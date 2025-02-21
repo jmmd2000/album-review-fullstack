@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "nodemon --watch src --legacy-watch --exec ts-node src/index.ts",
+    "dev": "nodemon --watch src --legacy-watch --exec tsx src/index.ts",
     "build": "tsc",
     "test": "jest --runInBand"
   },
