@@ -3,8 +3,7 @@ import { queryClient } from "../../main";
 import { createFileRoute } from "@tanstack/react-router";
 
 async function fetchToken(): Promise<string> {
-  const response = await fetch(`http://localhost:4000/api/spotify`);
-  console.log({ response });
+  const response = await fetch(`http://localhost:4000/api/spotify/token`);
   return await response.json();
 }
 

@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import { SpotifySearchResponse } from "../../../types";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -34,5 +32,22 @@ export class Spotify {
 
     console.log({ accessToken: this.accessToken, expiresAt: this.expiresAt });
     return this.accessToken;
+  }
+
+  static async searchAlbums(query: string) {
+    const endpoint = `https://api.spotify.com/v1/search?q=${query}&type=album&limit=10`;
+    const accessToken = await this.getAccessToken();
+    const searchParamaters = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + accessToken,
+      },
+    };
+
+    const response: Response = await fetch(endpoint, searchParamaters);
+
+    const data = await response.json();
+    return data as SpotifySearchResponse;
   }
 }
