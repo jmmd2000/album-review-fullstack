@@ -1,4 +1,4 @@
-import { SpotifySearchResponse } from "../../../types";
+import { SpotifyAlbum, SpotifySearchResponse } from "../../../types";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -49,5 +49,22 @@ export class Spotify {
 
     const data = await response.json();
     return data as SpotifySearchResponse;
+  }
+
+  static async getAlbum(albumID: string) {
+    const endpoint = `https://api.spotify.com/v1/albums/${albumID}`;
+    const accessToken = await this.getAccessToken();
+    const searchParamaters = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + accessToken,
+      },
+    };
+
+    const response: Response = await fetch(endpoint, searchParamaters);
+
+    const data = await response.json();
+    return data as SpotifyAlbum;
   }
 }

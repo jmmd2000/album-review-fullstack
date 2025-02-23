@@ -4,6 +4,7 @@ dotenv.config();
 import cors from "cors";
 import express from "express";
 import spotifyRoutes from "./api/routes/spotifyRoutes";
+import albumRoutes from "./api/routes/albumRoutes";
 
 export const app = express();
 
@@ -14,10 +15,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
 app.use("/api/spotify", spotifyRoutes);
-app.use("/", (req, res) => {
-  res.send("Hello, world!");
-});
+app.use("/api/albums", albumRoutes);
 
 app.listen(4000, "0.0.0.0", () => {
   console.log("Server is running on port 4000");

@@ -7,7 +7,9 @@
     "start": "node dist/index.js",
     "dev": "nodemon --watch src --legacy-watch --exec tsx src/index.ts",
     "build": "tsc",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio --port=1010 --verbose"
   },
   "keywords": [],
   "author": "",

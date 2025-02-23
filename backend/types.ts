@@ -71,3 +71,53 @@ export interface SpotifyTrack {
   type: string;
   uri: string;
 }
+export interface ReviewedAlbum {
+  id: number;
+  artistDBID: number;
+  spotifyID: string;
+  artist: ReviewedArtist;
+  bestSong: string;
+  worstSong: string;
+  name: string;
+  imageURLs: string;
+  createdAt: Date;
+  reviewScore: number;
+  reviewContent: string;
+  reviewDate: string;
+  runtime: string;
+  releaseDate: string;
+  releaseYear: number;
+  scoredTracks: string;
+}
+
+export interface ReviewedArtist {
+  id: number;
+  spotify_id: string;
+  name: string;
+  image_urls: string;
+  leaderboard_position: number;
+  albums: DisplayAlbum[];
+  average_score: number;
+  bonus_points: number;
+  bonus_reason: string | null;
+  total_score: number;
+  image_updated_at: Date;
+}
+
+export interface DisplayAlbum {
+  spotify_id: string;
+  artist_spotify_id: string;
+  artist_name: string;
+  name: string;
+  release_year: number;
+  image_urls: SpotifyImage[];
+  review_score?: number;
+  bookmarked?: boolean;
+  scored_tracks?: string;
+}
+
+export interface SpotifyImage {
+  height: number;
+  url: string;
+  width: number;
+}

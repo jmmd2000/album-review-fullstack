@@ -8,4 +8,8 @@ export class SpotifyService {
   static async searchAlbums(query: string) {
     return await Spotify.searchAlbums(query);
   }
+
+  static async getAlbum(albumID: string) {
+    return await Spotify.getAlbum(albumID);
+  }
 }

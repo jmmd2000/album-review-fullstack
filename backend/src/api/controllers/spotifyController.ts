@@ -27,3 +27,17 @@ export const searchAlbums = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const getAlbum = async (req: Request, res: Response) => {
+  const albumID = req.params.albumID;
+  try {
+    const spotifyAlbum = await SpotifyService.getAlbum(albumID);
+    res.status(200).json(spotifyAlbum);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};
