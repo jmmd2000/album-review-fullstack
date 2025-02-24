@@ -11,18 +11,12 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as AlbumsIndexImport } from './routes/albums/index'
-import { Route as AlbumsAlbumIDImport } from './routes/albums/$albumID'
+import { Route as AlbumsAlbumIDIndexImport } from './routes/albums/$albumID/index'
+import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/create'
 
 // Create/Update Routes
-
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -36,9 +30,15 @@ const AlbumsIndexRoute = AlbumsIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AlbumsAlbumIDRoute = AlbumsAlbumIDImport.update({
-  id: '/albums/$albumID',
-  path: '/albums/$albumID',
+const AlbumsAlbumIDIndexRoute = AlbumsAlbumIDIndexImport.update({
+  id: '/albums/$albumID/',
+  path: '/albums/$albumID/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AlbumsAlbumIDCreateRoute = AlbumsAlbumIDCreateImport.update({
+  id: '/albums/$albumID/create',
+  path: '/albums/$albumID/create',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -53,25 +53,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
-      parentRoute: typeof rootRoute
-    }
-    '/albums/$albumID': {
-      id: '/albums/$albumID'
-      path: '/albums/$albumID'
-      fullPath: '/albums/$albumID'
-      preLoaderRoute: typeof AlbumsAlbumIDImport
-      parentRoute: typeof rootRoute
-    }
     '/albums/': {
       id: '/albums/'
       path: '/albums'
       fullPath: '/albums'
       preLoaderRoute: typeof AlbumsIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/albums/$albumID/create': {
+      id: '/albums/$albumID/create'
+      path: '/albums/$albumID/create'
+      fullPath: '/albums/$albumID/create'
+      preLoaderRoute: typeof AlbumsAlbumIDCreateImport
+      parentRoute: typeof rootRoute
+    }
+    '/albums/$albumID/': {
+      id: '/albums/$albumID/'
+      path: '/albums/$albumID'
+      fullPath: '/albums/$albumID'
+      preLoaderRoute: typeof AlbumsAlbumIDIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -81,47 +81,52 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/albums/$albumID': typeof AlbumsAlbumIDRoute
   '/albums': typeof AlbumsIndexRoute
+  '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/albums/$albumID': typeof AlbumsAlbumIDRoute
   '/albums': typeof AlbumsIndexRoute
+  '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/albums/$albumID': typeof AlbumsAlbumIDRoute
   '/albums/': typeof AlbumsIndexRoute
+  '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/albums/$albumID' | '/albums'
+  fullPaths: '/' | '/albums' | '/albums/$albumID/create' | '/albums/$albumID'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/albums/$albumID' | '/albums'
-  id: '__root__' | '/' | '/about' | '/albums/$albumID' | '/albums/'
+  to: '/' | '/albums' | '/albums/$albumID/create' | '/albums/$albumID'
+  id:
+    | '__root__'
+    | '/'
+    | '/albums/'
+    | '/albums/$albumID/create'
+    | '/albums/$albumID/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  AlbumsAlbumIDRoute: typeof AlbumsAlbumIDRoute
   AlbumsIndexRoute: typeof AlbumsIndexRoute
+  AlbumsAlbumIDCreateRoute: typeof AlbumsAlbumIDCreateRoute
+  AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  AlbumsAlbumIDRoute: AlbumsAlbumIDRoute,
   AlbumsIndexRoute: AlbumsIndexRoute,
+  AlbumsAlbumIDCreateRoute: AlbumsAlbumIDCreateRoute,
+  AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -135,22 +140,22 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/about",
-        "/albums/$albumID",
-        "/albums/"
+        "/albums/",
+        "/albums/$albumID/create",
+        "/albums/$albumID/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/about": {
-      "filePath": "about.tsx"
-    },
-    "/albums/$albumID": {
-      "filePath": "albums/$albumID.tsx"
-    },
     "/albums/": {
       "filePath": "albums/index.tsx"
+    },
+    "/albums/$albumID/create": {
+      "filePath": "albums/$albumID/create.tsx"
+    },
+    "/albums/$albumID/": {
+      "filePath": "albums/$albumID/index.tsx"
     }
   }
 }

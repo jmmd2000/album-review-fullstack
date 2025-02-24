@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { features } from "process";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -22,7 +23,32 @@ export const reviewedAlbums = pgTable(
     reviewScore: real("review_score").notNull(),
     reviewDate: varchar("review_date", { length: 50 }),
   },
-  (table) => [index("artist_db_id_idx").on(table.artistDBID)]
+  (table) => [index("artist_db_id_album_idx").on(table.artistDBID)]
+);
+
+export const reviewedTracks = pgTable(
+  "reviewed_tracks",
+  {
+    id: serial("id").primaryKey(),
+    artistDBID: integer("artist_db_id")
+      .notNull()
+      .references(() => reviewedArtists.id), // Foreign key reference to `artists` table
+    albumDBID: integer("album_db_id")
+      .notNull()
+      .references(() => reviewedAlbums.id), // Foreign key reference to `albums
+    name: varchar("name", { length: 255 }).notNull(),
+    spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
+    features: text("features").notNull(), // JSON object of features
+    duration: integer("duration_ms").notNull(),
+    rating: integer("rating").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
+    imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true }).default(sql`now()`),
+  },
+  (table) => [
+    index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
+    index("artist_db_id_track_idx").on(table.artistDBID), // Index on artist DB ID for faster lookups
+    index("album_db_id_track_idx").on(table.albumDBID), // Index on album DB ID for faster lookups
+  ]
 );
 
 export const reviewedArtists = pgTable(
@@ -41,8 +67,8 @@ export const reviewedArtists = pgTable(
     imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true }).default(sql`now()`),
   },
   (table) => [
-    index("spotify_id_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
-    index("leaderboard_position_idx").on(table.leaderboardPosition), // Index for leaderboard queries
+    index("spotify_id_artist_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
+    index("leaderboard_position_artist_idx").on(table.leaderboardPosition), // Index for leaderboard queries
   ]
 );
 
@@ -50,7 +76,7 @@ export const bookmarkedAlbums = pgTable("bookmarked_albums", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(),
-  imageURL: text("image_url").notNull(),
+  imageURL: text("image_url").notNull(), // JSON object of image URLs
   artistName: varchar("artist_name", { length: 255 }).notNull(),
   artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
   releaseYear: integer("release_year").notNull(),

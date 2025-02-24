@@ -71,29 +71,6 @@ export interface SpotifyTrack {
   type: string;
   uri: string;
 }
-
-export interface SpotifyArtist {
-  external_urls: {
-    spotify: string;
-  };
-  followers: {
-    href: string | null;
-    total: number;
-  };
-  genres: string[];
-  href: string;
-  id: string;
-  images: {
-    height: number | null;
-    url: string;
-    width: number | null;
-  }[];
-  name: string;
-  popularity: number;
-  type: string;
-  uri: string;
-}
-
 export interface ReviewedAlbum {
   id: number;
   artistDBID: number;
@@ -115,71 +92,32 @@ export interface ReviewedAlbum {
 
 export interface ReviewedArtist {
   id: number;
-  spotifyID: string;
+  spotify_id: string;
   name: string;
-  imageURLs: string;
-  leaderboardPosition: number;
+  image_urls: string;
+  leaderboard_position: number;
   albums: DisplayAlbum[];
-  averageScore: number;
-  bonusPoints: number;
-  bonusReason: string | null;
-  totalScore: number;
-  imageUpdatedAt: Date;
+  average_score: number;
+  bonus_points: number;
+  bonus_reason: string | null;
+  total_score: number;
+  image_updated_at: Date;
 }
 
 export interface DisplayAlbum {
-  spotifyID: string;
-  artistSpotifyID: string;
-  artistName: string;
+  spotify_id: string;
+  artist_spotify_id: string;
+  artist_name: string;
   name: string;
-  releaseYear: number;
-  imageURLs: SpotifyImage[];
-  reviewScore?: number;
+  release_year: number;
+  image_urls: SpotifyImage[];
+  review_score?: number;
   bookmarked?: boolean;
-  scoredTracks?: string;
+  scored_tracks?: string;
 }
 
 export interface SpotifyImage {
   height: number;
   url: string;
   width: number;
-}
-
-export interface Reason {
-  reason: string;
-  value: number;
-  album?: MinimalAlbum;
-  concert?: Concert;
-}
-
-export interface Concert {
-  id: number;
-  artist: ReviewedArtist;
-  artistDBID: number;
-  showName: string;
-  date: Date;
-  city: string;
-  venue: string;
-  imageURL: string;
-  setlist: SetlistTrack[];
-  supportArtists: Array<ReviewedArtist | NonReviewedArtist>;
-}
-
-export interface SetlistTrack {
-  name: string;
-  encore: boolean;
-  trackInfo: string;
-}
-
-export interface NonReviewedArtist {
-  spotifyID: string;
-  name: string;
-  imageURLs: string;
-}
-
-export interface MinimalAlbum {
-  id: number;
-  spotifyID: string;
-  name: string;
-  imageURLs: SpotifyImage[];
 }
