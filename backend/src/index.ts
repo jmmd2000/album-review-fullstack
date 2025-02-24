@@ -5,6 +5,9 @@ import cors from "cors";
 import express from "express";
 import spotifyRoutes from "./api/routes/spotifyRoutes";
 import albumRoutes from "./api/routes/albumRoutes";
+import { drizzle } from "drizzle-orm/node-postgres";
+
+export const db = drizzle(process.env.DATABASE_URL!);
 
 export const app = express();
 

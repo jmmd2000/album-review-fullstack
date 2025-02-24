@@ -1,4 +1,4 @@
-import { SpotifyAlbum, SpotifySearchResponse } from "../../../types";
+import { SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -20,7 +20,7 @@ export class Spotify {
       body: "grant_type=client_credentials",
     };
 
-    console.log(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_ID);
+    // console.log(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_ID);
 
     const response = await fetch(tokenEndpoint, requestOptions);
 
@@ -30,7 +30,7 @@ export class Spotify {
     this.accessToken = data.access_token;
     this.expiresAt = Date.now() + data.expires_in * 1000; // Convert to milliseconds
 
-    console.log({ accessToken: this.accessToken, expiresAt: this.expiresAt });
+    // console.log({ accessToken: this.accessToken, expiresAt: this.expiresAt });
     return this.accessToken;
   }
 

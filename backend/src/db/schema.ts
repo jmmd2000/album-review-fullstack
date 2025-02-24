@@ -42,7 +42,6 @@ export const reviewedTracks = pgTable(
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
-    imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true }).default(sql`now()`),
   },
   (table) => [
     index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups

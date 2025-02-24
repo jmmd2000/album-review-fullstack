@@ -1,5 +1,5 @@
 import { C } from "drizzle-kit/index-Z-1TKnbX";
-import { ReviewedAlbum } from "../../../types";
+import { ReviewedAlbum } from "../../../../shared/types";
 import { Album } from "../models/Album";
 import { ReceivedReviewData } from "../controllers/albumController";
 

@@ -3,7 +3,7 @@ import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
 import { queryClient } from "../../../main";
 import { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { SpotifyAlbum } from "../../../../types";
+import { SpotifyAlbum } from "@shared/types";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -85,7 +85,7 @@ function RouteComponent() {
   const { data, error, isPending } = useQuery({ queryKey: ["spotifyAlbum", albumID], queryFn: ({ queryKey }) => fetchAlbumFromSpotify(queryKey[1]) });
   const { control, register, handleSubmit } = useForm({
     defaultValues: {
-      tracks: data?.tracks?.items.map((item) => ({ id: item.id, rating: 0 })) || [], // default all ratings to 0
+      tracks: data?.tracks?.items.map((item) => ({ id: item.id, rating: Math.floor(Math.random() * 11) })) || [], // default all ratings to a random number from 0-10
       bestSong: "",
       worstSong: "",
       reviewContent: "",
@@ -115,7 +115,7 @@ function RouteComponent() {
     if (!response.ok) {
       console.error("Failed to submit review:", response.statusText);
     } else {
-      console.log("Note submitted successfully");
+      console.log("Review submitted successfully");
     }
 
     console.log(response);

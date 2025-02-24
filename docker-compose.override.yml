@@ -16,6 +16,7 @@ services:
     volumes:
       - ./backend/src:/app/src # mount only the source code for live reload
       - ./backend/package.json:/app/package.json # keep package.json updated
+      - ./shared:/shared # mount shared code
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
@@ -31,6 +32,7 @@ services:
     volumes:
       - ./frontend/src:/app/src # mount source code for live reload
       - ./frontend/public:/app/public # Mount public assets
+      - ./shared:/app/shared # mount shared code
     environment:
       - CHOKIDAR_USEPOLLING=true # Ensure file changes are detected in Docker
       - VITE_API_URL=http://localhost:4000

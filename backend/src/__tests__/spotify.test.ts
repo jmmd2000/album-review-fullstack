@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { SpotifyAlbum, SpotifySearchResponse } from "../../types";
+import { SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
 
 test("GET /api/spotify/token - Should return token and expiry time", async () => {
   const response = await fetch("http://localhost:4000/api/spotify/token", {
