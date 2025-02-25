@@ -1,4 +1,4 @@
-import { useQuery, useQueryErrorResetBoundary } from "@tanstack/react-query";
+import { queryOptions, useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
 import { queryClient } from "../../../main";
 import { ErrorComponentProps } from "@tanstack/react-router";
@@ -10,30 +10,39 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 //# --------------------------------------------------------------------------------------------- #
 //# The usual structure for a route would be like:
 // const tokenQueryOptions = queryOptions({
-//   queryKey: ["token"],
+//   queryKey: ["album"],
 //   queryFn: fetchToken,
 // });
 //# And this would be passed to the loader in createFileRoute() like:
 // loader: () => queryClient.ensureQueryData(tokenQueryOptions),
-//# But in this case, the loader needs a parameter, so we need to pass queryOptions directly:
-// loader: ({ params: { albumID } }) =>
-//   queryClient.ensureQueryData({
-//     queryKey: ["spotifyAlbum", albumID],
-//     queryFn: () => fetchAlbumFromSpotify(albumID),
-//   }),
-//# And then inside the RouteComponent, you need to pass the same options to useQuery:
-// const { albumID } = useParams({
-//   from: "/albums/$albumID/create",
-//   select: (params) => ({ albumID: params.albumID }),
+//# But in this case, the query function needs a parameter, so we need to pass the param to queryOptions directly:
+// const albumQueryOptions = (albumSpotifyID: string) =>
+// queryOptions({
+//   queryKey: ["spotifyAlbum", albumSpotifyID],
+//   queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
 // });
-//
-// const { data, error, isPending } = useQuery({ queryKey: ["spotifyAlbum", albumID], queryFn: ({ queryKey }) => fetchAlbumFromSpotify(queryKey[1]) });
+//# Then, in the loader:
+// loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+//# And then inside the RouteComponent, you need to pass the same options to useQuery:
+// const { albumID } = useParams({ strict: false });
+//   if (!albumID) {
+//     throw new Error("albumID is undefined");
+//   }
+//   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
+//# No need for error as the error boundary is already handled by the ErrorComponent
+//# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
 async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<SpotifyAlbum> {
   const response = await fetch(`${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`);
   return await response.json();
 }
+
+const albumQueryOptions = (albumSpotifyID: string) =>
+  queryOptions({
+    queryKey: ["spotifyAlbum", albumSpotifyID],
+    queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
+  });
 
 const ErrorComponent = ({ error }: ErrorComponentProps) => {
   const router = useRouter();
@@ -60,11 +69,7 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 };
 
 export const Route = createFileRoute("/albums/$albumID/create")({
-  loader: ({ params: { albumID } }) =>
-    queryClient.ensureQueryData({
-      queryKey: ["spotifyAlbum", albumID],
-      queryFn: () => fetchAlbumFromSpotify(albumID),
-    }),
+  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
 });
@@ -77,12 +82,11 @@ type CreateReviewFormData = {
 };
 
 function RouteComponent() {
-  const { albumID } = useParams({
-    from: "/albums/$albumID/create",
-    select: (params) => ({ albumID: params.albumID }),
-  });
-  console.log({ albumID });
-  const { data, error, isPending } = useQuery({ queryKey: ["spotifyAlbum", albumID], queryFn: ({ queryKey }) => fetchAlbumFromSpotify(queryKey[1]) });
+  const { albumID } = useParams({ strict: false });
+  if (!albumID) {
+    throw new Error("albumID is undefined");
+  }
+  const { data } = useSuspenseQuery(albumQueryOptions(albumID));
   const { control, register, handleSubmit } = useForm({
     defaultValues: {
       tracks: data?.tracks?.items.map((item) => ({ id: item.id, rating: Math.floor(Math.random() * 11) })) || [], // default all ratings to a random number from 0-10
@@ -121,14 +125,6 @@ function RouteComponent() {
     console.log(response);
     console.log(formData);
   };
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  if (error instanceof Error) {
-    return <div>An error occurred: {error.message}</div>;
-  }
 
   if (!data) {
     return <div>No data</div>;

@@ -60,14 +60,14 @@ const seed = async () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        console.log(`\x1b[31m${error.message}\x1b[0m`);
+        console.log(`\x1b[34mSeed:\x1b[0m \x1b[31m${error.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[31mAn unknown error occurred.\x1b[0m`);
+        console.log(`\x1b[34mSeed:\x1b[0m \x1b[31mAn unknown error occurred.\x1b[0m`);
       }
     }
   }
 
-  console.log("\x1b[32mSeeding complete.\x1b[0m");
+  console.log(`\x1b[34mSeed:\x1b[0m \x1b[32mSeeding complete.\x1b[0m`);
 };
 
 seed();
