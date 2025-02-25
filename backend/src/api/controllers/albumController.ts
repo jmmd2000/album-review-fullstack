@@ -44,3 +44,16 @@ export const getAlbumByID = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const getAllAlbums = async (req: Request, res: Response) => {
+  try {
+    const albums = await AlbumService.getAllAlbums();
+    res.status(200).json(albums);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};

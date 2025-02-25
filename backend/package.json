@@ -9,7 +9,9 @@
     "build": "tsc",
     "test": "jest --runInBand",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio --port=1010 --verbose"
+    "db:studio": "drizzle-kit studio --port=1010 --verbose",
+    "db:seed": "tsx ./src/db/seed.ts",
+    "db:wipe": "tsx ./src/db/wipe.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +24,8 @@
     "drizzle-orm": "^0.39.3",
     "express": "^4.21.2",
     "node-mocks-http": "^1.16.2",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "@album-reviews/shared": "*"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

@@ -189,4 +189,13 @@ export class Album {
     console.log({ album });
     return album;
   }
+
+  static async getAllAlbums() {
+    const albums = await db
+      .select()
+      .from(reviewedAlbums)
+      // .innerJoin(reviewedArtists, eq(reviewedAlbums.artistDBID, reviewedArtists.id))
+      .then((results) => results);
+    return albums;
+  }
 }

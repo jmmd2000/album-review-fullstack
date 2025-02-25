@@ -1,5 +1,5 @@
 import { C } from "drizzle-kit/index-Z-1TKnbX";
-import { ReviewedAlbum } from "../../../../shared/types";
+import { ReviewedAlbum } from "../../../shared/src/types";
 import { Album } from "../models/Album";
 import { ReceivedReviewData } from "../controllers/albumController";
 
@@ -10,5 +10,9 @@ export class AlbumService {
 
   static async getAlbumByID(id: string) {
     return await Album.getAlbumByID(id);
+  }
+
+  static async getAllAlbums() {
+    return await Album.getAllAlbums();
   }
 }
