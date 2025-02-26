@@ -166,12 +166,14 @@ export interface SpotifyArtist {
 export interface ReviewedAlbum {
   /** Unique ID of the reviewed album. */
   id: number;
-  /** Database ID of the associated artist. */
-  artistDBID: number;
+  /** Spotify ID of the associated artist. */
+  artistSpotifyID: string;
+  /** Artist name */
+  artistName: string;
   /** Spotify ID of the album. */
   spotifyID: string;
-  /** The artist who created the album. */
-  artist: ReviewedArtist;
+  // /** The artist who created the album. */
+  // artist: ReviewedArtist;
   /** The best song from the album as chosen in the review. */
   bestSong: string;
   /** The worst song from the album as chosen in the review. */
@@ -284,8 +286,8 @@ export interface Concert {
   id: number;
   /** The artist who performed at the concert. */
   artist: ReviewedArtist;
-  /** Database ID of the associated artist. */
-  artistDBID: number;
+  /** Spotify ID of the associated artist. */
+  artistSpotifyID: number;
   /** Name of the concert or tour. */
   showName: string;
   /** Date of the concert. */

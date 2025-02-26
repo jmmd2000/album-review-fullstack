@@ -25,7 +25,7 @@
     "express": "^4.21.2",
     "node-mocks-http": "^1.16.2",
     "pg": "^8.13.3",
-    "@album-reviews/shared": "*"
+    "@album-reviews/shared": "file:../shared"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

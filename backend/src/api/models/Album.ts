@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { desc, eq } from "drizzle-orm";
-import { ReviewedAlbum } from "@shared/types";
+import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { ReceivedReviewData } from "../controllers/albumController";
 import getTotalDuration from "../../helpers/formatDuration";
@@ -87,7 +87,8 @@ export class Album {
         runtime: runtime,
         reviewContent: data.reviewContent,
         reviewScore: roundedScore,
-        artistDBID: createdArtist ? createdArtist.id : artist.id,
+        artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
+        artistName: createdArtist ? createdArtist.name : artist.name,
         reviewDate: new Date().toISOString(),
       })
       .returning()
@@ -109,11 +110,11 @@ export class Album {
         const trackArtist = await db
           .select()
           .from(reviewedArtists)
-          .where(eq(reviewedArtists.id, trackAlbum.artistDBID))
+          .where(eq(reviewedArtists.spotifyID, trackAlbum.artistSpotifyID))
           .then((results) => results[0]);
 
-        const trackAlbumID = trackAlbum.id;
-        const trackArtistID = trackArtist.id;
+        const trackAlbumID = trackAlbum.spotifyID;
+        const trackArtistID = trackArtist.spotifyID;
 
         const trackFeatures = trackData.artists
           .filter((artist) => artist.id !== trackArtist.spotifyID)
@@ -125,8 +126,8 @@ export class Album {
         const createdTrack = await db
           .insert(reviewedTracks)
           .values({
-            artistDBID: trackArtistID,
-            albumDBID: trackAlbumID,
+            artistSpotifyID: trackArtistID,
+            albumSpotifyID: trackAlbumID,
             name: trackData.name,
             spotifyID: trackData.id,
             features: JSON.stringify(trackFeatures),
@@ -145,7 +146,7 @@ export class Album {
       const artistAlbums: ReviewedAlbum[] = await db
         .select()
         .from(reviewedAlbums)
-        .where(eq(reviewedAlbums.artistDBID, artist.id))
+        .where(eq(reviewedAlbums.artistSpotifyID, artist.spotifyID))
         .then((results) => results as ReviewedAlbum[]);
 
       const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(artistAlbums, roundedScore);
@@ -153,7 +154,7 @@ export class Album {
       const updatedArtist = await db
         .update(reviewedArtists)
         .set({ averageScore: newAverageScore, bonusPoints: newBonusPoints, totalScore, bonusReason: JSON.stringify(bonusReasons) })
-        .where(eq(reviewedArtists.id, artist.id))
+        .where(eq(reviewedArtists.spotifyID, artist.spotifyID))
         .then((result) => result);
 
       console.log({ updatedArtist });
@@ -183,7 +184,7 @@ export class Album {
     const album = await db
       .select()
       .from(reviewedAlbums)
-      .innerJoin(reviewedArtists, eq(reviewedAlbums.artistDBID, reviewedArtists.id))
+      .innerJoin(reviewedArtists, eq(reviewedAlbums.artistSpotifyID, reviewedArtists.id))
       .where(eq(reviewedAlbums.spotifyID, id))
       .then((results) => results[0]);
     console.log({ album });
@@ -191,11 +192,22 @@ export class Album {
   }
 
   static async getAllAlbums() {
-    const albums = await db
-      .select()
-      .from(reviewedAlbums)
-      // .innerJoin(reviewedArtists, eq(reviewedAlbums.artistDBID, reviewedArtists.id))
-      .then((results) => results);
-    return albums;
+    const albums = await db.select().from(reviewedAlbums);
+
+    const displayAlbums: DisplayAlbum[] = albums.map((album) => {
+      const imageURLs: SpotifyImage[] = JSON.parse(album.imageURLs);
+      return {
+        name: album.name,
+        spotifyID: album.spotifyID,
+        releaseDate: album.releaseDate,
+        imageURLs: imageURLs,
+        reviewScore: album.reviewScore,
+        artistName: album.artistName,
+        artistSpotifyID: album.artistSpotifyID,
+        releaseYear: album.releaseYear,
+      };
+    });
+
+    return displayAlbums;
   }
 }

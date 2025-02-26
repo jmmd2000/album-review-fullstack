@@ -16,6 +16,9 @@ const reviewQueryOptions = (albumID: string) =>
   queryOptions({
     queryKey: ["albumReview", albumID],
     queryFn: () => fetchAlbumReview(albumID),
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
 const ErrorComponent = ({ error }: ErrorComponentProps) => {
@@ -43,7 +46,9 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 };
 
 export const Route = createFileRoute("/albums/$albumID/")({
-  loader: ({ params }) => queryClient.ensureQueryData(reviewQueryOptions(params.albumID)),
+  loader: async ({ params }) => {
+    return queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+  },
   errorComponent: ErrorComponent,
   component: RouteComponent,
 });
@@ -53,8 +58,10 @@ function RouteComponent() {
   if (!albumID) {
     throw new Error("albumID is undefined");
   }
-  const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
+  console.log("Cached Data:", queryClient.getQueryData(["albums", albumID]));
+  const { data, fetchStatus } = useSuspenseQuery(reviewQueryOptions(albumID));
 
+  console.log(`🔍 Fetch Status: ${fetchStatus}`);
   if (!data) {
     throw new Error("No data");
   }

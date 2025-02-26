@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { features } from "process";
 
 export const reviewedAlbums = pgTable(
@@ -7,9 +7,10 @@ export const reviewedAlbums = pgTable(
   {
     id: serial("id").primaryKey(),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`), // Default to current time
-    artistDBID: integer("artist_db_id")
+    artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
-      .references(() => reviewedArtists.id), // Foreign key reference to `artists` table
+      .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
+    artistName: varchar("artist_name", { length: 255 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique constraint
     releaseDate: varchar("release_date", { length: 50 }).notNull(),
@@ -23,19 +24,19 @@ export const reviewedAlbums = pgTable(
     reviewScore: real("review_score").notNull(),
     reviewDate: varchar("review_date", { length: 50 }),
   },
-  (table) => [index("artist_db_id_album_idx").on(table.artistDBID)]
+  (table) => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
 );
 
 export const reviewedTracks = pgTable(
   "reviewed_tracks",
   {
     id: serial("id").primaryKey(),
-    artistDBID: integer("artist_db_id")
+    artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
-      .references(() => reviewedArtists.id), // Foreign key reference to `artists` table
-    albumDBID: integer("album_db_id")
+      .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
+    albumSpotifyID: varchar("album_spotify_id")
       .notNull()
-      .references(() => reviewedAlbums.id), // Foreign key reference to `albums
+      .references(() => reviewedAlbums.spotifyID), // Foreign key reference to `albums
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
     features: text("features").notNull(), // JSON object of features
@@ -45,8 +46,8 @@ export const reviewedTracks = pgTable(
   },
   (table) => [
     index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
-    index("artist_db_id_track_idx").on(table.artistDBID), // Index on artist DB ID for faster lookups
-    index("album_db_id_track_idx").on(table.albumDBID), // Index on album DB ID for faster lookups
+    index("artist_spotify_id_track_idx").on(table.artistSpotifyID), // Index on artist DB ID for faster lookups
+    index("album_spotify_id_track_idx").on(table.albumSpotifyID), // Index on album DB ID for faster lookups
   ]
 );
 
@@ -86,9 +87,9 @@ export const concerts = pgTable(
   "concerts",
   {
     id: serial("id").primaryKey(),
-    artistDBID: integer("artist_db_id")
+    artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
-      .references(() => reviewedArtists.id),
+      .references(() => reviewedArtists.spotifyID),
     showName: varchar("show_name", { length: 255 }).notNull(),
     date: timestamp("date", { withTimezone: true }).notNull(),
     venue: varchar("venue", { length: 255 }).notNull(),
@@ -97,5 +98,5 @@ export const concerts = pgTable(
     setlistLink: varchar("setlist_link", { length: 255 }).notNull(),
     supportArtists: text("support_artists").notNull(), // JSON string of support artists
   },
-  (table) => [index("artist_db_id_concert_idx").on(table.artistDBID)]
+  (table) => [index("artist_spotify_id_concert_idx").on(table.artistSpotifyID)]
 );

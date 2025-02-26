@@ -1,5 +1,15 @@
 @import "tailwindcss";
+
 html {
-  background-color: #18181b;
-  color: oklch(0.923 0.003 48.717);
+  @apply bg-neutral-900;
+  @apply text-white;
+}
+
+@font-face {
+  font-family: "Cabin";
+  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
+}
+
+body {
+  font-family: "Cabin", sans-serif;
 }
