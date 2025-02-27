@@ -1,4 +1,5 @@
-import { SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+import { ExtractedColor, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+import { getImageColors } from "src/helpers/getImageColors";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -37,6 +38,7 @@ export class Spotify {
   static async searchAlbums(query: string) {
     const endpoint = `https://api.spotify.com/v1/search?q=${query}&type=album&limit=10`;
     const accessToken = await this.getAccessToken();
+    console.log({ accessToken });
     const searchParamaters = {
       method: "GET",
       headers: {
@@ -48,6 +50,7 @@ export class Spotify {
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
+    console.log({ data });
     return data as SpotifySearchResponse;
   }
 

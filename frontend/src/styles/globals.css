@@ -1,5 +1,81 @@
 @import "tailwindcss";
 
+@theme {
+  --animation-duration-lava0: 220s;
+  --animation-duration-lava1: 180s;
+  --animation-duration-lava2: 200s;
+  /* --animation-duration-lava0: 62s;
+  --animation-duration-lava1: 52s;
+  --animation-duration-lava2: 57s; */
+}
+
+/* Blurry header animations */
+@keyframes lava0 {
+  0% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+  25% {
+    transform: translate(40vw, -50px) scale(1.2);
+  }
+  50% {
+    transform: translate(-30vw, 30px) scale(0.9);
+  }
+  75% {
+    transform: translate(30vw, -10px) scale(1.1);
+  }
+  100% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+}
+
+@keyframes lava1 {
+  0% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+  25% {
+    transform: translate(-50vw, 40px) scale(1.1);
+  }
+  50% {
+    transform: translate(35vw, -30px) scale(0.95);
+  }
+  75% {
+    transform: translate(-40vw, 20px) scale(1.15);
+  }
+  100% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+}
+
+@keyframes lava2 {
+  0% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+  25% {
+    transform: translate(45vw, -20px) scale(1.05);
+  }
+  50% {
+    transform: translate(-55vw, 25px) scale(1.1);
+  }
+  75% {
+    transform: translate(20vw, 50px) scale(0.9);
+  }
+  100% {
+    transform: translate(0vw, 0px) scale(1);
+  }
+}
+
+.animate-lava0 {
+  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite alternate;
+}
+
+.animate-lava1 {
+  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite alternate;
+}
+
+.animate-lava2 {
+  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite alternate;
+}
+
 html {
   @apply bg-neutral-900;
   @apply text-white;

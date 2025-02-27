@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { desc, eq } from "drizzle-orm";
-import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage } from "@shared/types";
+import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { ReceivedReviewData } from "../controllers/albumController";
 import getTotalDuration from "../../helpers/formatDuration";
@@ -9,6 +9,7 @@ import formatDate from "../../helpers/formatDate";
 import { calculateArtistScore } from "../../helpers/calculateArtistScore";
 import { fetchArtistFromSpotify } from "../../helpers/fetchArtistFromSpotify";
 import { db } from "../../index";
+import { getImageColors } from "../..//helpers/getImageColors";
 
 export class Album {
   static async createAlbumReview(data: ReceivedReviewData) {
@@ -71,6 +72,16 @@ export class Album {
     const year = date.getFullYear();
     const releaseDate = formatDate(data.album.release_date);
     const runtime = getTotalDuration(data.album);
+    const imageURLs: SpotifyImage[] = data.album.images;
+    const image = imageURLs[0].url;
+    let colors: ExtractedColor[] = [];
+    try {
+      // Extract colors from the image
+      colors = await getImageColors(image);
+      console.log({ colors });
+    } catch (error) {
+      console.error("Failed to extract colors:", error);
+    }
 
     // Create the album
     const album = await db
@@ -90,6 +101,7 @@ export class Album {
         artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
         artistName: createdArtist ? createdArtist.name : artist.name,
         reviewDate: new Date().toISOString(),
+        colors: JSON.stringify(colors.map((color) => ({ hex: color.hex }))),
       })
       .returning()
       .then((results) => results[0]);
@@ -181,14 +193,14 @@ export class Album {
   }
 
   static async getAlbumByID(id: string) {
-    const album = await db
+    const albumAndArtist = await db
       .select()
       .from(reviewedAlbums)
-      .innerJoin(reviewedArtists, eq(reviewedAlbums.artistSpotifyID, reviewedArtists.id))
+      .innerJoin(reviewedArtists, eq(reviewedAlbums.artistSpotifyID, reviewedArtists.spotifyID))
       .where(eq(reviewedAlbums.spotifyID, id))
       .then((results) => results[0]);
-    console.log({ album });
-    return album;
+
+    return albumAndArtist;
   }
 
   static async getAllAlbums() {

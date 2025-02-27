@@ -2,9 +2,10 @@ import { queryOptions, useQueryErrorResetBoundary, useSuspenseQuery } from "@tan
 import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
 import { queryClient } from "../../../main";
 import { ErrorComponentProps } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { SpotifyAlbum } from "@shared/types";
+import { useEffect, useState } from "react";
+import { ExtractedColor, SpotifyAlbum } from "@shared/types";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import BlurryHeader from "../../../components/BlurryHeader";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -68,51 +69,111 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
   );
 };
 
+// This page is for creating a new album review
+
 export const Route = createFileRoute("/albums/$albumID/create")({
   loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
 });
 
+/**
+ * Represents the data submitted when creating a new review
+ */
 type CreateReviewFormData = {
+  /*** An array of track IDs and their ratings*/
   tracks: { id: string; rating: number }[];
+  /*** The best song on the album */
   bestSong: string;
+  /*** The worst song on the album */
   worstSong: string;
+  /*** The review content */
   reviewContent: string;
+  /*** The selected colors */
+  colors: ExtractedColor[];
 };
 
 function RouteComponent() {
+  // Get the album ID from the URL
   const { albumID } = useParams({ strict: false });
+
+  console.log({ albumID });
+  // If the album ID is undefined, throw an error
   if (!albumID) {
     throw new Error("albumID is undefined");
   }
+
+  // Fetch the album data
   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
-  const { control, register, handleSubmit } = useForm({
+
+  console.log({ data });
+
+  // Initialize the form
+  const { control, register, handleSubmit, setValue, getValues } = useForm({
     defaultValues: {
-      tracks: data?.tracks?.items.map((item) => ({ id: item.id, rating: Math.floor(Math.random() * 11) })) || [], // default all ratings to a random number from 0-10
+      // tracks: album.tracks?.items.map((item) => ({ id: item.id, rating: Math.floor(Math.random() * 11) })) || [], // default all ratings to a random number from 0-10
+      tracks: album.tracks?.items.map((item) => ({ id: item.id, rating: 0 })) || [], // default all ratings to 0
       bestSong: "",
       worstSong: "",
       reviewContent: "",
+      colors: [...album.colors] as ExtractedColor[],
     },
   });
 
+  // UseFieldArray for dynamic track ratings
   const { fields } = useFieldArray({
     control,
     name: "tracks",
   });
 
+  // These are the colors for the BlurryHeader picked by the user
+  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>([...extractedColors]);
+
+  // Sync selectedColors with the form state
+  useEffect(() => {
+    setValue("colors", selectedColors);
+  }, [selectedColors, setValue]);
+
+  // Adds a new color input, max 5
+  const addColor = () => {
+    if (selectedColors.length < 5) {
+      // Default new color is white
+      setSelectedColors((prev) => [...prev, { hex: "#ffffff" }]);
+    }
+  };
+
+  // Remove a color at a specific index
+  const removeColor = (index: number) => {
+    setSelectedColors((prevColors) => prevColors.filter((_, i) => i !== index));
+  };
+
+  // Updates the selectedColors array with the new color
+  const handleColorChange = (index: number, newColor: string) => {
+    setSelectedColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[index] = { hex: newColor };
+      return newColors;
+    });
+  };
+
+  // Submit the review
   const onSubmit = async (formData: CreateReviewFormData) => {
+    // Get the colors from the form
+    const colorsToSubmit = getValues("colors");
+
+    // Submit the form
     const response = await fetch(`${API_BASE_URL}/api/albums/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        album: data,
+        album: album,
         reviewContent: formData.reviewContent,
         bestSong: formData.bestSong,
         worstSong: formData.worstSong,
         ratedTracks: formData.tracks,
+        colors: colorsToSubmit,
       }),
     });
 
@@ -126,17 +187,20 @@ function RouteComponent() {
     console.log(formData);
   };
 
-  if (!data) {
+  // If there's no data, show an error
+  if (!album) {
     return <div>No data</div>;
   }
 
   return (
     <>
-      <h1>{data.name}</h1>
-      <img src={data.images[1].url} alt={data.name} />
-      <p>{data.artists.map((artist) => artist.name).join(", ")}</p>
-      <p>{data.release_date}</p>
-      <p>{data.total_tracks} tracks</p>
+      <BlurryHeader colors={selectedColors}>
+        <h1>{album.name}</h1>
+        <img src={album.images[1].url} alt={album.name} />
+        <p>{album.artists.map((artist) => artist.name).join(", ")}</p>
+        <p>{album.release_date}</p>
+        <p>{album.total_tracks} tracks</p>
+      </BlurryHeader>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* review content */}
@@ -155,11 +219,31 @@ function RouteComponent() {
           <input type="text" {...register("worstSong")} className="w-full p-2 border rounded" placeholder="worst song" />
         </div>
 
+        {/* dynamic color selection */}
+        <div className="mb-4">
+          <label>Select colors (max 5):</label>
+          <div className="flex flex-wrap gap-2">
+            {selectedColors.map((color, index) => (
+              <div className="flex items-center gap-2">
+                <input key={index} type="color" value={color.hex} onChange={(e) => handleColorChange(index, e.target.value)} className="w-10 h-10 border rounded cursor-pointer" />
+                <button type="button" onClick={() => removeColor(index)} className="text-red-500">
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          {selectedColors.length < 5 && (
+            <button type="button" onClick={addColor} className="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
+              Add Color
+            </button>
+          )}
+        </div>
+
         {/* track ratings */}
         {fields.map((field, index) => (
           <div key={field.id} className="mb-4">
             <p>
-              Track {data.tracks.items[index].track_number}: {data.tracks.items[index].name}
+              Track {album.tracks.items[index].track_number}: {album.tracks.items[index].name}
             </p>
 
             {/* track ID (hidden but included in form data) */}

@@ -1,8 +1,10 @@
-import { ReviewedAlbum, ReviewedArtist } from "@shared/types";
+import { ExtractedColor, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, ErrorComponentProps, useParams, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { queryClient } from "../../../main";
+import BlurryHeader from "../../../components/BlurryHeader";
+import AlbumHeader from "../../../components/AlbumHeader";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ reviewed_albums: ReviewedAlbum; reviewed_artists: ReviewedArtist }> {
@@ -58,19 +60,28 @@ function RouteComponent() {
   if (!albumID) {
     throw new Error("albumID is undefined");
   }
-  console.log("Cached Data:", queryClient.getQueryData(["albums", albumID]));
-  const { data, fetchStatus } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
 
-  console.log(`🔍 Fetch Status: ${fetchStatus}`);
   if (!data) {
     throw new Error("No data");
   }
+  const album = data.reviewed_albums;
+  const artist = data.reviewed_artists;
+  const colors: ExtractedColor[] = JSON.parse(album.colors);
+  console.log(colors);
 
-  console.log({ data });
   return (
-    <div>
-      <h1>{data.reviewed_albums.name}</h1>
-      <p>{data.reviewed_artists.name}</p>
-    </div>
+    <>
+      <BlurryHeader colors={colors}>
+        <AlbumHeader album={album} artist={artist} />
+      </BlurryHeader>
+      <div>
+        {/* {colors.map((color) => (
+          <div key={color.hex} className="w-20 h-20" style={{ backgroundColor: color.hex }}>
+            {color.hex}
+          </div>
+        ))} */}
+      </div>
+    </>
   );
 }

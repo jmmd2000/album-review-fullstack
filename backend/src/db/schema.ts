@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { features } from "process";
+import { index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -23,6 +22,7 @@ export const reviewedAlbums = pgTable(
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
     reviewDate: varchar("review_date", { length: 50 }),
+    colors: text("colors").notNull(), // JSON string
   },
   (table) => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
 );

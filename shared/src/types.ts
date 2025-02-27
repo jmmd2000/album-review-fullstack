@@ -198,6 +198,8 @@ export interface ReviewedAlbum {
   releaseYear: number;
   /** JSON string containing track ratings. */
   scoredTracks: string;
+  /** JSON string containing extracted colors from the album cover. */
+  colors: string;
 }
 
 /**
@@ -340,4 +342,16 @@ export interface MinimalAlbum {
   name: string;
   /** List of album cover images. */
   imageURLs: SpotifyImage[];
+}
+
+export interface ExtractedColor {
+  // area: number;
+  // blue: number;
+  // green: number;
+  // red: number;
+  hex: string;
+  // hue: number;
+  // lightness: number;
+  // saturation: number;
+  // intensity: number;
 }

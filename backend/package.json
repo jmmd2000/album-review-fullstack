@@ -18,19 +18,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@album-reviews/shared": "file:../shared",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.39.3",
     "express": "^4.21.2",
+    "extract-colors": "^4.1.1",
+    "get-pixels": "^3.3.3",
     "node-mocks-http": "^1.16.2",
-    "pg": "^8.13.3",
-    "@album-reviews/shared": "file:../shared"
+    "pg": "^8.13.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/get-pixels": "^3.3.4",
     "@types/node": "^22.13.4",
     "@types/pg": "^8.11.11",
     "@types/supertest": "^6.0.2",
