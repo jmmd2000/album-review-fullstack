@@ -5,7 +5,9 @@ export const reviewedAlbums = pgTable(
   "reviewed_albums",
   {
     id: serial("id").primaryKey(),
-    createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`), // Default to current time
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(), // Default to current time
     artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
       .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
@@ -18,10 +20,9 @@ export const reviewedAlbums = pgTable(
     scoredTracks: text("scored_tracks").notNull(), // JSON string
     bestSong: varchar("best_song", { length: 255 }).notNull(),
     worstSong: varchar("worst_song", { length: 255 }).notNull(),
-    runtime: varchar("runtime", { length: 50 }),
+    runtime: varchar("runtime", { length: 50 }).notNull(),
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
-    reviewDate: varchar("review_date", { length: 50 }),
     colors: text("colors").notNull(), // JSON string
   },
   (table) => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
@@ -34,6 +35,7 @@ export const reviewedTracks = pgTable(
     artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
       .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
+    artistName: varchar("artist_name", { length: 255 }).notNull(),
     albumSpotifyID: varchar("album_spotify_id")
       .notNull()
       .references(() => reviewedAlbums.spotifyID), // Foreign key reference to `albums
@@ -59,12 +61,16 @@ export const reviewedArtists = pgTable(
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
     imageURLs: text("image_urls").notNull(), // JSON object of image URLs
     averageScore: real("average_score").notNull(),
-    leaderboardPosition: integer("leaderboard_position"),
+    leaderboardPosition: integer("leaderboard_position").notNull(),
     bonusPoints: real("bonus_points").notNull().default(0),
     bonusReason: text("bonus_reason"),
     totalScore: real("total_score").notNull().default(0),
-    createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
-    imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true }).default(sql`now()`),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
   },
   (table) => [
     index("spotify_id_artist_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups

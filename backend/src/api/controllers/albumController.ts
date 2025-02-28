@@ -57,3 +57,17 @@ export const getAllAlbums = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const deleteAlbum = async (req: Request, res: Response) => {
+  const albumID = req.params.albumID;
+  try {
+    await AlbumService.deleteAlbum(albumID);
+    res.status(204).end();
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};

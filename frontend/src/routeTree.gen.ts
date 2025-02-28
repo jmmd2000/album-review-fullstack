@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as AlbumsIndexImport } from './routes/albums/index'
 import { Route as AlbumsAlbumIDIndexImport } from './routes/albums/$albumID/index'
+import { Route as AlbumsAlbumIDEditImport } from './routes/albums/$albumID/edit'
 import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/create'
 
 // Create/Update Routes
@@ -33,6 +34,12 @@ const AlbumsIndexRoute = AlbumsIndexImport.update({
 const AlbumsAlbumIDIndexRoute = AlbumsAlbumIDIndexImport.update({
   id: '/albums/$albumID/',
   path: '/albums/$albumID/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AlbumsAlbumIDEditRoute = AlbumsAlbumIDEditImport.update({
+  id: '/albums/$albumID/edit',
+  path: '/albums/$albumID/edit',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -67,6 +74,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlbumsAlbumIDCreateImport
       parentRoute: typeof rootRoute
     }
+    '/albums/$albumID/edit': {
+      id: '/albums/$albumID/edit'
+      path: '/albums/$albumID/edit'
+      fullPath: '/albums/$albumID/edit'
+      preLoaderRoute: typeof AlbumsAlbumIDEditImport
+      parentRoute: typeof rootRoute
+    }
     '/albums/$albumID/': {
       id: '/albums/$albumID/'
       path: '/albums/$albumID'
@@ -83,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
 }
 
@@ -90,6 +105,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
 }
 
@@ -98,19 +114,31 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/albums/': typeof AlbumsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
+  '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/albums' | '/albums/$albumID/create' | '/albums/$albumID'
+  fullPaths:
+    | '/'
+    | '/albums'
+    | '/albums/$albumID/create'
+    | '/albums/$albumID/edit'
+    | '/albums/$albumID'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/albums' | '/albums/$albumID/create' | '/albums/$albumID'
+  to:
+    | '/'
+    | '/albums'
+    | '/albums/$albumID/create'
+    | '/albums/$albumID/edit'
+    | '/albums/$albumID'
   id:
     | '__root__'
     | '/'
     | '/albums/'
     | '/albums/$albumID/create'
+    | '/albums/$albumID/edit'
     | '/albums/$albumID/'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +147,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlbumsIndexRoute: typeof AlbumsIndexRoute
   AlbumsAlbumIDCreateRoute: typeof AlbumsAlbumIDCreateRoute
+  AlbumsAlbumIDEditRoute: typeof AlbumsAlbumIDEditRoute
   AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
 }
 
@@ -126,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlbumsIndexRoute: AlbumsIndexRoute,
   AlbumsAlbumIDCreateRoute: AlbumsAlbumIDCreateRoute,
+  AlbumsAlbumIDEditRoute: AlbumsAlbumIDEditRoute,
   AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
 }
 
@@ -142,6 +172,7 @@ export const routeTree = rootRoute
         "/",
         "/albums/",
         "/albums/$albumID/create",
+        "/albums/$albumID/edit",
         "/albums/$albumID/"
       ]
     },
@@ -153,6 +184,9 @@ export const routeTree = rootRoute
     },
     "/albums/$albumID/create": {
       "filePath": "albums/$albumID/create.tsx"
+    },
+    "/albums/$albumID/edit": {
+      "filePath": "albums/$albumID/edit.tsx"
     },
     "/albums/$albumID/": {
       "filePath": "albums/$albumID/index.tsx"

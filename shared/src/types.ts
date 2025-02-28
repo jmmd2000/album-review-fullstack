@@ -73,6 +73,8 @@ export interface SpotifyAlbum {
   uri: string;
   /** List of tracks in the album. */
   tracks: { items: SpotifyTrack[] };
+  /** The extracted colours from the album cover */
+  colors: ExtractedColor[];
 }
 
 /**
@@ -187,19 +189,19 @@ export interface ReviewedAlbum {
   /** The numerical review score given to the album. */
   reviewScore: number;
   /** Full content of the album review. */
-  reviewContent: string;
-  /** Date when the review was written. */
-  reviewDate: string;
+  reviewContent: string | null;
   /** Runtime duration of the album. */
   runtime: string;
   /** Official release date of the album. */
   releaseDate: string;
   /** Release year of the album. */
   releaseYear: number;
-  /** JSON string containing track ratings. */
+  /** JSON string containing track ratings in the form { `id:string;` `rating:number` } */
   scoredTracks: string;
   /** JSON string containing extracted colors from the album cover. */
   colors: string;
+  /** Optional array of ReviewedTracks */
+  tracks?: ReviewedTrack[];
 }
 
 /**
@@ -217,7 +219,7 @@ export interface ReviewedArtist {
   /** Position of the artist in the leaderboard. */
   leaderboardPosition: number;
   /** List of albums associated with the artist. */
-  albums: DisplayAlbum[];
+  albums?: DisplayAlbum[];
   /** Average review score of the artist's albums. */
   averageScore: number;
   /** Bonus points awarded to the artist. */
@@ -228,6 +230,30 @@ export interface ReviewedArtist {
   totalScore: number;
   /** Timestamp of the last image update. */
   imageUpdatedAt: Date;
+}
+
+/**
+ * Represents a reviewed track.
+ */
+export interface ReviewedTrack {
+  /** Unique ID of the reviewed track. */
+  id: number;
+  /** Spotify ID of the associated artist. */
+  artistSpotifyID: string;
+  /** Name of the artist. */
+  artistName: string;
+  /** Spotify ID of the associated album. */
+  albumSpotifyID: string;
+  /** Name of the track. */
+  name: string;
+  /** Spotify ID of the track. */
+  spotifyID: string;
+  /** Array of names of features */
+  features: string;
+  /** Duration of the track in milliseconds. */
+  duration: number;
+  /** Rating of the track. */
+  rating?: number;
 }
 
 /**
@@ -252,6 +278,26 @@ export interface DisplayAlbum {
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
   scoredTracks?: string;
+}
+
+// /**
+//  * Represents the minimum data needed to display a track on a `TrackCard`.
+//  */
+export interface DisplayTrack {
+  /** Spotify ID of the track. */
+  spotifyID: string;
+  /** Spotify ID of the artist. */
+  artistSpotifyID: string;
+  /** Name of the artist. */
+  artistName: string;
+  /** Name of the track. */
+  name: string;
+  /** Duration of the track in milliseconds. */
+  duration: number;
+  /** Optional rating of the track. */
+  rating?: number;
+  /** Array of names of features */
+  features: { name: string }[];
 }
 
 /**

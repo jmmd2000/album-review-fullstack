@@ -28,7 +28,7 @@ const BlurryHeader = (props: BlobBackgroundProps) => {
   const colors = props.colors && props.colors.length > 0 ? props.colors : defaultColors;
   const { children } = props;
 
-  console.log({ colors });
+  // console.log(colors);
 
   const totalBlobs = 40; // Total number of blobs
   const colorCount = colors.length;

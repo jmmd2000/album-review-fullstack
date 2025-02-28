@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { desc, eq } from "drizzle-orm";
-import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor } from "@shared/types";
+import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor, ReviewedTrack } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { ReceivedReviewData } from "../controllers/albumController";
 import getTotalDuration from "../../helpers/formatDuration";
@@ -57,7 +56,7 @@ export class Album {
           .values({
             name: fetchedArtist.name,
             spotifyID: fetchedArtist.spotifyID,
-            imageURLs: fetchedArtist.imageURLs.join(","),
+            imageURLs: JSON.stringify(fetchedArtist.imageURLs),
             averageScore: roundedScore,
             leaderboardPosition: 0,
           })
@@ -78,7 +77,7 @@ export class Album {
     try {
       // Extract colors from the image
       colors = await getImageColors(image);
-      console.log({ colors });
+      // console.log({ colors });
     } catch (error) {
       console.error("Failed to extract colors:", error);
     }
@@ -100,8 +99,7 @@ export class Album {
         reviewScore: roundedScore,
         artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
         artistName: createdArtist ? createdArtist.name : artist.name,
-        reviewDate: new Date().toISOString(),
-        colors: JSON.stringify(colors.map((color) => ({ hex: color.hex }))),
+        colors: JSON.stringify(colors.map((color) => ({ hex: color.hex } as ExtractedColor))),
       })
       .returning()
       .then((results) => results[0]);
@@ -135,10 +133,13 @@ export class Album {
             name: artist.name,
           }));
 
+        // console.log({ trackFeatures });
+
         const createdTrack = await db
           .insert(reviewedTracks)
           .values({
             artistSpotifyID: trackArtistID,
+            artistName: trackArtist.name,
             albumSpotifyID: trackAlbumID,
             name: trackData.name,
             spotifyID: trackData.id,
@@ -159,7 +160,7 @@ export class Album {
         .select()
         .from(reviewedAlbums)
         .where(eq(reviewedAlbums.artistSpotifyID, artist.spotifyID))
-        .then((results) => results as ReviewedAlbum[]);
+        .then((results) => results);
 
       const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(artistAlbums, roundedScore);
 
@@ -193,14 +194,27 @@ export class Album {
   }
 
   static async getAlbumByID(id: string) {
-    const albumAndArtist = await db
+    const album: ReviewedAlbum = await db
       .select()
       .from(reviewedAlbums)
-      .innerJoin(reviewedArtists, eq(reviewedAlbums.artistSpotifyID, reviewedArtists.spotifyID))
       .where(eq(reviewedAlbums.spotifyID, id))
       .then((results) => results[0]);
 
-    return albumAndArtist;
+    const artist: ReviewedArtist = await db
+      .select()
+      .from(reviewedArtists)
+      .where(eq(reviewedArtists.spotifyID, album.artistSpotifyID))
+      .then((results) => results[0]);
+
+    const tracks: ReviewedTrack[] = await db
+      .select()
+      .from(reviewedTracks)
+      .where(eq(reviewedTracks.albumSpotifyID, id))
+      .then((results) => results);
+
+    // console.log({ album, artist, tracks });
+
+    return { album, artist, tracks };
   }
 
   static async getAllAlbums() {
@@ -211,7 +225,6 @@ export class Album {
       return {
         name: album.name,
         spotifyID: album.spotifyID,
-        releaseDate: album.releaseDate,
         imageURLs: imageURLs,
         reviewScore: album.reviewScore,
         artistName: album.artistName,
@@ -220,6 +233,23 @@ export class Album {
       };
     });
 
+    console.log({ displayAlbums });
     return displayAlbums;
+  }
+
+  static async deleteAlbum(id: string) {
+    console.log("Deleting album:", id);
+    const album = await db
+      .select()
+      .from(reviewedAlbums)
+      .where(eq(reviewedAlbums.spotifyID, id))
+      .then((results) => results[0]);
+
+    if (!album) {
+      throw new Error("Album not found");
+    }
+
+    await db.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, id));
+    await db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, id));
   }
 }

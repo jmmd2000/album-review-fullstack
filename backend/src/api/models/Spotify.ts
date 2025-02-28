@@ -1,5 +1,5 @@
 import { ExtractedColor, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
-import { getImageColors } from "src/helpers/getImageColors";
+import { getImageColors } from "../../helpers/getImageColors";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -68,6 +68,11 @@ export class Spotify {
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
+
+    // Extract colors from the album cover
+    const imageColors: ExtractedColor[] = await getImageColors(data.images[0].url);
+    data.colors = imageColors;
+
     return data as SpotifyAlbum;
   }
 }

@@ -77,20 +77,21 @@ const REVIEW = {
   worstSong: "The Worst Song",
 };
 
-const seed = async () => {
+export const seed = async (spotifyIDs: string[], review: { reviewContent: string; bestSong: string; worstSong: string }, logging: boolean = false) => {
+  // console.log("spotifyIDs received:", spotifyIDs);
   let albums: SpotifyAlbum[] = [];
-  for (let id of ALBUM_IDS) {
-    console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
+  for (let id of spotifyIDs) {
+    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
     const response = await fetch(`http://localhost:4000/api/spotify/albums/${id}`);
     const data: SpotifyAlbum = await response.json();
     albums.push(data);
-    console.log(`\x1b[34mSeed:\x1b[0m Fetched album \x1b[33m${data.name}\x1b[0m`);
+    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetched album \x1b[33m${data.name}\x1b[0m`);
   }
 
   let reviewedAlbums = albums.map((album) => {
-    console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
+    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
     return {
-      ...REVIEW,
+      ...review,
       album,
       ratedTracks: album.tracks.items.map((track) => {
         return {
@@ -102,7 +103,7 @@ const seed = async () => {
   });
 
   for (let reviewedAlbum of reviewedAlbums) {
-    console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
+    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
     try {
       const response = await fetch(`http://localhost:4000/api/albums/create`, {
         method: "POST",
@@ -118,9 +119,9 @@ const seed = async () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        console.log(`\x1b[34mSeed:\x1b[0m \x1b[31m${error.message}\x1b[0m`);
+        if (logging) console.log(`\x1b[34mSeed:\x1b[0m \x1b[31m${error.message}\x1b[0m`);
       } else {
-        console.log(`\x1b[34mSeed:\x1b[0m \x1b[31mAn unknown error occurred.\x1b[0m`);
+        if (logging) console.log(`\x1b[34mSeed:\x1b[0m \x1b[31mAn unknown error occurred.\x1b[0m`);
       }
     }
   }
@@ -128,4 +129,5 @@ const seed = async () => {
   console.log(`\x1b[34mSeed:\x1b[0m \x1b[32mSeeding complete.\x1b[0m`);
 };
 
-seed();
+// Disable this call when running tests
+// seed(ALBUM_IDS, REVIEW, true);

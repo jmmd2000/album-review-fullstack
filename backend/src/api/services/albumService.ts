@@ -14,4 +14,8 @@ export class AlbumService {
   static async getAllAlbums() {
     return await Album.getAllAlbums();
   }
+
+  static async deleteAlbum(id: string) {
+    return await Album.deleteAlbum(id);
+  }
 }
