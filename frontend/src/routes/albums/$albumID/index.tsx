@@ -91,6 +91,12 @@ function RouteComponent() {
             {color.hex}
           </div>
         ))} */}
+        {data.tracks.map((track) => (
+          <div key={track.spotifyID}>
+            <h1>{track.name}</h1>
+            <p>{track.duration}</p>
+          </div>
+        ))}
       </div>
     </>
   );
