@@ -1,6 +1,7 @@
 import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
+import TrackCard from "./TrackCard";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -207,9 +208,10 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       {/* track ratings */}
       {fields.map((field, index) => (
         <div key={field.id} className="mb-4">
-          <p>
+          {/* <p>
             Track {index + 1}: {displayTracks[index].name} - {displayTracks[index].artistName}
-          </p>
+          </p> */}
+          <TrackCard track={displayTracks[index]} />
 
           {/* track ID (hidden but included in form data) */}
           <input type="hidden" {...control.register(`tracks.${index}.spotifyID`)} />

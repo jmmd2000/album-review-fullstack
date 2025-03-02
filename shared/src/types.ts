@@ -248,7 +248,7 @@ export interface ReviewedTrack {
   name: string;
   /** Spotify ID of the track. */
   spotifyID: string;
-  /** Array of names of features */
+  /** Array of names of features in the form {id:string; name:string} */
   features: string;
   /** Duration of the track in milliseconds. */
   duration: number;
@@ -280,9 +280,9 @@ export interface DisplayAlbum {
   scoredTracks?: string;
 }
 
-// /**
-//  * Represents the minimum data needed to display a track on a `TrackCard`.
-//  */
+/**
+ * Represents the minimum data needed to display a track on a `TrackCard`.
+ */
 export interface DisplayTrack {
   /** Spotify ID of the track. */
   spotifyID: string;
@@ -297,7 +297,7 @@ export interface DisplayTrack {
   /** Optional rating of the track. */
   rating?: number;
   /** Array of names of features */
-  features: { name: string }[];
+  features: { id: string; name: string }[];
 }
 
 /**

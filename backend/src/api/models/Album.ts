@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { desc, eq } from "drizzle-orm";
-import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor, ReviewedTrack } from "@shared/types";
+import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor, ReviewedTrack, DisplayTrack } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { ReceivedReviewData } from "../controllers/albumController";
 import getTotalDuration from "../../helpers/formatDuration";
@@ -212,9 +212,21 @@ export class Album {
       .where(eq(reviewedTracks.albumSpotifyID, id))
       .then((results) => results);
 
+    const displayTracks: DisplayTrack[] = tracks.map((track) => {
+      return {
+        name: track.name,
+        artistName: track.artistName,
+        artistSpotifyID: track.artistSpotifyID,
+        spotifyID: track.spotifyID,
+        duration: track.duration,
+        rating: track.rating,
+        features: JSON.parse(track.features),
+      };
+    });
+
     // console.log({ album, artist, tracks });
 
-    return { album, artist, tracks };
+    return { album, artist, tracks: displayTracks };
   }
 
   static async getAllAlbums() {

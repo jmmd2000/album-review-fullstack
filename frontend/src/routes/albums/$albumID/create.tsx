@@ -1,9 +1,9 @@
-import { queryOptions, useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "../../../main";
-import { ErrorComponentProps } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ExtractedColor, SpotifyAlbum } from "@shared/types";
+import ErrorComponent from "../../../components/ErrorComponent";
 import BlurryHeader from "../../../components/BlurryHeader";
 import AlbumReviewForm from "../../../components/AlbumReviewForm";
 // import AlbumHeader from "../../../components/AlbumHeader";
@@ -37,7 +37,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<SpotifyAlbum> {
   const response = await fetch(`${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`);
-  return await response.json();
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch album");
+  }
+
+  return data;
 }
 
 const albumQueryOptions = (albumSpotifyID: string) =>
@@ -45,30 +52,6 @@ const albumQueryOptions = (albumSpotifyID: string) =>
     queryKey: ["spotifyAlbumCreate", albumSpotifyID],
     queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
   });
-
-const ErrorComponent = ({ error }: ErrorComponentProps) => {
-  const router = useRouter();
-  const queryErrorResetBoundary = useQueryErrorResetBoundary();
-
-  useEffect(() => {
-    // Reset the query error boundary
-    queryErrorResetBoundary.reset();
-  }, [queryErrorResetBoundary]);
-
-  return (
-    <div>
-      {error.message}
-      <button
-        onClick={() => {
-          // Invalidate the route to reload the loader, and reset any router error boundaries
-          router.invalidate();
-        }}
-      >
-        retry
-      </button>
-    </div>
-  );
-};
 
 // This page is for creating a new album review
 
