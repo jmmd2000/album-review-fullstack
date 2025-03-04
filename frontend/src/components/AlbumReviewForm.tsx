@@ -50,20 +50,26 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
 const AlbumReviewForm = (props: AlbumReviewFormProps) => {
   const { album, tracks, setSelectedColors, selectedColors } = props;
 
+  console.log({ album, tracks });
+
   let displayTracks: DisplayTrack[] = [];
   if (isReviewedAlbum(album)) {
+    tracks?.forEach((track) => {
+      console.log(track.features);
+    });
     displayTracks = tracks!.map((track) => ({
       rating: track.rating,
       name: track.name,
       artistName: track.artistName,
       duration: track.duration,
-      features: JSON.parse(track.features),
+      // If track.features is empty, it'll be [], therefore trying to JSON.parse it will result in an error
+      // So check if it's an array first and parse it if it's not
+      features: Array.isArray(track.features) ? track.features : JSON.parse(track.features),
       spotifyID: track.spotifyID,
       artistSpotifyID: track.artistSpotifyID,
     })) as DisplayTrack[];
   } else {
     displayTracks = album.tracks.items.map((track) => ({
-      rating: 0,
       name: track.name,
       artistName: track.artists[0].name,
       duration: track.duration_ms,
@@ -138,35 +144,35 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
     const colorsToSubmit = getValues("colors");
 
     // Submit the form
-    const response = await fetch(`${API_BASE_URL}/api/albums/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        album: album,
-        reviewContent: formData.reviewContent,
-        bestSong: formData.bestSong,
-        worstSong: formData.worstSong,
-        ratedTracks: formData.tracks,
-        colors: colorsToSubmit,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/albums/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          album: album,
+          reviewContent: formData.reviewContent,
+          bestSong: formData.bestSong,
+          worstSong: formData.worstSong,
+          ratedTracks: formData.tracks,
+          colors: colorsToSubmit,
+        }),
+      });
 
-    if (!response.ok) {
-      console.error("Failed to submit review:", response.statusText);
-    } else {
-      console.log("Review submitted successfully");
+      if (!response.ok) {
+        console.error("Failed to submit review:", response.statusText);
+      } else {
+        console.log("Review submitted successfully");
+      }
+    } catch (e) {
+      console.error("Failed to submit review:", e);
     }
 
     // console.log(response);
     console.log(formData);
   };
 
-  //   // If there's no data, show an error
-  //   if (!album) {
-  //     return <div>No data</div>;
-  //   }
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {/* review content */}

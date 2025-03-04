@@ -1,28 +1,26 @@
+/**
+ * A mapping of rating numbers to corresponding string representations.
+ */
+export const ratingString: { [key: number]: string } = {
+  0: "Non-song",
+  1: "Terrible",
+  2: "Awful",
+  3: "Bad",
+  4: "OK",
+  5: "Decent",
+  6: "Good",
+  7: "Great",
+  8: "Brilliant",
+  9: "Amazing",
+  10: "Perfect",
+};
+
+/**
+ * Converts a rating number to a string representation.
+ *
+ * @param {number} rating - The rating number, 0-10.
+ * @returns {string} The string representation of the rating.
+ */
 export const convertRatingToString = (rating: number): string => {
-  switch (rating) {
-    case 0:
-      return "Non-song";
-    case 1:
-      return "Terrible";
-    case 2:
-      return "Awful";
-    case 3:
-      return "Bad";
-    case 4:
-      return "OK";
-    case 5:
-      return "Meh";
-    case 6:
-      return "Good";
-    case 7:
-      return "Great";
-    case 8:
-      return "Brilliant";
-    case 9:
-      return "Amazing";
-    case 10:
-      return "Perfect";
-    default:
-      return "Invalid rating";
-  }
+  return ratingString[rating];
 };

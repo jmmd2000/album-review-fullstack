@@ -2,6 +2,7 @@ import { DisplayTrack } from "@shared/types";
 import { convertDuration } from "../helpers/convertDuration";
 import { convertRatingToString } from "../helpers/convertRatingToString";
 import { convertRatingToColor } from "../helpers/convertRatingToColor";
+import { cva } from "class-variance-authority";
 
 interface TrackCardProps {
   track: DisplayTrack;
@@ -11,20 +12,28 @@ const TrackCard = (props: TrackCardProps) => {
   const { track } = props;
 
   const mappedFeatures = track.features.map((feature) => feature.name);
-  let gradientColor;
-  if (track.rating) {
-    gradientColor = convertRatingToColor(track.rating);
-  } else {
-    gradientColor = "-gray-500";
-  }
+
+  const gradientStart = convertRatingToColor(track.rating ?? -1, { gradient: true });
+  const borderColor = convertRatingToColor(track.rating ?? -1, { border: true });
+  const textColor = convertRatingToColor(track.rating ?? -1, { text: true });
+  console.log(gradientStart, borderColor);
+
+  const trackCard = cva(["grid", "gap-2", "justify-between", "w-[90%]", "md:w-[70%]", "p-4", "rounded-lg", "bg-gradient-to-r", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "border-1", borderColor], {
+    variants: {
+      rating: {
+        true: "grid-cols-6 @[950px]/TrackList:grid-cols-7",
+        false: "grid-cols-5 @[950px]/TrackList:grid-cols-6",
+      },
+    },
+  });
 
   return (
-    <div className={`grid grid-cols-6 @[850px]/TrackList:grid-cols-7 gap-2 bg-zinc-800 justify-between w-[90%] md:w-[70%] p-4 rounded-lg bg-gradient-to-l from${gradientColor} via-zinc-800 to-zinc-800`}>
-      <h2 className="col-span-3 @[850px]/TrackList:col-span-2 truncate">{track.name}</h2>
-      <p className="col-start-4 @[850px]/TrackList:col-start-3 text-center">{track.artistName}</p>
-      <p className="col-span-2 hidden @[850px]/TrackList:block truncate">{mappedFeatures.join(", ")}</p>
-      <p className="col-start-5 @[850px]/TrackList:col-start-6 text-center">{convertDuration(track.duration)}</p>
-      {track.rating ? <p className="col-start-6 @[850px]/TrackList:col-start-7 text-center">{convertRatingToString(track.rating)}</p> : null}
+    <div className={trackCard({ rating: track.rating !== undefined })}>
+      <h2 className="col-span-3 @[950px]/TrackList:col-span-2 truncate ">{track.name}</h2>
+      <p className="col-start-4 col-span-2 @[950px]/TrackList:col-start-3 @[950px]/TrackList:col-span-1 text-center text-zinc-300 truncate">{track.artistName}</p>
+      <p className="col-span-2 hidden @[950px]/TrackList:block truncate">{mappedFeatures.join(", ")}</p>
+      <p className="hidden @[950px]/TrackList:block @[950px]/TrackList:col-start-6 text-center">{convertDuration(track.duration)}</p>
+      {track.rating !== undefined && <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-medium ${textColor}`}>{convertRatingToString(track.rating)}</p>}
     </div>
   );
 };
