@@ -76,6 +76,7 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       features: track.artists.slice(1).map((artist) => ({ name: artist.name })),
       spotifyID: track.id,
       artistSpotifyID: track.artists[0].id,
+      rating: 0,
     })) as DisplayTrack[];
   }
 
@@ -142,6 +143,13 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
   const onSubmit = async (formData: CreateReviewFormData) => {
     // Get the colors from the form
     const colorsToSubmit = getValues("colors");
+
+    // Ensure all track ratings are defined
+    formData.tracks.forEach((track) => {
+      if (track.rating === undefined) {
+        track.rating = 0;
+      }
+    });
 
     // Submit the form
     try {

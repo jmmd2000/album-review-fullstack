@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { AlbumService } from "../../api/services/albumService";
-import { SpotifyAlbum } from "@shared/types";
+import { DisplayTrack, SpotifyAlbum } from "@shared/types";
 
 export type ReceivedReviewData = {
-  ratedTracks: { id: string; rating: number }[];
+  ratedTracks: DisplayTrack[];
   bestSong: string;
   worstSong: string;
   reviewContent: string;
@@ -18,7 +18,7 @@ export const createAlbumReview = async (req: Request, res: Response) => {
     res.status(201).json(reviewedAlbum);
   } catch (error: any) {
     if (error instanceof Error) {
-      // console.log({ error });
+      console.log({ error });
       res.status(500).json({ message: error.message });
     }
     // Postgres code: 23505 → Duplicate Key Violation

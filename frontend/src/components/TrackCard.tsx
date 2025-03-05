@@ -16,7 +16,6 @@ const TrackCard = (props: TrackCardProps) => {
   const gradientStart = convertRatingToColor(track.rating ?? -1, { gradient: true });
   const borderColor = convertRatingToColor(track.rating ?? -1, { border: true });
   const textColor = convertRatingToColor(track.rating ?? -1, { text: true });
-  console.log(gradientStart, borderColor);
 
   const trackCard = cva(["grid", "gap-2", "justify-between", "w-[90%]", "md:w-[70%]", "p-4", "rounded-lg", "bg-gradient-to-r", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "border-1", borderColor], {
     variants: {

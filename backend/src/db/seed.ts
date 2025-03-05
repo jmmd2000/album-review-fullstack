@@ -95,7 +95,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
       album,
       ratedTracks: album.tracks.items.map((track) => {
         return {
-          id: track.id,
+          spotifyID: track.id,
           rating: Math.floor(Math.random() * 6),
         };
       }),

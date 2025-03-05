@@ -24,20 +24,23 @@ export class Album {
 
     let albumScore = 0;
     // Remove any tracks with a rating of 0
-    // const tracks = data.ratedTracks.filter((track) => track.rating !== 0);
+    const tempTracks = data.ratedTracks.filter((track) => track.rating !== 0);
 
     // Add up all the ratings
-    const tracks = data.ratedTracks;
-    tracks.forEach((track) => {
-      albumScore += parseInt(track.rating.toString());
+    // const tracks = data.ratedTracks;
+    tempTracks.forEach((track) => {
+      // By this point, it will have gone through AlbumReviewForm which has each tracks rating default to 0
+      // So it's impossible to be undefined
+      albumScore += Number(track.rating!);
     });
-    const maxScore = tracks.length * 10;
+    const maxScore = tempTracks.length * 10;
     const percentageScore = (albumScore / maxScore) * 100;
-
+    console.log({ albumScore, maxScore, percentageScore });
     // Round to 0 decimal places
     const roundedScore = Math.round(percentageScore);
     // console.log({ albumScore, maxScore, percentageScore, roundedScore, tracks });
 
+    const tracks = data.ratedTracks;
     // See if the artist already exists
     const artist = await db
       .select()
@@ -81,7 +84,7 @@ export class Album {
     } catch (error) {
       console.error("Failed to extract colors:", error);
     }
-
+    console.log({ roundedScore });
     // Create the album
     const album = await db
       .insert(reviewedAlbums)
@@ -104,12 +107,9 @@ export class Album {
       .returning()
       .then((results) => results[0]);
 
-    // console.log("album created");
-    // console.log({ album });
-
     // Create the tracks
     for (const track of tracks) {
-      const trackData = data.album.tracks.items.find((item) => item.id === track.id);
+      const trackData = data.album.tracks.items.find((item) => item.id === track.spotifyID);
       if (trackData) {
         const trackAlbum = await db
           .select()
@@ -134,7 +134,7 @@ export class Album {
           }));
 
         // console.log({ trackFeatures });
-
+        console.log("track.rating" + track.rating);
         const createdTrack = await db
           .insert(reviewedTracks)
           .values({
@@ -145,10 +145,13 @@ export class Album {
             spotifyID: trackData.id,
             features: JSON.stringify(trackFeatures),
             duration: trackData.duration_ms,
-            rating: track.rating,
+            // Same as before, this will always have a value
+            rating: track.rating!,
           })
           .returning()
           .then((results) => results[0]);
+
+        console.log({ createdTrack });
       }
     }
 
