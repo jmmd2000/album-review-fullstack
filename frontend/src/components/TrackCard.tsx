@@ -5,9 +5,10 @@ import { convertRatingToColor } from "../helpers/convertRatingToColor";
 import { cva } from "class-variance-authority";
 
 interface TrackCardProps {
+  /** The track to display */
   track: DisplayTrack;
 }
-
+/** This component is used to display track details for both rated tracks and tracks that are being rated inside `AlbumReviewForm` */
 const TrackCard = (props: TrackCardProps) => {
   const { track } = props;
 
@@ -17,6 +18,7 @@ const TrackCard = (props: TrackCardProps) => {
   const borderColor = convertRatingToColor(track.rating ?? -1, { border: true });
   const textColor = convertRatingToColor(track.rating ?? -1, { text: true });
 
+  // If the rating is present, add an extra grid column
   const trackCard = cva(["grid", "gap-2", "justify-between", "w-[90%]", "md:w-[70%]", "p-4", "rounded-lg", "bg-gradient-to-r", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "border-1", borderColor], {
     variants: {
       rating: {

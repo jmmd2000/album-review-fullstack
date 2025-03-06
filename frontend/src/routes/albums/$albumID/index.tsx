@@ -7,6 +7,7 @@ import ErrorComponent from "../../../components/ErrorComponent";
 import AlbumHeader from "../../../components/AlbumHeader";
 import { Link } from "@tanstack/react-router";
 import TrackList from "../../../components/TrackList";
+import RatingChip from "../../../components/RatingChip";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
@@ -31,6 +32,10 @@ export const Route = createFileRoute("/albums/$albumID/")({
   component: RouteComponent,
 });
 
+/**
+ *  This is the album detail page
+ *  It displays an album reviews contents along with the rated tracks in TrackCards
+ */
 function RouteComponent() {
   const { albumID } = useParams({ strict: false });
   if (!albumID) {
@@ -43,14 +48,9 @@ function RouteComponent() {
 
   console.log({ album, artist, tracks });
 
-  // if (!album || !artist || !tracks) {
-  //   throw new Error("No data");
-  // }
-
   console.log({ album, artist, tracks });
 
   const colors: ExtractedColor[] = JSON.parse(album.colors);
-  // console.log({ colors });
 
   return (
     <>
@@ -63,7 +63,7 @@ function RouteComponent() {
       <Link to="/albums/$albumID/create" params={{ albumID }}>
         <p>Create</p>
       </Link>
-
+      <RatingChip rating={album.reviewScore} options={{ text: true }} />
       <TrackList tracks={tracks} />
     </>
   );
