@@ -535,67 +535,67 @@ export const mockReviewData = {
   },
   ratedTracks: [
     {
-      id: "4HOryCnbme0zBnF8LWij3f",
+      spotifyID: "4HOryCnbme0zBnF8LWij3f",
       rating: 0,
     },
     {
-      id: "7bcy34fBT2ap1L4bfPsl9q",
+      spotifyID: "7bcy34fBT2ap1L4bfPsl9q",
       rating: 8,
     },
     {
-      id: "2KnuaZYoGzDoHiBTNYOTXG",
+      spotifyID: "2KnuaZYoGzDoHiBTNYOTXG",
       rating: 8,
     },
     {
-      id: "3YUMWmx8EJq0DurfuIwoGh",
+      spotifyID: "3YUMWmx8EJq0DurfuIwoGh",
       rating: 7,
     },
     {
-      id: "4t2OeILB07eMGTXSUbMPEu",
+      spotifyID: "4t2OeILB07eMGTXSUbMPEu",
       rating: 0,
     },
     {
-      id: "0FfqyjhB6Kspvit1oOo7ax",
+      spotifyID: "0FfqyjhB6Kspvit1oOo7ax",
       rating: 2,
     },
     {
-      id: "4191RXFPa7Ge9XkA4cWlna",
+      spotifyID: "4191RXFPa7Ge9XkA4cWlna",
       rating: 6,
     },
     {
-      id: "5XsAal7ZcWg1I5T4NcRjkv",
+      spotifyID: "5XsAal7ZcWg1I5T4NcRjkv",
       rating: 4,
     },
     {
-      id: "4T2zre0jqstNJ5Gt0WG9lz",
+      spotifyID: "4T2zre0jqstNJ5Gt0WG9lz",
       rating: 3,
     },
     {
-      id: "5uSG6fUPRaehaV820zcpsK",
+      spotifyID: "5uSG6fUPRaehaV820zcpsK",
       rating: 8,
     },
     {
-      id: "5jhBwnqzNNrENXnYrAdoCe",
+      spotifyID: "5jhBwnqzNNrENXnYrAdoCe",
       rating: 1,
     },
     {
-      id: "042Sl6Mn83JHyLEqdK7uI0",
+      spotifyID: "042Sl6Mn83JHyLEqdK7uI0",
       rating: 7,
     },
     {
-      id: "38GBNKZUhfBkk3oNlWzRYd",
+      spotifyID: "38GBNKZUhfBkk3oNlWzRYd",
       rating: 2,
     },
     {
-      id: "20R4HfKloPKgXDqU7UKk3x",
+      spotifyID: "20R4HfKloPKgXDqU7UKk3x",
       rating: 8,
     },
     {
-      id: "4RVwu0g32PAqgUiJoXsdF8",
+      spotifyID: "4RVwu0g32PAqgUiJoXsdF8",
       rating: 9,
     },
     {
-      id: "4ak9GGe6afmi2HbxEjvhIC",
+      spotifyID: "4ak9GGe6afmi2HbxEjvhIC",
       rating: 7,
     },
   ],

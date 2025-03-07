@@ -1,4 +1,4 @@
-import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedArtist } from "@shared/types";
+import { DisplayTrack, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "../../../main";
@@ -7,7 +7,7 @@ import ErrorComponent from "../../../components/ErrorComponent";
 import AlbumHeader from "../../../components/AlbumHeader";
 import { Link } from "@tanstack/react-router";
 import TrackList from "../../../components/TrackList";
-import RatingChip from "../../../components/RatingChip";
+import AlbumDetails from "../../../components/AlbumDetails";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
@@ -48,13 +48,9 @@ function RouteComponent() {
 
   console.log({ album, artist, tracks });
 
-  console.log({ album, artist, tracks });
-
-  const colors: ExtractedColor[] = JSON.parse(album.colors);
-
   return (
     <>
-      <BlurryHeader colors={colors}>
+      <BlurryHeader colors={album.colors}>
         <AlbumHeader album={album} artist={artist} />
       </BlurryHeader>
       <Link to="/albums/$albumID/edit" params={{ albumID }}>
@@ -63,7 +59,7 @@ function RouteComponent() {
       <Link to="/albums/$albumID/create" params={{ albumID }}>
         <p>Create</p>
       </Link>
-      <RatingChip rating={album.reviewScore} options={{ text: true }} />
+      <AlbumDetails album={album} />
       <TrackList tracks={tracks} />
     </>
   );

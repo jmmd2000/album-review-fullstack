@@ -42,7 +42,7 @@ test("GET /api/artists - should return all artist reviews", async () => {
   expect(typeof returnedData[0].id).toBe("number");
   expect(typeof returnedData[0].spotifyID).toBe("string");
   expect(typeof returnedData[0].name).toBe("string");
-  expect(typeof returnedData[0].imageURLs).toBe("string");
+  expect(typeof returnedData[0].imageURLs).toBe("object");
   expect(typeof returnedData[0].leaderboardPosition).toBe("number");
   expect(typeof returnedData[0].averageScore).toBe("number");
   expect(typeof returnedData[0].bonusPoints).toBe("number");

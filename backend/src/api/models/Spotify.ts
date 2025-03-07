@@ -58,15 +58,15 @@ export class Spotify {
   }
 
   static async getAlbum(albumID: string) {
-    const existingAlbum = await db
-      .select()
-      .from(reviewedAlbums)
-      .where(eq(reviewedAlbums.spotifyID, albumID))
-      .then((results) => results[0]);
+    // const existingAlbum = await db
+    //   .select()
+    //   .from(reviewedAlbums)
+    //   .where(eq(reviewedAlbums.spotifyID, albumID))
+    //   .then((results) => results[0]);
 
-    if (existingAlbum) {
-      throw new Error("Album already exists.");
-    }
+    // if (existingAlbum) {
+    //   throw new Error("Album already exists.");
+    // }
 
     const endpoint = `https://api.spotify.com/v1/albums/${albumID}`;
     const accessToken = await this.getAccessToken();

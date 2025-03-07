@@ -76,15 +76,15 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
   expect(typeof returnedData.album.releaseDate).toBe("string");
   expect(typeof returnedData.album.reviewScore).toBe("number");
   expect(typeof returnedData.album.reviewContent).toBe("string");
-  expect(typeof JSON.parse(returnedData.album.colors)).toBe("object");
-  expect(Array.isArray(JSON.parse(returnedData.album.imageURLs))).toBe(true);
+  expect(typeof returnedData.album.colors).toBe("object");
+  expect(Array.isArray(returnedData.album.imageURLs)).toBe(true);
   expect(typeof returnedData.album.bestSong).toBe("string");
   expect(typeof returnedData.album.worstSong).toBe("string");
   expect(typeof returnedData.album.runtime).toBe("string");
 
   expect(typeof returnedData.artist.name).toBe("string");
   expect(typeof returnedData.artist.spotifyID).toBe("string");
-  expect(Array.isArray(JSON.parse(returnedData.artist.imageURLs))).toBe(true);
+  expect(Array.isArray(returnedData.artist.imageURLs)).toBe(true);
   expect(typeof returnedData.artist.leaderboardPosition).toBe("number");
   expect(typeof returnedData.artist.averageScore).toBe("number");
   expect(typeof returnedData.artist.bonusPoints).toBe("number");
@@ -92,7 +92,7 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 
   expect(typeof returnedData.tracks[0].name).toBe("string");
   expect(typeof returnedData.tracks[0].spotifyID).toBe("string");
-  expect(typeof JSON.parse(returnedData.tracks[0].features)).toBe("object");
+  expect(typeof returnedData.tracks[0].features === "object" || Array.isArray(returnedData.tracks[0].features)).toBe(true);
   expect(typeof returnedData.tracks[0].duration).toBe("number");
   expect(typeof returnedData.tracks[0].rating).toBe("number");
 });

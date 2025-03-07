@@ -144,14 +144,7 @@ export interface SpotifyArtist {
   /** Unique Spotify ID of the artist. */
   id: string;
   /** List of images of the artist in different sizes. */
-  images: {
-    /** Image height in pixels (or `null` if unavailable). */
-    height: number | null;
-    /** URL of the image. */
-    url: string;
-    /** Image width in pixels (or `null` if unavailable). */
-    width: number | null;
-  }[];
+  images: SpotifyImage[];
   /** Name of the artist. */
   name: string;
   /** Popularity score (0-100, based on Spotify metrics). */
@@ -183,7 +176,7 @@ export interface ReviewedAlbum {
   /** The album's name. */
   name: string;
   /** JSON string containing album image URLs. */
-  imageURLs: string;
+  imageURLs: SpotifyImage[];
   /** Timestamp when the review was created. */
   createdAt: Date;
   /** The numerical review score given to the album. */
@@ -197,11 +190,13 @@ export interface ReviewedAlbum {
   /** Release year of the album. */
   releaseYear: number;
   /** JSON string containing track ratings in the form { `id:string;` `rating:number` } */
-  scoredTracks: string;
+  // scoredTracks: string;
   /** JSON string containing extracted colors from the album cover. */
-  colors: string;
+  colors: ExtractedColor[];
   /** Optional array of ReviewedTracks */
   tracks?: ReviewedTrack[];
+  /** String array of genres */
+  // genres: { genre: string }[] | null;
 }
 
 /**
@@ -215,7 +210,7 @@ export interface ReviewedArtist {
   /** Name of the artist. */
   name: string;
   /** JSON string containing artist image URLs. */
-  imageURLs: string;
+  imageURLs: SpotifyImage[];
   /** Position of the artist in the leaderboard. */
   leaderboardPosition: number;
   /** List of albums associated with the artist. */
@@ -249,7 +244,7 @@ export interface ReviewedTrack {
   /** Spotify ID of the track. */
   spotifyID: string;
   /** Array of names of features in the form {id:string; name:string} */
-  features: string;
+  features: { id: string; name: string }[];
   /** Duration of the track in milliseconds. */
   duration: number;
   /** Rating of the track. */
@@ -373,7 +368,7 @@ export interface NonReviewedArtist {
   /** Name of the artist. */
   name: string;
   /** JSON string containing artist image URLs. */
-  imageURLs: string;
+  imageURLs: SpotifyImage[];
 }
 
 /**

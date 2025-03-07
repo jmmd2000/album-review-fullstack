@@ -1,4 +1,4 @@
-import { SpotifyArtist } from "@shared/types";
+import { SpotifyArtist, SpotifyImage } from "@shared/types";
 import { SpotifyService } from "../api/services/spotifyService";
 
 /**
@@ -10,7 +10,7 @@ export interface ArtistData {
   /** The artist's Spotify ID */
   spotifyID: string;
   /** Array of image URLs */
-  imageURLs: string[];
+  imageURLs: SpotifyImage[];
 }
 
 /**
@@ -36,6 +36,6 @@ export const fetchArtistFromSpotify = async (id: string, url: string): Promise<A
   return {
     name: artist.name,
     spotifyID: artist.id,
-    imageURLs: artist.images.map((image) => image.url), // Extract URLs instead of JSON string
+    imageURLs: artist.images,
   };
 };

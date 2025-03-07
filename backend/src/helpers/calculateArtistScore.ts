@@ -34,7 +34,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
     console.log("--------------------------Starting on albums ---------------------------------");
     for (const album of albums) {
       console.log(album.name);
-      const image_urls = JSON.parse(album.imageURLs) as SpotifyImage[];
+      const image_urls = album.imageURLs;
       const minimalAlbum: MinimalAlbum = {
         id: album.id,
         spotifyID: album.spotifyID,

@@ -27,6 +27,8 @@ type CreateReviewFormData = {
   reviewContent: string;
   /*** The selected colors */
   colors: ExtractedColor[];
+  /*** String array of genre strings */
+  // genres: string[];
 };
 
 // If it's a SpotifyAlbum, the tracks are included
@@ -80,10 +82,8 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
     })) as DisplayTrack[];
   }
 
-  const colors: ExtractedColor[] = isReviewedAlbum(album) ? JSON.parse(album.colors) : album.colors;
-
   useEffect(() => {
-    setSelectedColors(colors);
+    setSelectedColors(album.colors);
   }, [album]);
 
   // Initialize the form
@@ -94,6 +94,7 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       worstSong: isReviewedAlbum(album) ? album.worstSong : "",
       reviewContent: isReviewedAlbum(album) ? album.reviewContent || "" : "",
       colors: selectedColors,
+      // genres: album.genres || [],
     },
   });
 
@@ -165,6 +166,7 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
           worstSong: formData.worstSong,
           ratedTracks: formData.tracks,
           colors: colorsToSubmit,
+          // genres: formData.genres,
         }),
       });
 

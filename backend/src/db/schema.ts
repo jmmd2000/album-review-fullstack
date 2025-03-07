@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -16,14 +16,15 @@ export const reviewedAlbums = pgTable(
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique constraint
     releaseDate: varchar("release_date", { length: 50 }).notNull(),
     releaseYear: integer("release_year").notNull(),
-    imageURLs: text("image_urls").notNull(), // JSON string
-    scoredTracks: text("scored_tracks").notNull(), // JSON string
+    imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
+    // scoredTracks: text("scored_tracks").notNull(), // JSON string
     bestSong: varchar("best_song", { length: 255 }).notNull(),
     worstSong: varchar("worst_song", { length: 255 }).notNull(),
     runtime: varchar("runtime", { length: 50 }).notNull(),
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
-    colors: text("colors").notNull(), // JSON string
+    colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
+    // genres: jsonb("genres").$type<{ genre: string }[]>(),
   },
   (table) => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
 );
@@ -41,7 +42,7 @@ export const reviewedTracks = pgTable(
       .references(() => reviewedAlbums.spotifyID), // Foreign key reference to `albums
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
-    features: text("features").notNull(), // JSON object of features
+    features: jsonb("features").$type<{ id: string; name: string }[]>().notNull(),
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
@@ -59,7 +60,7 @@ export const reviewedArtists = pgTable(
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
-    imageURLs: text("image_urls").notNull(), // JSON object of image URLs
+    imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     averageScore: real("average_score").notNull(),
     leaderboardPosition: integer("leaderboard_position").notNull(),
     bonusPoints: real("bonus_points").notNull().default(0),
@@ -82,7 +83,7 @@ export const bookmarkedAlbums = pgTable("bookmarked_albums", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(),
-  imageURL: text("image_url").notNull(), // JSON object of image URLs
+  imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
   artistName: varchar("artist_name", { length: 255 }).notNull(),
   artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
   releaseYear: integer("release_year").notNull(),

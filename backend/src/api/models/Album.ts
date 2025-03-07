@@ -35,7 +35,7 @@ export class Album {
     });
     const maxScore = tempTracks.length * 10;
     const percentageScore = (albumScore / maxScore) * 100;
-    console.log({ albumScore, maxScore, percentageScore });
+    // console.log({ albumScore, maxScore, percentageScore });
     // Round to 0 decimal places
     const roundedScore = Math.round(percentageScore);
     // console.log({ albumScore, maxScore, percentageScore, roundedScore, tracks });
@@ -59,7 +59,7 @@ export class Album {
           .values({
             name: fetchedArtist.name,
             spotifyID: fetchedArtist.spotifyID,
-            imageURLs: JSON.stringify(fetchedArtist.imageURLs),
+            imageURLs: fetchedArtist.imageURLs,
             averageScore: roundedScore,
             leaderboardPosition: 0,
           })
@@ -93,8 +93,8 @@ export class Album {
         spotifyID: data.album.id,
         releaseDate: releaseDate,
         releaseYear: year,
-        imageURLs: JSON.stringify(data.album.images),
-        scoredTracks: JSON.stringify(tracks),
+        imageURLs: data.album.images,
+        // scoredTracks: JSON.stringify(tracks),
         bestSong: data.bestSong,
         worstSong: data.worstSong,
         runtime: runtime,
@@ -102,14 +102,21 @@ export class Album {
         reviewScore: roundedScore,
         artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
         artistName: createdArtist ? createdArtist.name : artist.name,
-        colors: JSON.stringify(colors.map((color) => ({ hex: color.hex } as ExtractedColor))),
+        colors: colors.map((color) => ({ hex: color.hex } as ExtractedColor)),
+        // genres: data.album.genres.map((genre) => ({ hex: color.hex } as ExtractedColor)),
       })
       .returning()
       .then((results) => results[0]);
 
+    console.log({ tracks });
     // Create the tracks
     for (const track of tracks) {
-      const trackData = data.album.tracks.items.find((item) => item.id === track.spotifyID);
+      const trackData = data.album.tracks.items.find((item) => {
+        console.log(`item.id: ${item.id}, track.spotifyID: ${track.spotifyID}`);
+        return item.id === track.spotifyID;
+      });
+      console.log(data.album.tracks.items);
+      console.log({ trackData });
       if (trackData) {
         const trackAlbum = await db
           .select()
@@ -143,7 +150,7 @@ export class Album {
             albumSpotifyID: trackAlbumID,
             name: trackData.name,
             spotifyID: trackData.id,
-            features: JSON.stringify(trackFeatures),
+            features: trackFeatures,
             duration: trackData.duration_ms,
             // Same as before, this will always have a value
             rating: track.rating!,
@@ -215,6 +222,8 @@ export class Album {
       .where(eq(reviewedTracks.albumSpotifyID, id))
       .then((results) => results);
 
+    console.log({ tracks });
+
     const displayTracks: DisplayTrack[] = tracks.map((track) => {
       return {
         name: track.name,
@@ -223,11 +232,11 @@ export class Album {
         spotifyID: track.spotifyID,
         duration: track.duration,
         rating: track.rating,
-        features: JSON.parse(track.features),
+        features: track.features,
       };
     });
 
-    // console.log({ album, artist, tracks });
+    // console.log({ album, artist, displayTracks });
 
     return { album, artist, tracks: displayTracks };
   }
@@ -236,11 +245,10 @@ export class Album {
     const albums = await db.select().from(reviewedAlbums);
 
     const displayAlbums: DisplayAlbum[] = albums.map((album) => {
-      const imageURLs: SpotifyImage[] = JSON.parse(album.imageURLs);
       return {
         name: album.name,
         spotifyID: album.spotifyID,
-        imageURLs: imageURLs,
+        imageURLs: album.imageURLs,
         reviewScore: album.reviewScore,
         artistName: album.artistName,
         artistSpotifyID: album.artistSpotifyID,
