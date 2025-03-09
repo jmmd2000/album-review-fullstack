@@ -18,7 +18,7 @@ const AlbumHeader = (props: AlbumHeaderProps) => {
       <img src={albumImageURL} alt={album.name} className="rounded-lg h-72 w-72 shadow-2xl" />
       <div className="flex flex-col gap-2 px-0 py-1 relative">
         <h1 className="text-6xl font-bold drop-shadow-lg">{album.name}</h1>
-        <p className=" text-gray-00 tracking-wide font-extralight text-2xl drop-shadow-lg">{artist.name}</p>
+        {/* <p className=" text-gray-00 tracking-wide font-extralight text-2xl drop-shadow-lg">{artist.name}</p> */}
       </div>
     </div>
   );

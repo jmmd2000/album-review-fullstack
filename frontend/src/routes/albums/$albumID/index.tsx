@@ -53,13 +53,13 @@ function RouteComponent() {
       <BlurryHeader colors={album.colors}>
         <AlbumHeader album={album} artist={artist} />
       </BlurryHeader>
-      <Link to="/albums/$albumID/edit" params={{ albumID }}>
+      {/* <Link to="/albums/$albumID/edit" params={{ albumID }}>
         <p>Edit</p>
       </Link>
       <Link to="/albums/$albumID/create" params={{ albumID }}>
         <p>Create</p>
-      </Link>
-      <AlbumDetails album={album} />
+      </Link> */}
+      <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
       <TrackList tracks={tracks} />
     </>
   );
