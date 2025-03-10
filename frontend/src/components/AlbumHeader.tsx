@@ -11,7 +11,7 @@ interface AlbumHeaderProps {
  * This component is used to display the album cover and artist name on album detail pages
  */
 const AlbumHeader = (props: AlbumHeaderProps) => {
-  const { album, artist } = props;
+  const { album } = props;
   const albumImageURL = album.imageURLs[1].url;
   return (
     <div className="text-gray-100 max-w-[60%] mx-auto p-5 flex h-full items-center justify-center gap-8 px-16">

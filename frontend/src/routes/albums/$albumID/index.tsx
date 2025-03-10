@@ -1,13 +1,14 @@
 import { DisplayTrack, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "../../../main";
-import BlurryHeader from "../../../components/BlurryHeader";
-import ErrorComponent from "../../../components/ErrorComponent";
-import AlbumHeader from "../../../components/AlbumHeader";
-import { Link } from "@tanstack/react-router";
-import TrackList from "../../../components/TrackList";
-import AlbumDetails from "../../../components/AlbumDetails";
+import { queryClient } from "@/main";
+import BlurryHeader from "@components/BlurryHeader";
+import ErrorComponent from "@components/ErrorComponent";
+import AlbumHeader from "@components/AlbumHeader";
+// import { Link } from "@tanstack/react-router";
+import TrackList from "@components/TrackList";
+import AlbumDetails from "@components/AlbumDetails";
+import ReviewDetails from "@components/ReviewDetails";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
@@ -60,6 +61,7 @@ function RouteComponent() {
         <p>Create</p>
       </Link> */}
       <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
+      <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />
     </>
   );

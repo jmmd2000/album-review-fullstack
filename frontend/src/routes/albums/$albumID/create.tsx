@@ -1,12 +1,12 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "../../../main";
+import { queryClient } from "@/main";
 import { useState } from "react";
 import { ExtractedColor, SpotifyAlbum } from "@shared/types";
-import ErrorComponent from "../../../components/ErrorComponent";
-import BlurryHeader from "../../../components/BlurryHeader";
-import AlbumReviewForm from "../../../components/AlbumReviewForm";
-// import AlbumHeader from "../../../components/AlbumHeader";
+import ErrorComponent from "@components/ErrorComponent";
+import BlurryHeader from "@components/BlurryHeader";
+import AlbumReviewForm from "@components/AlbumReviewForm";
+// import AlbumHeader from ".@components/AlbumHeader";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #

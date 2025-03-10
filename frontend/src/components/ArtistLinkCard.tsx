@@ -11,7 +11,7 @@ const ArtistLinkCard = (props: ArtistLinkCardProps) => {
     <div className="flex items-center justify-center gap-2">
       <img src={props.artist.imageURLs[2].url} alt={props.artist.name} className="rounded-full h-12 w-12 shadow-2xl" />
       <div className="flex gap-2 px-0 py-1">
-        <Link to={"."} className="">
+        <Link to={"."} className="hover:underline text-gray-300 hover:text-gray-100 text-lg">
           {props.artist.name}
         </Link>
       </div>

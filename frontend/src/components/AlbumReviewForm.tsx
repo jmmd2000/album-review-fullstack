@@ -1,7 +1,7 @@
 import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
-import TrackCard from "./TrackCard";
+import TrackCard from "@components/TrackCard";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #

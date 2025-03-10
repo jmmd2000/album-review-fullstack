@@ -12,7 +12,8 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 
   // Check if the error message matches "album already exists"
   const isAlbumExistsError = error.message.toLowerCase().includes("album already exists");
-  console.log({ isAlbumExistsError });
+  // console.log({ isAlbumExistsError });
+  console.log({ error });
 
   return (
     <div className="flex items-center justify-center h-[80vh]">

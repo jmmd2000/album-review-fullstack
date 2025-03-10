@@ -13,7 +13,9 @@ export default defineConfig({
   plugins: [TanStackRouterVite({ autoCodeSplitting: true }), viteReact(), tailwindcss()],
   resolve: {
     alias: {
+      "@": path.resolve(__dirname, "src"),
       "@shared": path.resolve(__dirname, "../shared"),
+      "@components": path.resolve(__dirname, "src/components"),
     },
   },
 });

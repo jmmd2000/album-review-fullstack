@@ -1,8 +1,8 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../../main";
+import { queryClient } from "@/main";
 import { createFileRoute } from "@tanstack/react-router";
 import { DisplayAlbum } from "@shared/types";
-import AlbumCard from "../../components/AlbumCard";
+import AlbumCard from "@components/AlbumCard";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAllAlbums(): Promise<DisplayAlbum[]> {

@@ -1,5 +1,5 @@
 import { ReviewedAlbum, ReviewedArtist } from "@shared/types";
-import ArtistLinkCard from "./ArtistLinkCard";
+import ArtistLinkCard from "@components/ArtistLinkCard";
 
 interface AlbumDetailsProps {
   album: ReviewedAlbum;
@@ -20,8 +20,6 @@ const AlbumDetails = (props: AlbumDetailsProps) => {
         <span className="mx-2">•</span>
         <p className="text-gray-400">{album.releaseDate}</p>
       </div>
-      {/* <RatingChip rating={album.reviewScore} options={{ text: true }} /> */}
-      {/* <p className="p-4 border-1 border-gray-400 rounded-lg font-light">{album.reviewContent}</p> */}
     </div>
   );
 };
