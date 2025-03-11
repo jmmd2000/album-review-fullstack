@@ -12,7 +12,9 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as ArtistsIndexImport } from './routes/artists/index'
 import { Route as AlbumsIndexImport } from './routes/albums/index'
+import { Route as ArtistsArtistIDIndexImport } from './routes/artists/$artistID/index'
 import { Route as AlbumsAlbumIDIndexImport } from './routes/albums/$albumID/index'
 import { Route as AlbumsAlbumIDEditImport } from './routes/albums/$albumID/edit'
 import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/create'
@@ -25,9 +27,21 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ArtistsIndexRoute = ArtistsIndexImport.update({
+  id: '/artists/',
+  path: '/artists/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AlbumsIndexRoute = AlbumsIndexImport.update({
   id: '/albums/',
   path: '/albums/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ArtistsArtistIDIndexRoute = ArtistsArtistIDIndexImport.update({
+  id: '/artists/$artistID/',
+  path: '/artists/$artistID/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -67,6 +81,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlbumsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/artists/': {
+      id: '/artists/'
+      path: '/artists'
+      fullPath: '/artists'
+      preLoaderRoute: typeof ArtistsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/albums/$albumID/create': {
       id: '/albums/$albumID/create'
       path: '/albums/$albumID/create'
@@ -88,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlbumsAlbumIDIndexImport
       parentRoute: typeof rootRoute
     }
+    '/artists/$artistID/': {
+      id: '/artists/$artistID/'
+      path: '/artists/$artistID'
+      fullPath: '/artists/$artistID'
+      preLoaderRoute: typeof ArtistsArtistIDIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -96,26 +124,32 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
+  '/artists': typeof ArtistsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
+  '/artists/$artistID': typeof ArtistsArtistIDIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
+  '/artists': typeof ArtistsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
+  '/artists/$artistID': typeof ArtistsArtistIDIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/albums/': typeof AlbumsIndexRoute
+  '/artists/': typeof ArtistsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
+  '/artists/$artistID/': typeof ArtistsArtistIDIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -123,40 +157,50 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/albums'
+    | '/artists'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
+    | '/artists/$artistID'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/albums'
+    | '/artists'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
+    | '/artists/$artistID'
   id:
     | '__root__'
     | '/'
     | '/albums/'
+    | '/artists/'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID/'
+    | '/artists/$artistID/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlbumsIndexRoute: typeof AlbumsIndexRoute
+  ArtistsIndexRoute: typeof ArtistsIndexRoute
   AlbumsAlbumIDCreateRoute: typeof AlbumsAlbumIDCreateRoute
   AlbumsAlbumIDEditRoute: typeof AlbumsAlbumIDEditRoute
   AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
+  ArtistsArtistIDIndexRoute: typeof ArtistsArtistIDIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlbumsIndexRoute: AlbumsIndexRoute,
+  ArtistsIndexRoute: ArtistsIndexRoute,
   AlbumsAlbumIDCreateRoute: AlbumsAlbumIDCreateRoute,
   AlbumsAlbumIDEditRoute: AlbumsAlbumIDEditRoute,
   AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
+  ArtistsArtistIDIndexRoute: ArtistsArtistIDIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -171,9 +215,11 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/albums/",
+        "/artists/",
         "/albums/$albumID/create",
         "/albums/$albumID/edit",
-        "/albums/$albumID/"
+        "/albums/$albumID/",
+        "/artists/$artistID/"
       ]
     },
     "/": {
@@ -181,6 +227,9 @@ export const routeTree = rootRoute
     },
     "/albums/": {
       "filePath": "albums/index.tsx"
+    },
+    "/artists/": {
+      "filePath": "artists/index.tsx"
     },
     "/albums/$albumID/create": {
       "filePath": "albums/$albumID/create.tsx"
@@ -190,6 +239,9 @@ export const routeTree = rootRoute
     },
     "/albums/$albumID/": {
       "filePath": "albums/$albumID/index.tsx"
+    },
+    "/artists/$artistID/": {
+      "filePath": "artists/$artistID/index.tsx"
     }
   }
 }
