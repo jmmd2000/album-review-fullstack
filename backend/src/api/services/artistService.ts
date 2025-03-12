@@ -1,8 +1,12 @@
 import { Artist } from "../models/Artist";
 
 export class ArtistService {
-  static async getArtists() {
-    return await Artist.getArtists();
+  static async getAllArtists() {
+    return await Artist.getAllArtists();
+  }
+
+  static async getArtistByID(artistID: string) {
+    return await Artist.getArtistByID(artistID);
   }
 
   static async deleteArtist(artistID: string) {
