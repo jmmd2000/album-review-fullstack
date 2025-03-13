@@ -1,14 +1,15 @@
 import { DisplayTrack, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import BlurryHeader from "@components/BlurryHeader";
 import ErrorComponent from "@components/ErrorComponent";
-import AlbumHeader from "@components/AlbumHeader";
-// import { Link } from "@tanstack/react-router";
 import TrackList from "@components/TrackList";
 import AlbumDetails from "@components/AlbumDetails";
 import ReviewDetails from "@components/ReviewDetails";
+import GenrePills from "@/components/GenrePills";
+import HeaderDetails from "@/components/HeaderDetails";
+import { FilePenLine, Trash2 } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
@@ -52,15 +53,24 @@ function RouteComponent() {
   return (
     <>
       <BlurryHeader colors={album.colors}>
-        <AlbumHeader album={album} artist={artist} />
+        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} />
       </BlurryHeader>
-      {/* <Link to="/albums/$albumID/edit" params={{ albumID }}>
-        <p>Edit</p>
+      <Link to="/albums/$albumID/edit" params={{ albumID }}>
+        <div className="rounded-full bg-zinc-800/40 p-3 w-max absolute top-4 right-4">
+          {/* color is text-gray-400 */}
+          <FilePenLine color="#99a1af" />
+        </div>
       </Link>
-      <Link to="/albums/$albumID/create" params={{ albumID }}>
+      <div className="rounded-full bg-zinc-800/40 p-3 w-max absolute top-4 right-4">
+        {/* color is text-gray-400 */}
+        <Trash2 color="#99a1af" />
+      </div>
+
+      {/* <Link to="/albums/$albumID/create" params={{ albumID }}>
         <p>Create</p>
       </Link> */}
       <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
+      {album.genres && <GenrePills genres={album.genres} />}
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />
     </>

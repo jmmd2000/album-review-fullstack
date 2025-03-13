@@ -1,6 +1,5 @@
 import { DisplayTrack, ReviewedAlbum } from "@shared/types";
 import RatingChip from "./RatingChip";
-import { convertRatingToColor } from "@/helpers/convertRatingToColor";
 
 interface ReviewDetailsProps {
   album: ReviewedAlbum;
@@ -9,16 +8,13 @@ interface ReviewDetailsProps {
 
 const ReviewDetails = (props: ReviewDetailsProps) => {
   const { album } = props;
-  const gradientStart = convertRatingToColor(Math.floor(album.reviewScore / 10), { gradient: true });
-  // const borderColor = convertRatingToColor(Math.floor(album.reviewScore / 10), { border: true });
-  console.log(gradientStart);
   return (
     <div className="flex flex-col items-center justify-evenly w-[70%] mx-auto mb-8">
       {/* <div className="flex items-center gap-2"> */}
       <RatingChip rating={album.reviewScore} options={{ text: true }} />
       <BestWorstSong bestSong={album.bestSong} worstSong={album.worstSong} />
       {/* </div> bg-gradient-to-b ${gradientStart} via-zinc-800/40 to-zinc-800/40 */}
-      <p className={` p-3 rounded-lg bg-zinc-800/40`}>{album.reviewContent}</p>
+      <p className="p-3 rounded-lg bg-zinc-800/40">{album.reviewContent}</p>
     </div>
   );
 };

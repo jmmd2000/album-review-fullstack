@@ -94,7 +94,7 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       worstSong: isReviewedAlbum(album) ? album.worstSong : "",
       reviewContent: isReviewedAlbum(album) ? album.reviewContent || "" : "",
       colors: selectedColors,
-      // genres: album.genres || [],
+      genres: isReviewedAlbum(album) ? album.genres : [],
     },
   });
 
@@ -224,9 +224,6 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       {/* track ratings */}
       {fields.map((field, index) => (
         <div key={field.id} className="mb-4">
-          {/* <p>
-            Track {index + 1}: {displayTracks[index].name} - {displayTracks[index].artistName}
-          </p> */}
           <TrackCard track={displayTracks[index]} />
 
           {/* track ID (hidden but included in form data) */}
@@ -251,7 +248,6 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
 
       <button type="submit">Submit</button>
     </form>
-    // <div>Album Review Form</div>
   );
 };
 

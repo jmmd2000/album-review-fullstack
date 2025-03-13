@@ -4,7 +4,7 @@ const wipe = async () => {
   console.log(`\x1b[34mWipe:\x1b[0m Fetching albums to delete...`);
   const albumResponse = await fetch(`http://localhost:4000/api/albums`);
   const albums: ReviewedAlbum[] = await albumResponse.json();
-
+  console.log(albums);
   if (albums.length === 0) {
     console.log(`\x1b[34mWipe:\x1b[0m \x1b[33mNo albums to delete\x1b[0m`);
   } else {

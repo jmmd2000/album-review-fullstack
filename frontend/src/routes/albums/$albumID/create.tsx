@@ -6,7 +6,7 @@ import { ExtractedColor, SpotifyAlbum } from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
-// import AlbumHeader from ".@components/AlbumHeader";
+import HeaderDetails from "@/components/HeaderDetails";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -78,7 +78,9 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader colors={selectedColors}>{/* <AlbumHeader album={data} artist={data.artist} /> */}</BlurryHeader>
+      <BlurryHeader colors={selectedColors}>
+        <HeaderDetails name={data.name} imageURL={data.images[1].url} />
+      </BlurryHeader>
       <AlbumReviewForm album={data} setSelectedColors={setSelectedColors} selectedColors={selectedColors} />
     </>
   );

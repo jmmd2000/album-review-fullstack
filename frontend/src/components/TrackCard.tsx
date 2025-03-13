@@ -32,9 +32,9 @@ const TrackCard = (props: TrackCardProps) => {
     <div className={trackCard({ rating: track.rating !== undefined })}>
       <h2 className="col-span-3 @[950px]/TrackList:col-span-2 truncate ">{track.name}</h2>
       <p className="col-start-4 col-span-2 @[950px]/TrackList:col-start-3 @[950px]/TrackList:col-span-1 text-center text-zinc-300 truncate">{track.artistName}</p>
-      <p className="col-span-2 hidden @[950px]/TrackList:block truncate">{mappedFeatures.join(", ")}</p>
-      <p className="hidden @[950px]/TrackList:block @[950px]/TrackList:col-start-6 text-center">{convertDuration(track.duration)}</p>
-      {track.rating !== undefined && <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-medium ${textColor}`}>{convertRatingToString(track.rating)}</p>}
+      <p className="col-span-2 hidden @[950px]/TrackList:block truncate text-zinc-400">{mappedFeatures.join(", ")}</p>
+      <p className="hidden @[950px]/TrackList:block @[950px]/TrackList:col-start-6 text-center text-zinc-300">{convertDuration(track.duration)}</p>
+      {track.rating !== undefined && <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{convertRatingToString(track.rating)}</p>}
     </div>
   );
 };

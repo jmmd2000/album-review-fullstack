@@ -4,9 +4,9 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
-import AlbumHeader from "@components/AlbumHeader";
 import { useState } from "react";
 import ErrorComponent from "@components/ErrorComponent";
+import HeaderDetails from "@/components/HeaderDetails";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: ReviewedTrack[] }> {
@@ -45,7 +45,7 @@ function RouteComponent() {
   return (
     <>
       <BlurryHeader colors={selectedColors}>
-        <AlbumHeader album={data.album} artist={data.artist} />
+        <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} />
       </BlurryHeader>
       <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} />
     </>

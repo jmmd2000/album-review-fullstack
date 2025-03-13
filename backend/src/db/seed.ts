@@ -11,7 +11,7 @@ const ALBUM_IDS = [
   "4g1ZRSobMefqF6nelkgibi",
   "3HHNR44YbP7XogMVwzbodx",
   "1F9LY06gadScF4g3g3BrDC",
-  "4BbsHmXEghoPPevQjPnHXx",
+  "4f2G7uAWqzpOPwEfCDV87A",
   "2lIZef4lzdvZkiiCzvPKj7",
   "4HTy9WFTYooRjE9giTmzAF",
   "0Ydm84ftyiWRGOIFkdl30L",
@@ -76,8 +76,9 @@ const REVIEW = {
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sit amet urna a odio volutpat fringilla. Curabitur in augue quis mi dignissim posuere sed eget urna. Aenean tempus lacus at lacus auctor ultrices. Nullam sem erat, posuere sed blandit et, tristique ac ex. Donec ornare malesuada fermentum. Praesent accumsan est eget eros porttitor ornare. Proin sodales semper odio ac porttitor. Nunc scelerisque nunc eget sagittis vulputate. Nulla neque nunc, placerat sed laoreet ut, lobortis et orci. Fusce rutrum risus nec vestibulum pellentesque. Vestibulum mi libero, mattis in mi ac, lacinia dictum nulla. Nullam nisi odio, pharetra vitae interdum ac, lobortis in dui. Fusce convallis mattis risus id efficitur. In elementum, lorem eu eleifend sagittis, ligula arcu mattis nisl, vitae sodales dolor sem vestibulum mauris. Etiam elementum, libero vel semper suscipit, lacus purus ullamcorper leo, id scelerisque est nisi quis nulla. Nullam in consectetur dui, eget congue sapien. Curabitur lobortis diam eu pellentesque vulputate. Pellentesque varius id risus dictum dictum. Sed suscipit turpis massa, tristique consectetur dolor pellentesque sodales. Mauris eleifend suscipit iaculis. In suscipit at libero eget pellentesque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec vestibulum ex nulla, sed rutrum enim convallis at.",
 };
 
+const genres = ["pop", "rock", "rap", "hip-hop", "r&b", "jazz", "blues", "country", "classical", "metal", "electronic", "reggae", "folk", "indie", "punk", "hip-hop/rap", "r&b/soul", "pop/rap"];
+
 export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
-  // console.log("spotifyIDs received:", spotifyIDs);
   let albums: SpotifyAlbum[] = [];
   for (let id of spotifyIDs) {
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
@@ -91,12 +92,12 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
     const bestSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
     const worstSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
-    console.log(`\x1b[34mSeed:\x1b[0m Best song: \x1b[33m${bestSong}\x1b[0m`);
-    console.log(`\x1b[34mSeed:\x1b[0m Worst song: \x1b[33m${worstSong}\x1b[0m`);
+    const randomGenres = Array.from({ length: 3 }, () => genres[Math.floor(Math.random() * genres.length)]);
     return {
       ...review,
       bestSong: bestSong,
       worstSong: worstSong,
+      genres: randomGenres,
       album,
       ratedTracks: album.tracks.items.map((track) => {
         return {

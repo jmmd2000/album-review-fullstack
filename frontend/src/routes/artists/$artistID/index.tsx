@@ -7,7 +7,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchReviewedArtist(artistSpotifyID: string): Promise<ReviewedArtist> {
   const response = await fetch(`${API_BASE_URL}/api/artists/${artistSpotifyID}`);
-  console.log(response);
   return await response.json();
 }
 
@@ -30,14 +29,19 @@ export const Route = createFileRoute("/artists/$artistID/")({
 
 function RouteComponent() {
   const { artistID } = useParams({ strict: false });
-  console.log(artistID);
   if (!artistID) {
     throw new Error("artistID is undefined");
   }
 
   const data = useSuspenseQuery(artistQueryOptions(artistID));
 
-  console.log(data);
+  const artist = data.data;
 
-  return <div>Hello "/artists/$artistID/"!</div>;
+  return (
+    <div>
+      {/* <BlurryHeader /> */}
+      <h1>{artist.name}</h1>
+      <img src={artist.imageURLs[1].url} alt={artist.name} />
+    </div>
+  );
 }

@@ -65,8 +65,6 @@ export class Album {
           })
           .returning()
           .then((results) => results[0]);
-
-        // console.log({ createdArtist });
       }
     }
 
@@ -84,7 +82,7 @@ export class Album {
     } catch (error) {
       console.error("Failed to extract colors:", error);
     }
-    console.log({ roundedScore });
+
     // Create the album
     const album = await db
       .insert(reviewedAlbums)
@@ -103,20 +101,18 @@ export class Album {
         artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
         artistName: createdArtist ? createdArtist.name : artist.name,
         colors: colors.map((color) => ({ hex: color.hex } as ExtractedColor)),
-        // genres: data.album.genres.map((genre) => ({ hex: color.hex } as ExtractedColor)),
+        genres: data.genres,
       })
       .returning()
       .then((results) => results[0]);
 
-    console.log({ tracks });
     // Create the tracks
     for (const track of tracks) {
       const trackData = data.album.tracks.items.find((item) => {
-        console.log(`item.id: ${item.id}, track.spotifyID: ${track.spotifyID}`);
         return item.id === track.spotifyID;
       });
       console.log(data.album.tracks.items);
-      console.log({ trackData });
+
       if (trackData) {
         const trackAlbum = await db
           .select()
@@ -179,8 +175,6 @@ export class Album {
         .set({ averageScore: newAverageScore, bonusPoints: newBonusPoints, totalScore, bonusReason: JSON.stringify(bonusReasons) })
         .where(eq(reviewedArtists.spotifyID, artist.spotifyID))
         .then((result) => result);
-
-      console.log({ updatedArtist });
     }
 
     // get all artists and order by total score desc

@@ -8,6 +8,7 @@ export type ReceivedReviewData = {
   worstSong: string;
   reviewContent: string;
   album: SpotifyAlbum;
+  genres: string[];
 };
 
 export const createAlbumReview = async (req: Request, res: Response) => {
