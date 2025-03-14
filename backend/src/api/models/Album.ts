@@ -35,10 +35,8 @@ export class Album {
     });
     const maxScore = tempTracks.length * 10;
     const percentageScore = (albumScore / maxScore) * 100;
-    // console.log({ albumScore, maxScore, percentageScore });
     // Round to 0 decimal places
     const roundedScore = Math.round(percentageScore);
-    // console.log({ albumScore, maxScore, percentageScore, roundedScore, tracks });
 
     const tracks = data.ratedTracks;
     // See if the artist already exists
@@ -78,7 +76,6 @@ export class Album {
     try {
       // Extract colors from the image
       colors = await getImageColors(image);
-      // console.log({ colors });
     } catch (error) {
       console.error("Failed to extract colors:", error);
     }
@@ -111,7 +108,6 @@ export class Album {
       const trackData = data.album.tracks.items.find((item) => {
         return item.id === track.spotifyID;
       });
-      console.log(data.album.tracks.items);
 
       if (trackData) {
         const trackAlbum = await db
@@ -136,8 +132,6 @@ export class Album {
             name: artist.name,
           }));
 
-        // console.log({ trackFeatures });
-        console.log("track.rating" + track.rating);
         const createdTrack = await db
           .insert(reviewedTracks)
           .values({
@@ -153,15 +147,12 @@ export class Album {
           })
           .returning()
           .then((results) => results[0]);
-
-        console.log({ createdTrack });
       }
     }
 
     // If the artist already exists, calculate the new score and update the artist
     // The new album needs to be included in the calculation, so we update the artist after creating it
     if (artist) {
-      console.log("Artist found, updating score");
       const artistAlbums: ReviewedAlbum[] = await db
         .select()
         .from(reviewedAlbums)
@@ -216,8 +207,6 @@ export class Album {
       .where(eq(reviewedTracks.albumSpotifyID, id))
       .then((results) => results);
 
-    console.log({ tracks });
-
     const displayTracks: DisplayTrack[] = tracks.map((track) => {
       return {
         name: track.name,
@@ -229,8 +218,6 @@ export class Album {
         features: track.features,
       };
     });
-
-    // console.log({ album, artist, displayTracks });
 
     return { album, artist, tracks: displayTracks };
   }
@@ -250,12 +237,10 @@ export class Album {
       };
     });
 
-    console.log({ displayAlbums });
     return displayAlbums;
   }
 
   static async deleteAlbum(id: string) {
-    console.log("Deleting album:", id);
     const album = await db
       .select()
       .from(reviewedAlbums)

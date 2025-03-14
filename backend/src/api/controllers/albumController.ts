@@ -13,20 +13,17 @@ export type ReceivedReviewData = {
 
 export const createAlbumReview = async (req: Request, res: Response) => {
   const reviewData: ReceivedReviewData = req.body;
-  // console.log(reviewData);
   try {
     const reviewedAlbum = await AlbumService.createAlbumReview(reviewData);
     res.status(201).json(reviewedAlbum);
   } catch (error: any) {
     if (error instanceof Error) {
-      console.log({ error });
       res.status(500).json({ message: error.message });
     }
     // Postgres code: 23505 → Duplicate Key Violation
     else if (error.code === "23505") {
       res.status(400).json({ message: "You have already reviewed this album." });
     } else {
-      console.log({ error });
       res.status(500).json({ message: "An unknown error occurred." });
     }
   }

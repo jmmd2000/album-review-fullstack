@@ -21,7 +21,6 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
   let newBonusPoints = 0;
 
   for (const album of albums) {
-    console.log("Calculating artist score for album: ", album.name);
     newAverageScore += album.reviewScore;
   }
 
@@ -31,9 +30,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
     //* Calculate bonus points only for every album after the first 2
     //* Also generate the bonus reasons
     // const albumsToConsider = albums.slice(2);
-    console.log("--------------------------Starting on albums ---------------------------------");
     for (const album of albums) {
-      console.log(album.name);
       const image_urls = album.imageURLs;
       const minimalAlbum: MinimalAlbum = {
         id: album.id,
@@ -42,7 +39,6 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
         imageURLs: image_urls,
       };
       if (album.reviewScore < 45) {
-        console.log("Low quality album");
         newBonusPoints -= BAD_ALBUM_BONUS;
         bonusReasons.push({
           album: minimalAlbum,
@@ -50,14 +46,12 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
           value: -BAD_ALBUM_BONUS,
         });
       } else if (album.reviewScore > 45 && album.reviewScore < 55) {
-        console.log("Mid quality album");
         bonusReasons.push({
           album: minimalAlbum,
           reason: "Mid quality album",
           value: 0,
         });
       } else if (album.reviewScore > 55) {
-        console.log("High quality album");
         newBonusPoints += GOOD_ALBUM_BONUS;
         bonusReasons.push({
           album: minimalAlbum,
@@ -66,8 +60,6 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
         });
       }
     }
-    console.log("--------------------------Finished on albums ---------------------------------");
-    console.log({ newBonusPoints, bonusReasons });
   }
 
   //* If this is being called while adding a new album, the array of albums doesn't include the new album yet
@@ -82,9 +74,6 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
   if (totalScore > 100) {
     totalScore = 100;
   }
-  console.log("Calculations complete:");
-  console.log({ newAverageScore, newBonusPoints, totalScore, bonusReasons });
-  console.log("--------------------------recalculationcomplete ---------------------------------");
 
   return { newAverageScore, newBonusPoints, totalScore, bonusReasons };
 };

@@ -1,7 +1,15 @@
+/**
+ * The props for the GenrePills component.
+ */
 interface GenrePillsProps {
+  /** The genres to display */
   genres: string[];
 }
 
+/**
+ * This component creates a row of genre pills.
+ * @param {string[]} genres The genres to display
+ */
 const GenrePills = (props: GenrePillsProps) => {
   const { genres } = props;
   return (

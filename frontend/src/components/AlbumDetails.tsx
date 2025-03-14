@@ -1,12 +1,25 @@
 import { ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import ArtistLinkCard from "@components/ArtistLinkCard";
 
+/**
+ * The props for the AlbumDetails component.
+ */
 interface AlbumDetailsProps {
+  /** The album being reviewed */
   album: ReviewedAlbum;
+  /** The artist of the album */
   artist: ReviewedArtist;
+  /** The number of tracks on the album */
   trackCount: number;
 }
 
+/**
+ * This component creates a detail section for an album with the artist, runtime, track count, and release date.
+ * Usuaully displayed sits below the BlurryHeader on the AlbumDetail page.
+ * @param {ReviewedAlbum} album The album being reviewed
+ * @param {ReviewedArtist} artist The artist of the album
+ * @param {number} trackCount The number of tracks on the album
+ */
 const AlbumDetails = (props: AlbumDetailsProps) => {
   const { album, artist, trackCount } = props;
   return (

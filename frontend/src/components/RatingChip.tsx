@@ -11,6 +11,8 @@ interface RatingChipProps {
 /**
  * A component that displays a rating as a chip with a gradient background and an optional text label.
  * It's primarily used in AlbumCards and on album detail pages.
+ * @param {number} rating The rating to display
+ * @param {{text?: boolean}} options Options to specify whether or not to display the text label
  */
 const RatingChip = (props: RatingChipProps) => {
   const { rating, options } = props;

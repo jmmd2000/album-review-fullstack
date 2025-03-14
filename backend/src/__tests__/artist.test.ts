@@ -19,12 +19,9 @@ afterAll(async () => {
 test("GET /api/artists - should return all artist reviews", async () => {
   await seed(["7fRrTyKvE4Skh93v97gtcU", "0S0KGZnfBGSIssfF54WSJh", "0JGOiO34nwfUdDrD612dOp"], {
     reviewContent: "Amazing album with deep emotions.",
-    bestSong: "The Best Song",
-    worstSong: "The Worst Song",
   });
   const response = await request(app).get("/api/artists");
   const returnedData: ReviewedArtist[] = response.body;
-  console.log(returnedData);
 
   expect(response.status).toBe(200);
   expect(returnedData.length).toBeGreaterThan(0);

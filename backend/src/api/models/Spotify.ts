@@ -24,8 +24,6 @@ export class Spotify {
       body: "grant_type=client_credentials",
     };
 
-    // console.log(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_ID);
-
     const response = await fetch(tokenEndpoint, requestOptions);
 
     const data = await response.json();
@@ -34,14 +32,12 @@ export class Spotify {
     this.accessToken = data.access_token;
     this.expiresAt = Date.now() + data.expires_in * 1000; // Convert to milliseconds
 
-    // console.log({ accessToken: this.accessToken, expiresAt: this.expiresAt });
     return this.accessToken;
   }
 
   static async searchAlbums(query: string) {
     const endpoint = `https://api.spotify.com/v1/search?q=${query}&type=album&limit=10`;
     const accessToken = await this.getAccessToken();
-    console.log({ accessToken });
     const searchParamaters = {
       method: "GET",
       headers: {

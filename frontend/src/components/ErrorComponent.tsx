@@ -2,6 +2,10 @@ import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { useRouter, ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+/**
+ * This component is displayed when an error occurs in the app.
+ * @param {ErrorComponentProps} props The props for the ErrorComponent.
+ */
 const ErrorComponent = ({ error }: ErrorComponentProps) => {
   const router = useRouter();
   const queryErrorResetBoundary = useQueryErrorResetBoundary();
@@ -12,8 +16,6 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 
   // Check if the error message matches "album already exists"
   const isAlbumExistsError = error.message.toLowerCase().includes("album already exists");
-  // console.log({ isAlbumExistsError });
-  // console.log({ error });
 
   return (
     <div className="flex items-center justify-center h-[80vh]">

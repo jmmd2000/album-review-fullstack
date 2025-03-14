@@ -1,10 +1,18 @@
 import { DisplayAlbum } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 
+/**
+ * The props for the AlbumCard component.
+ */
 interface AlbumCardProps {
+  /** The album to display */
   album: DisplayAlbum;
 }
 
+/**
+ * This component creates a card for an album with an image, name, artist, and review score.
+ * @param {DisplayAlbum} album The album to display
+ */
 const AlbumCard = (props: AlbumCardProps) => {
   const { album } = props;
   return (

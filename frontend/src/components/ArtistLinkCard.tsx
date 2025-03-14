@@ -1,11 +1,19 @@
 import { ReviewedArtist } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 
+/**
+ * The props for the ArtistLinkCard component.
+ */
 interface ArtistLinkCardProps {
   /** The artist data */
   artist: ReviewedArtist;
 }
 
+/**
+ * This component creates a card for an artist with an image and name.
+ * Usually displayed in the AlbumDetails component below the BlurryHeader.
+ * @param {ReviewedArtist} artist The artist data
+ */
 const ArtistLinkCard = (props: ArtistLinkCardProps) => {
   return (
     <div className="flex items-center justify-center gap-2">

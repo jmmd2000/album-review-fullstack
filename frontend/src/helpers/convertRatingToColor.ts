@@ -118,7 +118,7 @@ export const ratingColorsBorder: { [key: number]: string } = {
  * @param {boolean} [options.text] - If true, returns the text color corresponding to the rating.
  * @param {boolean} [options.gradient] - If true, returns the gradient color corresponding to the rating.
  * @param {boolean} [options.border] - If true, returns the border color corresponding to the rating.
- * @returns {string} - The color corresponding to the rating based on the provided options.
+ * @returns {string} The color corresponding to the rating based on the provided options.
  */
 export const convertRatingToColor = (rating: number, options: { text?: boolean; gradient?: boolean; border?: boolean } = {}) => {
   if (options.text) return ratingColorsText[rating] ?? "text-gray-500";

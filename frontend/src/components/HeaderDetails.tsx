@@ -7,6 +7,8 @@ interface HeaderDetailsProps {
 
 /**
  * This component is used to display the an image and a name and is used on the album and artist detail pages
+ * @param {string} name The name to be displayed
+ * @param {string} imageURL The image to be displayed
  */
 const HeaderDetails = (props: HeaderDetailsProps) => {
   const { name, imageURL } = props;

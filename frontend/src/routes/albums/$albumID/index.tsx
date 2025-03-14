@@ -48,8 +48,6 @@ function RouteComponent() {
     data: { album, artist, tracks },
   } = useSuspenseQuery(reviewQueryOptions(albumID));
 
-  console.log({ album, artist, tracks });
-
   return (
     <>
       <BlurryHeader colors={album.colors}>

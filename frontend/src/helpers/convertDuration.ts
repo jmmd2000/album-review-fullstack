@@ -4,7 +4,6 @@
  * @param {number} duration - The duration in milliseconds.
  * @returns {string} The formatted duration string as "mm:ss".
  */
-
 export const convertDuration = (duration: number): string => {
   const minutes = Math.floor(duration / 60000);
   const seconds = ((duration % 60000) / 1000).toFixed(0);

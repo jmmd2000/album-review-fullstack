@@ -52,13 +52,8 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
 const AlbumReviewForm = (props: AlbumReviewFormProps) => {
   const { album, tracks, setSelectedColors, selectedColors } = props;
 
-  console.log({ album, tracks });
-
   let displayTracks: DisplayTrack[] = [];
   if (isReviewedAlbum(album)) {
-    tracks?.forEach((track) => {
-      console.log(track.features);
-    });
     displayTracks = tracks!.map((track) => ({
       rating: track.rating,
       name: track.name,
@@ -172,15 +167,10 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
 
       if (!response.ok) {
         console.error("Failed to submit review:", response.statusText);
-      } else {
-        console.log("Review submitted successfully");
       }
     } catch (e) {
       console.error("Failed to submit review:", e);
     }
-
-    // console.log(response);
-    console.log(formData);
   };
 
   return (

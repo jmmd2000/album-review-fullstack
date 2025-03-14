@@ -1,11 +1,21 @@
 import { DisplayTrack, ReviewedAlbum } from "@shared/types";
 import RatingChip from "./RatingChip";
 
+/**
+ * The props for the ReviewDetails component.
+ */
 interface ReviewDetailsProps {
+  /** The album being reviewed */
   album: ReviewedAlbum;
+  /** The tracks on the album */
   tracks: DisplayTrack[];
 }
 
+/**
+ * This component displays the review content, best and worst song, and rating for the album.
+ * @param {ReviewedAlbum} album The album being reviewed
+ * @param {DisplayTrack[]} tracks The tracks on the album
+ */
 const ReviewDetails = (props: ReviewDetailsProps) => {
   const { album } = props;
   return (
@@ -21,11 +31,21 @@ const ReviewDetails = (props: ReviewDetailsProps) => {
 
 export default ReviewDetails;
 
+/**
+ * The props for the BestWorstSong component.
+ */
 interface BestWorstSongProps {
+  /** The best song on the album */
   bestSong: string;
+  /** The worst song on the album */
   worstSong: string;
 }
 
+/**
+ * This component displays the best and worst song on the album.
+ * @param {string} bestSong The best song on the album
+ * @param {string} worstSong The worst song on the album
+ */
 const BestWorstSong = (props: BestWorstSongProps) => {
   const { bestSong, worstSong } = props;
   return (

@@ -28,7 +28,6 @@ test("POST /api/albums/create - should create a new album review", async () => {
 test("GET /api/albums/:albumID - should return a review for a given album", async () => {
   // Create a review
   const album = await request(app).post("/api/albums/create").send(mockReviewData);
-  console.log(album.body.spotifyID);
 
   const response = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
   const returnedData: {
@@ -36,8 +35,6 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
     artist: ReviewedArtist;
     tracks: ReviewedTrack[];
   } = response.body;
-
-  console.log(returnedData);
 
   expect(response.status).toBe(200);
   expect(returnedData.album).toHaveProperty("spotifyID");
@@ -100,12 +97,9 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 test("GET /api/albums - should return all album reviews", async () => {
   await seed(["7fRrTyKvE4Skh93v97gtcU", "0S0KGZnfBGSIssfF54WSJh", "0JGOiO34nwfUdDrD612dOp"], {
     reviewContent: "Amazing album with deep emotions.",
-    bestSong: "The Best Song",
-    worstSong: "The Worst Song",
   });
   const response = await request(app).get("/api/albums");
   const returnedData: DisplayAlbum[] = response.body;
-  console.log(returnedData);
 
   expect(response.status).toBe(200);
   // expect(returnedData.length).toBeGreaterThan(0);

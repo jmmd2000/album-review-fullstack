@@ -4,11 +4,18 @@ import { convertRatingToString } from "@/helpers/convertRatingToString";
 import { convertRatingToColor } from "@/helpers/convertRatingToColor";
 import { cva } from "class-variance-authority";
 
+/**
+ * The props for the TrackCard component.
+ */
 interface TrackCardProps {
   /** The track to display */
   track: DisplayTrack;
 }
-/** This component is used to display track details for both rated tracks and tracks that are being rated inside `AlbumReviewForm` */
+
+/**
+ * This component is used to display track details for both rated tracks and tracks that are being rated inside `AlbumReviewForm`
+ * @param {DisplayTrack} track The track to display
+ */
 const TrackCard = (props: TrackCardProps) => {
   const { track } = props;
 
