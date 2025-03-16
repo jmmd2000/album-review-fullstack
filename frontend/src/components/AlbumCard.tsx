@@ -1,5 +1,6 @@
 import { DisplayAlbum } from "@shared/types";
 import { Link } from "@tanstack/react-router";
+import RatingChip from "./RatingChip";
 
 /**
  * The props for the AlbumCard component.
@@ -24,7 +25,11 @@ const AlbumCard = (props: AlbumCardProps) => {
             <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
             <p className="text-xs text-gray-500">{album.artistName}</p>
           </div>
-          <div className="grid place-items-center">{album.reviewScore}</div>
+          {album.reviewScore && (
+            <div className="grid place-items-center">
+              <RatingChip rating={album.reviewScore} options={{ small: true }} />
+            </div>
+          )}
         </div>
       </div>
     </Link>

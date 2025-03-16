@@ -10,19 +10,20 @@ async function fetchAllAlbums(): Promise<DisplayAlbum[]> {
   return await response.json();
 }
 
-const tokenQueryOptions = queryOptions({
+const albumQueryOptions = queryOptions({
   queryKey: ["albums"],
   queryFn: fetchAllAlbums,
 });
 
 export const Route = createFileRoute("/albums/")({
-  loader: () => queryClient.ensureQueryData(tokenQueryOptions),
+  loader: () => queryClient.ensureQueryData(albumQueryOptions),
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data } = useQuery(tokenQueryOptions);
+  const { data } = useQuery(albumQueryOptions);
   if (!data) return <div>Loading...</div>;
+  console.log(data);
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] max-w-[1900px] mx-4 my-8 gap-4 place-items-center">
       {data.map((album) => (

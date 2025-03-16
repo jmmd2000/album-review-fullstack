@@ -1,14 +1,15 @@
 import { ReviewedAlbum } from "@shared/types";
 import AlbumCard from "./AlbumCard";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface AlbumRowProps {
   albums: ReviewedAlbum[];
 }
 
-const AlbumRow = (props: AlbumRowProps) => {
-  const { albums } = props;
+const AlbumRow = ({ albums }: AlbumRowProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const scrollLeft = () => {
     if (rowRef.current) {
@@ -22,19 +23,50 @@ const AlbumRow = (props: AlbumRowProps) => {
     }
   };
 
+  const checkScroll = () => {
+    if (rowRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = rowRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    if (rowRef.current) {
+      rowRef.current.addEventListener("scroll", checkScroll);
+    }
+    return () => {
+      if (rowRef.current) {
+        rowRef.current.removeEventListener("scroll", checkScroll);
+      }
+    };
+  }, [albums]);
+
+  if (!albums || albums.length === 0) {
+    return null;
+  }
+
   return (
     <div className="relative mx-4 my-8">
-      <button className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200 p-2 rounded-full" onClick={scrollLeft}>
-        {"<"}
-      </button>
-      <div ref={rowRef} className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] max-w-[1900px] gap-4 place-items-center overflow-x-auto scrollbar-hide">
+      {canScrollLeft && (
+        <button className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollLeft}>
+          {"<"}
+        </button>
+      )}
+
+      <div ref={rowRef} className="flex gap-4 overflow-x-scroll no-scrollbar scroll-smooth w-full max-w-[1900px] px-8">
         {albums.map((album) => (
-          <AlbumCard key={album.spotifyID} album={album} />
+          <div key={album.spotifyID} className="min-w-[240px]">
+            <AlbumCard album={album} />
+          </div>
         ))}
       </div>
-      <button className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 p-2 rounded-full" onClick={scrollRight}>
-        {">"}
-      </button>
+      {canScrollRight && (
+        <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollRight}>
+          {">"}
+        </button>
+      )}
     </div>
   );
 };

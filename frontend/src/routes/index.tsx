@@ -3,6 +3,7 @@ import { queryClient } from "@/main";
 import { ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import ErrorComponent from "@components/ErrorComponent";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAllAlbums(): Promise<{ topArtists: ReviewedArtist[]; topAlbums: ReviewedAlbum[]; numArtists: number; numAlbums: number; numTracks: number }> {
@@ -10,18 +11,19 @@ async function fetchAllAlbums(): Promise<{ topArtists: ReviewedArtist[]; topAlbu
   return await response.json();
 }
 
-const tokenQueryOptions = queryOptions({
-  queryKey: ["albums"],
+const statsQueryOptions = queryOptions({
+  queryKey: ["home"],
   queryFn: fetchAllAlbums,
 });
 
 export const Route = createFileRoute("/")({
-  loader: () => queryClient.ensureQueryData(tokenQueryOptions),
+  loader: () => queryClient.ensureQueryData(statsQueryOptions),
   component: Index,
+  errorComponent: ErrorComponent,
 });
 
 function Index() {
-  const { data } = useQuery(tokenQueryOptions);
+  const { data } = useQuery(statsQueryOptions);
   if (!data) return <div>Loading...</div>;
   console.log(data);
   return (
