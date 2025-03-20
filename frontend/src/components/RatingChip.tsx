@@ -17,7 +17,6 @@ interface RatingChipProps {
  */
 const RatingChip = (props: RatingChipProps) => {
   const { rating, options } = props;
-  console.log(options);
   // The function uses maps from 0-10 so take the first digit of the rating
   const tempRating = Math.floor(rating / 10);
   const borderColor = convertRatingToColor(tempRating, { border: true });

@@ -29,7 +29,7 @@ export class Artist {
       .limit(5)
       .then((results) => results)) as ReviewedAlbum[];
 
-    console.log(topAlbums);
+    // console.log(topAlbums);
 
     const numArtists = await db.select({ count: count() }).from(reviewedArtists);
     const numAlbums = await db.select({ count: count() }).from(reviewedAlbums);

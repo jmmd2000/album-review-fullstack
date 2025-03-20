@@ -1,10 +1,12 @@
 import request from "supertest";
 import { app } from "../index";
 import { query } from "../../db";
-import { test, expect, beforeEach, afterAll } from "@jest/globals";
-import { mockReviewData } from "./constants";
+import { test, expect, beforeEach, afterAll, afterEach, beforeAll } from "@jest/globals";
+import { mockReviewData, mockUpdateData } from "./constants";
 import { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { seed } from "../db/seed";
+import { mock } from "node:test";
+import e from "cors";
 
 beforeEach(async () => {
   await query("DELETE FROM reviewed_tracks;");
@@ -12,7 +14,7 @@ beforeEach(async () => {
   await query("DELETE FROM reviewed_artists;");
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await query("DELETE FROM reviewed_tracks;");
   await query("DELETE FROM reviewed_albums;");
   await query("DELETE FROM reviewed_artists;");
@@ -124,4 +126,25 @@ test("GET /api/albums - should return all album reviews", async () => {
   expect(typeof returnedData[0].artistName).toBe("string");
   expect(typeof returnedData[0].artistSpotifyID).toBe("string");
   expect(typeof returnedData[0].releaseYear).toBe("number");
-});
+}, 15000);
+
+test("PUT /api/albums/:albumID/edit - should update album review", async () => {
+  const response = await request(app).post("/api/albums/create").send(mockReviewData);
+  const createdAlbum = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
+  const createdAlbumData = createdAlbum.body.album;
+  mockUpdateData.album = createdAlbumData;
+
+  const updateResponse = await request(app).put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").send(mockUpdateData);
+
+  expect(updateResponse.status).toBe(200);
+
+  const updatedAlbum = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
+  const updatedAlbumData = updatedAlbum.body.album;
+
+  expect(updatedAlbumData.reviewScore).toBe(90);
+  expect(updatedAlbumData.reviewContent).toBe(mockUpdateData.reviewContent);
+  expect(updatedAlbumData.bestSong).toBe(mockUpdateData.bestSong);
+  expect(updatedAlbumData.worstSong).toBe(mockUpdateData.worstSong);
+  expect(updatedAlbumData.genres).toStrictEqual(mockUpdateData.genres);
+  expect(updatedAlbumData.colors).toStrictEqual(mockUpdateData.colors);
+}, 15000);

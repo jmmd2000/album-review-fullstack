@@ -1,7 +1,10 @@
 import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
-import TrackCard from "@components/TrackCard";
+import { useForm, useFieldArray } from "react-hook-form";
+// import TrackCard from "@components/TrackCard";
+// import { convertRatingToString } from "@/helpers/convertRatingToString";
+// import { convertRatingToColor } from "@/helpers/convertRatingToColor";
+import TrackList from "./TrackList";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -16,7 +19,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 /**
  * Represents the data submitted when creating a new review
  */
-type CreateReviewFormData = {
+export type CreateReviewFormData = {
   /*** An array of track IDs and their ratings*/
   tracks: DisplayTrack[];
   /*** The best song on the album */
@@ -28,7 +31,7 @@ type CreateReviewFormData = {
   /*** The selected colors */
   colors: ExtractedColor[];
   /*** String array of genre strings */
-  // genres: string[];
+  genres: { name: string }[];
 };
 
 // If it's a SpotifyAlbum, the tracks are included
@@ -79,6 +82,7 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
 
   useEffect(() => {
     setSelectedColors(album.colors);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [album]);
 
   // Initialize the form
@@ -89,14 +93,23 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
       worstSong: isReviewedAlbum(album) ? album.worstSong : "",
       reviewContent: isReviewedAlbum(album) ? album.reviewContent || "" : "",
       colors: selectedColors,
-      genres: isReviewedAlbum(album) ? album.genres : [],
+      genres: isReviewedAlbum(album) ? album.genres.map((genre) => ({ name: genre })) : [],
     },
   });
 
-  // UseFieldArray for dynamic track ratings
-  const { fields } = useFieldArray({
+  // // UseFieldArray for dynamic track ratings
+  // const { fields } = useFieldArray({
+  //   control,
+  //   name: "tracks",
+  // });
+
+  const {
+    fields: genreFields,
+    append: addGenre,
+    remove: removeGenre,
+  } = useFieldArray({
     control,
-    name: "tracks",
+    name: "genres",
   });
 
   // Sync selectedColors with the form state
@@ -106,10 +119,6 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
 
   // Adds a new color input, max 5
   const addColor = () => {
-    // if (colors.length < 5) {
-    //   // Default new color is white
-    //   setSelectedColors((prev) => [...prev, { hex: "#ffffff" }]);
-    // }
     if (selectedColors.length < 5) {
       const updatedColors = [...selectedColors, { hex: "#ffffff" }];
       setSelectedColors(updatedColors);
@@ -118,7 +127,6 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
 
   // Remove a color at a specific index
   const removeColor = (index: number) => {
-    // setSelectedColors((prevColors) => prevColors.filter((_, i) => i !== index));
     const updatedColors = selectedColors.filter((_, i) => i !== index);
     setSelectedColors(updatedColors);
   };
@@ -140,17 +148,25 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
     // Get the colors from the form
     const colorsToSubmit = getValues("colors");
 
-    // Ensure all track ratings are defined
-    formData.tracks.forEach((track) => {
-      if (track.rating === undefined) {
-        track.rating = 0;
-      }
-    });
+    // Convert all ratings to numbers to avoid type mismatch issues
+    const formattedTracks = formData.tracks.map((track) => ({
+      ...track,
+      // Convert possible string to number, default to 0
+      rating: Number(track.rating) || 0,
+    }));
+
+    // The form data expects an array of genre objects, but the structure
+    // of the DB is an array of strings. So format the genres.
+    const formattedGenres = formData.genres.map((genre) => genre.name);
+
+    // Determine endpoint based on whether it's a new or existing review
+    const isEditing = isReviewedAlbum(album);
+    const endpoint = isEditing ? `${API_BASE_URL}/api/albums/${album.spotifyID}/edit` : `${API_BASE_URL}/api/albums/create`;
 
     // Submit the form
     try {
-      const response = await fetch(`${API_BASE_URL}/api/albums/create`, {
-        method: "POST",
+      const response = await fetch(endpoint, {
+        method: isReviewedAlbum(album) ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -159,9 +175,9 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
           reviewContent: formData.reviewContent,
           bestSong: formData.bestSong,
           worstSong: formData.worstSong,
-          ratedTracks: formData.tracks,
+          ratedTracks: formattedTracks,
           colors: colorsToSubmit,
-          // genres: formData.genres,
+          genres: formattedGenres,
         }),
       });
 
@@ -174,23 +190,19 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {/* review content */}
       <div className="mb-4">
-        <label>Review:</label>
         <textarea {...register("reviewContent")} className="w-full p-2 border rounded" rows={4} placeholder="Write your review here..." />
       </div>
-
       {/* best song */}
       <div className="mb-4">
         <input type="text" {...register("bestSong")} className="w-full p-2 border rounded" placeholder="best song" />
       </div>
-
       {/* worst song */}
       <div className="mb-4">
         <input type="text" {...register("worstSong")} className="w-full p-2 border rounded" placeholder="worst song" />
       </div>
-
       {/* dynamic color selection */}
       <div className="mb-4">
         <label>Select colors (max 5):</label>
@@ -210,31 +222,29 @@ const AlbumReviewForm = (props: AlbumReviewFormProps) => {
           </button>
         )}
       </div>
-
-      {/* track ratings */}
-      {fields.map((field, index) => (
-        <div key={field.id} className="mb-4">
-          <TrackCard track={displayTracks[index]} />
-
-          {/* track ID (hidden but included in form data) */}
-          <input type="hidden" {...control.register(`tracks.${index}.spotifyID`)} />
-
-          {/* Rating select */}
-          <Controller
-            control={control}
-            name={`tracks.${index}.rating`}
-            render={({ field }) => (
-              <select {...field} className="bg-green-900">
-                {[...Array(11)].map((_, idx) => (
-                  <option key={idx} value={idx}>
-                    {idx}
-                  </option>
-                ))}
-              </select>
-            )}
-          />
+      {/* Genres Input Field */}
+      <div className="mb-4">
+        <label>Genres:</label>
+        <div className="flex flex-col gap-2">
+          {genreFields.map((field, index) => (
+            <div key={field.id} className="flex gap-2">
+              <input {...register(`genres.${index}.name`)} className="p-2 border rounded" placeholder="Enter genre" />
+              <button type="button" onClick={() => removeGenre(index)} className="text-red-500">
+                ✕
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+        <button
+          type="button"
+          onClick={() => addGenre({ name: "" })} // Ensure new genres follow the expected object structure
+          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Add Genre
+        </button>
+      </div>
+      {/* track ratings */}
+      <TrackList tracks={displayTracks} formMethods={{ control, register, setValue }} />
 
       <button type="submit">Submit</button>
     </form>

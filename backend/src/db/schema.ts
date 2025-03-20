@@ -24,7 +24,7 @@ export const reviewedAlbums = pgTable(
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
-    genres: text("genres").array(),
+    genres: text("genres").array().notNull(),
   },
   (table) => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
 );

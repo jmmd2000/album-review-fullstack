@@ -196,7 +196,7 @@ export interface ReviewedAlbum {
   /** Optional array of ReviewedTracks */
   tracks?: ReviewedTrack[];
   /** String array of genres */
-  genres: string[] | null;
+  genres: string[];
 }
 
 /**

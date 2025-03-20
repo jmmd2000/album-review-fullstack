@@ -49,7 +49,7 @@ export class Spotify {
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
-    console.log({ data });
+    // console.log({ data });
     return data as SpotifySearchResponse;
   }
 

@@ -18,4 +18,8 @@ export class AlbumService {
   static async deleteAlbum(id: string) {
     return await Album.deleteAlbum(id);
   }
+
+  static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
+    return await Album.updateAlbumReview(data, albumID);
+  }
 }

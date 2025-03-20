@@ -8,10 +8,16 @@ import formatDate from "../../helpers/formatDate";
 import { calculateArtistScore } from "../../helpers/calculateArtistScore";
 import { fetchArtistFromSpotify } from "../../helpers/fetchArtistFromSpotify";
 import { db } from "../../index";
-import { getImageColors } from "../..//helpers/getImageColors";
+import { getImageColors } from "../../helpers/getImageColors";
+import { calculateAlbumScore } from "../../helpers/calculateAlbumScore";
 
 export class Album {
   static async createAlbumReview(data: ReceivedReviewData) {
+    // Check if the data is a SpotifyAlbum
+    if (!("uri" in data.album && "artists" in data.album)) {
+      throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
+    }
+
     const existingAlbum = await db
       .select()
       .from(reviewedAlbums)
@@ -22,21 +28,7 @@ export class Album {
       throw new Error("Album already exists");
     }
 
-    let albumScore = 0;
-    // Remove any tracks with a rating of 0
-    const tempTracks = data.ratedTracks.filter((track) => track.rating !== 0);
-
-    // Add up all the ratings
-    // const tracks = data.ratedTracks;
-    tempTracks.forEach((track) => {
-      // By this point, it will have gone through AlbumReviewForm which has each tracks rating default to 0
-      // So it's impossible to be undefined
-      albumScore += Number(track.rating!);
-    });
-    const maxScore = tempTracks.length * 10;
-    const percentageScore = (albumScore / maxScore) * 100;
-    // Round to 0 decimal places
-    const roundedScore = Math.round(percentageScore);
+    const roundedScore = calculateAlbumScore(data.ratedTracks);
 
     const tracks = data.ratedTracks;
     // See if the artist already exists
@@ -73,13 +65,16 @@ export class Album {
     const imageURLs: SpotifyImage[] = data.album.images;
     const image = imageURLs[0].url;
     let colors: ExtractedColor[] = [];
-    try {
-      // Extract colors from the image
-      colors = await getImageColors(image);
-    } catch (error) {
-      console.error("Failed to extract colors:", error);
+    if (data.colors) {
+      colors = data.colors;
+    } else {
+      try {
+        // Extract colors from the image
+        colors = await getImageColors(image);
+      } catch (error) {
+        console.error("Failed to extract colors:", error);
+      }
     }
-
     // Create the album
     const album = await db
       .insert(reviewedAlbums)
@@ -253,5 +248,138 @@ export class Album {
 
     await db.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, id));
     await db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, id));
+  }
+
+  static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
+    // Check if the data is a ReviewedAlbum
+    if (!("reviewScore" in data.album && "artistName" in data.album)) {
+      throw new Error("Invalid album data: Expected a ReviewedAlbum, received something else");
+    }
+
+    // Fetch existing album
+    const existingAlbum = await db
+      .select()
+      .from(reviewedAlbums)
+      .where(eq(reviewedAlbums.spotifyID, albumID))
+      .then((results) => results[0]);
+
+    if (!existingAlbum) {
+      throw new Error("Album not found");
+    }
+
+    // Fetch existing tracks for this album
+    const existingTracks = await db
+      .select()
+      .from(reviewedTracks)
+      .where(eq(reviewedTracks.albumSpotifyID, albumID))
+      .then((results) => results);
+
+    // Track fields that have changed
+    let updateNeeded = false;
+    let updateValues: Partial<typeof reviewedAlbums.$inferInsert> = {};
+
+    if (data.reviewContent !== existingAlbum.reviewContent) {
+      updateValues.reviewContent = data.reviewContent;
+      updateNeeded = true;
+      console.log("reviewContent changed");
+    }
+
+    if (data.bestSong !== existingAlbum.bestSong) {
+      updateValues.bestSong = data.bestSong;
+      updateNeeded = true;
+      console.log("bestSong changed");
+    }
+
+    if (data.worstSong !== existingAlbum.worstSong) {
+      updateValues.worstSong = data.worstSong;
+      updateNeeded = true;
+      console.log("worstSong changed");
+    }
+
+    if (JSON.stringify(data.genres) !== JSON.stringify(existingAlbum.genres)) {
+      updateValues.genres = data.genres;
+      updateNeeded = true;
+      console.log("genres changed");
+    }
+
+    if (JSON.stringify(data.colors) !== JSON.stringify(existingAlbum.colors)) {
+      updateValues.colors = data.colors;
+      updateNeeded = true;
+      console.log("colors changed");
+    }
+
+    // Check if ratedTracks have changed
+    const tracksChanged = data.ratedTracks.some((newTrack) => {
+      const oldTrack = existingTracks.find((track) => track.spotifyID === newTrack.spotifyID);
+      return !oldTrack || oldTrack.rating !== newTrack.rating;
+    });
+
+    if (tracksChanged) {
+      const newScore = calculateAlbumScore(data.ratedTracks);
+      if (newScore !== existingAlbum.reviewScore) {
+        updateValues.reviewScore = newScore;
+        updateNeeded = true;
+      }
+    }
+
+    // Update album only if necessary
+    if (updateNeeded) {
+      await db.update(reviewedAlbums).set(updateValues).where(eq(reviewedAlbums.spotifyID, albumID));
+    }
+
+    // Update `reviewedTracks` if there are changes
+    if (tracksChanged) {
+      for (const newTrack of data.ratedTracks) {
+        const existingTrack = existingTracks.find((track) => track.spotifyID === newTrack.spotifyID);
+
+        if (!existingTrack) {
+          // Insert new track
+          await db.insert(reviewedTracks).values({
+            artistSpotifyID: existingAlbum.artistSpotifyID,
+            artistName: existingAlbum.artistName,
+            albumSpotifyID: albumID,
+            name: newTrack.name,
+            spotifyID: newTrack.spotifyID,
+            features: newTrack.features,
+            duration: newTrack.duration,
+            rating: newTrack.rating ?? 0, // Provide a default value if undefined
+          });
+        } else if (existingTrack.rating !== newTrack.rating) {
+          // Update only if rating changed
+          await db.update(reviewedTracks).set({ rating: newTrack.rating }).where(eq(reviewedTracks.spotifyID, newTrack.spotifyID));
+        }
+      }
+    }
+
+    // Only recalculate album score if tracks changed
+    if (tracksChanged) {
+      const newAlbumScore = calculateAlbumScore(data.ratedTracks);
+      await db.update(reviewedAlbums).set({ reviewScore: newAlbumScore }).where(eq(reviewedAlbums.spotifyID, albumID));
+
+      // Update artist's score
+      const artistAlbums = await db
+        .select()
+        .from(reviewedAlbums)
+        .where(eq(reviewedAlbums.artistSpotifyID, existingAlbum.artistSpotifyID))
+        .then((results) => results);
+
+      const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(artistAlbums, newAlbumScore);
+
+      await db
+        .update(reviewedArtists)
+        .set({
+          averageScore: newAverageScore,
+          bonusPoints: newBonusPoints,
+          totalScore,
+          bonusReason: JSON.stringify(bonusReasons),
+        })
+        .where(eq(reviewedArtists.spotifyID, existingAlbum.artistSpotifyID));
+    }
+
+    return await db
+      .select()
+      .from(reviewedAlbums)
+      .where(eq(reviewedAlbums.spotifyID, albumID))
+      .then((results) => results[0]);
   }
 }
