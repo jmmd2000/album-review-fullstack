@@ -9,7 +9,7 @@ import "./styles/globals.css";
 import "./assets/fonts/cabin-latin-400-normal.ttf";
 
 // Create a new router instance
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, defaultPreload: "intent" });
 
 export const queryClient = new QueryClient();
 

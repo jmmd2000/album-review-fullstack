@@ -14,12 +14,13 @@ interface AlbumCardProps {
  * This component creates a card for an album with an image, name, artist, and review score.
  * @param {DisplayAlbum} album The album to display
  */
-const AlbumCard = (props: AlbumCardProps) => {
-  const { album } = props;
+const AlbumCard = ({ album }: AlbumCardProps) => {
   return (
-    <Link params={{ albumID: album.spotifyID }} to="/albums/$albumID">
+    <Link params={{ albumID: album.spotifyID }} to="/albums/$albumID" viewTransition className="block">
       <div className="flex flex-col rounded-xl items-center w-full max-w-[240px]">
-        <img src={album.imageURLs[1].url} alt={album.name} className="w-full aspect-square rounded-lg" />
+        {/* <div className="h-[240px] w-[240px] overflow-hidden"> */}
+        <img src={album.imageURLs[1].url} alt={album.name} className="w-full aspect-square rounded-lg" style={{ viewTransitionName: `album-image-${album.spotifyID}` }} />
+        {/* </div> */}
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
             <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{album.name}</h2>

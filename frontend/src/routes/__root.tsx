@@ -1,5 +1,5 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
-// import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
@@ -7,8 +7,11 @@ export const Route = createRootRoute({
   component: () => (
     <>
       <Navbar />
-      <Outlet />
-      {/* <TanStackRouterDevtools /> */}
+      <div className="[view-transition-name:main-content]">
+        <Outlet />
+      </div>
+
+      <TanStackRouterDevtools />
     </>
   ),
 });
@@ -34,7 +37,7 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Navbar (sm and up) */}
-      <div className="hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full">
+      <div className="hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full will-change-transform">
         <img src="../../../public/favicon.ico" alt="logo" className="h-[40px]" />
         {ROUTES.map((route) => (
           <NavLink key={route.to} to={route.to} name={route.name} />
@@ -70,10 +73,10 @@ interface NavLinkProps {
   name: string;
 }
 
-const NavLink = (props: NavLinkProps) => {
+const NavLink = ({ to, name }: NavLinkProps) => {
   return (
-    <Link to={props.to} className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2">
-      {props.name}
+    <Link to={to} className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2">
+      {name}
     </Link>
   );
 };

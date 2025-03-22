@@ -10,8 +10,7 @@ interface GenrePillsProps {
  * This component creates a row of genre pills.
  * @param {string[]} genres The genres to display
  */
-const GenrePills = (props: GenrePillsProps) => {
-  const { genres } = props;
+const GenrePills = ({ genres }: GenrePillsProps) => {
   return (
     <div className="flex gap-1 mx-auto items-center justify-center">
       {genres.map((genre, index) => (

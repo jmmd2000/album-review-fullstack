@@ -9,10 +9,6 @@ export class ArtistService {
     return await Artist.getArtistByID(artistID);
   }
 
-  static async getPersonalStats() {
-    return await Artist.getPersonalStats();
-  }
-
   static async deleteArtist(artistID: string) {
     await Artist.deleteArtist(artistID);
   }

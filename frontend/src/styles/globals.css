@@ -4,6 +4,7 @@
   --animation-duration-lava0: 220s;
   --animation-duration-lava1: 180s;
   --animation-duration-lava2: 200s;
+  --animation-duration-infinite-scroll: 320s;
 }
 
 /* Blurry header animations */
@@ -73,6 +74,24 @@
   animation: lava2 var(--animation-duration-lava2) ease-in-out infinite alternate;
 }
 
+/* Infinite scroll animation for the AlbumScroller */
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear infinite;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 html {
   @apply bg-neutral-900;
   @apply text-white;
@@ -85,4 +104,18 @@ html {
 
 body {
   font-family: "Cabin", sans-serif;
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    /* IE and Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+  }
 }

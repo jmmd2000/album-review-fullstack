@@ -14,13 +14,13 @@ interface ArtistLinkCardProps {
  * Usually displayed in the AlbumDetails component below the BlurryHeader.
  * @param {ReviewedArtist} artist The artist data
  */
-const ArtistLinkCard = (props: ArtistLinkCardProps) => {
+const ArtistLinkCard = ({ artist }: ArtistLinkCardProps) => {
   return (
     <div className="flex items-center justify-center gap-2">
-      <img src={props.artist.imageURLs[2].url} alt={props.artist.name} className="rounded-full h-12 w-12 shadow-2xl" />
+      <img src={artist.imageURLs[2].url} alt={artist.name} className="rounded-full h-12 w-12 shadow-2xl" />
       <div className="flex gap-2 px-0 py-1">
-        <Link params={{ artistID: props.artist.spotifyID }} to={"/artists/$artistID"} className="hover:underline text-gray-300 hover:text-gray-100 text-lg">
-          {props.artist.name}
+        <Link params={{ artistID: artist.spotifyID }} to={"/artists/$artistID"} className="hover:underline text-gray-300 hover:text-gray-100 text-lg" viewTransition style={{ viewTransitionName: `artist-image-` }}>
+          {artist.name}
         </Link>
       </div>
     </div>

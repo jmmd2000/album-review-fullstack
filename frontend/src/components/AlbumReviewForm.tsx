@@ -52,9 +52,7 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
   return (album as ReviewedAlbum).reviewScore !== undefined;
 };
 
-const AlbumReviewForm = (props: AlbumReviewFormProps) => {
-  const { album, tracks, setSelectedColors, selectedColors } = props;
-
+const AlbumReviewForm = ({ album, tracks, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
   let displayTracks: DisplayTrack[] = [];
   if (isReviewedAlbum(album)) {
     displayTracks = tracks!.map((track) => ({

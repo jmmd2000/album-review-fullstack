@@ -20,10 +20,9 @@ interface AlbumDetailsProps {
  * @param {ReviewedArtist} artist The artist of the album
  * @param {number} trackCount The number of tracks on the album
  */
-const AlbumDetails = (props: AlbumDetailsProps) => {
-  const { album, artist, trackCount } = props;
+const AlbumDetails = ({ album, artist, trackCount }: AlbumDetailsProps) => {
   return (
-    <div className="w-[70%] mx-auto flex items-center mt-4 justify-evenly">
+    <div className="w-[70%] mx-auto flex items-center justify-evenly">
       <div className="flex items-center justify-evenly gap-4">
         <ArtistLinkCard artist={artist} />
         <span className="mx-2">•</span>

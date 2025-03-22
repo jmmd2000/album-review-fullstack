@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { AlbumService } from "../../api/services/albumService";
-import { DisplayTrack, ExtractedColor, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
+import { DisplayTrack, ExtractedColor, GetAllAlbumsOptions, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 
 export type ReceivedReviewData = {
   ratedTracks: DisplayTrack[];
@@ -49,6 +49,26 @@ export const getAllAlbums = async (req: Request, res: Response) => {
   try {
     const albums = await AlbumService.getAllAlbums();
     res.status(200).json(albums);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};
+
+export const getPaginatedAlbums = async (req: Request, res: Response) => {
+  const options: GetAllAlbumsOptions = {
+    page: req.query.page as number | undefined,
+    orderBy: req.query.orderBy as GetAllAlbumsOptions["orderBy"] | undefined,
+    order: req.query.order as GetAllAlbumsOptions["order"] | undefined,
+    search: req.query.search as string | undefined,
+  };
+
+  try {
+    const { albums, furtherPages } = await AlbumService.getPaginatedAlbums(options);
+    res.status(200).json({ albums, furtherPages });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

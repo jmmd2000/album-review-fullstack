@@ -396,3 +396,13 @@ export interface ExtractedColor {
   // saturation: number;
   // intensity: number;
 }
+
+/**
+ * Represents the parameters passed to the getAllAlbums method.
+ */
+export interface GetAllAlbumsOptions {
+  page?: number;
+  orderBy?: "reviewScore" | "releaseYear" | "name" | "createdAt";
+  order?: "asc" | "desc";
+  search?: string;
+}

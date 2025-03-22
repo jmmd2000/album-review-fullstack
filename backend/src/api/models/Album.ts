@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { desc, eq } from "drizzle-orm";
-import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor, ReviewedTrack, DisplayTrack } from "@shared/types";
+import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
+import { ReviewedAlbum, DisplayAlbum, ReviewedArtist, SpotifyImage, ExtractedColor, ReviewedTrack, DisplayTrack, GetAllAlbumsOptions } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { ReceivedReviewData } from "../controllers/albumController";
 import getTotalDuration from "../../helpers/formatDuration";
@@ -231,8 +231,54 @@ export class Album {
         releaseYear: album.releaseYear,
       };
     });
+    const numArtists = await db.select({ count: count() }).from(reviewedArtists);
+    const numAlbums = await db.select({ count: count() }).from(reviewedAlbums);
+    const numTracks = await db.select({ count: count() }).from(reviewedTracks);
 
-    return displayAlbums;
+    return { albums: displayAlbums, numArtists: numArtists[0].count, numAlbums: numAlbums[0].count, numTracks: numTracks[0].count };
+  }
+
+  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetAllAlbumsOptions) {
+    // Validate sort params
+    const validOrderBy = ["reviewScore", "releaseYear", "name", "createdAt"] as const;
+    const validOrder = ["asc", "desc"] as const;
+
+    const sortField = validOrderBy.includes(orderBy) ? orderBy : "reviewScore";
+    const sortDirection = validOrder.includes(order) ? order : "desc";
+
+    const PAGE_SIZE = 35;
+    const OFFSET = (page - 1) * PAGE_SIZE;
+
+    const baseQuery = db
+      .select()
+      .from(reviewedAlbums)
+      .limit(PAGE_SIZE + 1) // Fetch one extra to check for further pages
+      .offset(OFFSET)
+      .orderBy(sortDirection === "asc" ? asc(reviewedAlbums[sortField]) : desc(reviewedAlbums[sortField]));
+
+    // If a search string exists, apply WHERE
+    const albums = search.trim() ? await baseQuery.where(or(ilike(reviewedAlbums.name, `%${search}%`), ilike(reviewedAlbums.artistName, `%${search}%`))) : await baseQuery;
+
+    // Check if there are further pages
+    const furtherPages = albums.length > PAGE_SIZE;
+
+    // Trim the extra album if it exists
+    if (furtherPages) {
+      albums.pop();
+    }
+
+    const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
+      spotifyID: album.spotifyID,
+      name: album.name,
+      image: album.imageURLs[0]?.url ?? null,
+      imageURLs: album.imageURLs,
+      reviewScore: album.reviewScore,
+      artistName: album.artistName,
+      artistSpotifyID: album.artistSpotifyID,
+      releaseYear: album.releaseYear,
+    }));
+
+    return { albums: displayAlbums, furtherPages };
   }
 
   static async deleteAlbum(id: string) {

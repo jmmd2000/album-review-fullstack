@@ -10,6 +10,7 @@ import ReviewDetails from "@components/ReviewDetails";
 import GenrePills from "@/components/GenrePills";
 import HeaderDetails from "@/components/HeaderDetails";
 import { FilePenLine, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
@@ -39,6 +40,10 @@ export const Route = createFileRoute("/albums/$albumID/")({
  *  It displays an album reviews contents along with the rated tracks in TrackCards
  */
 function RouteComponent() {
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
+
   const { albumID } = useParams({ strict: false });
   if (!albumID) {
     throw new Error("albumID is undefined");
@@ -50,8 +55,10 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader colors={album.colors}>
-        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} />
+      <BlurryHeader _colors={album.colors}>
+        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} albumID={album.spotifyID} />
+        <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
+        <div className="pb-10">{album.genres && <GenrePills genres={album.genres} />}</div>
       </BlurryHeader>
       <Link to="/albums/$albumID/edit" params={{ albumID }}>
         <div className="rounded-full bg-zinc-800/40 p-3 w-max absolute top-4 right-4">
@@ -67,8 +74,7 @@ function RouteComponent() {
       {/* <Link to="/albums/$albumID/create" params={{ albumID }}>
         <p>Create</p>
       </Link> */}
-      <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
-      {album.genres && <GenrePills genres={album.genres} />}
+
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />
     </>

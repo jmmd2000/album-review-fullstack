@@ -1,4 +1,4 @@
-import { ReviewedAlbum } from "../../../shared/src/types";
+import { GetAllAlbumsOptions, ReviewedAlbum } from "../../../shared/src/types";
 import { Album } from "../models/Album";
 import { ReceivedReviewData } from "../controllers/albumController";
 
@@ -13,6 +13,10 @@ export class AlbumService {
 
   static async getAllAlbums() {
     return await Album.getAllAlbums();
+  }
+
+  static async getPaginatedAlbums(options: GetAllAlbumsOptions) {
+    return await Album.getPaginatedAlbums(options);
   }
 
   static async deleteAlbum(id: string) {

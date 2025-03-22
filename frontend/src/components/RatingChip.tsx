@@ -6,17 +6,20 @@ interface RatingChipProps {
   /** The rating to display */
   rating: number;
   /** Options to specify whether or not to display the text label */
-  options?: { text?: boolean; small?: boolean };
+  options?: {
+    textBelow?: boolean;
+    small?: boolean;
+    ratingString?: boolean;
+  };
 }
 
 /**
  * A component that displays a rating as a chip with a gradient background and an optional text label.
  * It's primarily used in AlbumCards and on album detail pages.
  * @param {number} rating The rating to display
- * @param {{text?: boolean, small?: boolean}} options Options to specify whether or not to display the text label
+ * @param {{text?: boolean, small?: boolean, ratingString?: boolean}} options Options to specify whether or not to display the text label, the size of the chip, and the rating string
  */
-const RatingChip = (props: RatingChipProps) => {
-  const { rating, options } = props;
+const RatingChip = ({ rating, options }: RatingChipProps) => {
   // The function uses maps from 0-10 so take the first digit of the rating
   const tempRating = Math.floor(rating / 10);
   const borderColor = convertRatingToColor(tempRating, { border: true });
@@ -32,7 +35,7 @@ const RatingChip = (props: RatingChipProps) => {
     },
   });
 
-  const textStyles = cva([borderColor, "text-center", "rounded-lg", "bg-gradient-to-tr", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "w-min"], {
+  const textStyles = cva([borderColor, "text-center", "rounded-lg", "bg-gradient-to-tr", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "w-max"], {
     variants: {
       small: {
         true: "border-1 text-sm px-1 rounded-sm",
@@ -48,8 +51,8 @@ const RatingChip = (props: RatingChipProps) => {
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
-      <div className={textStyles({ small: options?.small ?? false })}>{rating}</div>
-      {options?.text && <p className="uppercase text-center font-medium text-xl">{ratingString}</p>}
+      <div className={textStyles({ small: options?.small ?? false })}>{options?.ratingString ? ratingString : rating}</div>
+      {options?.textBelow && <p className="uppercase text-center font-medium text-xl">{ratingString}</p>}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useMemo } from "react";
  */
 interface BlobBackgroundProps {
   /*** The colors to use for the blobs */
-  colors?: ExtractedColor[];
+  _colors?: ExtractedColor[];
   /*** The children to render on top of the blobs */
   children?: React.ReactNode;
 }
@@ -23,12 +23,14 @@ interface BlobBackgroundProps {
  * @param {ExtractedColor[] | undefined} colors The colors to use for the blobs, defaults to black
  * @param {React.ReactNode} children The children to render on top of the blobs
  */
-const BlurryHeader = (props: BlobBackgroundProps) => {
-  const defaultColors: ExtractedColor[] = [{ hex: "#000000" }];
-  const colors = props.colors && props.colors.length > 0 ? props.colors : defaultColors;
-  const { children } = props;
+const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
+  const defaultColors: ExtractedColor[] = [{ hex: "#00ffff" }];
+  const colors = _colors && _colors.length > 0 ? _colors : defaultColors;
 
-  const totalBlobs = 40; // Total number of blobs
+  // Total number of blobs, previously 40 but
+  // reduced to 30 after adding ViewTransitions.
+  // Was causing a flicker on navigation.
+  const totalBlobs = 30;
   const colorCount = colors.length;
 
   // Generate blobs with proportional color distribution
@@ -51,7 +53,7 @@ const BlurryHeader = (props: BlobBackgroundProps) => {
   }, [colorCount, colors]);
 
   return (
-    <div className="relative w-full h-[400px] overflow-hidden">
+    <div className="relative w-full h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
       {blobs.map((blob, index) => (
         <div
           key={index}

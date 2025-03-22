@@ -41,7 +41,7 @@ function RouteComponent() {
     <div>
       {/* <BlurryHeader /> */}
       <h1>{artist.name}</h1>
-      <img src={artist.imageURLs[1].url} alt={artist.name} />
+      <img src={artist.imageURLs[1].url} alt={artist.name} style={{ viewTransitionName: `artist-image-` }} />
     </div>
   );
 }

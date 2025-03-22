@@ -78,29 +78,10 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader colors={selectedColors}>
+      <BlurryHeader _colors={selectedColors}>
         <HeaderDetails name={data.name} imageURL={data.images[1].url} />
       </BlurryHeader>
       <AlbumReviewForm album={data} setSelectedColors={setSelectedColors} selectedColors={selectedColors} />
     </>
   );
 }
-
-// interface TrackCardProps {
-//   trackNumber: number;
-//   name: string;
-//   duration_ms: number;
-//   trackID: string;
-// }
-
-// const TrackCard = (props: TrackCardProps) => {
-//   const { trackNumber, name, duration_ms } = props;
-//   return (
-//     <div className="flex justify-between">
-//       <p>
-//         {trackNumber}. {name}
-//       </p>
-//       <p>{duration_ms / 1000}</p>
-//     </div>
-//   );
-// };
