@@ -46,8 +46,9 @@ export const getAlbumByID = async (req: Request, res: Response) => {
 };
 
 export const getAllAlbums = async (req: Request, res: Response) => {
+  const includeCounts = req.query.includeCounts === "true";
   try {
-    const albums = await AlbumService.getAllAlbums();
+    const albums = await AlbumService.getAllAlbums(includeCounts);
     res.status(200).json(albums);
   } catch (error) {
     if (error instanceof Error) {

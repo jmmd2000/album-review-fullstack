@@ -80,7 +80,9 @@ const GENRES = ["pop", "rock", "rap", "hip-hop", "r&b", "jazz", "blues", "countr
 
 export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
   let albums: SpotifyAlbum[] = [];
-  for (let id of spotifyIDs) {
+  while (spotifyIDs.length > 0) {
+    const randomIndex = Math.floor(Math.random() * spotifyIDs.length);
+    const id = spotifyIDs.splice(randomIndex, 1)[0];
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
     const response = await fetch(`http://localhost:4000/api/spotify/albums/${id}`);
     const data: SpotifyAlbum = await response.json();

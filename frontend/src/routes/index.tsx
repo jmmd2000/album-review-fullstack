@@ -8,7 +8,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAllAlbums(): Promise<{ albums: DisplayAlbum[]; numArtists: number; numAlbums: number; numTracks: number }> {
-  const response = await fetch(`${API_BASE_URL}/api/albums/all`);
+  const response = await fetch(`${API_BASE_URL}/api/albums/all?includeCounts=true`);
   return await response.json();
 }
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { TrackService } from "../services/trackService";
 
-export const getAlbumTracks = async (req: Request, res: Response) => {
+export const getTracksByAlbumID = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
   try {
     const albumTracks = await TrackService.getAlbumTracks(albumID);
@@ -15,10 +15,10 @@ export const getAlbumTracks = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteAlbumTracks = async (req: Request, res: Response) => {
+export const deleteTracksByAlbumID = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
   try {
-    await TrackService.deleteAlbumTracks(albumID);
+    await TrackService.deleteTracksByAlbumID(albumID);
     res.status(204).end();
   } catch (error) {
     if (error instanceof Error) {
