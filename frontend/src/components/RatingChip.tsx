@@ -1,6 +1,5 @@
-import { convertRatingToString } from "@/helpers/convertRatingToString";
-import { convertRatingToColor } from "@/helpers/convertRatingToColor";
 import { cva } from "class-variance-authority";
+import { getRatingStyles } from "@/helpers/getRatingStyles";
 
 interface RatingChipProps {
   /** The rating to display */
@@ -20,12 +19,7 @@ interface RatingChipProps {
  * @param {{text?: boolean, small?: boolean, ratingString?: boolean}} options Options to specify whether or not to display the text label, the size of the chip, and the rating string
  */
 const RatingChip = ({ rating, options }: RatingChipProps) => {
-  // The function uses maps from 0-10 so take the first digit of the rating
-  const tempRating = Math.floor(rating / 10);
-  const borderColor = convertRatingToColor(tempRating, { border: true });
-  const textColor = convertRatingToColor(tempRating, { text: true });
-  const gradientStart = convertRatingToColor(tempRating, { gradient: true });
-  const ratingString = convertRatingToString(tempRating);
+  const { label, borderColor, gradientStart, textColor } = getRatingStyles(rating);
 
   const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-min", "mx-auto", textColor], {
     variants: {
@@ -35,7 +29,7 @@ const RatingChip = ({ rating, options }: RatingChipProps) => {
     },
   });
 
-  const textStyles = cva([borderColor, "text-center", "rounded-lg", "bg-gradient-to-tr", gradientStart, "via-zinc-800/40", "to-zinc-800/40", "w-max"], {
+  const textStyles = cva([borderColor, "text-center", "rounded-lg", "bg-gradient-to-t", gradientStart, "to-transparent", "w-max"], {
     variants: {
       small: {
         true: "border-1 text-sm px-1 rounded-sm",
@@ -51,8 +45,8 @@ const RatingChip = ({ rating, options }: RatingChipProps) => {
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
-      <div className={textStyles({ small: options?.small ?? false })}>{options?.ratingString ? ratingString : rating}</div>
-      {options?.textBelow && <p className="uppercase text-center font-medium text-xl">{ratingString}</p>}
+      <div className={textStyles({ small: options?.small ?? false })}>{options?.ratingString ? label : rating}</div>
+      {options?.textBelow && <p className="uppercase text-center font-medium text-xl">{label}</p>}
     </div>
   );
 };

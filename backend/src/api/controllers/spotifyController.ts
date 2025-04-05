@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { SpotifyService } from "../services/spotifyService";
+import { SearchAlbumsOptions } from "@shared/types";
 
 export const getAccessToken = async (_req: Request, res: Response) => {
   try {
@@ -15,7 +16,9 @@ export const getAccessToken = async (_req: Request, res: Response) => {
 };
 
 export const searchAlbums = async (req: Request, res: Response) => {
-  const query = req.query.q as string;
+  const query: SearchAlbumsOptions = {
+    query: req.query.query as string,
+  };
   try {
     const spotifyResponse = await SpotifyService.searchAlbums(query);
     res.status(200).json(spotifyResponse);

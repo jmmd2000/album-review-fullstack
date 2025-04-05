@@ -4,7 +4,6 @@ export const useCountUp = (target: number, duration = 1000) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    //   const start = 0;
     const startTime = performance.now();
 
     const animate = (time: number) => {

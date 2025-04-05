@@ -3,22 +3,6 @@ import { count, eq } from "drizzle-orm";
 import { reviewedTracks } from "../../db/schema";
 import { db } from "../../index";
 
-// export class Track {
-//   static async getAlbumTracks(albumID: string) {
-//     const tracks = await db
-//       .select()
-//       .from(reviewedTracks)
-//       .where(eq(reviewedTracks.albumSpotifyID, albumID))
-//       .then((results) => results);
-
-//     return tracks as ReviewedTrack[];
-//   }
-
-//   static async deleteAlbumTracks(albumID: string) {
-//     await db.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
-//   }
-// }
-
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {
     return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));

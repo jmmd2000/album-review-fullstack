@@ -400,9 +400,13 @@ export interface ExtractedColor {
 /**
  * Represents the parameters passed to the getAllAlbums method.
  */
-export interface GetAllAlbumsOptions {
+export interface GetPaginatedAlbumsOptions {
   page?: number;
   orderBy?: "reviewScore" | "releaseYear" | "name" | "createdAt";
   order?: "asc" | "desc";
   search?: string;
+}
+
+export interface SearchAlbumsOptions {
+  query?: string;
 }

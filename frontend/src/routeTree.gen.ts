@@ -12,6 +12,9 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as SettingsIndexImport } from './routes/settings/index'
+import { Route as SearchIndexImport } from './routes/search/index'
+import { Route as BookmarksIndexImport } from './routes/bookmarks/index'
 import { Route as ArtistsIndexImport } from './routes/artists/index'
 import { Route as AlbumsIndexImport } from './routes/albums/index'
 import { Route as ArtistsArtistIDIndexImport } from './routes/artists/$artistID/index'
@@ -24,6 +27,24 @@ import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/cre
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsIndexRoute = SettingsIndexImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SearchIndexRoute = SearchIndexImport.update({
+  id: '/search/',
+  path: '/search/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BookmarksIndexRoute = BookmarksIndexImport.update({
+  id: '/bookmarks/',
+  path: '/bookmarks/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -88,6 +109,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArtistsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/bookmarks/': {
+      id: '/bookmarks/'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/search/': {
+      id: '/search/'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/albums/$albumID/create': {
       id: '/albums/$albumID/create'
       path: '/albums/$albumID/create'
@@ -125,6 +167,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
   '/artists': typeof ArtistsIndexRoute
+  '/bookmarks': typeof BookmarksIndexRoute
+  '/search': typeof SearchIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
@@ -135,6 +180,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
   '/artists': typeof ArtistsIndexRoute
+  '/bookmarks': typeof BookmarksIndexRoute
+  '/search': typeof SearchIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
@@ -146,6 +194,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/albums/': typeof AlbumsIndexRoute
   '/artists/': typeof ArtistsIndexRoute
+  '/bookmarks/': typeof BookmarksIndexRoute
+  '/search/': typeof SearchIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
@@ -158,6 +209,9 @@ export interface FileRouteTypes {
     | '/'
     | '/albums'
     | '/artists'
+    | '/bookmarks'
+    | '/search'
+    | '/settings'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
@@ -167,6 +221,9 @@ export interface FileRouteTypes {
     | '/'
     | '/albums'
     | '/artists'
+    | '/bookmarks'
+    | '/search'
+    | '/settings'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
@@ -176,6 +233,9 @@ export interface FileRouteTypes {
     | '/'
     | '/albums/'
     | '/artists/'
+    | '/bookmarks/'
+    | '/search/'
+    | '/settings/'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID/'
@@ -187,6 +247,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlbumsIndexRoute: typeof AlbumsIndexRoute
   ArtistsIndexRoute: typeof ArtistsIndexRoute
+  BookmarksIndexRoute: typeof BookmarksIndexRoute
+  SearchIndexRoute: typeof SearchIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   AlbumsAlbumIDCreateRoute: typeof AlbumsAlbumIDCreateRoute
   AlbumsAlbumIDEditRoute: typeof AlbumsAlbumIDEditRoute
   AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
@@ -197,6 +260,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlbumsIndexRoute: AlbumsIndexRoute,
   ArtistsIndexRoute: ArtistsIndexRoute,
+  BookmarksIndexRoute: BookmarksIndexRoute,
+  SearchIndexRoute: SearchIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   AlbumsAlbumIDCreateRoute: AlbumsAlbumIDCreateRoute,
   AlbumsAlbumIDEditRoute: AlbumsAlbumIDEditRoute,
   AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
@@ -216,6 +282,9 @@ export const routeTree = rootRoute
         "/",
         "/albums/",
         "/artists/",
+        "/bookmarks/",
+        "/search/",
+        "/settings/",
         "/albums/$albumID/create",
         "/albums/$albumID/edit",
         "/albums/$albumID/",
@@ -230,6 +299,15 @@ export const routeTree = rootRoute
     },
     "/artists/": {
       "filePath": "artists/index.tsx"
+    },
+    "/bookmarks/": {
+      "filePath": "bookmarks/index.tsx"
+    },
+    "/search/": {
+      "filePath": "search/index.tsx"
+    },
+    "/settings/": {
+      "filePath": "settings/index.tsx"
     },
     "/albums/$albumID/create": {
       "filePath": "albums/$albumID/create.tsx"

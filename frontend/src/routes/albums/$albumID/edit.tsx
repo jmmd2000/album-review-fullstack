@@ -44,7 +44,7 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader colors={selectedColors}>
+      <BlurryHeader _colors={selectedColors}>
         <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} />
       </BlurryHeader>
       <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} />

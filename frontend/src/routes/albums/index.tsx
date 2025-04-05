@@ -1,21 +1,19 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { DisplayAlbum, GetAllAlbumsOptions } from "@shared/types";
+import { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
 import AlbumCard from "@components/AlbumCard";
 import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchAllAlbums(options: GetAllAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean }> {
+async function fetchAllAlbums(options: GetPaginatedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
   if (options.order) queryParams.set("order", options.order);
   if (options.orderBy) queryParams.set("orderBy", options.orderBy);
   if (options.search) queryParams.set("search", options.search);
-
-  console.log(queryParams);
 
   const response = await fetch(`${API_BASE_URL}/api/albums?${queryParams.toString()}`);
 
@@ -26,7 +24,7 @@ async function fetchAllAlbums(options: GetAllAlbumsOptions): Promise<{ albums: D
   return await response.json();
 }
 
-const albumQueryOptions = (options: GetAllAlbumsOptions) =>
+const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   queryOptions({
     queryKey: ["albums", options],
     queryFn: () => fetchAllAlbums(options),
@@ -35,34 +33,34 @@ const albumQueryOptions = (options: GetAllAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/albums/")({
-  loaderDeps: ({ search }: { search: GetAllAlbumsOptions }) => ({
+  loaderDeps: ({ search }: { search: GetPaginatedAlbumsOptions }) => ({
     page: search.page,
     search: search.search,
     orderBy: search.orderBy,
     order: search.order,
   }),
-  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetAllAlbumsOptions }) => {
+  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetPaginatedAlbumsOptions }) => {
     return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const options: GetAllAlbumsOptions = Route.useSearch();
+  const options: GetPaginatedAlbumsOptions = Route.useSearch();
   const { data } = useQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const handleNextPage = () => {
     if (data?.furtherPages) {
       navigate({
-        search: (prev: Partial<GetAllAlbumsOptions>) => ({ ...prev, page: (prev.page || 1) + 1 }),
+        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, page: (prev.page || 1) + 1 }),
       });
     }
   };
 
   const handlePrevPage = () => {
     navigate({
-      search: (prev: Partial<GetAllAlbumsOptions>) => {
+      search: (prev: Partial<GetPaginatedAlbumsOptions>) => {
         const currentPage = prev.page || 1;
         if (currentPage > 1) {
           return { ...prev, page: currentPage - 1 };
@@ -72,7 +70,13 @@ function RouteComponent() {
     });
   };
 
-  console.log(data?.furtherPages, options.page);
+  const handleSearch = (search: string) => {
+    navigate({
+      search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, search }),
+    });
+  };
+
+  console.log("data", data);
 
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
@@ -81,11 +85,11 @@ function RouteComponent() {
         cards={data.albums.map((album) => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
-        options={{ controls: true, counter: true }}
-        nextPage={handleNextPage}
-        previousPage={handlePrevPage}
-        nextDisabled={!data.furtherPages}
-        previousDisabled={options.page === 1 || options.page === undefined}
+        options={{ search: true, pagination: true, counter: data.totalCount }}
+        nextPage={{ action: handleNextPage, disabled: !data.furtherPages }}
+        previousPage={{ action: handlePrevPage, disabled: options.page === 1 || options.page === undefined }}
+        pageData={{ pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) }}
+        search={handleSearch}
       />
     </motion.div>
   );

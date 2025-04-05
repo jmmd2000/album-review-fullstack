@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { DisplayAlbum, ExtractedColor, DisplayTrack, GetAllAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage } from "@shared/types";
 import { ReceivedReviewData } from "../controllers/albumController";
 import { calculateAlbumScore } from "../../helpers/calculateAlbumScore";
 import { calculateArtistScore } from "../../helpers/calculateArtistScore";
@@ -143,8 +143,9 @@ export class AlbumService {
     return { albums: displayAlbums, numArtists, numAlbums, numTracks };
   }
 
-  static async getPaginatedAlbums(opts: GetAllAlbumsOptions) {
+  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions) {
     const albums = await AlbumModel.getPaginatedAlbums(opts);
+    const totalCount = await AlbumModel.getAlbumCount();
     const furtherPages = albums.length > 35;
     if (furtherPages) albums.pop();
 
@@ -159,7 +160,7 @@ export class AlbumService {
       releaseYear: album.releaseYear,
     }));
 
-    return { albums: displayAlbums, furtherPages };
+    return { albums: displayAlbums, furtherPages, totalCount };
   }
 
   static async deleteAlbum(id: string) {

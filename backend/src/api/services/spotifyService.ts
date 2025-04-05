@@ -1,3 +1,4 @@
+import { SearchAlbumsOptions } from "@shared/types";
 import { Spotify } from "../models/Spotify";
 
 export class SpotifyService {
@@ -5,7 +6,7 @@ export class SpotifyService {
     return await Spotify.getAccessToken();
   }
 
-  static async searchAlbums(query: string) {
+  static async searchAlbums(query: SearchAlbumsOptions) {
     return await Spotify.searchAlbums(query);
   }
 

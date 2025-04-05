@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { AlbumService } from "../../api/services/albumService";
-import { DisplayTrack, ExtractedColor, GetAllAlbumsOptions, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
+import { DisplayTrack, ExtractedColor, GetPaginatedAlbumsOptions, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 
 export type ReceivedReviewData = {
   ratedTracks: DisplayTrack[];
@@ -60,16 +60,16 @@ export const getAllAlbums = async (req: Request, res: Response) => {
 };
 
 export const getPaginatedAlbums = async (req: Request, res: Response) => {
-  const options: GetAllAlbumsOptions = {
+  const options: GetPaginatedAlbumsOptions = {
     page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as GetAllAlbumsOptions["orderBy"] | undefined,
-    order: req.query.order as GetAllAlbumsOptions["order"] | undefined,
+    orderBy: req.query.orderBy as GetPaginatedAlbumsOptions["orderBy"] | undefined,
+    order: req.query.order as GetPaginatedAlbumsOptions["order"] | undefined,
     search: req.query.search as string | undefined,
   };
 
   try {
-    const { albums, furtherPages } = await AlbumService.getPaginatedAlbums(options);
-    res.status(200).json({ albums, furtherPages });
+    const { albums, furtherPages, totalCount } = await AlbumService.getPaginatedAlbums(options);
+    res.status(200).json({ albums, furtherPages, totalCount });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

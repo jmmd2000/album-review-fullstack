@@ -1,8 +1,9 @@
-import { ExtractedColor, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
 import { getImageColors } from "../../helpers/getImageColors";
 import { db } from "../../index";
 import { reviewedAlbums } from "../../db/schema";
 import { eq } from "drizzle-orm";
+import { AlbumModel } from "./Album";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -35,8 +36,12 @@ export class Spotify {
     return this.accessToken;
   }
 
-  static async searchAlbums(query: string) {
-    const endpoint = `https://api.spotify.com/v1/search?q=${query}&type=album&limit=10`;
+  static async searchAlbums(query: SearchAlbumsOptions) {
+    // Check if the query is empty or undefined
+    const rawQuery = query.query?.trim();
+    if (!rawQuery || rawQuery === "undefined") return [] as DisplayAlbum[];
+    console.log("Searching for albums with query:", rawQuery);
+    const endpoint = `https://api.spotify.com/v1/search?q=${query.query}&type=album&limit=35`;
     const accessToken = await this.getAccessToken();
     const searchParamaters = {
       method: "GET",
@@ -49,21 +54,28 @@ export class Spotify {
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
-    // console.log({ data });
-    return data as SpotifySearchResponse;
+    const displayAlbums: DisplayAlbum[] = data.albums.items.map((album: SpotifyAlbum) => {
+      return {
+        spotifyID: album.id,
+        name: album.name,
+        artistName: album.artists[0].name,
+        artistSpotifyID: album.artists[0].id,
+        releaseYear: album.release_date.split("-")[0],
+        imageURLs: album.images,
+      };
+    });
+
+    return displayAlbums;
+
+    // return data as SpotifySearchResponse;
   }
 
   static async getAlbum(albumID: string) {
-    // const existingAlbum = await db
-    //   .select()
-    //   .from(reviewedAlbums)
-    //   .where(eq(reviewedAlbums.spotifyID, albumID))
-    //   .then((results) => results[0]);
-
-    // if (existingAlbum) {
-    //   throw new Error("Album already exists.");
-    // }
-
+    // Check if the album already exists in the database
+    const existingAlbum = AlbumModel.findBySpotifyID(albumID);
+    if (await existingAlbum) {
+      throw new Error("Album already exists in the database");
+    }
     const endpoint = `https://api.spotify.com/v1/albums/${albumID}`;
     const accessToken = await this.getAccessToken();
     const searchParamaters = {

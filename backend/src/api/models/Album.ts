@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
-import { GetAllAlbumsOptions } from "@shared/types";
+import { GetPaginatedAlbumsOptions } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
 import { db } from "../../index";
 
@@ -33,7 +33,7 @@ export class AlbumModel {
     return db.select().from(reviewedAlbums);
   }
 
-  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetAllAlbumsOptions) {
+  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetPaginatedAlbumsOptions) {
     const validOrderBy = ["reviewScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "reviewScore";

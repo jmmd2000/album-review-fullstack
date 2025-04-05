@@ -1,12 +1,13 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
-import { useState } from "react";
-import { ExtractedColor, SpotifyAlbum } from "@shared/types";
+import { useEffect, useState } from "react";
+import { DisplayAlbum, ExtractedColor, SpotifyAlbum } from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
 import HeaderDetails from "@/components/HeaderDetails";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -53,8 +54,10 @@ const albumQueryOptions = (albumSpotifyID: string) =>
     queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
   });
 
-// This page is for creating a new album review
+// This is the maximum number of recent albums to show in the recent albums list
+const MAX_RECENT = 14;
 
+// This page is for creating a new album review
 export const Route = createFileRoute("/albums/$albumID/create")({
   loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
@@ -64,6 +67,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
 function RouteComponent() {
   // Get the album ID from the URL
   const { albumID } = useParams({ strict: false });
+  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
 
   // If the album ID is undefined, throw an error
   if (!albumID) {
@@ -72,6 +76,30 @@ function RouteComponent() {
 
   // Fetch the album data
   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
+  // console.log(data);
+
+  useEffect(() => {
+    if (!data.id) return;
+
+    const alreadyExists = recentAlbums.some((album) => album.spotifyID === data.id);
+    if (alreadyExists) return;
+
+    const newAlbum: DisplayAlbum = {
+      spotifyID: data.id,
+      name: data.name,
+      artistName: data.artists[0].name,
+      artistSpotifyID: data.artists[0].id,
+      releaseYear: parseInt(data.release_date.split("-")[0], 10),
+      imageURLs: data.images,
+    };
+
+    setRecentAlbums((prev) => {
+      const deduped = prev.filter((album) => album.spotifyID !== data.id);
+      const updated = [newAlbum, ...deduped].slice(0, MAX_RECENT);
+      return updated;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.id]);
 
   // State to manage selected colors
   const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.colors);

@@ -1,3 +1,4 @@
+import AdminDropdown from "@/components/AdminDropdown";
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
@@ -37,11 +38,14 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Navbar (sm and up) */}
-      <div className="hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full will-change-transform">
+      <div className="z-[9999] relative hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full will-change-transform">
         <img src="../../../public/favicon.ico" alt="logo" className="h-[40px]" />
         {ROUTES.map((route) => (
           <NavLink key={route.to} to={route.to} name={route.name} />
         ))}
+        <div className="ml-auto">
+          <AdminDropdown />
+        </div>
       </div>
 
       {/* Mobile Menu Button (below sm) */}

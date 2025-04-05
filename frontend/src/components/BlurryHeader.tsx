@@ -40,11 +40,12 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
       const blobCount = Math.round((totalBlobs / colorCount) * (colorCount - i)); // More for first colors
       for (let j = 0; j < blobCount; j++) {
         blobsArray.push({
-          size: Math.floor(Math.random() * 300) + 200,
-          top: Math.random() * 100,
-          left: Math.random() * 100,
+          size: Math.floor(Math.random() * 300) + 300,
+          top: Math.random() * 30,
+          left: Math.random() * 70,
           color: colors[i].hex,
-          blur: Math.floor(Math.random() * 60) + 80,
+          blur: Math.floor(Math.random() * 60) + 60,
+          opacity: Math.random() * 0.5 + 0.5,
           animationClass: `animate-lava${j % 3}`,
         });
       }
@@ -53,7 +54,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   }, [colorCount, colors]);
 
   return (
-    <div className="relative w-full h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
+    <div className="relative  w-full h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
       {blobs.map((blob, index) => (
         <div
           key={index}
@@ -64,6 +65,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
             top: `${blob.top}%`,
             left: `${blob.left}%`,
             filter: `blur(${blob.blur}px)`,
+            opacity: blob.opacity,
             backgroundColor: blob.color,
           }}
         ></div>

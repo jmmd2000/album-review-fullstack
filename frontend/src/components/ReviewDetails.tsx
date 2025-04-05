@@ -49,11 +49,11 @@ const BestWorstSong = ({ bestSong, worstSong }: BestWorstSongProps) => {
   return (
     <div className="flex items-center gap-2 m-4">
       <div>
-        <p className="text-emerald-500 text-xs tracking-wider">Best song</p>
+        <p className="text-emerald-500 text-xs tracking-wider uppercase">Best song</p>
         <p className="bg-emerald-500/60 p-2 rounded-lg text-center">{bestSong}</p>
       </div>
       <div>
-        <p className="text-red-500 text-xs tracking-wide">Worst song</p>
+        <p className="text-red-500 text-xs tracking-wide uppercase">Worst song</p>
         <p className="bg-red-500/60 p-2 rounded-lg text-center">{worstSong}</p>
       </div>
     </div>

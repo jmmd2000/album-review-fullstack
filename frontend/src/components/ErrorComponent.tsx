@@ -1,5 +1,5 @@
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { useRouter, ErrorComponentProps } from "@tanstack/react-router";
+import { useRouter, ErrorComponentProps, useParams } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 /**
@@ -8,6 +8,7 @@ import { useEffect } from "react";
  */
 const ErrorComponent = ({ error }: ErrorComponentProps) => {
   const router = useRouter();
+  const params = useParams({ strict: false });
   const queryErrorResetBoundary = useQueryErrorResetBoundary();
 
   useEffect(() => {
@@ -31,7 +32,7 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
                 router.navigate({
                   to: "/albums/$albumID/edit",
                   replace: true,
-                  params: { albumID: "albumID" },
+                  params: { albumID: params.albumID ?? "" },
                 })
               }
               className="px-4 py-2 bg-green-500 text-white rounded"

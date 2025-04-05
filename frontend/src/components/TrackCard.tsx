@@ -1,8 +1,7 @@
 import { DisplayTrack } from "@shared/types";
 import { convertDuration } from "@/helpers/convertDuration";
-import { convertRatingToString } from "@/helpers/convertRatingToString";
-import { convertRatingToColor } from "@/helpers/convertRatingToColor";
 import { cva } from "class-variance-authority";
+import { getRatingStyles } from "@/helpers/getRatingStyles";
 
 /**
  * The props for the TrackCard component.
@@ -18,11 +17,11 @@ interface TrackCardProps {
  * This component is used to display track details for both rated tracks and tracks that are being rated inside `AlbumReviewForm`
  */
 const TrackCard = ({ track, children }: TrackCardProps) => {
+  // console.log(track);
   const mappedFeatures = track.features.map((feature) => feature.name);
-  const gradientStart = convertRatingToColor(track.rating ?? -1, { gradient: true });
-  const textColor = convertRatingToColor(track.rating ?? -1, { text: true });
+  const { label, gradientStart, textColor } = getRatingStyles(track.rating !== undefined ? track.rating * 10 : undefined);
 
-  const trackCard = cva(["grid", "gap-2", "justify-between", "w-[90%]", "md:w-[70%]", "p-4", "rounded-lg", "bg-gradient-to-r", gradientStart, "via-zinc-800/40", "to-zinc-800/40"], {
+  const trackCard = cva(["grid", "gap-2", "justify-between", "p-4", "bg-gradient-to-l", gradientStart, "via-neutral-900/60", "to-neutral-900", "rounded-lg"], {
     variants: {
       rating: {
         true: "grid-cols-6 @[950px]/TrackList:grid-cols-7",
@@ -34,18 +33,19 @@ const TrackCard = ({ track, children }: TrackCardProps) => {
   const hasChildren = children !== undefined && children !== null && children !== false;
 
   return (
-    <div className={trackCard({ rating: track.rating !== undefined })}>
-      <h2 className="col-span-3 @[950px]/TrackList:col-span-2 truncate">{track.name}</h2>
-      <p className="col-start-4 col-span-2 @[950px]/TrackList:col-start-3 @[950px]/TrackList:col-span-1 text-center text-zinc-300 truncate">{track.artistName}</p>
-      <p className="col-span-2 hidden @[950px]/TrackList:block truncate text-zinc-400">{mappedFeatures.join(", ")}</p>
-      <p className="hidden @[950px]/TrackList:block @[950px]/TrackList:col-start-6 text-center text-zinc-300">{convertDuration(track.duration)}</p>
+    <div className={`p-[2px] rounded-lg bg-gradient-to-r ${gradientStart} to-neutral-900 w-[90%] md:w-[70%]`}>
+      <div className={trackCard({ rating: track.rating !== undefined })}>
+        <h2 className="col-span-3 @[950px]/TrackList:col-span-2 truncate">{track.name}</h2>
+        <p className="col-start-4 col-span-2 @[950px]/TrackList:col-start-3 @[950px]/TrackList:col-span-1 text-center text-zinc-300 truncate">{track.artistName}</p>
+        <p className="col-span-2 hidden @[950px]/TrackList:block truncate text-zinc-400">{mappedFeatures.join(", ")}</p>
+        <p className="hidden @[950px]/TrackList:block @[950px]/TrackList:col-start-6 text-center text-zinc-300">{convertDuration(track.duration)}</p>
 
-      {/* Show the rating when NOT in a form */}
-      {track.rating !== undefined && !hasChildren ? (
-        <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{convertRatingToString(track.rating)}</p>
-      ) : (
-        <div className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{children}</div>
-      )}
+        {track.rating !== undefined && !hasChildren ? (
+          <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p>
+        ) : (
+          <div className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{children}</div>
+        )}
+      </div>
     </div>
   );
 };

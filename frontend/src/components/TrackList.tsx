@@ -2,9 +2,8 @@ import { DisplayTrack } from "@shared/types";
 import TrackCard from "@components/TrackCard";
 import { Controller, UseFormReturn } from "react-hook-form";
 import { CreateReviewFormData } from "./AlbumReviewForm";
-import { convertRatingToColor } from "@/helpers/convertRatingToColor";
-import { convertRatingToString } from "@/helpers/convertRatingToString";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getRatingStyles } from "@/helpers/getRatingStyles";
 
 /**
  * The props for the TrackList component.
@@ -23,6 +22,11 @@ const TrackList = ({ tracks, formMethods }: TrackListProps) => {
   // Local state to force re-renders when ratings change
   const [updatedTracks, setUpdatedTracks] = useState(tracks);
 
+  useEffect(() => {
+    console.log("Tracks updated");
+    console.log(updatedTracks);
+  }, [updatedTracks]);
+
   // Function to handle rating changes
   const handleRatingChange = (index: number, newRating: number) => {
     const newTracks = updatedTracks.map((track, i) => (i === index ? { ...track, rating: newRating } : track));
@@ -36,7 +40,7 @@ const TrackList = ({ tracks, formMethods }: TrackListProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 mb-8 items-center @container/TrackList">
+    <div className="flex flex-col gap-2 mb-8 items-center @container/TrackList">
       {updatedTracks.map((track, index) =>
         formMethods ? (
           <TrackCard key={track.spotifyID} track={track}>
@@ -57,11 +61,14 @@ const TrackList = ({ tracks, formMethods }: TrackListProps) => {
                     handleRatingChange(index, newRating);
                   }}
                 >
-                  {[...Array(11)].map((_, idx) => (
-                    <option key={idx} value={idx} className={`text-center uppercase font-bold ${convertRatingToColor(idx, { text: true })}`}>
-                      {convertRatingToString(idx)}
-                    </option>
-                  ))}
+                  {[...Array(11)].map((_, idx) => {
+                    const { label, textColor } = getRatingStyles(idx * 10);
+                    return (
+                      <option key={idx} value={idx} className={`text-center uppercase font-bold ${textColor}`}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
               )}
             />

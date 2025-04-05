@@ -1,26 +1,66 @@
 import Button from "@components/Button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+type CardGridControlsProps =
+  | {
+      /** Indicates if pagination is disabled or not */
+      pagination: true;
+      /** Next page action and disabled state */
+      nextPage: { action: () => void; disabled?: boolean };
+      /** Previous page action and disabled state */
+      previousPage: { action: () => void; disabled?: boolean };
+      /** Current page number and total pages */
+      pageData: { pageNumber: number; totalPages: number };
+      /** Search callback function */
+      search: (search: string) => void;
+    }
+  | {
+      pagination?: false;
+      nextPage?: never;
+      previousPage?: never;
+      pageData?: never;
+      search: (search: string) => void;
+    };
 
-interface CardGridControlsProps {
-  nextPage: () => void;
-  previousPage: () => void;
-  previousDisabled?: boolean;
-  nextDisabled?: boolean;
-}
-
-const CardGridControls = ({ nextPage, previousPage, nextDisabled, previousDisabled }: CardGridControlsProps) => {
-  console.log(nextDisabled, previousDisabled);
+/**
+ * This component creates a card grid with controls for pagination and search.
+ */
+const CardGridControls = ({ pagination, nextPage, previousPage, pageData, search }: CardGridControlsProps) => {
   return (
     <div className="sticky top-0 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 z-10">
       <div className="flex gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
         <div className="flex justify-center gap-2">
-          <input type="text" placeholder="Search..." className="rounded-sm p-2 bg-neutral-800 px-4" />
-          <Button label={"Search"} />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="rounded-sm p-2 bg-neutral-800 px-4"
+            id="search-input"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const inputElement = e.target as HTMLInputElement;
+                const inputValue = inputElement?.value || "";
+                search(inputValue);
+              }
+            }}
+          />
+          <Button
+            label={"Search"}
+            onClick={() => {
+              const inputElement = document.getElementById("search-input") as HTMLInputElement;
+              const inputValue = inputElement?.value || "";
+              search(inputValue);
+            }}
+          />
         </div>
 
-        <div className="ml-auto flex justify-center items-center gap-2">
-          <Button label="Previous" onClick={previousPage} disabled={previousDisabled} />
-          <Button label="Next" onClick={nextPage} disabled={nextDisabled} />
-        </div>
+        {pagination && (
+          <div className="ml-auto flex justify-center items-center gap-2">
+            <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} />
+            <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded" aria-label="Page Number">
+              {pageData?.pageNumber} / {pageData?.totalPages}
+            </div>
+            <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} />
+          </div>
+        )}
       </div>
     </div>
   );

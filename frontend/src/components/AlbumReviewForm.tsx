@@ -1,9 +1,6 @@
 import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-// import TrackCard from "@components/TrackCard";
-// import { convertRatingToString } from "@/helpers/convertRatingToString";
-// import { convertRatingToColor } from "@/helpers/convertRatingToColor";
 import TrackList from "./TrackList";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
