@@ -27,22 +27,21 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   const defaultColors: ExtractedColor[] = [{ hex: "#00ffff" }];
   const colors = _colors && _colors.length > 0 ? _colors : defaultColors;
 
-  // Total number of blobs, previously 40 but
-  // reduced to 30 after adding ViewTransitions.
-  // Was causing a flicker on navigation.
-  const totalBlobs = 30;
+  // Total number of blobs
+  const totalBlobs = 80;
   const colorCount = colors.length;
 
   // Generate blobs with proportional color distribution
   const blobs = useMemo(() => {
     const blobsArray = [];
+
     for (let i = 0; i < colorCount; i++) {
-      const blobCount = Math.round((totalBlobs / colorCount) * (colorCount - i)); // More for first colors
+      const blobCount = Math.round((totalBlobs / colorCount) * (colorCount - i));
       for (let j = 0; j < blobCount; j++) {
         blobsArray.push({
           size: Math.floor(Math.random() * 300) + 300,
-          top: Math.random() * 30,
           left: Math.random() * 70,
+          top: Math.random() * 30,
           color: colors[i].hex,
           blur: Math.floor(Math.random() * 60) + 60,
           opacity: Math.random() * 0.5 + 0.5,
@@ -50,6 +49,13 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
         });
       }
     }
+
+    // Shuffle blobs to randomize layering
+    for (let i = blobsArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [blobsArray[i], blobsArray[j]] = [blobsArray[j], blobsArray[i]];
+    }
+
     return blobsArray;
   }, [colorCount, colors]);
 
@@ -62,14 +68,18 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
           style={{
             width: `${blob.size}px`,
             height: `${blob.size}px`,
+            position: "absolute",
             top: `${blob.top}%`,
             left: `${blob.left}%`,
+            transform: "translate(-50%, -50%)",
             filter: `blur(${blob.blur}px)`,
             opacity: blob.opacity,
             backgroundColor: blob.color,
+            willChange: "transform, opacity, filter",
           }}
         ></div>
       ))}
+
       {children}
     </div>
   );
