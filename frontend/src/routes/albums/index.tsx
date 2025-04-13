@@ -7,7 +7,7 @@ import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchAllAlbums(options: GetPaginatedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
+async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
@@ -27,7 +27,7 @@ async function fetchAllAlbums(options: GetPaginatedAlbumsOptions): Promise<{ alb
 const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   queryOptions({
     queryKey: ["albums", options],
-    queryFn: () => fetchAllAlbums(options),
+    queryFn: () => fetchPaginatedAlbums(options),
     placeholderData: (prev) => prev,
     staleTime: 1000 * 60 * 10,
   });
@@ -43,6 +43,13 @@ export const Route = createFileRoute("/albums/")({
     return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "Albums",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

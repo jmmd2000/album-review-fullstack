@@ -16,8 +16,17 @@ const BAD_ALBUM_BONUS = 0.25;
  * @param {number | null} existingScore In the case that this is being called while adding a new album, this is the artist's current score
  * @returns {Object} an object containing the `newAverageScore`, `newBonusPoints`, `totalScore`, and `bonusReasons`
  */
-export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: number | null) => {
-  let newAverageScore = existingScore ?? 0;
+export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
+  if (albums.length === 0) {
+    return {
+      newAverageScore: 0,
+      newBonusPoints: 0,
+      totalScore: 0,
+      bonusReasons: [],
+    };
+  }
+
+  let newAverageScore = 0;
   let newBonusPoints = 0;
 
   for (const album of albums) {
@@ -27,9 +36,6 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
   const bonusReasons: Reason[] = [];
 
   if (albums.length > 2) {
-    //* Calculate bonus points only for every album after the first 2
-    //* Also generate the bonus reasons
-    // const albumsToConsider = albums.slice(2);
     for (const album of albums) {
       const image_urls = album.imageURLs;
       const minimalAlbum: MinimalAlbum = {
@@ -38,6 +44,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
         name: album.name,
         imageURLs: image_urls,
       };
+
       if (album.reviewScore < 45) {
         newBonusPoints -= BAD_ALBUM_BONUS;
         bonusReasons.push({
@@ -62,18 +69,10 @@ export const calculateArtistScore = (albums: ReviewedAlbum[], existingScore: num
     }
   }
 
-  //* If this is being called while adding a new album, the array of albums doesn't include the new album yet
-  if (existingScore) {
-    newAverageScore = newAverageScore / (albums.length + 1);
-  } else {
-    newAverageScore = newAverageScore / albums.length;
-  }
-
-  //* Calculate the total score
-  let totalScore = newAverageScore + newBonusPoints;
-  if (totalScore > 100) {
-    totalScore = 100;
-  }
+  newAverageScore = newAverageScore / albums.length;
+  let newAverageScoreRounded = Math.ceil(newAverageScore);
+  let totalScore = newAverageScoreRounded + newBonusPoints;
+  if (totalScore > 100) totalScore = 100;
 
   return { newAverageScore, newBonusPoints, totalScore, bonusReasons };
 };

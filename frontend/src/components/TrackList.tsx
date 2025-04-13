@@ -43,7 +43,7 @@ const TrackList = ({ tracks, formMethods }: TrackListProps) => {
     <div className="flex flex-col gap-2 mb-8 items-center @container/TrackList">
       {updatedTracks.map((track, index) =>
         formMethods ? (
-          <TrackCard key={track.spotifyID} track={track}>
+          <TrackCard key={track.spotifyID} track={track} trackNumber={index + 1}>
             {/* Hidden input for track ID */}
             <input type="hidden" {...formMethods.register(`tracks.${index}.spotifyID`)} value={track.spotifyID} />
 
@@ -74,7 +74,7 @@ const TrackList = ({ tracks, formMethods }: TrackListProps) => {
             />
           </TrackCard>
         ) : (
-          <TrackCard key={track.spotifyID} track={track} />
+          <TrackCard key={track.spotifyID} track={track} trackNumber={index + 1} />
         )
       )}
     </div>

@@ -19,7 +19,7 @@ interface RatingChipProps {
  * @param {{text?: boolean, small?: boolean, ratingString?: boolean}} options Options to specify whether or not to display the text label, the size of the chip, and the rating string
  */
 const RatingChip = ({ rating, options }: RatingChipProps) => {
-  const { label, borderColor, gradientStart, textColor } = getRatingStyles(rating);
+  const { label, borderColor, textColor, backgroundColorLighter } = getRatingStyles(rating);
 
   const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-min", "mx-auto", textColor], {
     variants: {
@@ -29,7 +29,7 @@ const RatingChip = ({ rating, options }: RatingChipProps) => {
     },
   });
 
-  const textStyles = cva([borderColor, "text-center", "rounded-lg", "bg-gradient-to-t", gradientStart, "to-transparent", "w-max"], {
+  const textStyles = cva([borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"], {
     variants: {
       small: {
         true: "border-1 text-sm px-1 rounded-sm",
@@ -37,11 +37,6 @@ const RatingChip = ({ rating, options }: RatingChipProps) => {
       },
     },
   });
-
-  // <div className={`flex items-center flex-col gap-1 w-min mx-auto mt-12 mb-4 ${textColor} `}>
-  //   <div className={`border-2 ${borderColor} text-4xl text-center px-4 py-2 rounded-lg bg-gradient-to-tr ${gradientStart} via-zinc-800/40 to-zinc-800/40 w-min`}>{rating}</div>
-  //   {options?.text && <p className="uppercase text-center font-medium text-xl">{ratingString}</p>}
-  // </div>;
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>

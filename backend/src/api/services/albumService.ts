@@ -21,10 +21,10 @@ export class AlbumService {
     if (existingAlbum) throw new Error("Album already exists");
 
     const roundedScore = calculateAlbumScore(data.ratedTracks);
-    const artist = await ArtistModel.getArtistBySpotifyID(data.album.artists[0].id);
+    const existingArtist = await ArtistModel.getArtistBySpotifyID(data.album.artists[0].id);
     let createdArtist = null;
 
-    if (!artist) {
+    if (!existingArtist) {
       const fetched = await fetchArtistFromSpotify(data.album.artists[0].id, data.album.artists[0].href);
       if (fetched) {
         createdArtist = await ArtistModel.createArtist({
@@ -36,6 +36,9 @@ export class AlbumService {
         });
       }
     }
+
+    const finalArtist = createdArtist || existingArtist;
+    if (!finalArtist) throw new Error("Failed to resolve artist.");
 
     const releaseDate = formatDate(data.album.release_date);
     const releaseYear = new Date(data.album.release_date).getFullYear();
@@ -62,8 +65,8 @@ export class AlbumService {
       runtime,
       reviewContent: data.reviewContent,
       reviewScore: roundedScore,
-      artistSpotifyID: createdArtist ? createdArtist.spotifyID : artist.spotifyID,
-      artistName: createdArtist ? createdArtist.name : artist.name,
+      artistSpotifyID: finalArtist.spotifyID,
+      artistName: finalArtist.name,
       colors: colors.map((c) => ({ hex: c.hex })),
       genres: data.genres,
     });
@@ -71,29 +74,27 @@ export class AlbumService {
     for (const track of data.ratedTracks) {
       const t = data.album.tracks.items.find((i) => i.id === track.spotifyID);
       if (!t) continue;
-      const a = createdArtist || artist;
       await TrackModel.createTrack({
         albumSpotifyID: album.spotifyID,
-        artistSpotifyID: a.spotifyID,
-        artistName: a.name,
+        artistSpotifyID: finalArtist.spotifyID,
+        artistName: finalArtist.name,
         name: t.name,
         spotifyID: t.id,
         duration: t.duration_ms,
-        features: t.artists.filter((x) => x.id !== a.spotifyID).map((x) => ({ id: x.id, name: x.name })),
+        features: t.artists.filter((x) => x.id !== finalArtist.spotifyID).map((x) => ({ id: x.id, name: x.name })),
         rating: track.rating!,
       });
     }
 
-    if (artist) {
-      const albums = await AlbumModel.getAlbumsByArtist(artist.spotifyID);
-      const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums, roundedScore);
-      await ArtistModel.updateArtist(artist.spotifyID, {
-        averageScore: newAverageScore,
-        bonusPoints: newBonusPoints,
-        totalScore,
-        bonusReason: JSON.stringify(bonusReasons),
-      });
-    }
+    const albums = await AlbumModel.getAlbumsByArtist(finalArtist.spotifyID);
+    const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums);
+    await ArtistModel.updateArtist(finalArtist.spotifyID, {
+      averageScore: newAverageScore,
+      bonusPoints: newBonusPoints,
+      totalScore,
+      bonusReason: JSON.stringify(bonusReasons),
+      reviewCount: albums.length,
+    });
 
     const allArtists = await ArtistModel.findAllArtistsSortedByTotalScore();
     let rank = 1;
@@ -166,8 +167,19 @@ export class AlbumService {
   static async deleteAlbum(id: string) {
     const album = await AlbumModel.findBySpotifyID(id);
     if (!album) throw new Error("Album not found");
+
     await TrackModel.deleteTracksByAlbumID(id);
     await AlbumModel.deleteAlbum(id);
+
+    const albums = await AlbumModel.getAlbumsByArtist(album.artistSpotifyID);
+    const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums);
+    await ArtistModel.updateArtist(album.artistSpotifyID, {
+      averageScore: newAverageScore,
+      bonusPoints: newBonusPoints,
+      totalScore,
+      bonusReason: JSON.stringify(bonusReasons),
+      reviewCount: albums.length,
+    });
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
@@ -243,12 +255,13 @@ export class AlbumService {
       await AlbumModel.updateAlbum(albumID, { reviewScore: newScore });
 
       const albums = await AlbumModel.getAlbumsByArtist(existing.artistSpotifyID);
-      const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums, newScore);
+      const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums);
       await ArtistModel.updateArtist(existing.artistSpotifyID, {
         averageScore: newAverageScore,
         bonusPoints: newBonusPoints,
         totalScore,
         bonusReason: JSON.stringify(bonusReasons),
+        reviewCount: albums.length,
       });
     }
 

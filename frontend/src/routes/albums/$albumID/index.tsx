@@ -33,6 +33,13 @@ export const Route = createFileRoute("/albums/$albumID/")({
   },
   errorComponent: ErrorComponent,
   component: RouteComponent,
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: loaderData.album.name,
+      },
+    ],
+  }),
 });
 
 /**

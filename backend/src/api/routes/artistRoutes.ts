@@ -3,7 +3,8 @@ import * as artistController from "../controllers/artistController";
 
 const router = express.Router();
 
-router.get("/", artistController.getAllArtists);
+router.get("/all", artistController.getAllArtists);
+router.get("/", artistController.getPaginatedArtists);
 router.get("/:artistID", artistController.getArtistByID);
 router.delete("/:artistID", artistController.deleteArtist);
 

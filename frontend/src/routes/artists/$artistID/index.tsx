@@ -25,6 +25,13 @@ export const Route = createFileRoute("/artists/$artistID/")({
   },
   errorComponent: ErrorComponent,
   component: RouteComponent,
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: loaderData.name,
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
@@ -41,7 +48,7 @@ function RouteComponent() {
     <div>
       {/* <BlurryHeader /> */}
       <h1>{artist.name}</h1>
-      <img src={artist.imageURLs[1].url} alt={artist.name} style={{ viewTransitionName: `artist-image-` }} />
+      <img src={artist.imageURLs[1].url} alt={artist.name} style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }} />
     </div>
   );
 }

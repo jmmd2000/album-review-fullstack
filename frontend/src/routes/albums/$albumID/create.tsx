@@ -62,6 +62,13 @@ export const Route = createFileRoute("/albums/$albumID/create")({
   loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: `Review: ${loaderData.name}`,
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

@@ -6,6 +6,7 @@ import { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function searchSpotifyAlbums(query: SearchAlbumsOptions): Promise<DisplayAlbum[]> {
@@ -35,6 +36,13 @@ export const Route = createFileRoute("/search/")({
     return queryClient.ensureQueryData(searchQueryOptions({ query }));
   },
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "Search Albums",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
@@ -42,12 +50,24 @@ function RouteComponent() {
   const { data } = useQuery(searchQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
   const [recentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
+  const [pageTitle, setPageTitle] = useState<string>("Search Albums");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("query");
+    if (query) {
+      setPageTitle(`Search results for "${query}"`);
+    } else {
+      setPageTitle("Search Albums");
+    }
+  }, [options.query]);
 
   const dataIsEmpty = data?.length === 0;
   const albumCards = dataIsEmpty ? recentAlbums : data;
-  const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search Results for "${options.query}"`;
+  const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search results for "${options.query}"`;
 
   const handleSearch = (query: string) => {
+    setPageTitle(`Search results for "${query}"`);
     navigate({
       search: (prev: Partial<SearchAlbumsOptions>) => ({ ...prev, query }),
     });
@@ -55,14 +75,19 @@ function RouteComponent() {
 
   if (!data) return <div>Loading...</div>;
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <CardGrid
-        cards={(albumCards || []).map((album) => (
-          <AlbumCard key={album.spotifyID} album={album} />
-        ))}
-        options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
-        search={handleSearch}
-      />
-    </motion.div>
+    <>
+      {/* Setting the title via <title> rather than in the head option of createFileRoute()
+        because it was annoying and finnicky to access the search params to update the title.  */}
+      <title>{pageTitle}</title>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <CardGrid
+          cards={(albumCards || []).map((album) => (
+            <AlbumCard key={album.spotifyID} album={album} />
+          ))}
+          options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
+          search={handleSearch}
+        />
+      </motion.div>
+    </>
   );
 }

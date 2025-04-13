@@ -23,7 +23,8 @@ const wipe = async () => {
 
   console.log(`\x1b[34mWipe:\x1b[0m Fetching artists to delete...`);
   const artistResponse = await fetch(`http://localhost:4000/api/artists`);
-  const artists: ReviewedArtist[] = await artistResponse.json();
+  const artistsData = await artistResponse.json();
+  const artists: ReviewedArtist[] = artistsData.artists;
 
   if (artists.length === 0) {
     console.log(`\x1b[34mWipe:\x1b[0m \x1b[33mNo artists to delete\x1b[0m`);

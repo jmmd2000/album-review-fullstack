@@ -66,6 +66,7 @@ export const reviewedArtists = pgTable(
     bonusPoints: real("bonus_points").notNull().default(0),
     bonusReason: text("bonus_reason"),
     totalScore: real("total_score").notNull().default(0),
+    reviewCount: integer("review_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(),

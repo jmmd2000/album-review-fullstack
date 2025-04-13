@@ -223,6 +223,8 @@ export interface ReviewedArtist {
   bonusReason: string | null;
   /** Total calculated score of the artist. */
   totalScore: number;
+  /** Number of albums reviewed by the artist. */
+  reviewCount: number;
   /** Timestamp of the last image update. */
   imageUpdatedAt: Date;
 }
@@ -273,6 +275,24 @@ export interface DisplayAlbum {
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
   scoredTracks?: string;
+}
+
+/**
+ * Represents the minimum data needed to display an artist on an `ArtistCard`.
+ */
+export interface DisplayArtist {
+  /** Spotify ID of the artist. */
+  spotifyID: string;
+  /** Name of the artist. */
+  name: string;
+  /** Position of the artist in the leaderboard. */
+  leaderboardPosition: number;
+  /** Average review score of the artist's albums. */
+  totalScore: number;
+  /** JSON string containing artist image URLs. */
+  imageURLs: SpotifyImage[];
+  /** Number of albums reviewed */
+  albumCount: number;
 }
 
 /**
@@ -398,15 +418,37 @@ export interface ExtractedColor {
 }
 
 /**
- * Represents the parameters passed to the getAllAlbums method.
+ * Represents the parameters passed to the getPaginatedAlbums method.
  */
 export interface GetPaginatedAlbumsOptions {
+  /** The page number to retrieve. */
   page?: number;
+  /** The data to order the results by */
   orderBy?: "reviewScore" | "releaseYear" | "name" | "createdAt";
+  /** The order in which to sort the results */
   order?: "asc" | "desc";
+  /** The search query to filter the results by */
   search?: string;
 }
 
+/**
+ * Represents the parameters passed to the getPaginatedArtists method.
+ */
+export interface GetPaginatedArtistsOptions {
+  /** The page number to retrieve. */
+  page?: number;
+  /** The data to order the results by */
+  orderBy?: "totalScore" | "reviewCount" | "name" | "createdAt";
+  /** The order in which to sort the results */
+  order?: "asc" | "desc";
+  /** The search query to filter the results by */
+  search?: string;
+}
+
+/**
+ * Represents the parameters passed when searching for albums.
+ */
 export interface SearchAlbumsOptions {
+  /** The search query */
   query?: string;
 }

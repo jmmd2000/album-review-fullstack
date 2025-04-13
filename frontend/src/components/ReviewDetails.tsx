@@ -18,12 +18,16 @@ interface ReviewDetailsProps {
  */
 const ReviewDetails = ({ album }: ReviewDetailsProps) => {
   return (
-    <div className="flex flex-col items-center justify-evenly w-[70%] mx-auto mb-8">
-      {/* <div className="flex items-center gap-2"> */}
+    <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] mx-auto mb-8">
       <RatingChip rating={album.reviewScore} options={{ textBelow: true }} />
       <BestWorstSong bestSong={album.bestSong} worstSong={album.worstSong} />
-      {/* </div> bg-gradient-to-b ${gradientStart} via-zinc-800/40 to-zinc-800/40 */}
-      <p className="p-3 rounded-lg bg-zinc-800/40">{album.reviewContent}</p>
+      <div className="w-full mt-6 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
+        <div className="relative px-5 py-4 border-l-4 border-neutral-800">
+          <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
+            <p className="leading-relaxed">{album.reviewContent}</p>
+          </blockquote>
+        </div>
+      </div>
     </div>
   );
 };
@@ -47,14 +51,25 @@ interface BestWorstSongProps {
  */
 const BestWorstSong = ({ bestSong, worstSong }: BestWorstSongProps) => {
   return (
-    <div className="flex items-center gap-2 m-4">
-      <div>
-        <p className="text-emerald-500 text-xs tracking-wider uppercase">Best song</p>
-        <p className="bg-emerald-500/60 p-2 rounded-lg text-center">{bestSong}</p>
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 my-6 w-3/5 sm:w-full max-w-xl">
+      <div className="flex-1 rounded-lg overflow-hidden border-2 border-emerald-500/30 shadow-sm">
+        <div className="bg-emerald-500/20 px-3 py-1.5">
+          <p className="text-emerald-400 text-xs font-medium tracking-wider uppercase flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+            Best Track
+          </p>
+        </div>
+        <p className="p-3 text-center font-medium text-emerald-50 bg-gradient-to-b from-emerald-900/40 to-transparent">{bestSong}</p>
       </div>
-      <div>
-        <p className="text-red-500 text-xs tracking-wide uppercase">Worst song</p>
-        <p className="bg-red-500/60 p-2 rounded-lg text-center">{worstSong}</p>
+
+      <div className="flex-1 rounded-lg overflow-hidden border-2 border-red-500/30 shadow-sm">
+        <div className="bg-red-500/20 px-3 py-1.5">
+          <p className="text-red-400 text-xs font-medium tracking-wider uppercase flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-red-400 mr-2"></span>
+            Worst Track
+          </p>
+        </div>
+        <p className="p-3 text-center font-medium text-red-50 bg-gradient-to-b from-red-900/40 to-transparent">{worstSong}</p>
       </div>
     </div>
   );

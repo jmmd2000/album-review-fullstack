@@ -1,5 +1,5 @@
 import AdminDropdown from "@/components/AdminDropdown";
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, HeadContent } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { useState } from "react";
 export const Route = createRootRoute({
   component: () => (
     <>
+      <HeadContent />
       <Navbar />
       <div className="[view-transition-name:main-content]">
         <Outlet />

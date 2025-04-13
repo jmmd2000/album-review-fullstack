@@ -25,6 +25,13 @@ export const Route = createFileRoute("/albums/$albumID/edit")({
   loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   errorComponent: ErrorComponent,
   component: RouteComponent,
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: `Edit: ${loaderData.album.name}`,
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
