@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
-import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
-import { db } from "../../index";
+import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
+import { db } from "@/index";
 import { GetPaginatedArtistsOptions, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 
 export class ArtistModel {

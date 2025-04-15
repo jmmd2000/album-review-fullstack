@@ -1,8 +1,8 @@
 import { DisplayArtist, GetPaginatedArtistsOptions, DisplayAlbum, DisplayTrack } from "@shared/types";
-import { ArtistModel } from "../models/Artist";
-import { AlbumModel } from "../models/Album";
-import { TrackModel } from "../models/Track";
-import { toSortableDate } from "../../helpers/formatDate";
+import { ArtistModel } from "@/api/models/Artist";
+import { AlbumModel } from "@/api/models/Album";
+import { TrackModel } from "@/api/models/Track";
+import { toSortableDate } from "@/helpers/formatDate";
 
 export class ArtistService {
   static async getAllArtists() {

@@ -1,5 +1,5 @@
 import express from "express";
-import * as trackController from "../controllers/trackController";
+import * as trackController from "@/api/controllers/trackController";
 
 const router = express.Router();
 

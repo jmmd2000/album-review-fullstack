@@ -3,10 +3,10 @@ dotenv.config();
 
 import cors from "cors";
 import express from "express";
-import spotifyRoutes from "./api/routes/spotifyRoutes";
-import albumRoutes from "./api/routes/albumRoutes";
-import trackRoutes from "./api/routes/trackRoutes";
-import artistRoutes from "./api/routes/artistRoutes";
+import spotifyRoutes from "@/api/routes/spotifyRoutes";
+import albumRoutes from "@/api/routes/albumRoutes";
+import trackRoutes from "@/api/routes/trackRoutes";
+import artistRoutes from "@/api/routes/artistRoutes";
 import { drizzle } from "drizzle-orm/node-postgres";
 
 export const db = drizzle(process.env.DATABASE_URL!);

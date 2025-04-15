@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AlbumService } from "../../api/services/albumService";
+import { AlbumService } from "@/api/services/albumService";
 import { DisplayTrack, ExtractedColor, GetPaginatedAlbumsOptions, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 
 export type ReceivedReviewData = {

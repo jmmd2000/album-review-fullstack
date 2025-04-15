@@ -1,5 +1,5 @@
 import express from "express";
-import * as artistController from "../controllers/artistController";
+import * as artistController from "@/api/controllers/artistController";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ArtistService } from "../services/artistService";
+import { ArtistService } from "@/api/services/artistService";
 import { GetPaginatedArtistsOptions } from "@shared/types";
 
 export const getAllArtists = async (_req: Request, res: Response) => {

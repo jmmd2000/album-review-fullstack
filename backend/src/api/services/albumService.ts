@@ -1,18 +1,18 @@
 import "dotenv/config";
 import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage } from "@shared/types";
-import { ReceivedReviewData } from "../controllers/albumController";
-import { calculateAlbumScore } from "../../helpers/calculateAlbumScore";
-import { calculateArtistScore } from "../../helpers/calculateArtistScore";
-import { formatDate } from "../../helpers/formatDate";
-import getTotalDuration from "../../helpers/formatDuration";
-import { fetchArtistFromSpotify } from "../../helpers/fetchArtistFromSpotify";
-import { getImageColors } from "../../helpers/getImageColors";
-import { AlbumModel } from "../models/Album";
-import { TrackModel } from "../models/Track";
-import { ArtistModel } from "../models/Artist";
-import { fetchArtistHeaderFromSpotify } from "../../helpers/fetchArtistHeaderFromSpotify";
-import { ArtistLeaderboardData, calculateLeaderboardPositions } from "../../helpers/calculateLeaderboardPositions";
-import { getAllGenres } from "../../helpers/getAllGenres";
+import { ReceivedReviewData } from "@/api/controllers/albumController";
+import { AlbumModel } from "@/api/models/Album";
+import { TrackModel } from "@/api/models/Track";
+import { ArtistModel } from "@/api/models/Artist";
+import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
+import { ArtistLeaderboardData, calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
+import { getAllGenres } from "@/helpers/getAllGenres";
+import { calculateAlbumScore } from "@/helpers/calculateAlbumScore";
+import { calculateArtistScore } from "@/helpers/calculateArtistScore";
+import { formatDate } from "@/helpers/formatDate";
+import getTotalDuration from "@/helpers/formatDuration";
+import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
+import { getImageColors } from "@/helpers/getImageColors";
 
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {

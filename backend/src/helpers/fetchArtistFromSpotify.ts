@@ -1,5 +1,5 @@
 import { SpotifyArtist, SpotifyImage } from "@shared/types";
-import { SpotifyService } from "../api/services/spotifyService";
+import { SpotifyService } from "@/api/services/spotifyService";
 
 /**
  * Represents an artist's data from Spotify.

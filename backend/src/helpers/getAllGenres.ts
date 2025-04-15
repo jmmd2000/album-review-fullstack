@@ -1,5 +1,5 @@
-import { db } from "../index";
-import { reviewedAlbums } from "../db/schema";
+import { db } from "@/index";
+import { reviewedAlbums } from "@/db/schema";
 
 /**
  * Fetches all unique genres from the reviewedAlbums table.

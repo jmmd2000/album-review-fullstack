@@ -1,4 +1,4 @@
-import { TrackModel } from "../models/Track";
+import { TrackModel } from "@/api/models/Track";
 
 export class TrackService {
   static async getAlbumTracks(albumID: string) {

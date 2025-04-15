@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { count, eq } from "drizzle-orm";
-import { reviewedTracks } from "../../db/schema";
-import { db } from "../../index";
+import { reviewedTracks } from "@/db/schema";
+import { db } from "@/index";
 
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {

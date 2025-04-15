@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
 import { GetPaginatedAlbumsOptions } from "@shared/types";
-import { reviewedAlbums, reviewedArtists, reviewedTracks } from "../../db/schema";
-import { db } from "../../index";
+import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
+import { db } from "@/index";
 
 export class AlbumModel {
   static async findBySpotifyID(id: string) {

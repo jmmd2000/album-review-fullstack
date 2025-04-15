@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { TrackService } from "../services/trackService";
+import { TrackService } from "@/api/services/trackService";
 
 export const getTracksByAlbumID = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
