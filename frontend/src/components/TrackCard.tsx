@@ -2,6 +2,7 @@ import { DisplayTrack } from "@shared/types";
 import { convertDuration } from "@/helpers/convertDuration";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { Clock } from "lucide-react";
+import { motion } from "framer-motion";
 
 /**
  * The props for the TrackCard component.
@@ -25,18 +26,38 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
   const hasFeatures = track.features && track.features.length > 0;
   const featuresText = hasFeatures ? track.features.map((feature) => feature.name).join(", ") : "";
 
+  // Get the smallest album image that's at least 64px
+  const albumImage = track.imageURLs?.find((img) => img.width >= 64) || track.imageURLs?.[0];
+
   return (
-    <div
-      className={`py-2 bg-gradient-to-br from-neutral-800/40 to-neutral-900 border-1 border-neutral-800 rounded-lg flex items-center transition-colors w-[90%] md:w-[80ch]`}
+    <motion.div
+      className={`py-2 bg-gradient-to-br from-neutral-800/40 to-neutral-900 border-1 border-neutral-800 rounded-lg flex items-center transition-colors w-full max-w-[80ch]`}
       style={{
-        // In tailwdind, you can't do "from-[gradient] to-[gradient]", where gradient = "red-500". It needs to be the full class string.
-        // I could just define the to, from and via colors for each rating tier in getRatingStyles, and maybe I will, but for now I just
-        // defined the gradientOKLCH and used it like below.
         background: `linear-gradient(to left, ${gradientStartOKLCH} 1%, #171717 25%)`,
       }}
+      whileHover={{
+        x: 5,
+        y: -2,
+        transition: { duration: 0.1 },
+      }}
     >
-      {/* Track number */}
-      {trackNumber && <div className="px-4 text-center text-md text-zinc-400">{trackNumber}</div>}
+      {/* Track number or Album image in the same position */}
+      {trackNumber ? (
+        <div className="px-4 text-center text-md text-zinc-400">{trackNumber}</div>
+      ) : albumImage ? (
+        <div className="px-4 flex-shrink-0">
+          <img src={albumImage.url} alt={track.name} className="w-10 h-10 rounded-lg" style={{ viewTransitionName: `track-image-${track.spotifyID}` }} />
+        </div>
+      ) : (
+        <div className="px-4" />
+      )}
+
+      {/* Only show album image here if we're also showing track number */}
+      {trackNumber && albumImage && (
+        <div className="ml-2 mr-3 flex-shrink-0">
+          <img src={albumImage.url} alt={track.name} className="w-10 h-10 rounded-lg" style={{ viewTransitionName: `track-image-${track.spotifyID}` }} />
+        </div>
+      )}
 
       {/* Track name and artist */}
       <div className="flex-grow min-w-0">
@@ -54,14 +75,14 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
       </div>
 
       {/* Duration */}
-      <div className="text-sm text-zinc-400 flex items-center gap-1">
+      <div className="text-sm text-zinc-400 flex items-center gap-1 mr-2">
         <Clock className="h-3 w-3 opacity-70" />
         <p>{convertDuration(track.duration)}</p>
       </div>
 
       {/* Rating or form input */}
-      <div className="shrink-0 w-32">{hasRating && !children ? <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p> : children ? <div>{children}</div> : null}</div>
-    </div>
+      <div className="shrink-0 w-32 mr-2">{hasRating && !children ? <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p> : children ? <div>{children}</div> : null}</div>
+    </motion.div>
   );
 };
 

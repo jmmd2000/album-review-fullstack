@@ -211,6 +211,8 @@ export interface ReviewedArtist {
   name: string;
   /** JSON string containing artist image URLs. */
   imageURLs: SpotifyImage[];
+  /** Header image scraped from spotify artist page */
+  headerImage: string | null;
   /** Position of the artist in the leaderboard. */
   leaderboardPosition: number;
   /** List of albums associated with the artist. */
@@ -313,6 +315,8 @@ export interface DisplayTrack {
   rating?: number;
   /** Array of names of features */
   features: { id: string; name: string }[];
+  /** Optional album images */
+  imageURLs?: SpotifyImage[];
 }
 
 /**
@@ -438,7 +442,7 @@ export interface GetPaginatedArtistsOptions {
   /** The page number to retrieve. */
   page?: number;
   /** The data to order the results by */
-  orderBy?: "totalScore" | "reviewCount" | "name" | "createdAt";
+  orderBy?: "totalScore" | "reviewCount" | "name" | "createdAt" | "leaderboardPosition";
   /** The order in which to sort the results */
   order?: "asc" | "desc";
   /** The search query to filter the results by */

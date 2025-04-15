@@ -1,5 +1,6 @@
 import CardGridControls from "@/components/CardGridControls";
 import { motion } from "framer-motion";
+import { SortDropdownProps } from "@components/SortDropdown";
 
 interface CardGridProps {
   /** The cards to display in the grid */
@@ -14,7 +15,7 @@ interface CardGridProps {
     heading?: string;
   };
   /** Search callback function */
-  search: (search: string) => void;
+  search?: (search: string) => void;
   /** Pagination control for next page */
   nextPage?: {
     action: () => void;
@@ -30,6 +31,8 @@ interface CardGridProps {
     pageNumber: number;
     totalPages: number;
   };
+  /** Options for the sorting dropdown */
+  sortSettings?: SortDropdownProps;
 }
 
 /**
@@ -58,24 +61,16 @@ const itemVariants = {
 /**
  * This component creates a card grid with controls for pagination and search.
  */
-const CardGrid = ({ cards, options, nextPage, previousPage, pageData, search }: CardGridProps) => {
+const CardGrid = ({ cards, options, nextPage, previousPage, pageData, search, sortSettings }: CardGridProps) => {
   const shouldShowControls = options?.search || options?.pagination;
-  console.log(options?.counter);
-
-  const controlsProps =
-    options?.pagination && nextPage && previousPage && pageData
-      ? {
-          pagination: true as const,
-          nextPage,
-          previousPage,
-          pageData,
-          search,
-        }
-      : { search };
 
   return (
     <>
-      {shouldShowControls && <CardGridControls {...controlsProps} />}
+      {shouldShowControls && options?.pagination && nextPage && previousPage && pageData && search ? (
+        <CardGridControls pagination={true} nextPage={nextPage} previousPage={previousPage} pageData={pageData} search={search} sortSettings={sortSettings} />
+      ) : shouldShowControls && search ? (
+        <CardGridControls search={search} pagination={false} />
+      ) : null}
 
       {options?.heading && (
         <div className="max-w-[1900px] mx-4 px-2 pt-4 z-10">
@@ -89,7 +84,7 @@ const CardGrid = ({ cards, options, nextPage, previousPage, pageData, search }: 
         </div>
       )}
 
-      <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] max-w-[1900px] mx-4 my-8 gap-4 place-items-center">
+      <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4">
         {cards.map((card, index) => (
           <motion.div key={index} variants={itemVariants}>
             {card}

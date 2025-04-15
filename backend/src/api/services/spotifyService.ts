@@ -1,5 +1,6 @@
 import { SearchAlbumsOptions } from "@shared/types";
 import { Spotify } from "../models/Spotify";
+import { getAllGenres } from "../../helpers/getAllGenres";
 
 export class SpotifyService {
   static async getAccessToken() {
@@ -10,7 +11,13 @@ export class SpotifyService {
     return await Spotify.searchAlbums(query);
   }
 
-  static async getAlbum(albumID: string) {
-    return await Spotify.getAlbum(albumID);
+  static async getAlbum(id: string, includeGenres: boolean = true) {
+    const album = await Spotify.getAlbum(id);
+    if (!includeGenres) {
+      return album;
+    }
+
+    const genres = await getAllGenres();
+    return { album, genres };
   }
 }

@@ -10,7 +10,7 @@ export class ArtistModel {
   }
 
   static async getPaginatedArtists({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetPaginatedArtistsOptions) {
-    const validOrderBy = ["totalScore", "reviewCount", "name", "createdAt"] as const;
+    const validOrderBy = ["totalScore", "reviewCount", "name", "createdAt", "leaderboardPosition"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";

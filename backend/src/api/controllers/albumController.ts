@@ -33,9 +33,10 @@ export const createAlbumReview = async (req: Request, res: Response) => {
 
 export const getAlbumByID = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
+  const includeGenres = req.query.includeGenres !== "false";
   try {
-    const reviewedAlbum = await AlbumService.getAlbumByID(albumID);
-    res.status(200).json(reviewedAlbum);
+    const reviewedAlbumData = await AlbumService.getAlbumByID(albumID, includeGenres);
+    res.status(200).json(reviewedAlbumData);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

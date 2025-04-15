@@ -30,4 +30,8 @@ export class TrackModel {
       .from(reviewedTracks)
       .then((r) => r[0].count);
   }
+
+  static async getTracksByArtist(artistID: string) {
+    return db.select().from(reviewedTracks).where(eq(reviewedTracks.artistSpotifyID, artistID));
+  }
 }

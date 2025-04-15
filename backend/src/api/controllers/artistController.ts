@@ -35,11 +35,27 @@ export const getPaginatedArtists = async (req: Request, res: Response) => {
   }
 };
 
+// This endpoint is for fetching a specific artist by their Spotify ID.
 export const getArtistByID = async (req: Request, res: Response) => {
   const artistID = req.params.artistID;
   try {
     const artist = await ArtistService.getArtistByID(artistID);
     res.status(200).json(artist);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};
+
+// This endpoint is for fetching detailed information about an artist, including their albums and tracks.
+export const getArtistDetails = async (req: Request, res: Response) => {
+  const artistID = req.params.artistID;
+  try {
+    const data = await ArtistService.getArtistDetails(artistID);
+    res.status(200).json(data);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

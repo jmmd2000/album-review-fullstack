@@ -1,3 +1,5 @@
+// This component shares a lot with the AlbumCard. Could create a base, reusable card component and share it.
+
 import { DisplayArtist } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
@@ -10,8 +12,16 @@ interface ArtistCardProps {
 const ArtistCard = ({ artist }: ArtistCardProps) => {
   const albumCountString = artist.albumCount === 1 ? `${artist.albumCount} album` : `${artist.albumCount} albums`;
   return (
-    <Link params={{ artistID: artist.spotifyID }} to={"/artists/$artistID"} viewTransition className="block">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className="flex flex-col rounded-xl items-center w-full max-w-[240px]">
+    <Link params={{ artistID: artist.spotifyID }} to={"/artists/$artistID"} resetScroll={true} viewTransition className="block">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        whileHover={{
+          y: -10,
+        }}
+        className="flex flex-col rounded-xl items-center w-full max-w-[240px]"
+      >
         <img src={artist.imageURLs[1].url} alt={artist.name} className="w-full aspect-square rounded-lg" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }} />
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">

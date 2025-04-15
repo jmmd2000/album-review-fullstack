@@ -61,6 +61,7 @@ export const reviewedArtists = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
     imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
+    headerImage: varchar("header_image", { length: 255 }),
     averageScore: real("average_score").notNull(),
     leaderboardPosition: integer("leaderboard_position").notNull(),
     bonusPoints: real("bonus_points").notNull().default(0),

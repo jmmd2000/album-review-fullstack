@@ -1,6 +1,6 @@
 import { DisplayTrack, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import BlurryHeader from "@components/BlurryHeader";
 import ErrorComponent from "@components/ErrorComponent";
@@ -9,12 +9,11 @@ import AlbumDetails from "@components/AlbumDetails";
 import ReviewDetails from "@components/ReviewDetails";
 import GenrePills from "@/components/GenrePills";
 import HeaderDetails from "@/components/HeaderDetails";
-import { FilePenLine, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[] }> {
-  const response = await fetch(`${API_BASE_URL}/api/albums/${albumSpotifyID}`);
+async function fetchAlbumReview(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: DisplayTrack[]; genres: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/api/albums/${albumSpotifyID}?includeGenres=false`);
   return await response.json();
 }
 
@@ -63,24 +62,10 @@ function RouteComponent() {
   return (
     <>
       <BlurryHeader _colors={album.colors}>
-        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} albumID={album.spotifyID} />
+        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} viewTransitionName={`album-image-${album.spotifyID}`} />
         <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
         <div className="pb-10">{album.genres && <GenrePills genres={album.genres} />}</div>
       </BlurryHeader>
-      <Link to="/albums/$albumID/edit" params={{ albumID }}>
-        <div className="rounded-full bg-zinc-800/40 p-3 w-max absolute top-4 right-4">
-          {/* color is text-gray-400 */}
-          <FilePenLine color="#99a1af" />
-        </div>
-      </Link>
-      <div className="rounded-full bg-zinc-800/40 p-3 w-max absolute top-4 right-4">
-        {/* color is text-gray-400 */}
-        <Trash2 color="#99a1af" />
-      </div>
-
-      {/* <Link to="/albums/$albumID/create" params={{ albumID }}>
-        <p>Create</p>
-      </Link> */}
 
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />

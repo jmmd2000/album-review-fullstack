@@ -20,8 +20,16 @@ interface AlbumCardProps {
 const AlbumCard = ({ album }: AlbumCardProps) => {
   const toURL = album.reviewScore ? "/albums/$albumID" : "/albums/$albumID/create";
   return (
-    <Link params={{ albumID: album.spotifyID }} to={toURL} viewTransition className="block">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} className="flex flex-col rounded-xl items-center w-full max-w-[240px]">
+    <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll={true} viewTransition className="block">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        whileHover={{
+          y: -10,
+        }}
+        className="flex flex-col rounded-xl items-center w-full max-w-[240px]"
+      >
         <img src={album.imageURLs[1].url} alt={album.name} className="w-full aspect-square rounded-lg" style={{ viewTransitionName: `album-image-${album.spotifyID}` }} />
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">

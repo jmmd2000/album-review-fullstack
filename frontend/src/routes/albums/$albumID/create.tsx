@@ -36,7 +36,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 //# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
-async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<SpotifyAlbum> {
+async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{ album: SpotifyAlbum; genres: string[] }> {
   const response = await fetch(`${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`);
 
   const data = await response.json();
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: `Review: ${loaderData.name}`,
+        title: `Review: ${loaderData.album.name}`,
       },
     ],
   }),
@@ -86,37 +86,37 @@ function RouteComponent() {
   // console.log(data);
 
   useEffect(() => {
-    if (!data.id) return;
+    if (!data.album.id) return;
 
-    const alreadyExists = recentAlbums.some((album) => album.spotifyID === data.id);
+    const alreadyExists = recentAlbums.some((album) => album.spotifyID === data.album.id);
     if (alreadyExists) return;
 
     const newAlbum: DisplayAlbum = {
-      spotifyID: data.id,
-      name: data.name,
-      artistName: data.artists[0].name,
-      artistSpotifyID: data.artists[0].id,
-      releaseYear: parseInt(data.release_date.split("-")[0], 10),
-      imageURLs: data.images,
+      spotifyID: data.album.id,
+      name: data.album.name,
+      artistName: data.album.artists[0].name,
+      artistSpotifyID: data.album.artists[0].id,
+      releaseYear: parseInt(data.album.release_date.split("-")[0], 10),
+      imageURLs: data.album.images,
     };
 
     setRecentAlbums((prev) => {
-      const deduped = prev.filter((album) => album.spotifyID !== data.id);
+      const deduped = prev.filter((album) => album.spotifyID !== data.album.id);
       const updated = [newAlbum, ...deduped].slice(0, MAX_RECENT);
       return updated;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.id]);
+  }, [data.album.id]);
 
   // State to manage selected colors
-  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.colors);
+  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.album.colors);
 
   return (
     <>
       <BlurryHeader _colors={selectedColors}>
-        <HeaderDetails name={data.name} imageURL={data.images[1].url} />
+        <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
       </BlurryHeader>
-      <AlbumReviewForm album={data} setSelectedColors={setSelectedColors} selectedColors={selectedColors} />
+      <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
     </>
   );
 }

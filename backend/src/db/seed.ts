@@ -84,7 +84,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
     const randomIndex = Math.floor(Math.random() * spotifyIDs.length);
     const id = spotifyIDs.splice(randomIndex, 1)[0];
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
-    const response = await fetch(`http://localhost:4000/api/spotify/albums/${id}`);
+    const response = await fetch(`http://localhost:4000/api/spotify/albums/${id}?includeGenres=false`);
     const data: SpotifyAlbum = await response.json();
     albums.push(data);
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetched album \x1b[33m${data.name}\x1b[0m`);

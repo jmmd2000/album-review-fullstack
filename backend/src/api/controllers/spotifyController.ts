@@ -33,9 +33,10 @@ export const searchAlbums = async (req: Request, res: Response) => {
 
 export const getAlbum = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
+  const includeGenres = req.query.includeGenres !== "false";
   try {
-    const spotifyAlbum = await SpotifyService.getAlbum(albumID);
-    res.status(200).json(spotifyAlbum);
+    const spotifyAlbumData = await SpotifyService.getAlbum(albumID, includeGenres);
+    res.status(200).json(spotifyAlbumData);
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

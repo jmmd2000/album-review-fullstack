@@ -3,7 +3,7 @@
  * @param {string} inputDate The date to be formatted i.e. '2023-09-22'
  * @returns {string} The formatted date i.e. 'September 22nd, 2023'
  */
-export default function formatDate(inputDate: string): string {
+export function formatDate(inputDate: string): string {
   //* Some release dates from spotify are just the year, so we need to check for that
   if (inputDate.length < 5) {
     return inputDate;
@@ -36,4 +36,24 @@ export default function formatDate(inputDate: string): string {
 
     return `${formattedDate.replace(`${dayOfMonth}`, `${dayOfMonth}${daySuffix}`)}`;
   }
+}
+
+/**
+ * Converts a formatted date like 'September 22nd, 2023' into a parseable ISO string.
+ * If the date is just a year, returns 'YYYY-01-01'.
+ */
+export function toSortableDate(dateStr: string, fallbackYear: number): string {
+  // If it's just a year (e.g. "2004"), default to Jan 1st of that year
+  if (/^\d{4}$/.test(dateStr)) return `${dateStr}-01-01`;
+
+  // Remove ordinal suffixes: "22nd" → "22"
+  const cleaned = dateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
+
+  const parsed = new Date(cleaned);
+  if (isNaN(parsed.getTime())) {
+    // Fallback to just the year if the full date isn't valid
+    return `${fallbackYear}-01-01`;
+  }
+
+  return parsed.toISOString().split("T")[0]; // e.g. '2023-09-22'
 }

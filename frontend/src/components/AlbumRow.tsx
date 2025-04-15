@@ -38,6 +38,7 @@ const AlbumRow = ({ albums }: AlbumRowProps) => {
     }
     return () => {
       if (rowRef.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         rowRef.current.removeEventListener("scroll", checkScroll);
       }
     };

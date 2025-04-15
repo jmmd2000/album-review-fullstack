@@ -5,6 +5,7 @@ import { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
 import AlbumCard from "@components/AlbumCard";
 import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
+import { SortDropdownProps } from "@/components/SortDropdown";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
@@ -83,7 +84,22 @@ function RouteComponent() {
     });
   };
 
-  console.log("data", data);
+  const sortSettings: SortDropdownProps = {
+    options: [
+      // { label: "Score", value: "totalScore" },
+      { label: "Score", value: "reviewScore" },
+      { label: "Name", value: "name" },
+      { label: "Date Added", value: "createdAt" },
+      { label: "Year", value: "releaseYear" },
+    ],
+    defaultValue: options.orderBy || "createdAt",
+    defaultDirection: options.order || "desc",
+    onSortChange: (value, direction) => {
+      navigate({
+        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, orderBy: value, order: direction }),
+      });
+    },
+  };
 
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
@@ -97,6 +113,7 @@ function RouteComponent() {
         previousPage={{ action: handlePrevPage, disabled: options.page === 1 || options.page === undefined }}
         pageData={{ pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) }}
         search={handleSearch}
+        sortSettings={sortSettings}
       />
     </motion.div>
   );
