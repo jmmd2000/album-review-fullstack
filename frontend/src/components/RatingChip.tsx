@@ -21,7 +21,7 @@ interface RatingChipProps {
 const RatingChip = ({ rating, options }: RatingChipProps) => {
   const { label, borderColor, textColor, backgroundColorLighter } = getRatingStyles(rating);
 
-  const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-min", "mx-auto", textColor], {
+  const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-max", "mx-auto", textColor], {
     variants: {
       small: {
         false: "mt-12 mb-4",

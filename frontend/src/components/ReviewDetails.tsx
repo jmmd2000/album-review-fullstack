@@ -26,7 +26,6 @@ const slideInFromLeft = (delay: number) => ({
  * @param {DisplayTrack[]} tracks The tracks on the album
  */
 const ReviewDetails = ({ album }: ReviewDetailsProps) => {
-  console.log("ReviewDetails album", album);
   return (
     <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] mx-auto mb-8">
       <motion.div {...slideInFromLeft(0.2)}>

@@ -29,5 +29,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../shared", "../backend/src/helpers/formatDuration.ts", "../backend/src/helpers/formatDate.ts"]
+  "include": ["src", "../shared"]
 }

@@ -7,10 +7,10 @@ import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { ArtistLeaderboardData, calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { getAllGenres } from "@/helpers/getAllGenres";
-import { calculateAlbumScore } from "@/helpers/calculateAlbumScore";
+import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
-import { formatDate } from "@/helpers/formatDate";
-import getTotalDuration from "@/helpers/formatDuration";
+import { formatDate } from "@shared/helpers/formatDate";
+import getTotalDuration from "@shared/helpers/formatDuration";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
 
@@ -34,8 +34,8 @@ export class AlbumService {
       if (fetched) {
         createdArtist = await ArtistModel.createArtist({
           name: fetched.name,
-          spotifyID: fetched.spotifyID,
-          imageURLs: fetched.imageURLs,
+          spotifyID: fetched.id,
+          imageURLs: fetched.images,
           headerImage: headerImage,
           averageScore: roundedScore,
           leaderboardPosition: 0,

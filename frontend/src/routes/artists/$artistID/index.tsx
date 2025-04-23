@@ -14,9 +14,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchReviewedArtist(artistSpotifyID: string): Promise<{ artist: ReviewedArtist; albums: DisplayAlbum[]; tracks: DisplayTrack[] }> {
   const response = await fetch(`${API_BASE_URL}/api/artists/details/${artistSpotifyID}`);
-  const x = await response.json();
-  console.log(x);
-  return x;
+  return await response.json();
 }
 
 const artistQueryOptions = (artistID: string) =>
@@ -61,7 +59,6 @@ function RouteComponent() {
   const albumString = albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
 
   const podiumCheck = (pos: number) => {
-    console.log(pos);
     if (pos === 1) return <Crown color="#d4af37" size={16} />;
     if (pos === 2) return <Trophy color="#C0C0C0" size={16} />;
     if (pos === 3) return <Medal color="#CD7F32" size={16} />;

@@ -2,12 +2,13 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
-import { DisplayAlbum, ExtractedColor, SpotifyAlbum } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, SpotifyAlbum, SpotifyArtist } from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
 import HeaderDetails from "@/components/HeaderDetails";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import AlbumDetails from "@/components/AlbumDetails";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -36,7 +37,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 //# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
-async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{ album: SpotifyAlbum; genres: string[] }> {
+async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{ album: SpotifyAlbum; artist: SpotifyArtist | null; genres: string[] }> {
   const response = await fetch(`${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`);
 
   const data = await response.json();
@@ -83,7 +84,6 @@ function RouteComponent() {
 
   // Fetch the album data
   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
-  // console.log(data);
 
   useEffect(() => {
     if (!data.album.id) return;
@@ -115,7 +115,9 @@ function RouteComponent() {
     <>
       <BlurryHeader _colors={selectedColors}>
         <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
+        {data.artist && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artist={data.artist} />}
       </BlurryHeader>
+
       <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
     </>
   );

@@ -28,20 +28,7 @@ export interface SpotifyAlbum {
   /** Type of the album (e.g., "album", "single"). */
   album_type: string;
   /** List of artists associated with the album. */
-  artists: {
-    /** External URLs for the artist (e.g., Spotify link). */
-    external_urls: { spotify: string };
-    /** API endpoint for the artist. */
-    href: string;
-    /** Unique Spotify ID of the artist. */
-    id: string;
-    /** Name of the artist. */
-    name: string;
-    /** Type of entity (e.g., "artist"). */
-    type: string;
-    /** Spotify URI for the artist. */
-    uri: string;
-  }[];
+  artists: SimpleSpotifyArtist[];
   /** List of country codes where the album is available. */
   available_markets: string[];
   /** External URLs for the album (e.g., Spotify link). */
@@ -75,6 +62,22 @@ export interface SpotifyAlbum {
   tracks: { items: SpotifyTrack[] };
   /** The extracted colours from the album cover */
   colors: ExtractedColor[];
+}
+
+/** Represents the artist data that comes with a Spotify album */
+export interface SimpleSpotifyArtist {
+  /** External URLs for the artist (e.g., Spotify link). */
+  external_urls: { spotify: string };
+  /** API endpoint for the artist. */
+  href: string;
+  /** Unique Spotify ID of the artist. */
+  id: string;
+  /** Name of the artist. */
+  name: string;
+  /** Type of entity (e.g., "artist"). */
+  type: string;
+  /** Spotify URI for the artist. */
+  uri: string;
 }
 
 /**

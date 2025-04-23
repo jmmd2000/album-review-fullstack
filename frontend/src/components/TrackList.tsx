@@ -2,7 +2,7 @@ import { DisplayTrack } from "@shared/types";
 import TrackCard from "@components/TrackCard";
 import { Controller, UseFormReturn } from "react-hook-form";
 import { CreateReviewFormData } from "./AlbumReviewForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 
 /**
@@ -25,11 +25,6 @@ interface TrackListProps {
 const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = false }: TrackListProps) => {
   // Local state to force re-renders when ratings change
   const [updatedTracks, setUpdatedTracks] = useState(tracks);
-
-  useEffect(() => {
-    console.log("Tracks updated");
-    console.log(updatedTracks);
-  }, [updatedTracks]);
 
   // Function to handle rating changes
   const handleRatingChange = (index: number, newRating: number) => {

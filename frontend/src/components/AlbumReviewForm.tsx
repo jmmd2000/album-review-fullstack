@@ -1,12 +1,14 @@
 import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
-import { useForm, useFieldArray, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend } from "react-hook-form";
+import { useForm, useFieldArray, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, useWatch, UseFormSetValue } from "react-hook-form";
 import TrackList from "./TrackList";
 import { BestWorstSong } from "./ReviewDetails";
 import Button from "./Button";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import RatingChip from "./RatingChip";
+import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -57,8 +59,11 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
 };
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
+  const isEditing = isReviewedAlbum(album);
+  const [dynamicScore, setDynamicScore] = useState<number>(0);
+
   let displayTracks: DisplayTrack[] = [];
-  if (isReviewedAlbum(album)) {
+  if (isEditing) {
     displayTracks = tracks!.map((track) => ({
       rating: track.rating,
       name: track.name,
@@ -91,19 +96,22 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
   const { control, register, handleSubmit, setValue, getValues } = useForm({
     defaultValues: {
       tracks: displayTracks,
-      bestSong: isReviewedAlbum(album) ? album.bestSong : "",
-      worstSong: isReviewedAlbum(album) ? album.worstSong : "",
-      reviewContent: isReviewedAlbum(album) ? album.reviewContent || "" : "",
+      bestSong: isEditing ? album.bestSong : "",
+      worstSong: isEditing ? album.worstSong : "",
+      reviewContent: isEditing ? album.reviewContent || "" : "",
       colors: selectedColors,
-      genres: isReviewedAlbum(album) ? album.genres.map((genre) => ({ name: genre })) : [],
+      genres: isEditing ? album.genres.map((genre) => ({ name: genre })) : [],
     },
   });
 
-  // // UseFieldArray for dynamic track ratings
-  // const { fields } = useFieldArray({
-  //   control,
-  //   name: "tracks",
-  // });
+  // Watch the tracks field to calculate the dynamic score to update the RatingChip
+  const watchedTracks = useWatch({ control, name: "tracks" });
+
+  useEffect(() => {
+    if (!watchedTracks || watchedTracks.length === 0) return;
+    const score = calculateAlbumScore(watchedTracks);
+    setDynamicScore(score);
+  }, [watchedTracks]);
 
   const {
     fields: genreFields,
@@ -135,11 +143,6 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
 
   // Updates the selectedColors array with the new color
   const handleColorChange = (index: number, newColor: string) => {
-    // setSelectedColors((prevColors) => {
-    //   const newColors = [...prevColors];
-    //   newColors[index] = { hex: newColor };
-    //   return newColors;
-    // });
     const updatedColors = [...selectedColors];
     updatedColors[index] = { hex: newColor };
     setSelectedColors(updatedColors);
@@ -165,48 +168,63 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8">
-      {/* Color Selection */}
-      <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
-        <label className="block text-zinc-200 font-medium mb-3">
-          Album Colors <span className="text-neutral-500">(max 5)</span>
-        </label>
-        <div className="flex flex-wrap  items-center justify-center gap-3">
-          {selectedColors.map((color, index) => (
-            <div className="relative group" key={index}>
-              <div className={"w-12 h-12 rounded-full border-2 border-neutral-700 overflow-hidden shadow-lg transition-transform hover:scale-105"} style={{ backgroundColor: color.hex }}>
-                <input type="color" value={color.hex} onChange={(e) => handleColorChange(index, e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-              </div>
-              <button
-                type="button"
-                onClick={() => removeColor(index)}
-                className="absolute -top-2 -right-2 bg-neutral-800 text-red-400 rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          {selectedColors.length < 5 && (
-            <button type="button" onClick={addColor} className="w-12 h-12 rounded-full border-2 border-dashed border-neutral-600 flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:border-neutral-400 transition-colors">
-              +
-            </button>
-          )}
-        </div>
+    <>
+      <div className="sticky top-0 z-50">
+        {isEditing ? (
+          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
+            <RatingChip rating={album.reviewScore} options={{ textBelow: true }} />
+            {dynamicScore !== null && <RatingChip rating={dynamicScore} options={{ textBelow: true }} />}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
+            <RatingChip rating={dynamicScore} options={{ textBelow: true }} />
+          </div>
+        )}
       </div>
 
-      {/* Genres Input Field */}
-      <GenreSelector genreFields={genreFields} register={register} removeGenre={removeGenre} addGenre={addGenre} genres={genres} />
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8">
+        {/* Color Selection */}
+        <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
+          <label className="block text-zinc-200 font-medium mb-3">
+            Album Colors <span className="text-neutral-500">(max 5)</span>
+          </label>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {selectedColors.map((color, index) => (
+              <div className="relative group z-10" key={index}>
+                <div className={"w-12 h-12 rounded-full border-2 border-neutral-700 overflow-hidden shadow-lg transition-transform hover:scale-105"} style={{ backgroundColor: color.hex }}>
+                  <input type="color" value={color.hex} onChange={(e) => handleColorChange(index, e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeColor(index)}
+                  className="absolute -top-2 -right-2 bg-neutral-800 text-red-400 rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            {selectedColors.length < 5 && (
+              <button type="button" onClick={addColor} className="w-12 h-12 rounded-full border-2 border-dashed border-neutral-600 flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:border-neutral-400 transition-colors">
+                +
+              </button>
+            )}
+          </div>
+        </div>
 
-      <BestWorstSong
-        bestInput={<input type="text" {...register("bestSong")} className="w-full p-2 rounded" placeholder="Best song..." />}
-        worstInput={<input type="text" {...register("worstSong")} className="w-full p-2 rounded" placeholder="Worst song..." />}
-      />
-      <ReviewContentInput registration={register("reviewContent")} value={getValues("reviewContent")} />
+        {/* Genres Input Field */}
+        <GenreSelector genreFields={genreFields} register={register} removeGenre={removeGenre} addGenre={addGenre} setValue={setValue} genres={genres} />
 
-      <TrackList tracks={displayTracks} formMethods={{ control, register, setValue }} />
+        <BestWorstSong
+          bestInput={<input type="text" {...register("bestSong")} className="w-full p-2 rounded" placeholder="Best song..." />}
+          worstInput={<input type="text" {...register("worstSong")} className="w-full p-2 rounded" placeholder="Worst song..." />}
+        />
+        <ReviewContentInput registration={register("reviewContent")} value={getValues("reviewContent")} />
 
-      <Button type="submit" label={"Submit"} states={{ loading: isPending, error: isError, success: isSuccess }} />
-    </form>
+        <TrackList tracks={displayTracks} formMethods={{ control, register, setValue }} />
+
+        <Button type="submit" label={"Submit"} states={{ loading: isPending, error: isError, success: isSuccess }} />
+      </form>
+    </>
   );
 };
 
@@ -231,7 +249,7 @@ const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum 
   // Submit the form
   try {
     const response = await fetch(endpoint, {
-      method: isReviewedAlbum(album) ? "PUT" : "POST",
+      method: isEditing ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -295,11 +313,11 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
           <textarea
             {...registration}
             ref={(e) => {
-              registration.ref(e); // ref for react-hook-form
-              ref.current = e; // local ref for auto-resize
+              ref.current = e;
+              if (e) registration.ref(e);
             }}
             defaultValue={value}
-            className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none"
+            className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-opacity-50 rounded-lg"
             rows={1}
             placeholder="Write your review here..."
           />
@@ -314,6 +332,7 @@ interface GenreSelectorProps {
   register: UseFormRegister<CreateReviewFormData>;
   removeGenre: UseFieldArrayRemove;
   addGenre: UseFieldArrayAppend<CreateReviewFormData, "genres">;
+  setValue: UseFormSetValue<CreateReviewFormData>;
   genres: string[];
 }
 
@@ -321,7 +340,7 @@ interface GenreSelectorProps {
  * This component allows users to select and add genres with a searchable dropdown.
  * It supports dynamic field array operations using react-hook-form.
  */
-const GenreSelector = ({ genreFields, register, removeGenre, addGenre, genres }: GenreSelectorProps) => {
+const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue, genres }: GenreSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -345,10 +364,14 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, genres }:
 
   // Handle selecting a genre from dropdown
   const handleSelectGenre = (genre: string) => {
-    // Remove the empty last genre if present
-    const last = genreFields[genreFields.length - 1];
-    if (last?.name === "") removeGenre(genreFields.length - 1);
-    addGenre({ name: genre });
+    const lastIndex = genreFields.length - 1;
+
+    if (genreFields[lastIndex]?.name === "") {
+      setValue(`genres.${lastIndex}.name`, genre); // ✅ sets value in the input
+    } else {
+      addGenre({ name: genre });
+    }
+
     setIsDropdownOpen(false);
     setSearchTerm("");
   };
@@ -374,11 +397,11 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, genres }:
                 defaultValue={field.name}
                 className="bg-transparent text-zinc-200 focus:outline-none w-full"
                 placeholder="Enter genre"
-                value={isLast ? searchTerm : undefined}
                 onChange={(e) => {
                   if (isLast) {
                     setSearchTerm(e.target.value);
                     setIsDropdownOpen(true);
+                    setValue(`genres.${index}.name`, e.target.value); // ✅ immediately update form
                   }
                 }}
                 onFocus={() => {

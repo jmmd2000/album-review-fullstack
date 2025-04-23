@@ -10,6 +10,11 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   // Remove any tracks with a rating of 0
   const tempTracks = ratedTracks.filter((track) => track.rating !== 0);
 
+  // This function is used in both AlbumReviewForm and in the backend when an album is created
+  if (tempTracks.length === 0) {
+    return 0;
+  }
+
   // Add up all the ratings
   // const tracks = data.ratedTracks;
   tempTracks.forEach((track) => {

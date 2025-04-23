@@ -2,7 +2,7 @@ import { DisplayArtist, GetPaginatedArtistsOptions, DisplayAlbum, DisplayTrack }
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
-import { toSortableDate } from "@/helpers/formatDate";
+import { toSortableDate } from "@shared/helpers/formatDate";
 
 export class ArtistService {
   static async getAllArtists() {
