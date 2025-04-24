@@ -1,4 +1,6 @@
+import { getAdminCookie } from "@/helpers/getAdminCookie";
 import { SpotifyAlbum } from "@shared/types";
+import "dotenv/config";
 
 const ALBUM_IDS = [
   "7fRrTyKvE4Skh93v97gtcU",
@@ -79,6 +81,8 @@ const REVIEW = {
 const GENRES = ["pop", "rock", "rap", "hip-hop", "r&b", "jazz", "blues", "country", "classical", "metal", "electronic", "reggae", "folk", "indie", "punk", "hip-hop/rap", "r&b/soul", "pop/rap"];
 
 export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
+  const cookie = await getAdminCookie();
+  if (logging) console.log("Logged in, got cookie...");
   let albums: SpotifyAlbum[] = [];
   while (spotifyIDs.length > 0) {
     const randomIndex = Math.floor(Math.random() * spotifyIDs.length);
@@ -117,6 +121,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Cookie: cookie,
         },
         body: JSON.stringify(reviewedAlbum),
       });

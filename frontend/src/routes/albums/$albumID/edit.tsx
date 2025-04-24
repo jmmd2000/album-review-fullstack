@@ -8,6 +8,7 @@ import { useState } from "react";
 import ErrorComponent from "@components/ErrorComponent";
 import HeaderDetails from "@/components/HeaderDetails";
 import AlbumDetails from "@/components/AlbumDetails";
+import { RequireAdmin } from "@/components/RequireAdmin";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: ReviewedTrack[]; genres: string[] }> {
@@ -51,12 +52,14 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader _colors={selectedColors}>
-        <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} />
-        <AlbumDetails album={data.album} trackCount={data.tracks.length} artist={data.artist} />
-      </BlurryHeader>
+      <RequireAdmin>
+        <BlurryHeader _colors={selectedColors}>
+          <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} />
+          <AlbumDetails album={data.album} trackCount={data.tracks.length} artist={data.artist} />
+        </BlurryHeader>
 
-      <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+      </RequireAdmin>
     </>
   );
 }

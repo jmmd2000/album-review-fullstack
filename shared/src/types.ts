@@ -459,3 +459,9 @@ export interface SearchAlbumsOptions {
   /** The search query */
   query?: string;
 }
+
+export type AuthContextType = {
+  isAdmin: boolean;
+  login: (password: string) => Promise<void>;
+  logout: () => Promise<void>;
+};

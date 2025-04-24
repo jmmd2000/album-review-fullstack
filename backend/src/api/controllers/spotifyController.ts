@@ -19,7 +19,6 @@ export const searchAlbums = async (req: Request, res: Response) => {
   const query: SearchAlbumsOptions = {
     query: req.query.query as string,
   };
-  console.log("query", query.query);
   try {
     const spotifyResponse = await SpotifyService.searchAlbums(query);
     res.status(200).json(spotifyResponse);

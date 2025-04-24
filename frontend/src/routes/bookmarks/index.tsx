@@ -1,9 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { RequireAdmin } from "@/components/RequireAdmin";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/bookmarks/')({
+export const Route = createFileRoute("/bookmarks/")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  return <div>Hello "/bookmarks/"!</div>
+  return (
+    <RequireAdmin>
+      <div>Hello "/bookmarks/"!</div>
+    </RequireAdmin>
+  );
 }

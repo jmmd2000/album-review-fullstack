@@ -1,46 +1,52 @@
+import request from "supertest";
+import { app } from "../index";
 import { test, expect } from "@jest/globals";
-import { SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+import { DisplayAlbum, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+
+const agent = request.agent(app);
 
 test("GET /api/spotify/token - Should return token and expiry time", async () => {
-  const response = await fetch("http://localhost:4000/api/spotify/token", {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-    },
-  });
+  const response = await agent.get("/api/spotify/token");
 
-  const data = await response.json();
+  const data = await response.body;
 
   expect(response.status).toBe(200);
   expect(data).toHaveProperty("token");
   expect(typeof data.token).toBe("string");
 });
 
-test("GET /api/spotify/search?q=abba - Should return albums", async () => {
-  const response = await fetch("http://localhost:4000/api/spotify/albums?q=abba");
+test("GET /api/spotify/albums/search?query=abba - Should return albums", async () => {
+  const response = await agent.get("/api/spotify/albums/search?query=abba");
 
-  const data: SpotifySearchResponse = await response.json();
+  const data: DisplayAlbum[] = await response.body;
 
   expect(response.status).toBe(200);
-  expect(data).toHaveProperty("albums");
-  expect(data.albums).toHaveProperty("href");
-  expect(data.albums).toHaveProperty("items");
-  expect(Array.isArray(data.albums.items)).toBe(true);
-  expect(typeof data.albums.limit).toBe("number");
+  expect(data[0]).toHaveProperty("name");
+  expect(data[0]).toHaveProperty("spotifyID");
+  expect(data[0]).toHaveProperty("imageURLs");
+  expect(data[0]).toHaveProperty("artistName");
+  expect(data[0]).toHaveProperty("artistSpotifyID");
+  expect(data[0]).toHaveProperty("releaseYear");
 
-  //? The next and previous properties can be either a string or null (which is a type of object)
-  expect(["string", "object"].includes(typeof data.albums.next)).toBe(true);
-  expect(typeof data.albums.offset).toBe("number");
+  expect(data[0].imageURLs).toBeInstanceOf(Array);
+  expect(data[0].imageURLs[0]).toHaveProperty("url");
+  expect(data[0].imageURLs[0]).toHaveProperty("height");
+  expect(data[0].imageURLs[0]).toHaveProperty("width");
 
-  //? The next and previous properties can be either a string or null (which is a type of object)
-  expect(["string", "object"].includes(typeof data.albums.previous)).toBe(true);
-  expect(typeof data.albums.total).toBe("number");
+  expect(typeof data[0].imageURLs[0].url).toBe("string");
+  expect(typeof data[0].imageURLs[0].height).toBe("number");
+  expect(typeof data[0].imageURLs[0].width).toBe("number");
+
+  expect(typeof data[0].name).toBe("string");
+  expect(typeof data[0].spotifyID).toBe("string");
+  expect(typeof data[0].artistName).toBe("string");
+  expect(typeof data[0].artistSpotifyID).toBe("string");
 });
 
-test("GET /api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n - Should return album", async () => {
-  const response = await fetch("http://localhost:4000/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n");
+test("GET /api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false - Should return album", async () => {
+  const response = await agent.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false");
 
-  const data: SpotifyAlbum = await response.json();
+  const data: SpotifyAlbum = await response.body;
 
   expect(data).toHaveProperty("album_type");
   expect(data).toHaveProperty("artists");

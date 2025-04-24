@@ -37,7 +37,6 @@ export class Spotify {
     // Check if the query is empty or undefined
     const rawQuery = query.query?.trim();
     if (!rawQuery || rawQuery === "undefined") return [] as DisplayAlbum[];
-    // console.log("Searching for albums with query:", rawQuery);
     const endpoint = `https://api.spotify.com/v1/search?q=${query.query}&type=album&limit=35`;
     const accessToken = await this.getAccessToken();
     const searchParamaters = {
@@ -51,7 +50,6 @@ export class Spotify {
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
-    // console.log("Response data:", data);
     const displayAlbums: DisplayAlbum[] = data.albums.items.map((album: SpotifyAlbum) => {
       return {
         spotifyID: album.id,
@@ -63,11 +61,7 @@ export class Spotify {
       };
     });
 
-    // console.log("Display albums:", displayAlbums);
-
     return displayAlbums;
-
-    // return data as SpotifySearchResponse;
   }
 
   static async getAlbum(albumID: string) {
@@ -86,12 +80,9 @@ export class Spotify {
       },
     };
 
-    console.log("accessToken", accessToken);
-
     const response: Response = await fetch(endpoint, searchParamaters);
 
     const data = await response.json();
-    console.log("Response data:", data);
 
     // Extract colors from the album cover
     const imageColors: ExtractedColor[] = await getImageColors(data.images[0].url);

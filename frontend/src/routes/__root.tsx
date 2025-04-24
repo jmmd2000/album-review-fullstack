@@ -1,18 +1,22 @@
+import { AuthProvider } from "@/auth/AuthContext";
 import AdminDropdown from "@/components/AdminDropdown";
 import { createRootRoute, Link, Outlet, HeadContent } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
+// The auth provider goes here rather than in main.tsx as
+// the AdminDropdown component needs access to it, which is here in the layout.
 export const Route = createRootRoute({
   component: () => (
     <>
-      <HeadContent />
-      <Navbar />
-      <div className="[view-transition-name:main-content]">
-        <Outlet />
-      </div>
-
+      <AuthProvider>
+        <HeadContent />
+        <Navbar />
+        <div className="[view-transition-name:main-content]">
+          <Outlet />
+        </div>
+      </AuthProvider>
       <TanStackRouterDevtools />
     </>
   ),

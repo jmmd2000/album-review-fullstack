@@ -1,12 +1,17 @@
 import request from "supertest";
 import { app } from "../index";
 import { query } from "../../db";
-import { test, expect, beforeEach, afterAll, afterEach, beforeAll } from "@jest/globals";
+import { test, expect, beforeAll, beforeEach, afterEach, afterAll } from "@jest/globals";
 import { mockReviewData, mockUpdateData } from "./constants";
-import { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
-import { seed } from "../db/seed";
-import { mock } from "node:test";
-import e from "cors";
+import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
+
+const agent = request.agent(app);
+
+beforeAll(async () => {
+  // Log in
+  const res = await agent.post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD ?? "123" });
+  expect(res.status).toBe(204);
+});
 
 beforeEach(async () => {
   await query("DELETE FROM reviewed_tracks;");
@@ -20,18 +25,23 @@ afterEach(async () => {
   await query("DELETE FROM reviewed_artists;");
 });
 
+afterAll(async () => {
+  // Optionally log out
+  await agent.post("/api/auth/logout");
+});
+
 test("POST /api/albums/create - should create a new album review", async () => {
-  const response = await request(app).post("/api/albums/create").send(mockReviewData);
+  const response = await agent.post("/api/albums/create").send(mockReviewData);
 
   expect(response.status).toBe(201);
   expect(response.body).toHaveProperty("spotifyID", "0JGOiO34nwfUdDrD612dOp");
 });
 
 test("GET /api/albums/:albumID - should return a review for a given album", async () => {
-  // Create a review
-  const album = await request(app).post("/api/albums/create").send(mockReviewData);
+  // Create via the agent so it’s authenticated
+  await agent.post("/api/albums/create").send(mockReviewData);
 
-  const response = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
+  const response = await agent.get("/api/albums/0JGOiO34nwfUdDrD612dOp");
   const returnedData: {
     album: ReviewedAlbum;
     artist: ReviewedArtist;
@@ -94,52 +104,55 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
   expect(typeof returnedData.tracks[0].features === "object" || Array.isArray(returnedData.tracks[0].features)).toBe(true);
   expect(typeof returnedData.tracks[0].duration).toBe("number");
   expect(typeof returnedData.tracks[0].rating).toBe("number");
-});
+}, 15000);
 
 test("GET /api/albums - should return all album reviews", async () => {
-  await seed(["7fRrTyKvE4Skh93v97gtcU", "0S0KGZnfBGSIssfF54WSJh", "0JGOiO34nwfUdDrD612dOp"], {
-    reviewContent: "Amazing album with deep emotions.",
+  // Create two reviews
+  await agent.post("/api/albums/create").send(mockReviewData);
+  await agent.post("/api/albums/create").send({
+    ...mockReviewData,
+    album: { spotifyID: "7fRrTyKvE4Skh93v97gtcU" },
   });
-  const response = await request(app).get("/api/albums");
-  const returnedData: DisplayAlbum[] = response.body;
+
+  const response = await agent.get("/api/albums");
+  const returnedData: { albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number } = response.body;
 
   expect(response.status).toBe(200);
-  // expect(returnedData.length).toBeGreaterThan(0);
-  expect(returnedData[0]).toHaveProperty("name");
-  expect(returnedData[0]).toHaveProperty("spotifyID");
-  expect(returnedData[0]).toHaveProperty("imageURLs");
-  expect(returnedData[0]).toHaveProperty("artistName");
-  expect(returnedData[0]).toHaveProperty("artistSpotifyID");
-  expect(returnedData[0]).toHaveProperty("releaseYear");
+  expect(returnedData.albums[0]).toHaveProperty("name");
+  expect(returnedData.albums[0]).toHaveProperty("spotifyID");
+  expect(returnedData.albums[0]).toHaveProperty("imageURLs");
+  expect(returnedData.albums[0]).toHaveProperty("artistName");
+  expect(returnedData.albums[0]).toHaveProperty("artistSpotifyID");
+  expect(returnedData.albums[0]).toHaveProperty("releaseYear");
 
-  expect(returnedData[0].imageURLs).toBeInstanceOf(Array);
-  expect(returnedData[0].imageURLs[0]).toHaveProperty("url");
-  expect(returnedData[0].imageURLs[0]).toHaveProperty("height");
-  expect(returnedData[0].imageURLs[0]).toHaveProperty("width");
+  expect(returnedData.albums[0].imageURLs).toBeInstanceOf(Array);
+  expect(returnedData.albums[0].imageURLs[0]).toHaveProperty("url");
+  expect(returnedData.albums[0].imageURLs[0]).toHaveProperty("height");
+  expect(returnedData.albums[0].imageURLs[0]).toHaveProperty("width");
 
-  expect(typeof returnedData[0].imageURLs[0].url).toBe("string");
-  expect(typeof returnedData[0].imageURLs[0].height).toBe("number");
-  expect(typeof returnedData[0].imageURLs[0].width).toBe("number");
+  expect(typeof returnedData.albums[0].imageURLs[0].url).toBe("string");
+  expect(typeof returnedData.albums[0].imageURLs[0].height).toBe("number");
+  expect(typeof returnedData.albums[0].imageURLs[0].width).toBe("number");
 
-  expect(typeof returnedData[0].name).toBe("string");
-  expect(typeof returnedData[0].spotifyID).toBe("string");
-  expect(typeof returnedData[0].artistName).toBe("string");
-  expect(typeof returnedData[0].artistSpotifyID).toBe("string");
-  expect(typeof returnedData[0].releaseYear).toBe("number");
+  expect(typeof returnedData.albums[0].name).toBe("string");
+  expect(typeof returnedData.albums[0].spotifyID).toBe("string");
+  expect(typeof returnedData.albums[0].artistName).toBe("string");
+  expect(typeof returnedData.albums[0].artistSpotifyID).toBe("string");
+  expect(typeof returnedData.albums[0].releaseYear).toBe("number");
 }, 15000);
 
 test("PUT /api/albums/:albumID/edit - should update album review", async () => {
-  const response = await request(app).post("/api/albums/create").send(mockReviewData);
-  const createdAlbum = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
-  const createdAlbumData = createdAlbum.body.album;
+  await agent.post("/api/albums/create").send(mockReviewData);
+  const createdAlbumResponse = await agent.get("/api/albums/0JGOiO34nwfUdDrD612dOp");
+  const createdAlbumData = createdAlbumResponse.body.album;
   mockUpdateData.album = createdAlbumData;
 
-  const updateResponse = await request(app).put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").send(mockUpdateData);
+  const updateResponse = await agent.put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").send(mockUpdateData);
 
   expect(updateResponse.status).toBe(200);
 
-  const updatedAlbum = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp");
-  const updatedAlbumData = updatedAlbum.body.album;
+  const updatedAlbumResponse = await agent.get("/api/albums/0JGOiO34nwfUdDrD612dOp");
+  const updatedAlbumData = updatedAlbumResponse.body.album;
 
   expect(updatedAlbumData.reviewScore).toBe(90);
   expect(updatedAlbumData.reviewContent).toBe(mockUpdateData.reviewContent);

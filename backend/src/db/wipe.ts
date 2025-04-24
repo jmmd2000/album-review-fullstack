@@ -1,6 +1,10 @@
+import { getAdminCookie } from "@/helpers/getAdminCookie";
 import { ReviewedAlbum, ReviewedArtist } from "@shared/types";
+import "dotenv/config";
 
 const wipe = async () => {
+  const cookie = await getAdminCookie();
+  console.log("Logged in, got cookie...");
   console.log(`\x1b[34mWipe:\x1b[0m Fetching albums to delete...`);
   const albumResponse = await fetch(`http://localhost:4000/api/albums/all?includeCounts=false`);
   const data = await albumResponse.json();
@@ -13,6 +17,7 @@ const wipe = async () => {
       try {
         await fetch(`http://localhost:4000/api/albums/${album.spotifyID}`, {
           method: "DELETE",
+          headers: { Cookie: cookie },
         });
         console.log(`\x1b[34mWipe:\x1b[0m \x1b[32mDeleted album ${album.name}\x1b[0m`);
       } catch (error) {
@@ -34,6 +39,7 @@ const wipe = async () => {
       try {
         await fetch(`http://localhost:4000/api/artists/${artist.spotifyID}`, {
           method: "DELETE",
+          headers: { Cookie: cookie },
         });
         console.log(`\x1b[34mWipe:\x1b[0m \x1b[32mDeleted artist ${artist.name}\x1b[0m`);
       } catch (error) {

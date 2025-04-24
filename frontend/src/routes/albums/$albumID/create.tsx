@@ -9,6 +9,7 @@ import AlbumReviewForm from "@components/AlbumReviewForm";
 import HeaderDetails from "@/components/HeaderDetails";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import AlbumDetails from "@/components/AlbumDetails";
+import { RequireAdmin } from "@/components/RequireAdmin";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -113,12 +114,14 @@ function RouteComponent() {
 
   return (
     <>
-      <BlurryHeader _colors={selectedColors}>
-        <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
-        {data.artist && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artist={data.artist} />}
-      </BlurryHeader>
+      <RequireAdmin>
+        <BlurryHeader _colors={selectedColors}>
+          <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
+          {data.artist && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artist={data.artist} />}
+        </BlurryHeader>
 
-      <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+      </RequireAdmin>
     </>
   );
 }

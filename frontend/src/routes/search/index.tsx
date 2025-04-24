@@ -1,5 +1,6 @@
 import AlbumCard from "@/components/AlbumCard";
 import CardGrid from "@/components/CardGrid";
+import { RequireAdmin } from "@/components/RequireAdmin";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { queryClient } from "@/main";
 import { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
@@ -76,18 +77,20 @@ function RouteComponent() {
   if (!data) return <div>Loading...</div>;
   return (
     <>
-      {/* Setting the title via <title> rather than in the head option of createFileRoute()
+      <RequireAdmin>
+        {/* Setting the title via <title> rather than in the head option of createFileRoute()
         because it was annoying and finnicky to access the search params to update the title.  */}
-      <title>{pageTitle}</title>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <CardGrid
-          cards={(albumCards || []).map((album) => (
-            <AlbumCard key={album.spotifyID} album={album} />
-          ))}
-          options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
-          search={handleSearch}
-        />
-      </motion.div>
+        <title>{pageTitle}</title>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <CardGrid
+            cards={(albumCards || []).map((album) => (
+              <AlbumCard key={album.spotifyID} album={album} />
+            ))}
+            options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
+            search={handleSearch}
+          />
+        </motion.div>
+      </RequireAdmin>
     </>
   );
 }
