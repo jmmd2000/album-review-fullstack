@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import type React from "react";
+import React from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface ButtonProps {
   /** The label to display on the button */
@@ -12,27 +13,40 @@ interface ButtonProps {
   disabled?: boolean;
   /** The type of the button */
   type?: "button" | "submit" | "reset";
-  /** Loading, error and success states */
+  /** Optional loading, error and success states */
   states?: {
     loading?: boolean;
     error?: boolean;
     success?: boolean;
+  };
+  /** State messages for toasts */
+  stateMessages?: {
+    loading?: string;
+    error?: string;
+    success?: string;
   };
 }
 
 /**
  * This component creates a button with a label and an optional click handler.
  */
-const Button = ({ label, onClick, disabled, type, states }: ButtonProps) => {
+const Button = ({ label, onClick, disabled, type, states, stateMessages }: ButtonProps) => {
   const { loading, error, success } = states || {};
   const [displayState, setDisplayState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const toastID = React.useId();
 
   // Handle state changes
   useEffect(() => {
     if (loading) {
       setDisplayState("loading");
+      toast.loading(stateMessages?.loading, {
+        id: toastID,
+      });
     } else if (success) {
       setDisplayState("success");
+      toast.success(stateMessages?.success, {
+        id: toastID,
+      });
       // Auto-reset success state after animation
       const timer = setTimeout(() => {
         setDisplayState("idle");
@@ -40,12 +54,15 @@ const Button = ({ label, onClick, disabled, type, states }: ButtonProps) => {
       return () => clearTimeout(timer);
     } else if (error) {
       setDisplayState("error");
+      toast.error(stateMessages?.error, {
+        id: toastID,
+      });
     } else {
       setDisplayState("idle");
     }
-  }, [loading, success, error]);
+  }, [loading, success, error, stateMessages?.loading, stateMessages?.success, stateMessages?.error, toastID]);
 
-  // Animation variants - keeping the original ones
+  // Animation variants
   const buttonVariants = {
     initial: {
       scale: 1,

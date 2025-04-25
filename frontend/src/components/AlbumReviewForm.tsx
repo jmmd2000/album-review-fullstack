@@ -155,12 +155,6 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isSuccess,
   } = useMutation({
     mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) => submitReview(formData, album),
-    onSuccess: (data) => {
-      console.log("Review submitted successfully:", data);
-    },
-    onError: (err) => {
-      console.error("Error submitting review:", err);
-    },
   });
 
   const onSubmit = (formData: CreateReviewFormData) => {
@@ -222,7 +216,12 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
 
         <TrackList tracks={displayTracks} formMethods={{ control, register, setValue }} />
 
-        <Button type="submit" label={"Submit"} states={{ loading: isPending, error: isError, success: isSuccess }} />
+        <Button
+          type="submit"
+          label={"Submit"}
+          states={{ loading: isPending, error: isError, success: isSuccess }}
+          stateMessages={{ loading: "Submitting review...", success: "Review submitted successfully!", error: "Error submitting review, please try again." }}
+        />
       </form>
     </>
   );
@@ -250,6 +249,7 @@ const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum 
   try {
     const response = await fetch(endpoint, {
       method: isEditing ? "PUT" : "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -270,7 +270,7 @@ const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum 
 
     const data = await response.json();
     if (data.success) {
-      console.log("Review submitted successfully:", data);
+      console.log("Review submitted successfully.");
     }
   } catch (e) {
     console.error("Failed to submit review:", e);
