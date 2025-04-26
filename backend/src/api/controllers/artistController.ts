@@ -78,3 +78,29 @@ export const deleteArtist = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const updateArtistHeaders = async (req: Request, res: Response) => {
+  const all = req.query.all === "true";
+  const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
+
+  try {
+    await ArtistService.updateArtistHeaders(all, spotifyID);
+    res.status(204).end(); // no json, just “No Content”
+  } catch (error: any) {
+    console.error("Header update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateArtistImages = async (req: Request, res: Response) => {
+  const all = req.query.all === "true";
+  const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
+  console.log("Updating artist images", { all, spotifyID });
+  try {
+    await ArtistService.updateArtistImages(all, spotifyID);
+    res.status(204).end(); // no json, just “No Content”
+  } catch (error: any) {
+    console.error("Image update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

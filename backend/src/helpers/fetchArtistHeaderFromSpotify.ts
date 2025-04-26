@@ -7,7 +7,10 @@ import puppeteer from "puppeteer";
  */
 
 export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string): Promise<string | null> {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
   const page = await browser.newPage();
   await page.goto(`https://open.spotify.com/artist/${spotifyArtistID}`, {
     waitUntil: "networkidle0",

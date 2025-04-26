@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut } from "lucide-react";
 import { useState, useRef, useEffect, JSX } from "react";
 import { useAuth } from "@/auth/useAuth";
+import { queryClient } from "@/main";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LinkItem {
@@ -46,6 +47,9 @@ const AdminDropdown = () => {
         credentials: "include",
       });
       if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: ["artists"] });
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+
       navigate({ to: "/albums" });
     } catch {
       alert("Something went wrong while deleting the album.");

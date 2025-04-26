@@ -21,6 +21,9 @@ RUN npm run build
 # Stage 2: Production stage
 FROM node:18-alpine AS production
 
+RUN apk add --no-cache \
+    chromium
+
 WORKDIR /app
 
 # Copy the compiled app from build
@@ -31,6 +34,8 @@ COPY --from=build /app/backend/tsconfig.json ./dist/backend/tsconfig.json
 
 # Set environment
 ENV NODE_ENV=production
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV DRIZZLE_CONFIG_PATH=/app/dist/backend/drizzle.config.js
 ENV TS_NODE_PROJECT=./dist/backend/tsconfig.json
 

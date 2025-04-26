@@ -52,11 +52,11 @@ const CardGridControls = ({ pagination, nextPage, previousPage, pageData, search
 
         {pagination && nextPage && previousPage && (
           <div className="ml-auto flex justify-center items-center gap-2">
-            <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} />
+            <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} size="icon" />
             <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded" aria-label="Page Number">
               {pageData?.pageNumber} / {pageData?.totalPages}
             </div>
-            <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} />
+            <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} size="icon" />
           </div>
         )}
       </div>

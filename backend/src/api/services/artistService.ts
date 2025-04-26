@@ -1,8 +1,10 @@
-import { DisplayArtist, GetPaginatedArtistsOptions, DisplayAlbum, DisplayTrack } from "@shared/types";
+import { DisplayArtist, GetPaginatedArtistsOptions, DisplayAlbum, DisplayTrack, SpotifyImage } from "@shared/types";
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { toSortableDate } from "@shared/helpers/formatDate";
+import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
+import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 
 export class ArtistService {
   static async getAllArtists() {
@@ -61,5 +63,61 @@ export class ArtistService {
 
   static async deleteArtist(artistID: string) {
     return ArtistModel.deleteArtist(artistID);
+  }
+
+  static async updateArtistHeaders(all: boolean, spotifyID?: string): Promise<void> {
+    let ids: string[];
+    if (all) {
+      const artists = await ArtistModel.getAllArtists();
+      ids = artists.map((a) => a.spotifyID);
+    } else if (spotifyID) {
+      ids = [spotifyID];
+    } else {
+      throw new Error("Must specify either all=true or a spotifyID");
+    }
+
+    for (const id of ids) {
+      try {
+        const header = await fetchArtistHeaderFromSpotify(id);
+        if (header) {
+          console.log("updating artist1", id);
+          await ArtistModel.updateArtist(id, {
+            headerImage: header,
+            imageUpdatedAt: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error(`Header update failed for ${id}:`, err);
+      }
+    }
+  }
+
+  static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
+    console.log("Updating artist images in service");
+    let ids: string[];
+    if (all) {
+      const artists = await ArtistModel.getAllArtists();
+      ids = artists.map((a) => a.spotifyID);
+    } else if (spotifyID) {
+      ids = [spotifyID];
+    } else {
+      throw new Error("Must specify either all=true or a spotifyID");
+    }
+
+    for (const id of ids) {
+      try {
+        const url = `https://api.spotify.com/v1/artists/${id}`;
+        const artist = await fetchArtistFromSpotify(id, url);
+        if (artist) {
+          console.log("updating artist2", artist.name);
+          await ArtistModel.updateArtist(id, {
+            imageURLs: artist.images as SpotifyImage[],
+            imageUpdatedAt: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error(`Image update failed for ${id}:`, err);
+      }
+    }
   }
 }

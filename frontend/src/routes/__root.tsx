@@ -44,7 +44,7 @@ const Navbar = () => {
     <>
       {/* Desktop Navbar (sm and up) */}
       <div className="z-[9999] relative hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full will-change-transform">
-        <img src="../../../public/favicon.ico" alt="logo" className="h-[40px]" />
+        <img src="/favicon.ico" alt="logo" className="h-[40px]" />
         {ROUTES.map((route) => (
           <NavLink key={route.to} to={route.to} name={route.name} />
         ))}
@@ -63,7 +63,7 @@ const Navbar = () => {
         <button onClick={() => setIsOpen(false)} className="absolute top-3 right-3 text-white">
           <X size={24} />
         </button>
-        <img src="../../../public/favicon.ico" alt="logo" className="h-[40px] mb-5" />
+        <img src="/favicon.ico" alt="logo" className="h-[40px] mb-5" />
         <nav className="flex flex-col gap-4">
           {ROUTES.map((route) => (
             <NavLink key={route.to} to={route.to} name={route.name} />

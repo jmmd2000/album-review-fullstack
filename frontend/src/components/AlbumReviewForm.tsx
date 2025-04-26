@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import RatingChip from "./RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
+import { queryClient } from "@/main";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 //# --------------------------------------------------------------------------------------------- #
@@ -155,6 +156,9 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isSuccess,
   } = useMutation({
     mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) => submitReview(formData, album),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+    },
   });
 
   const onSubmit = (formData: CreateReviewFormData) => {

@@ -25,12 +25,14 @@ interface ButtonProps {
     error?: string;
     success?: string;
   };
+  /** Button size variant */
+  size?: "default" | "compact" | "icon";
 }
 
 /**
  * This component creates a button with a label and an optional click handler.
  */
-const Button = ({ label, onClick, disabled, type, states, stateMessages }: ButtonProps) => {
+const Button = ({ label, onClick, disabled, type, states, stateMessages, size = "default" }: ButtonProps) => {
   const { loading, error, success } = states || {};
   const [displayState, setDisplayState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const toastID = React.useId();
@@ -80,93 +82,135 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages }: Butto
     },
   };
 
+  // Background color variants
+  const backgroundVariants = {
+    idle: {
+      backgroundColor: "rgba(38, 38, 38, 1)", // neutral-800
+      opacity: 1,
+    },
+    success: {
+      backgroundColor: "rgba(22, 163, 74, 1)", // green-600
+      opacity: 1,
+    },
+    error: {
+      backgroundColor: "rgba(220, 38, 38, 1)", // red-600
+      opacity: 1,
+    },
+    loading: {
+      backgroundColor: "rgba(38, 38, 38, 1)", // neutral-800
+      opacity: 1,
+    },
+  };
+
+  // Content variants for icons and text
+  const contentVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut",
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      transition: {
+        duration: 0.15,
+        ease: "easeIn",
+      },
+    },
+  };
+
+  // Get size-specific classes
+  const getSizeClasses = () => {
+    switch (size) {
+      case "icon":
+        return "p-3 h-11 w-11";
+      case "compact":
+        return "py-1.5 px-3";
+      default:
+        return "py-2 px-4";
+    }
+  };
+
+  // Get content container classes
+  const getContentClasses = () => {
+    switch (size) {
+      case "icon":
+        return "h-5 w-5";
+      case "compact":
+        return "h-5 min-w-[60px]";
+      default:
+        return "h-6 min-w-[80px]";
+    }
+  };
+
+  // Get the appropriate icon based on state
+  const getStateIcon = () => {
+    switch (displayState) {
+      case "loading":
+        return (
+          <motion.div key="loader" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8, ease: "linear" }}>
+              <Loader2 className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
+            </motion.div>
+          </motion.div>
+        );
+      case "success":
+        return (
+          <motion.div key="success" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+            <CheckCircle className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
+          </motion.div>
+        );
+      case "error":
+        return (
+          <motion.div
+            key="error"
+            variants={contentVariants}
+            initial="hidden"
+            animate={{
+              ...contentVariants.visible,
+              x: [0, -3, 3, -3, 3, 0],
+              transition: {
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 },
+                x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+              },
+            }}
+            exit="exit"
+            className="flex items-center justify-center"
+          >
+            <XCircle className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
+          </motion.div>
+        );
+      case "idle":
+        return (
+          <motion.div key="label" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+            {typeof label === "string" ? <span>{label}</span> : label}
+          </motion.div>
+        );
+    }
+  };
+
   return (
     <motion.button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`relative border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded overflow-hidden ${
-        disabled ? "cursor-not-allowed text-neutral-600 bg-neutral-800/30" : "hover:bg-neutral-900 hover:border-neutral-800 hover:text-neutral-100 cursor-pointer"
-      }`}
+      className={`relative border border-transparent font-medium rounded overflow-hidden ${getSizeClasses()} ${disabled ? "cursor-not-allowed text-neutral-600 bg-neutral-800/30" : "hover:border-neutral-800 hover:text-neutral-100 cursor-pointer"}`}
       initial="initial"
       whileHover="hover"
       animate={disabled ? "disabled" : "initial"}
       variants={buttonVariants}
       type={type}
     >
-      {/* State background overlays */}
-      <AnimatePresence>
-        {displayState === "success" && <motion.div className="absolute inset-0 bg-green-600 rounded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />}
+      {/* Animated background */}
+      <motion.div className="absolute inset-0 rounded" initial="idle" animate={displayState} variants={backgroundVariants} transition={{ duration: 0.3 }} />
 
-        {displayState === "error" && <motion.div className="absolute inset-0 bg-red-600 rounded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />}
-      </AnimatePresence>
-
-      {/* Content container */}
-      <div className="relative z-10 flex items-center justify-center h-5">
-        {/* Loading spinner */}
-        <AnimatePresence>
-          {displayState === "loading" && (
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8, ease: "linear" }}>
-                <Loader2 className="w-5 h-5" />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Success icon */}
-        <AnimatePresence>
-          {displayState === "success" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                transition: { type: "spring", stiffness: 400, damping: 15 },
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.5,
-                transition: { duration: 0.2 },
-              }}
-            >
-              <CheckCircle className="w-5 h-5" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Error icon */}
-        <AnimatePresence>
-          {displayState === "error" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                x: [0, -3, 3, -3, 3, 0],
-                transition: {
-                  scale: { type: "spring", stiffness: 400, damping: 15 },
-                  x: { duration: 0.4, times: [0, 0.2, 0.4, 0.6, 0.8, 1] },
-                },
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.5,
-                transition: { duration: 0.2 },
-              }}
-            >
-              <XCircle className="w-5 h-5" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Default label */}
-        <AnimatePresence>
-          {displayState === "idle" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              {typeof label === "string" ? <span>{label}</span> : label}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Content container with size-appropriate dimensions */}
+      <div className={`relative z-10 flex items-center justify-center ${getContentClasses()}`}>
+        <AnimatePresence mode="wait">{getStateIcon()}</AnimatePresence>
       </div>
     </motion.button>
   );

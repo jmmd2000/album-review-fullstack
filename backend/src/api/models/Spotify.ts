@@ -84,8 +84,8 @@ export class Spotify {
 
   static async getAlbum(albumID: string) {
     // Check if the album already exists in the database
-    const existingAlbum = AlbumModel.findBySpotifyID(albumID);
-    if (await existingAlbum) {
+    const existingAlbum = await AlbumModel.findBySpotifyID(albumID);
+    if (existingAlbum) {
       throw new Error("Album already exists in the database");
     }
     const endpoint = `https://api.spotify.com/v1/albums/${albumID}`;
