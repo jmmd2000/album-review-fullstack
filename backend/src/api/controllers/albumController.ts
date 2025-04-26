@@ -82,6 +82,7 @@ export const getPaginatedAlbums = async (req: Request, res: Response) => {
 
 export const deleteAlbum = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
+  console.log("Deleting album with ID:", albumID);
   try {
     await AlbumService.deleteAlbum(albumID);
     res.status(204).end();
@@ -109,6 +110,28 @@ export const updateAlbumReview = async (req: Request, res: Response) => {
     // Postgres code: 23505 → Duplicate Key Violation
     else if (error.code === "23505") {
       res.status(400).json({ message: "You have already reviewed this album." });
+    } else {
+      res.status(500).json({ message: "An unknown error occurred." });
+    }
+  }
+};
+
+export const getReviewScoresByIds = async (req: Request, res: Response) => {
+  let raw = req.query.ids;
+  let ids: string[] = [];
+
+  if (Array.isArray(raw)) {
+    ids = raw as string[];
+  } else if (typeof raw === "string") {
+    ids = raw.includes(",") ? raw.split(",") : [raw];
+  }
+
+  try {
+    const scores = await AlbumService.getReviewScoresByIds(ids);
+    res.status(200).json(scores);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
     } else {
       res.status(500).json({ message: "An unknown error occurred." });
     }

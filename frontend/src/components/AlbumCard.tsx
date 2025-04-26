@@ -2,8 +2,11 @@ import { DisplayAlbum } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 import RatingChip from "./RatingChip";
 import { motion } from "framer-motion";
-import { Bookmark, BookmarkX } from "lucide-react";
 import { useState } from "react";
+import { Bookmark, BookmarkX, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 /**
  * The props for the AlbumCard component.
@@ -11,38 +14,42 @@ import { useState } from "react";
 interface AlbumCardProps {
   /** The album to display */
   album: DisplayAlbum;
+  /** Whether the album is bookmarked, default false */
+  bookmarked?: boolean;
 }
 
 /**
  * This component creates a card for an album with an image, name, artist, and review score.
  * @param {DisplayAlbum} album The album to display
  */
-const AlbumCard = ({ album }: AlbumCardProps) => {
-  const toURL = album.reviewScore ? "/albums/$albumID" : "/albums/$albumID/create";
+const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
+  const toURL = album.reviewScore != null ? "/albums/$albumID" : "/albums/$albumID/create";
+
   return (
-    <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll={true} viewTransition className="block">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        whileHover={{
-          y: -10,
-        }}
-        className="flex flex-col rounded-xl items-center w-full max-w-[240px]"
-      >
-        <img src={album.imageURLs[1].url} alt={album.name} className="w-full aspect-square rounded-lg" style={{ viewTransitionName: `album-image-${album.spotifyID}` }} />
+    <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll viewTransition className="block">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }} whileHover={{ y: -10 }} className="flex flex-col rounded-xl items-center w-full max-w-[240px]">
+        <img
+          src={album.imageURLs[1].url}
+          alt={album.name}
+          className="w-full aspect-square rounded-lg"
+          style={{
+            viewTransitionName: `album-image-${album.spotifyID}`,
+          }}
+        />
+
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
             <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
             <p className="text-xs text-gray-500">{album.artistName}</p>
           </div>
-          {album.reviewScore ? (
+
+          {album.reviewScore != null ? (
             <div className="grid place-items-center">
               <RatingChip rating={album.reviewScore} options={{ small: true }} />
             </div>
           ) : (
             <div className="grid place-items-center">
-              <BookmarkButton bookmarked={false} onClick={() => {}} spotifyID={album.spotifyID} />
+              <BookmarkButton album={album} bookmarked={bookmarked} />
             </div>
           )}
         </div>
@@ -54,34 +61,83 @@ const AlbumCard = ({ album }: AlbumCardProps) => {
 export default AlbumCard;
 
 interface BookmarkButtonProps {
-  /** Whether the album is bookmarked */
+  /** The album to bookmark/unbookmark */
+  album: DisplayAlbum;
+  /** Current bookmark state */
   bookmarked: boolean;
-  /** Function to call when the button is clicked */
-  onClick: (spotifyID: string) => void;
-  /** The Spotify ID of the album */
-  spotifyID: string;
 }
 
-const BookmarkButton = ({ bookmarked, onClick, spotifyID }: BookmarkButtonProps) => {
-  const [isBookmarked, setIsBookmarked] = useState(bookmarked);
+function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
+  const queryClient = useQueryClient();
   const [isHovering, setIsHovering] = useState(false);
 
-  const handleToggleBookmark = () => {
-    setIsBookmarked(!bookmarked);
-    onClick(spotifyID);
+  // Mutation for adding a bookmark
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/${album.spotifyID}/add`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(album),
+      });
+      if (!res.ok) throw new Error("Failed to add bookmark");
+      return res.json();
+    },
+    onSuccess: () => {
+      // Invalidate so useBookmarkStatus refetches
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    },
+  });
+
+  // Mutation for removing a bookmark (204 No Content)
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/${album.spotifyID}/remove`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to remove bookmark");
+      // no res.json() here since it's 204
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    },
+  });
+
+  const isLoading = addMutation.isPending || removeMutation.isPending;
+  const isRemoving = isHovering && bookmarked;
+  const iconColor = {
+    fill: isRemoving ? "#dc2626" : bookmarked ? "#22c55e" : "transparent",
+    stroke: isRemoving ? "white" : bookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
   };
 
-  const fillColor = isHovering && isBookmarked ? "#dc2626" : isBookmarked ? "#22c55e" : "transparent";
-  const strokeColor = isHovering && isBookmarked ? "white" : isBookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171";
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (bookmarked) {
+      removeMutation.mutate();
+    } else {
+      addMutation.mutate();
+    }
+  };
 
   return (
     <button
-      className="rounded-md bg-gray-700 bg-opacity-10 bg-clip-padding p-1 backdrop-blur-sm transition-colors hover:bg-gray-700 hover:text-[#D2D2D3]"
-      onClick={handleToggleBookmark}
+      onClick={handleClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      aria-label={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      disabled={isLoading}
+      className="rounded-md bg-neutral-800 bg-opacity-60 p-1 backdrop-blur-md transition-all duration-200 hover:bg-neutral-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 active:scale-95 disabled:opacity-50 cursor-pointer"
     >
-      {isHovering && isBookmarked ? <BookmarkX size={20} fill={fillColor} stroke={strokeColor} /> : <Bookmark size={20} fill={fillColor} stroke={strokeColor} />}
+      {isLoading ? (
+        <Loader2 size={20} className="animate-spin" stroke={bookmarked ? "#22c55e" : "#717171"} />
+      ) : isRemoving ? (
+        <BookmarkX size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
+      ) : (
+        <Bookmark size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
+      )}
     </button>
   );
-};
+}

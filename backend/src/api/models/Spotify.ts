@@ -1,6 +1,7 @@
 import { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
 import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
+import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -33,35 +34,52 @@ export class Spotify {
     return this.accessToken;
   }
 
-  static async searchAlbums(query: SearchAlbumsOptions) {
+  static async searchAlbums(query: SearchAlbumsOptions): Promise<DisplayAlbum[]> {
     // Check if the query is empty or undefined
     const rawQuery = query.query?.trim();
-    if (!rawQuery || rawQuery === "undefined") return [] as DisplayAlbum[];
-    const endpoint = `https://api.spotify.com/v1/search?q=${query.query}&type=album&limit=35`;
+    if (!rawQuery || rawQuery === "undefined") {
+      return [] as DisplayAlbum[];
+    }
+
+    // Fetch from Spotify
+    const endpoint = `https://api.spotify.com/v1/search?q=${encodeURIComponent(rawQuery)}&type=album&limit=35`;
     const accessToken = await this.getAccessToken();
-    const searchParamaters = {
+    const response = await fetch(endpoint, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + accessToken,
       },
-    };
-
-    const response: Response = await fetch(endpoint, searchParamaters);
-
-    const data = await response.json();
-    const displayAlbums: DisplayAlbum[] = data.albums.items.map((album: SpotifyAlbum) => {
-      return {
-        spotifyID: album.id,
-        name: album.name,
-        artistName: album.artists[0].name,
-        artistSpotifyID: album.artists[0].id,
-        releaseYear: album.release_date.split("-")[0],
-        imageURLs: album.images,
-      };
     });
+    const data = await response.json();
 
-    return displayAlbums;
+    // Map raw Spotify data into your DisplayAlbum shape
+    const displayAlbums: DisplayAlbum[] = data.albums.items.map((album: SpotifyAlbum) => ({
+      spotifyID: album.id,
+      name: album.name,
+      artistName: album.artists[0].name,
+      artistSpotifyID: album.artists[0].id,
+      releaseYear: Number(album.release_date.split("-")[0]),
+      imageURLs: album.images,
+    }));
+
+    if (displayAlbums.length === 0) return displayAlbums;
+
+    // Bulk fetch existing review scores
+    const ids = displayAlbums.map((a) => a.spotifyID);
+    const scoreRows = await AlbumModel.getReviewScoresByIds(ids);
+    const scoreMap = new Map(scoreRows.map(({ spotifyID, reviewScore }) => [spotifyID, reviewScore]));
+
+    // Bulk fetch bookmarked IDs
+    const bookmarkedIds = await BookmarkedAlbumModel.getBookmarkedByIds(ids);
+    const bookmarkedSet = new Set(bookmarkedIds);
+
+    // merge back into each album
+    return displayAlbums.map((album) => ({
+      ...album,
+      reviewScore: scoreMap.get(album.spotifyID), // optional
+      bookmarked: bookmarkedSet.has(album.spotifyID), // optional
+    }));
   }
 
   static async getAlbum(albumID: string) {

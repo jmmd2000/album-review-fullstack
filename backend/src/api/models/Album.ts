@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
+import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import { GetPaginatedAlbumsOptions } from "@shared/types";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
 import { db } from "@/index";
@@ -60,5 +60,20 @@ export class AlbumModel {
 
   static async getAlbumsByArtist(spotifyID: string) {
     return db.select().from(reviewedAlbums).where(eq(reviewedAlbums.artistSpotifyID, spotifyID));
+  }
+
+  static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {
+    const rows = await db
+      .select({
+        spotifyID: reviewedAlbums.spotifyID,
+        reviewScore: reviewedAlbums.reviewScore,
+      })
+      .from(reviewedAlbums)
+      .where(inArray(reviewedAlbums.spotifyID, ids));
+
+    return rows.map((r) => ({
+      spotifyID: r.spotifyID,
+      reviewScore: r.reviewScore,
+    }));
   }
 }

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/api/middleware/authMiddleware";
 const router = express.Router();
 
 router.get("/all", albumController.getAllAlbums);
+router.get("/scores", albumController.getReviewScoresByIds);
 router.get("/:albumID", albumController.getAlbumByID);
 router.post("/create", requireAdmin, albumController.createAlbumReview);
 router.get("/", albumController.getPaginatedAlbums);

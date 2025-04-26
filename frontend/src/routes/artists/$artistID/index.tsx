@@ -95,7 +95,7 @@ function RouteComponent() {
       <div className="mb-16">
         <RatingChip rating={Math.ceil(artist.totalScore)} options={{ textBelow: true }} />
       </div>
-      <div className="mx-auto">
+      <div className="mx-auto max-w-[80ch]">
         <TrackList tracks={tracks} sortByRating maxHeight="500px" />
       </div>
       <CardGrid

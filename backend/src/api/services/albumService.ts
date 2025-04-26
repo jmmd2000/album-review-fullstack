@@ -13,6 +13,7 @@ import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
+import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {
@@ -92,6 +93,11 @@ export class AlbumService {
       });
     }
 
+    const isBookmarked = await BookmarkedAlbumModel.findBySpotifyID(album.spotifyID);
+    if (isBookmarked) {
+      await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID);
+    }
+
     const albums = await AlbumModel.getAlbumsByArtist(finalArtist.spotifyID);
     const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(albums);
     await ArtistModel.updateArtist(finalArtist.spotifyID, {
@@ -110,7 +116,6 @@ export class AlbumService {
     })) as ArtistLeaderboardData[];
 
     const leaderboardPositions = calculateLeaderboardPositions(mappedArtists);
-    console.log("All artists sorted:", mappedArtists);
     let rank = 1;
     for (const artist of leaderboardPositions) {
       await ArtistModel.updateLeaderboardPosition(artist.id, rank++);
@@ -203,6 +208,19 @@ export class AlbumService {
         reviewCount: albums.length,
       });
     }
+
+    const allArtists = await ArtistModel.findAllArtistsSortedByTotalScore();
+    const mappedArtists = allArtists.map((a) => ({
+      id: a.id,
+      score: a.totalScore,
+      name: a.name,
+    })) as ArtistLeaderboardData[];
+
+    const leaderboardPositions = calculateLeaderboardPositions(mappedArtists);
+    let rank = 1;
+    for (const artist of leaderboardPositions) {
+      await ArtistModel.updateLeaderboardPosition(artist.id, rank++);
+    }
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
@@ -289,5 +307,9 @@ export class AlbumService {
     }
 
     return AlbumModel.findBySpotifyID(albumID);
+  }
+
+  static async getReviewScoresByIds(ids: string[]) {
+    return AlbumModel.getReviewScoresByIds(ids);
   }
 }

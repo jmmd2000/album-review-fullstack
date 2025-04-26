@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, jsonb, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -89,7 +89,9 @@ export const bookmarkedAlbums = pgTable("bookmarked_albums", {
   artistName: varchar("artist_name", { length: 255 }).notNull(),
   artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
   releaseYear: integer("release_year").notNull(),
-  releaseDate: varchar("release_date", { length: 50 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`now()`)
+    .notNull(),
 });
 
 export const concerts = pgTable(

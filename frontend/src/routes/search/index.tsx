@@ -1,6 +1,7 @@
 import AlbumCard from "@/components/AlbumCard";
 import CardGrid from "@/components/CardGrid";
 import { RequireAdmin } from "@/components/RequireAdmin";
+import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { queryClient } from "@/main";
 import { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
@@ -53,6 +54,8 @@ function RouteComponent() {
   const [recentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
   const [pageTitle, setPageTitle] = useState<string>("Search Albums");
 
+  const { data: recentAlbumsWithStatus } = useAlbumStatus(recentAlbums);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const query = params.get("query");
@@ -64,7 +67,7 @@ function RouteComponent() {
   }, [options.query]);
 
   const dataIsEmpty = data?.length === 0;
-  const albumCards = dataIsEmpty ? recentAlbums : data;
+  const albumCards = dataIsEmpty ? recentAlbumsWithStatus : data;
   const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search results for "${options.query}"`;
 
   const handleSearch = (query: string) => {
@@ -84,7 +87,7 @@ function RouteComponent() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           <CardGrid
             cards={(albumCards || []).map((album) => (
-              <AlbumCard key={album.spotifyID} album={album} />
+              <AlbumCard key={album.spotifyID} album={album} bookmarked={album.bookmarked} />
             ))}
             options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
             search={handleSearch}

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut } from "lucide-react";
 import { useState, useRef, useEffect, JSX } from "react";
 import { useAuth } from "@/auth/useAuth";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LinkItem {
   label: string;
@@ -40,7 +41,7 @@ const AdminDropdown = () => {
     if (!albumID) return;
     if (!confirm("Are you sure you want to delete this album?")) return;
     try {
-      const res = await fetch(`/api/albums/${albumID}`, {
+      const res = await fetch(`${API_BASE_URL}/api/albums/${albumID}`, {
         method: "DELETE",
         credentials: "include",
       });
