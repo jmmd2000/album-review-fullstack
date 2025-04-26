@@ -12,7 +12,7 @@ interface HeaderDetailsProps {
 }
 
 const HeaderDetails = ({ name, imageURL, viewTransitionName, nameBackground }: HeaderDetailsProps) => {
-  const nameStyles = cva(["text-5xl", "lg:text-6xl", "flex-col", "font-bold", "drop-shadow-lg"], {
+  const nameStyles = cva(["text-5xl", "lg:text-6xl", "flex-col", "font-bold", "drop-shadow-lg", "text-center", "lg:w-max"], {
     variants: {
       nameBackground: {
         true: "bg-black/20 backdrop-blur-sm px-5 py-3 rounded-lg border-t-1 border-r-1 border-b-2 border-l-2 border-neutral-900/20",

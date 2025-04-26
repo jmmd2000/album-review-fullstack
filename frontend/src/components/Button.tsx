@@ -209,7 +209,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       <motion.div className="absolute inset-0 rounded" initial="idle" animate={displayState} variants={backgroundVariants} transition={{ duration: 0.3 }} />
 
       {/* Content container with size-appropriate dimensions */}
-      <div className={`relative z-10 flex items-center justify-center ${getContentClasses()}`}>
+      <div className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}>
         <AnimatePresence mode="wait">{getStateIcon()}</AnimatePresence>
       </div>
     </motion.button>

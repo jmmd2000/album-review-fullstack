@@ -19,41 +19,55 @@ interface CardGridControlsProps {
 /**
  * This component creates a card grid with controls for pagination and search.
  */
+import { useRef } from "react";
+
 const CardGridControls = ({ pagination, nextPage, previousPage, pageData, search, sortSettings }: CardGridControlsProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="sticky top-0 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 z-10">
-      <div className="flex gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
+      <div className="flex flex-col sm:flex-row gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
         {search && (
-          <div className="flex justify-center gap-2">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="rounded-sm py-2 bg-neutral-800 px-4"
-              id="search-input"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const inputElement = e.target as HTMLInputElement;
-                  const inputValue = inputElement?.value || "";
-                  search(inputValue);
-                }
-              }}
-            />
-            <Button
-              label={"Search"}
-              onClick={() => {
-                const inputElement = document.getElementById("search-input") as HTMLInputElement;
-                const inputValue = inputElement?.value || "";
-                search(inputValue);
-              }}
-            />
-            {sortSettings && <SortDropdown {...sortSettings} />}
+          <div className="flex flex-col sm:flex-row justify-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="Search..."
+                ref={inputRef}
+                className="w-[75%] sm:w-auto rounded-sm py-2 bg-neutral-800 px-4"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const val = inputRef.current?.value || "";
+                    search(val);
+                  }
+                }}
+              />
+              <Button
+                label="Search"
+                onClick={() => {
+                  search(inputRef.current?.value || "");
+                }}
+                size="compact"
+              />
+            </div>
+            <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
+              {sortSettings && <SortDropdown {...sortSettings} />}
+              {pagination && nextPage && previousPage && (
+                <div className="flex flex-row justify-center items-center gap-2 ml-auto w-full sm:hidden">
+                  <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} size="icon" />
+                  <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded">
+                    {pageData?.pageNumber} / {pageData?.totalPages}
+                  </div>
+                  <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} size="icon" />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {pagination && nextPage && previousPage && (
-          <div className="ml-auto flex justify-center items-center gap-2">
+          <div className=" flex-row justify-center items-center gap-2 mt-4 sm:mt-0 ml-auto w-full hidden sm:w-auto sm:flex">
             <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} size="icon" />
-            <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded" aria-label="Page Number">
+            <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded">
               {pageData?.pageNumber} / {pageData?.totalPages}
             </div>
             <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} size="icon" />

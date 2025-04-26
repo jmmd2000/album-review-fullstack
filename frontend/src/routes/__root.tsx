@@ -1,7 +1,7 @@
 import { AuthProvider } from "@/auth/AuthContext";
 import AdminDropdown from "@/components/AdminDropdown";
 import { createRootRoute, Link, Outlet, HeadContent } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+// import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
@@ -17,7 +17,7 @@ export const Route = createRootRoute({
           <Outlet />
         </div>
       </AuthProvider>
-      <TanStackRouterDevtools />
+      {/* <TanStackRouterDevtools /> */}
     </>
   ),
 });
@@ -42,37 +42,49 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Desktop Navbar (sm and up) */}
-      <div className="z-[9999] relative hidden sm:flex px-5 py-5 gap-5 text-2xl items-center max-w-full will-change-transform">
+      {/* Mobile Header */}
+      <header className="flex sm:hidden items-center justify-between bg-neutral-900 text-white px-5 py-5 z-[9999]">
         <img src="/favicon.ico" alt="logo" className="h-[40px]" />
-        {ROUTES.map((route) => (
-          <NavLink key={route.to} to={route.to} name={route.name} />
+        <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-md focus:outline-none" aria-label={isOpen ? "Close menu" : "Open menu"}>
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </header>
+
+      {/* Mobile Sidebar */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 w-[250px] bg-neutral-900 text-white p-5
+          transform transition-transform duration-300 z-[9998] flex flex-col
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4" aria-label="Close menu">
+          <X size={24} />
+        </button>
+        <img src="/favicon.ico" alt="logo" className="h-[40px] w-[40px] mb-6" />
+        <nav className="flex flex-col gap-4">
+          {ROUTES.map((r) => (
+            <NavLink key={r.to} to={r.to} name={r.name} onClick={() => setIsOpen(false)} />
+          ))}
+        </nav>
+        <div className="mt-auto">
+          <AdminDropdown />
+        </div>
+      </aside>
+
+      {/* Overlay behind mobile menu */}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-[9997]" onClick={() => setIsOpen(false)} />}
+
+      {/* Desktop Navbar */}
+      <header className="hidden sm:flex bg-neutral-900 text-white px-5 py-5 gap-5 items-center z-[9999] relative">
+        <img src="/favicon.ico" alt="logo" className="h-[40px]" />
+        {ROUTES.map((r) => (
+          <NavLink key={r.to} to={r.to} name={r.name} />
         ))}
         <div className="ml-auto">
           <AdminDropdown />
         </div>
-      </div>
-
-      {/* Mobile Menu Button (below sm) */}
-      <button onClick={() => setIsOpen(!isOpen)} className="sm:hidden fixed top-5 left-5 z-50 p-2 bg-black text-white rounded-md">
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* Sidebar (below sm) */}
-      <div className={`sm:hidden fixed top-0 left-0 h-full w-[250px] bg-gray-900 text-white p-5 transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <button onClick={() => setIsOpen(false)} className="absolute top-3 right-3 text-white">
-          <X size={24} />
-        </button>
-        <img src="/favicon.ico" alt="logo" className="h-[40px] mb-5" />
-        <nav className="flex flex-col gap-4">
-          {ROUTES.map((route) => (
-            <NavLink key={route.to} to={route.to} name={route.name} />
-          ))}
-        </nav>
-      </div>
-
-      {/* Sidebar Overlay */}
-      {isOpen && <div className="sm:hidden fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsOpen(false)} />}
+      </header>
     </>
   );
 };
@@ -80,12 +92,10 @@ const Navbar = () => {
 interface NavLinkProps {
   to: string;
   name: string;
+  onClick?: () => void;
 }
-
-const NavLink = ({ to, name }: NavLinkProps) => {
-  return (
-    <Link to={to} className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2">
-      {name}
-    </Link>
-  );
-};
+const NavLink = ({ to, name, onClick }: NavLinkProps) => (
+  <Link to={to} onClick={onClick} className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2 text-lg md:text-2xl">
+    {name}
+  </Link>
+);

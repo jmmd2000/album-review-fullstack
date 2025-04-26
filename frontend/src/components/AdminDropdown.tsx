@@ -129,7 +129,7 @@ const AdminDropdown = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-neutral-900 shadow-lg ring-1 ring-neutral-700 overflow-hidden"
+            className={`absolute z-10 ${isAdmin ? "-top-48" : "-top-32"} -right-28 -mr-3 mt-0 w-56 origin-bottom-left sm:origin-top-right rounded-md bg-neutral-900 shadow-lg ring-1 ring-neutral-700 overflow-hidden sm:mt-2 sm:top-auto sm:right-0 sm:mr-0`}
           >
             {!isAdmin ? (
               <div className="flex flex-col gap-2 p-4">

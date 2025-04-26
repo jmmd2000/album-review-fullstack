@@ -60,7 +60,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   }, [colorCount, colors]);
 
   return (
-    <div className="relative w-full h-[600px] md:h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
+    <div className="relative w-full h-[700px] md:h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
       {blobs.map((blob, index) => (
         <div
           key={index}
