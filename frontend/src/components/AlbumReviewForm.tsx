@@ -213,8 +213,8 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
         <GenreSelector genreFields={genreFields} register={register} removeGenre={removeGenre} addGenre={addGenre} setValue={setValue} genres={genres} />
 
         <BestWorstSong
-          bestInput={<input type="text" {...register("bestSong")} className="w-full p-2 rounded" placeholder="Best song..." />}
-          worstInput={<input type="text" {...register("worstSong")} className="w-full p-2 rounded" placeholder="Worst song..." />}
+          bestInput={<input type="text" {...register("bestSong")} className="w-full p-2 rounded" placeholder="Best song..." autoComplete="off" />}
+          worstInput={<input type="text" {...register("worstSong")} className="w-full p-2 rounded" placeholder="Worst song..." autoComplete="off" />}
         />
         <ReviewContentInput registration={register("reviewContent")} value={getValues("reviewContent")} />
 

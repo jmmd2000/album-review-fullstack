@@ -78,7 +78,29 @@ const REVIEW = {
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sit amet urna a odio volutpat fringilla. Curabitur in augue quis mi dignissim posuere sed eget urna. Aenean tempus lacus at lacus auctor ultrices. Nullam sem erat, posuere sed blandit et, tristique ac ex. Donec ornare malesuada fermentum. Praesent accumsan est eget eros porttitor ornare. Proin sodales semper odio ac porttitor. Nunc scelerisque nunc eget sagittis vulputate. Nulla neque nunc, placerat sed laoreet ut, lobortis et orci. Fusce rutrum risus nec vestibulum pellentesque. Vestibulum mi libero, mattis in mi ac, lacinia dictum nulla. Nullam nisi odio, pharetra vitae interdum ac, lobortis in dui. Fusce convallis mattis risus id efficitur. In elementum, lorem eu eleifend sagittis, ligula arcu mattis nisl, vitae sodales dolor sem vestibulum mauris. Etiam elementum, libero vel semper suscipit, lacus purus ullamcorper leo, id scelerisque est nisi quis nulla. Nullam in consectetur dui, eget congue sapien. Curabitur lobortis diam eu pellentesque vulputate. Pellentesque varius id risus dictum dictum. Sed suscipit turpis massa, tristique consectetur dolor pellentesque sodales. Mauris eleifend suscipit iaculis. In suscipit at libero eget pellentesque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec vestibulum ex nulla, sed rutrum enim convallis at.",
 };
 
-const GENRES = ["pop", "rock", "rap", "hip-hop", "r&b", "jazz", "blues", "country", "classical", "metal", "electronic", "reggae", "folk", "indie", "punk", "hip-hop/rap", "r&b/soul", "pop/rap"];
+const GENRES = [
+  "alternative-pop",
+  "alternative-rock",
+  "alternative-rap",
+  "alternative-hip-hop",
+  "r&b",
+  "jazz",
+  "blues",
+  "alternative-country",
+  "classical",
+  "metal",
+  "electronic",
+  "reggae",
+  "alternative-folk",
+  "indie",
+  "punk",
+  "hip-hop/rap",
+  "r&b/soul",
+  "pop/rap",
+  "heartland rock",
+  "experimental pop",
+  "avant-garde",
+];
 
 export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
   const cookie = await getAdminCookie();
@@ -98,7 +120,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
     const bestSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
     const worstSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
-    const randomGenres = Array.from({ length: 3 }, () => GENRES[Math.floor(Math.random() * GENRES.length)]);
+    const randomGenres = Array.from({ length: 6 }, () => GENRES[Math.floor(Math.random() * GENRES.length)]);
     return {
       ...review,
       bestSong: bestSong,
