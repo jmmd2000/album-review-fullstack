@@ -2,7 +2,7 @@ import { DisplayTrack, ReviewedAlbum } from "@shared/types";
 import RatingChip from "./RatingChip";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useMemo } from "react";
 
 /**
  * The props for the ReviewDetails component.
@@ -98,12 +98,31 @@ interface ReviewContentProps {
 }
 
 export const ReviewContent = ({ reviewContent }: ReviewContentProps) => {
+  // Parse and format the content
+  const formattedContent = useMemo(() => {
+    // Process the content step by step
+    let processedContent = reviewContent;
+
+    // Replace the markdown-style formatting with HTML with enhanced styling
+    processedContent = processedContent
+      // Bold formatting - using stronger font-weight and slightly brighter color
+      .replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:900; color:#ffffff">$1</strong>')
+      // Italic formatting
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      // Underline formatting
+      .replace(/__([^_]+)__/g, "<u>$1</u>")
+      // Color formatting
+      .replace(/\{color:#fb2c36\}([^{]+)\{color\}/g, '<span style="color:#fb2c36; font-weight:700">$1</span>');
+
+    return processedContent;
+  }, [reviewContent]);
+
   return (
     <motion.div {...slideInFromLeft(0.8)}>
       <div className="w-full mt-6 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
         <div className="relative px-5 py-4 border-l-4 border-neutral-800">
           <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
-            <p className="leading-relaxed">{reviewContent}</p>
+            <p className="leading-relaxed" dangerouslySetInnerHTML={{ __html: formattedContent }} />
           </blockquote>
         </div>
       </div>

@@ -310,22 +310,98 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
     }
   }, [value]);
 
+  const applyFormatting = (format: string) => {
+    if (!ref.current) return;
+
+    const textarea = ref.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    // Make sure some text is selected
+    if (start === end) {
+      alert("Please select some text first");
+      return;
+    }
+
+    let prefix = "";
+    let suffix = "";
+
+    switch (format) {
+      case "bold":
+        prefix = "**";
+        suffix = "**";
+        break;
+      case "italic":
+        prefix = "*";
+        suffix = "*";
+        break;
+      case "underline":
+        prefix = "__";
+        suffix = "__";
+        break;
+      case "color":
+        prefix = "{color:#fb2c36}";
+        suffix = "{color}";
+        break;
+    }
+
+    const currentValue = textarea.value;
+    const selectedText = currentValue.substring(start, end);
+    const newValue = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
+
+    // Update the textarea value
+    textarea.value = newValue;
+
+    // Trigger a change event to update react-hook-form
+    const event = new Event("input", { bubbles: true });
+    textarea.dispatchEvent(event);
+
+    // Force a resize of the textarea
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+
+    // Set focus back to the textarea after format is applied
+    setTimeout(() => {
+      textarea.focus();
+      // Set cursor position after the formatted text
+      const newPosition = start + prefix.length + selectedText.length + suffix.length;
+      textarea.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
   return (
-    <div className="w-full my-6 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
-      <div className="relative px-5 py-4 border-l-4 border-neutral-800">
-        <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
-          <textarea
-            {...registration}
-            ref={(e) => {
-              ref.current = e;
-              if (e) registration.ref(e);
-            }}
-            defaultValue={value}
-            className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-opacity-50 rounded-lg"
-            rows={1}
-            placeholder="Write your review here..."
-          />
-        </blockquote>
+    <div className="w-full my-6">
+      <div className="flex gap-2 mb-2">
+        <button type="button" onClick={() => applyFormatting("bold")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Bold">
+          <strong>B</strong>
+        </button>
+        <button type="button" onClick={() => applyFormatting("italic")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Italic">
+          <em>I</em>
+        </button>
+        <button type="button" onClick={() => applyFormatting("underline")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Underline">
+          <u>U</u>
+        </button>
+        <button type="button" onClick={() => applyFormatting("color")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white flex items-center" title="Red Text">
+          <span className="text-[#fb2c36]">A</span>
+        </button>
+      </div>
+
+      <div className="rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
+        <div className="relative px-5 py-4 border-l-4 border-neutral-800">
+          <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
+            <textarea
+              {...registration}
+              ref={(e) => {
+                ref.current = e;
+                if (e) registration.ref(e);
+              }}
+              defaultValue={value}
+              className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-opacity-50 rounded-lg"
+              rows={3}
+              placeholder="Write your review here... Use formatting options or select text to format."
+            />
+          </blockquote>
+        </div>
       </div>
     </div>
   );
