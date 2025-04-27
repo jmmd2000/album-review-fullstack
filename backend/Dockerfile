@@ -16,7 +16,7 @@ COPY shared ./shared
 
 # Compile TypeScript
 WORKDIR /app/backend
-RUN npm run build
+RUN npx tsc
 
 # Stage 2: Production stage
 FROM node:18-alpine AS production

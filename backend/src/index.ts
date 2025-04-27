@@ -17,7 +17,7 @@ export const db = drizzle(process.env.DATABASE_URL!);
 export const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:8080", "http://localhost:5173"],
+  origin: ["http://localhost:5173", process.env.CLIENT_ORIGIN || "http://localhost:8080"],
   credentials: true,
 };
 

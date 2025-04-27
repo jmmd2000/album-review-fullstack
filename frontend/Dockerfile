@@ -1,44 +1,50 @@
 # Stage 1: Build stage
-FROM node:18-alpine AS build
+FROM node:18 AS build
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY frontend/package*.json ./frontend/
-COPY shared/package*.json ./shared/
+COPY backend/package*.json ./backend/
 
-# Set up structure for shared dependencies
+# Install dependencies
 RUN npm install
 
 # Copy source code
-COPY frontend ./frontend
+COPY backend ./backend
 COPY shared ./shared
 
-# Build the frontend
-WORKDIR /app/frontend
-
-# Fix for Rollup in Alpine Linux
-RUN npm install @rollup/rollup-linux-x64-musl
-
-RUN npm run build
+# Compile TypeScript
+WORKDIR /app/backend
+RUN npm install
+RUN npx tsc
 
 # Stage 2: Production stage
-FROM nginx:alpine AS production
+FROM node:18-alpine AS production
 
-WORKDIR /usr/share/nginx/html
+RUN apk add --no-cache \
+    chromium
 
-# Remove default Nginx static files
-RUN rm -rf ./*
+WORKDIR /app
 
-# Copy built frontend from the build stage
-COPY --from=build /app/frontend/dist .
+# Copy the compiled app from build
+COPY --from=build /app/backend/dist ./dist
+COPY --from=build /app/backend/package.json ./package.json
+COPY --from=build /app/backend/package-lock.json ./package-lock.json
+COPY --from=build /app/backend/tsconfig.json ./dist/backend/tsconfig.json
 
-# Create Nginx config that redirects to index.html for SPA
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Set environment
+ENV NODE_ENV=production
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV DRIZZLE_CONFIG_PATH=/app/dist/backend/drizzle.config.js
+ENV TS_NODE_PROJECT=./dist/backend/tsconfig.json
 
-# Expose port 80
-EXPOSE 80
+# Install only prod deps
+RUN npm ci --omit=dev
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 4000
+
+# Run DB migration then app
+CMD ["sh", "-c", "./node_modules/.bin/drizzle-kit push --config $DRIZZLE_CONFIG_PATH && node -r tsconfig-paths/register dist/backend/src/index.js"]

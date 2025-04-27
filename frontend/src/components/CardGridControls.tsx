@@ -52,10 +52,12 @@ const CardGridControls = ({ pagination, nextPage, previousPage, pageData, search
             <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
               {sortSettings && <SortDropdown {...sortSettings} />}
               {pagination && nextPage && previousPage && (
-                <div className="flex flex-row justify-center items-center gap-2 ml-auto w-full sm:hidden">
+                <div className="flex flex-row justify-evenly items-center ml-auto w-full sm:hidden">
                   <Button label={<ChevronLeft />} onClick={previousPage.action} disabled={previousPage.disabled} size="icon" />
-                  <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded">
-                    {pageData?.pageNumber} / {pageData?.totalPages}
+                  <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-[10px] px-4 rounded">
+                    <span className="mx-auto text-center">
+                      {pageData?.pageNumber} / {pageData?.totalPages}
+                    </span>
                   </div>
                   <Button label={<ChevronRight />} onClick={nextPage.action} disabled={nextPage.disabled} size="icon" />
                 </div>
