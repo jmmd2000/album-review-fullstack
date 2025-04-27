@@ -53,21 +53,6 @@ services:
       - backend
     networks:
       - app_network
-  nginx:
-    image: nginx:latest
-    # ports:
-    #   - "80:80"
-    #   - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/sites:/etc/nginx/sites-enabled:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/www/html:/var/www/html
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - app_network
 
 networks:
   app_network:
