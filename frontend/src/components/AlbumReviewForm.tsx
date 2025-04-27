@@ -477,6 +477,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                 defaultValue={field.name}
                 className="bg-transparent text-zinc-200 focus:outline-none w-full"
                 placeholder="Enter genre"
+                autoComplete="off"
                 onChange={(e) => {
                   if (isLast) {
                     setSearchTerm(e.target.value);
