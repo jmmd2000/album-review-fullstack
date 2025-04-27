@@ -7,15 +7,16 @@ WORKDIR /app
 COPY package*.json ./
 COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install dependencies for the root project
 RUN npm install
 
 # Copy source code
 COPY backend ./backend
 COPY shared ./shared
 
-# Compile TypeScript
+# Install dependencies for the backend and build
 WORKDIR /app/backend
+RUN npm install
 RUN npx tsc
 
 # Stage 2: Production stage
