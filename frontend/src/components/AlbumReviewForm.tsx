@@ -64,10 +64,13 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
   const [dynamicScores, setDynamicScores] = useState<{ baseScore: number; bonuses: ReviewBonuses; finalScore: number }>({
     baseScore: 0,
     bonuses: {
-      perfectBonus: 0,
       qualityBonus: 0,
+      perfectBonus: 0,
       consistencyBonus: 0,
       noWeakBonus: 0,
+      terriblePenalty: 0,
+      poorQualityPenalty: 0,
+      noStrongPenalty: 0,
       totalBonus: 0,
     },
     finalScore: 0,

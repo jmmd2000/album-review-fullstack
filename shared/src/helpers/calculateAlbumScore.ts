@@ -1,9 +1,10 @@
 import { DisplayTrack } from "@shared/types";
 
 /**
- * Calculates the album's score based on the rated tracks
+ * Enhanced album scoring system that includes both bonuses for high quality
+ * and penalties for low quality tracks.
  * @param {DisplayTrack[]} ratedTracks an array of rated tracks
- * @returns {number} the album's score rounded to the nearest whole number
+ * @returns {Object} detailed breakdown of the album score
  */
 export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   // Remove any tracks with a rating of 0
@@ -18,6 +19,9 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
         perfectBonus: 0,
         consistencyBonus: 0,
         noWeakBonus: 0,
+        terriblePenalty: 0,
+        poorQualityPenalty: 0,
+        noStrongPenalty: 0,
         totalBonus: 0,
       },
       finalScore: 0,
@@ -44,15 +48,9 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
 
   // 2. Quality bonus (0-1.5 points) - count 8s and 9s
   const qualityTracks = ratings.filter((r) => r >= 8 && r < 10).length;
-
-  // Quality bonus based on percentage of quality tracks
   const qualityBonus = Math.min(1.5, (qualityTracks / tempTracks.length) * 3);
 
-  // 3. Consistency bonus (0-1 points) - calculate track average and standard deviation
-  // Technically there could be a situation where dropping the score of a track actually
-  // increases the consistency bonus, and therefore possibly increasing the score.
-  // Rounding up basically negates this in the finalScore, but the consistency bonus
-  // would still be higher
+  // 3. Consistency bonus (0-1 points)
   const trackAverage = albumScore / tempTracks.length;
   const variance = ratings.reduce((sum, rating) => sum + Math.pow(rating - trackAverage, 2), 0) / tempTracks.length;
   const stdDev = Math.sqrt(variance);
@@ -60,7 +58,6 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   // Determine the rating range in the album
   const minRating = Math.min(...ratings);
   const maxRating = Math.max(...ratings);
-  // If min is 7 and max is 10, range is 3
   const ratingRange = maxRating - minRating;
 
   // Improved consistency bonus that considers the rating range
@@ -69,7 +66,6 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   // Adjust threshold based on the range of ratings
   if (ratingRange <= 2) {
     // Only apply to albums with ratings within 2 points
-    // Adjust the threshold based on range, decrease numbers below to be more strict
     const adjustedThreshold = 0.9 + ratingRange * 0.2;
 
     if (stdDev < adjustedThreshold) {
@@ -82,25 +78,58 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   const weakTracks = ratings.filter((r) => r < 5).length;
   const noWeakBonus = weakTracks === 0 ? 1 : 0;
 
-  // Round each bonus to 1 decimal place
+  // ----- QUALITY PENALTIES -----
+
+  // 1. Terrible tracks penalty (0 to -3 points)
+  // Each "terrible" track (rating 1) penalizes the album
+  const terribleTracks = ratings.filter((r) => r <= 1).length;
+  const terriblePenalty = Math.max(-3, terribleTracks * -1); // Cap at -3 points
+
+  // 2. Poor quality penalty (0 to -2 points)
+  // Based on percentage of tracks rated 2-3
+  const poorTracks = ratings.filter((r) => r >= 2 && r <= 3).length;
+  const poorQualityPenalty = Math.max(-2, (poorTracks / tempTracks.length) * -4);
+
+  // 3. No strong tracks penalty (0 to -2 points)
+  // If there are no tracks rated above 5
+  const strongTracks = ratings.filter((r) => r > 5).length;
+  const noStrongPenalty = strongTracks === 0 ? -2 : 0;
+
+  // 4. Poor consistency penalty (already factored in - no consistency bonus for highly variable albums)
+
+  // Round all bonuses and penalties to 1 decimal place
   const roundedQualityBonus = Math.round(qualityBonus * 10) / 10;
   const roundedPerfectBonus = Math.round(perfectBonus * 10) / 10;
   const roundedConsistencyBonus = Math.round(consistencyBonus * 10) / 10;
+  const roundedTerriblePenalty = Math.round(terriblePenalty * 10) / 10;
+  const roundedPoorQualityPenalty = Math.round(poorQualityPenalty * 10) / 10;
 
-  // Apply combined bonus (cap at 5 points total - the theoretical maximum)
-  const totalBonus = Math.min(5, roundedQualityBonus + roundedPerfectBonus + roundedConsistencyBonus + noWeakBonus);
+  // Calculate total adjustments, capped at +5 and -5 points
+  const totalPositive = roundedQualityBonus + roundedPerfectBonus + roundedConsistencyBonus + noWeakBonus;
+  const totalNegative = roundedTerriblePenalty + roundedPoorQualityPenalty + noStrongPenalty;
 
-  // Final score with bonus (capped at 100)
-  const finalScore = Math.min(100, Math.ceil(baseScore + totalBonus));
+  // Combine positive and negative adjustments, capped at +5 and -5
+  const totalBonus = Math.min(5, Math.max(-5, totalPositive + totalNegative));
+
+  // Final score with combined bonuses and penalties (capped at 100, minimum 1)
+  const finalScore = Math.min(100, Math.max(1, Math.ceil(baseScore + totalBonus)));
 
   // Return detailed breakdown
   return {
     baseScore,
     bonuses: {
+      // Positive adjustments
       qualityBonus: roundedQualityBonus,
       perfectBonus: roundedPerfectBonus,
       consistencyBonus: roundedConsistencyBonus,
       noWeakBonus,
+
+      // Negative adjustments
+      terriblePenalty: roundedTerriblePenalty,
+      poorQualityPenalty: roundedPoorQualityPenalty,
+      noStrongPenalty,
+
+      // Total adjustment (can be positive or negative)
       totalBonus: Math.round(totalBonus * 10) / 10,
     },
     finalScore,

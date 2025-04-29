@@ -493,6 +493,12 @@ export interface ReviewBonuses {
   consistencyBonus: number;
   /** Rewards albums with no low rated tracks, < 5 (max 1) */
   noWeakBonus: number;
-  /** Rewards albums with perfect rated tracks (capped at 5) */
+  /** Penalizes albums with terrible rated tracks, 1/10 (max -3) */
+  terriblePenalty: number;
+  /** Penalizes albums with poor quality tracks, 2-3/10 (max -2) */
+  poorQualityPenalty: number;
+  /** Penalizes albums with no tracks rated above 5/10 (fixed -2) */
+  noStrongPenalty: number;
+  /** Sum of all bonuses and penalties (capped between -5 and +5) */
   totalBonus: number;
 }
