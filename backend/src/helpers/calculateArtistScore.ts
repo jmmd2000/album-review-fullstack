@@ -30,7 +30,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
   let newBonusPoints = 0;
 
   for (const album of albums) {
-    newAverageScore += album.reviewScore;
+    newAverageScore += album.finalScore;
   }
 
   const bonusReasons: Reason[] = [];
@@ -45,20 +45,20 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
         imageURLs: image_urls,
       };
 
-      if (album.reviewScore < 45) {
+      if (album.finalScore < 45) {
         newBonusPoints -= BAD_ALBUM_BONUS;
         bonusReasons.push({
           album: minimalAlbum,
           reason: "Low quality album",
           value: -BAD_ALBUM_BONUS,
         });
-      } else if (album.reviewScore > 45 && album.reviewScore < 55) {
+      } else if (album.finalScore > 45 && album.finalScore < 55) {
         bonusReasons.push({
           album: minimalAlbum,
           reason: "Mid quality album",
           value: 0,
         });
-      } else if (album.reviewScore > 55) {
+      } else if (album.finalScore > 55) {
         newBonusPoints += GOOD_ALBUM_BONUS;
         bonusReasons.push({
           album: minimalAlbum,

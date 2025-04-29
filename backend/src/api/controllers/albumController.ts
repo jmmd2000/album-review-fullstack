@@ -98,7 +98,6 @@ export const deleteAlbum = async (req: Request, res: Response) => {
 export const updateAlbumReview = async (req: Request, res: Response) => {
   const reviewData: ReceivedReviewData = req.body;
   const albumID = req.params.albumID;
-  console.log(reviewData);
   try {
     const updatedAlbum = await AlbumService.updateAlbumReview(reviewData, albumID);
     res.status(200).json(updatedAlbum);

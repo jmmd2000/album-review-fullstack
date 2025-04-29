@@ -23,7 +23,7 @@ interface AlbumCardProps {
  * @param {DisplayAlbum} album The album to display
  */
 const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
-  const toURL = album.reviewScore != null ? "/albums/$albumID" : "/albums/$albumID/create";
+  const toURL = album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create";
 
   return (
     <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll viewTransition className="block">
@@ -43,9 +43,9 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
             <p className="text-xs text-gray-500">{album.artistName}</p>
           </div>
 
-          {album.reviewScore != null ? (
+          {album.finalScore != null ? (
             <div className="grid place-items-center">
-              <RatingChip rating={album.reviewScore} options={{ small: true }} />
+              <RatingChip rating={album.finalScore} options={{ small: true }} />
             </div>
           ) : (
             <div className="grid place-items-center">
@@ -70,6 +70,7 @@ interface BookmarkButtonProps {
 function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
   const queryClient = useQueryClient();
   const [isHovering, setIsHovering] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(bookmarked);
 
   // Mutation for adding a bookmark
   const addMutation = useMutation({
@@ -105,18 +106,20 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
   });
 
   const isLoading = addMutation.isPending || removeMutation.isPending;
-  const isRemoving = isHovering && bookmarked;
+  const isRemoving = isHovering && isBookmarked;
   const iconColor = {
-    fill: isRemoving ? "#dc2626" : bookmarked ? "#22c55e" : "transparent",
-    stroke: isRemoving ? "white" : bookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
+    fill: isRemoving ? "#dc2626" : isBookmarked ? "#22c55e" : "transparent",
+    stroke: isRemoving ? "white" : isBookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (bookmarked) {
+    if (isBookmarked) {
+      setIsBookmarked(() => !isBookmarked);
       removeMutation.mutate();
     } else {
+      setIsBookmarked(() => !isBookmarked);
       addMutation.mutate();
     }
   };
@@ -126,13 +129,13 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
       onClick={handleClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      aria-label={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
-      title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
       disabled={isLoading}
       className="rounded-md bg-neutral-800 bg-opacity-60 p-1 backdrop-blur-md transition-all duration-200 hover:bg-neutral-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 active:scale-95 disabled:opacity-50 cursor-pointer"
     >
       {isLoading ? (
-        <Loader2 size={20} className="animate-spin" stroke={bookmarked ? "#22c55e" : "#717171"} />
+        <Loader2 size={20} className="animate-spin" stroke={isBookmarked ? "#22c55e" : "#717171"} />
       ) : isRemoving ? (
         <BookmarkX size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
       ) : (

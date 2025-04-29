@@ -43,7 +43,7 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
     ...album,
     bookmarked: Boolean(bookmarkData[album.spotifyID]),
     // override or fill in the score from cache
-    reviewScore: scoreMap[album.spotifyID] ?? album.reviewScore,
+    finalScore: scoreMap[album.spotifyID] ?? album.finalScore,
   }));
 
   return {

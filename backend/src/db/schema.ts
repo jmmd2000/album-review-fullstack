@@ -1,3 +1,4 @@
+import { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
 import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
@@ -23,6 +24,14 @@ export const reviewedAlbums = pgTable(
     runtime: varchar("runtime", { length: 50 }).notNull(),
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
+    reviewBonuses: jsonb("bonus_details").$type<ReviewBonuses>().default({
+      qualityBonus: 0,
+      perfectBonus: 0,
+      consistencyBonus: 0,
+      noWeakBonus: 0,
+      totalBonus: 0,
+    }),
+    finalScore: real("final_score"),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),
   },

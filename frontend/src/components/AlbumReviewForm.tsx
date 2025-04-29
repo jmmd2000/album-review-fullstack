@@ -1,4 +1,4 @@
-import { DisplayTrack, ExtractedColor, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
+import { DisplayTrack, ExtractedColor, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, useWatch, UseFormSetValue } from "react-hook-form";
 import TrackList from "./TrackList";
@@ -61,7 +61,17 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
   const isEditing = isReviewedAlbum(album);
-  const [dynamicScore, setDynamicScore] = useState<number>(0);
+  const [dynamicScores, setDynamicScores] = useState<{ baseScore: number; bonuses: ReviewBonuses; finalScore: number }>({
+    baseScore: 0,
+    bonuses: {
+      perfectBonus: 0,
+      qualityBonus: 0,
+      consistencyBonus: 0,
+      noWeakBonus: 0,
+      totalBonus: 0,
+    },
+    finalScore: 0,
+  });
 
   let displayTracks: DisplayTrack[] = [];
   if (isEditing) {
@@ -110,8 +120,8 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
 
   useEffect(() => {
     if (!watchedTracks || watchedTracks.length === 0) return;
-    const score = calculateAlbumScore(watchedTracks);
-    setDynamicScore(score);
+    const { baseScore, bonuses, finalScore } = calculateAlbumScore(watchedTracks);
+    setDynamicScores({ baseScore, bonuses, finalScore });
   }, [watchedTracks]);
 
   const {
@@ -170,12 +180,12 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
       <div className="sticky top-0 z-50">
         {isEditing ? (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={album.reviewScore} options={{ textBelow: true }} />
-            {dynamicScore !== null && <RatingChip rating={dynamicScore} options={{ textBelow: true }} />}
+            <RatingChip rating={album.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: album.reviewScore, bonuses: album.reviewBonuses }} />
+            {dynamicScores.finalScore !== null && <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses }} />}
           </div>
         ) : (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={dynamicScore} options={{ textBelow: true }} />
+            <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses }} />
           </div>
         )}
       </div>

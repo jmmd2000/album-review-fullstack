@@ -34,6 +34,7 @@ export class BookmarkedAlbumService {
       artistName: album.artistName,
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
+      finalScore: null,
     }));
 
     return { albums: displayAlbums };
@@ -53,6 +54,7 @@ export class BookmarkedAlbumService {
       artistName: album.artistName,
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
+      finalScore: null,
     }));
 
     return { albums: displayAlbums, furtherPages, totalCount };

@@ -29,7 +29,17 @@ const ReviewDetails = ({ album }: ReviewDetailsProps) => {
   return (
     <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] mx-auto mb-8">
       <motion.div {...slideInFromLeft(0.2)}>
-        <RatingChip rating={album.reviewScore} options={{ textBelow: true }} />
+        <RatingChip
+          rating={album.finalScore}
+          options={{
+            textBelow: true,
+            small: false,
+          }}
+          scoreBreakdown={{
+            baseScore: album.reviewScore,
+            bonuses: album.reviewBonuses,
+          }}
+        />
       </motion.div>
       <BestWorstSong bestSong={album.bestSong} worstSong={album.worstSong} />
       {album.reviewContent && <ReviewContent reviewContent={album.reviewContent} />}

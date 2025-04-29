@@ -99,6 +99,7 @@ function RouteComponent() {
       artistSpotifyID: data.album.artists[0].id,
       releaseYear: parseInt(data.album.release_date.split("-")[0], 10),
       imageURLs: data.album.images,
+      finalScore: null,
     };
 
     setRecentAlbums((prev) => {

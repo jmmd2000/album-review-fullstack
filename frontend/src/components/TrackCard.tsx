@@ -75,13 +75,13 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
       </div>
 
       {/* Duration */}
-      <div className="text-sm text-zinc-400 flex items-center gap-1 mr-2">
+      <div className="hidden sm:flex text-sm text-zinc-400 items-center gap-1 mr-2">
         <Clock className="h-3 w-3 opacity-70" />
         <p>{convertDuration(track.duration)}</p>
       </div>
 
       {/* Rating or form input */}
-      <div className="shrink-0 w-32 mr-2">{hasRating && !children ? <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p> : children ? <div>{children}</div> : null}</div>
+      <div className="shrink-0 w-32 -mr-3 sm:mr-2">{hasRating && !children ? <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p> : children ? <div>{children}</div> : null}</div>
     </motion.div>
   );
 };

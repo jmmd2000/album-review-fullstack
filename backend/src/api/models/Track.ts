@@ -5,7 +5,10 @@ import { db } from "@/index";
 
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {
-    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
+    const tracks = await db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
+
+    // Really random bug where sometimes these dont return in the correct order
+    return tracks.sort((a, b) => a.createdAt!.getTime() - b.createdAt!.getTime());
   }
 
   static async deleteTracksByAlbumID(albumID: string) {

@@ -182,8 +182,12 @@ export interface ReviewedAlbum {
   imageURLs: SpotifyImage[];
   /** Timestamp when the review was created. */
   createdAt: Date;
-  /** The numerical review score given to the album. */
+  /** The numerical review score given to the album via my ratings */
   reviewScore: number;
+  /** The bonus points awarded */
+  reviewBonuses: ReviewBonuses;
+  /** The final calculated score */
+  finalScore: number;
   /** Full content of the album review. */
   reviewContent: string | null;
   /** Runtime duration of the album. */
@@ -275,7 +279,7 @@ export interface DisplayAlbum {
   /** List of album cover images. */
   imageURLs: SpotifyImage[];
   /** Optional review score given to the album. */
-  reviewScore?: number;
+  finalScore: number | null;
   /** Indicates whether the album is bookmarked. */
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
@@ -479,3 +483,16 @@ export type AuthContextType = {
   login: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
+
+export interface ReviewBonuses {
+  /** Rewards albums with perfect rated tracks (max 1.5) */
+  perfectBonus: number;
+  /** Rewards albums with high quality tracks, 8/9 (max 1.5) */
+  qualityBonus: number;
+  /** Rewards albums with consistent track quality (max 1) */
+  consistencyBonus: number;
+  /** Rewards albums with no low rated tracks, < 5 (max 1) */
+  noWeakBonus: number;
+  /** Rewards albums with perfect rated tracks (capped at 5) */
+  totalBonus: number;
+}
