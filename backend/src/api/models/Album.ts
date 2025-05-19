@@ -41,14 +41,37 @@ export class AlbumModel {
     const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;
 
-    const baseQuery = db
-      .select()
-      .from(reviewedAlbums)
-      .limit(PAGE_SIZE + 1)
-      .offset(OFFSET)
-      .orderBy(sortDirection === "asc" ? asc(reviewedAlbums[sortField]) : desc(reviewedAlbums[sortField]));
+    // The previous way of building the query meant there would be a duplicated entry
+    // at the end of the 1st page which also would appear on the start of the second page
+    // (seemingly only when sorting by reviewScore ascending). Here we sort first by the selected
+    // field e.g. reviewScore and then alphabetically by album name to break ties, therefore preventing
+    // duplicate entries
+    const baseOrder = sortDirection === "asc" ? [asc(reviewedAlbums[sortField]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[sortField]), desc(reviewedAlbums.name)];
 
-    return search.trim() ? await baseQuery.where(or(ilike(reviewedAlbums.name, `%${search}%`), ilike(reviewedAlbums.artistName, `%${search}%`))) : await baseQuery;
+    const albums = search.trim()
+      ? await db
+          .select()
+          .from(reviewedAlbums)
+          .where(or(ilike(reviewedAlbums.name, `%${search}%`), ilike(reviewedAlbums.artistName, `%${search}%`)))
+          .orderBy(...baseOrder)
+          .limit(PAGE_SIZE)
+          .offset(OFFSET)
+      : await db
+          .select()
+          .from(reviewedAlbums)
+          .orderBy(...baseOrder)
+          .limit(PAGE_SIZE)
+          .offset(OFFSET);
+
+    const [{ count: totalCount }] = await db.select({ count: count() }).from(reviewedAlbums);
+
+    const furtherPages = OFFSET + PAGE_SIZE < totalCount;
+
+    return {
+      albums,
+      furtherPages,
+      totalCount,
+    };
   }
 
   static async getAlbumCount() {

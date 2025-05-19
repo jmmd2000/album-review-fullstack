@@ -170,10 +170,7 @@ export class AlbumService {
   }
 
   static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions) {
-    const albums = await AlbumModel.getPaginatedAlbums(opts);
-    const totalCount = await AlbumModel.getAlbumCount();
-    const furtherPages = albums.length > 35;
-    if (furtherPages) albums.pop();
+    const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
 
     const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
       spotifyID: album.spotifyID,
