@@ -44,8 +44,7 @@ export class AlbumModel {
     // The previous way of building the query meant there would be a duplicated entry
     // at the end of the 1st page which also would appear on the start of the second page
     // (seemingly only when sorting by reviewScore ascending). Here we sort first by the selected
-    // field e.g. reviewScore and then alphabetically by album name to break ties, therefore preventing
-    // duplicate entries
+    // field e.g. reviewScore and then alphabetically by album name to break ties, therefore preventing duplicate entries.
     const baseOrder = sortDirection === "asc" ? [asc(reviewedAlbums[sortField]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[sortField]), desc(reviewedAlbums.name)];
 
     const albums = search.trim()

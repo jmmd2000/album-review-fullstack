@@ -21,7 +21,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
 
   // Reduce blob count based on screen size but maintain distribution
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const totalBlobs = isMobile ? 30 : 50;
+  const totalBlobs = isMobile ? 15 : 50;
   const colorCount = colors.length;
 
   // Generate blobs with proportional color distribution and better spread
