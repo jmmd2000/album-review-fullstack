@@ -20,7 +20,7 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 
   return (
     <div className="flex items-center justify-center h-[80vh]">
-      <div className="flex flex-col items-center justify-center gap-4 p-5 border-2 text-red-600 bg-red-600/40 border-red-600 w-[400px] rounded-lg">
+      <div className="flex flex-col items-center justify-center gap-4 p-5 border-2 text-red-500 bg-red-500/40 border-red-500 w-[400px] rounded-lg">
         <h1 className="text-3xl font-bold">Error</h1>
         <p>{error.message}</p>
 
@@ -39,12 +39,12 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
             >
               Edit the album instead
             </button>
-            <button onClick={() => router.invalidate()} className="px-4 py-2 bg-blue-500 text-white rounded">
+            <button onClick={() => router.invalidate()} className="px-4 py-2 bg-blue-400 text-white rounded">
               Retry
             </button>
           </div>
         ) : (
-          <button onClick={() => router.invalidate()} className="px-4 py-2 bg-blue-500 text-white rounded">
+          <button onClick={() => router.invalidate()} className="px-4 py-2 bg-blue-400 text-white rounded">
             Retry
           </button>
         )}
