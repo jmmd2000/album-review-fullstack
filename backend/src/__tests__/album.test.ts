@@ -4,6 +4,7 @@ import { closeDatabase, query } from "../../db";
 import { mockReviewData, mockUpdateData } from "./constants";
 import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { resetTables } from "./testUtils";
 
 // Mock Puppeteer header fetcher
 jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
@@ -28,15 +29,11 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await query("DELETE FROM reviewed_tracks;");
-  await query("DELETE FROM reviewed_albums;");
-  await query("DELETE FROM reviewed_artists;");
+  await resetTables(query);
 });
 
 afterEach(async () => {
-  await query("DELETE FROM reviewed_tracks;");
-  await query("DELETE FROM reviewed_albums;");
-  await query("DELETE FROM reviewed_artists;");
+  await resetTables(query);
 });
 
 afterAll(async () => {

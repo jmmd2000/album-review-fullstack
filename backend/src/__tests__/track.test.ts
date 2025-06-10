@@ -3,7 +3,7 @@ import { app } from "../index";
 import { closeDatabase, query } from "../../db";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
-import type { ReviewedArtist } from "@shared/types";
+import type { DisplayTrack } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
 
 // Mock Puppeteer header fetcher to avoid launch errors
@@ -12,7 +12,6 @@ jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
 }));
 
 let authCookie: string[];
-const artistID = mockReviewData.album.artists[0].id;
 
 beforeAll(async () => {
   const res = await request(app)
@@ -36,35 +35,25 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("GET /api/artists/all - should return all artist reviews", async () => {
+test("GET /api/tracks/:albumID - should return album tracks", async () => {
   await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
 
-  const response = await request(app).get("/api/artists/all");
-  const returnedData: ReviewedArtist[] = response.body;
+  const response = await request(app).get("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
 
   expect(response.status).toBe(200);
-  expect(returnedData.length).toBe(1);
-  expect(returnedData[0]).toHaveProperty("spotifyID", artistID);
+  const tracks: DisplayTrack[] = response.body;
+  expect(Array.isArray(tracks)).toBe(true);
+  expect(tracks[0]).toHaveProperty("spotifyID");
+  expect(tracks[0]).toHaveProperty("name");
 });
 
-test("GET /api/artists/:artistID - should return an artist", async () => {
+test("DELETE /api/tracks/:albumID - should delete album tracks", async () => {
   await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
 
-  const response = await request(app).get(`/api/artists/${artistID}`);
-  expect(response.status).toBe(200);
+  const delRes = await request(app).delete("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
+  expect(delRes.status).toBe(204);
 
-  const artist: ReviewedArtist = response.body;
-  expect(artist).toHaveProperty("spotifyID", artistID);
-  expect(artist).toHaveProperty("name");
-});
-
-test("GET /api/artists/details/:artistID - should return artist details", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
-
-  const response = await request(app).get(`/api/artists/details/${artistID}`);
-  expect(response.status).toBe(200);
-
-  expect(response.body).toHaveProperty("artist");
-  expect(response.body).toHaveProperty("albums");
-  expect(response.body).toHaveProperty("tracks");
+  const response = await request(app).get("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
+  const tracks: DisplayTrack[] = response.body;
+  expect(tracks.length).toBe(0);
 });
