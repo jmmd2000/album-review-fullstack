@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage, SpotifyAlbum } from "@shared/types";
 import { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -15,22 +15,35 @@ import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 
+// albumService.ts (or a helpers file)
+function isSpotifyAlbum(a: any): a is SpotifyAlbum {
+  return typeof a === "object" && typeof a.id === "string" && Array.isArray(a.artists) && typeof a.uri === "string";
+}
+
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {
-    if (!("uri" in data.album && "artists" in data.album)) {
+    if (!isSpotifyAlbum(data.album)) {
       throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
     }
 
-    const existingAlbum = await AlbumModel.findBySpotifyID(data.album.id);
+    const spotifyAlbum = data.album;
+
+    const existingAlbum = await AlbumModel.findBySpotifyID(spotifyAlbum.id);
     if (existingAlbum) throw new Error("Album already exists");
 
     const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
-    const existingArtist = await ArtistModel.getArtistBySpotifyID(data.album.artists[0].id);
+    const existingArtist = await ArtistModel.getArtistBySpotifyID(spotifyAlbum.artists[0].id);
     let createdArtist = null;
 
     if (!existingArtist) {
-      const fetched = await fetchArtistFromSpotify(data.album.artists[0].id, data.album.artists[0].href);
-      const headerImage = await fetchArtistHeaderFromSpotify(data.album.artists[0].id);
+      const fetched = await fetchArtistFromSpotify(spotifyAlbum.artists[0].id, spotifyAlbum.artists[0].href);
+      // Just in case the header image fetch fails (possibly due to an issue with puppeteer)
+      let headerImage: string | null = null;
+      try {
+        headerImage = await fetchArtistHeaderFromSpotify(spotifyAlbum.artists[0].id);
+      } catch (err) {
+        console.warn("Could not fetch artist header image, skipping scraper:", err);
+      }
       if (fetched) {
         createdArtist = await ArtistModel.createArtist({
           name: fetched.name,
@@ -46,10 +59,10 @@ export class AlbumService {
     const finalArtist = createdArtist || existingArtist;
     if (!finalArtist) throw new Error("Failed to resolve artist.");
 
-    const releaseDate = formatDate(data.album.release_date);
-    const releaseYear = new Date(data.album.release_date).getFullYear();
-    const runtime = getTotalDuration(data.album);
-    const image = data.album.images[0].url;
+    const releaseDate = formatDate(spotifyAlbum.release_date);
+    const releaseYear = new Date(spotifyAlbum.release_date).getFullYear();
+    const runtime = getTotalDuration(spotifyAlbum);
+    const image = spotifyAlbum.images[0].url;
 
     let colors: ExtractedColor[] = data.colors || [];
     if (!colors.length) {
@@ -61,11 +74,11 @@ export class AlbumService {
     }
 
     const album = await AlbumModel.createAlbum({
-      name: data.album.name,
-      spotifyID: data.album.id,
+      name: spotifyAlbum.name,
+      spotifyID: spotifyAlbum.id,
       releaseDate,
       releaseYear,
-      imageURLs: data.album.images,
+      imageURLs: spotifyAlbum.images,
       bestSong: data.bestSong,
       worstSong: data.worstSong,
       runtime,
@@ -80,7 +93,7 @@ export class AlbumService {
     });
 
     for (const track of data.ratedTracks) {
-      const t = data.album.tracks.items.find((i) => i.id === track.spotifyID);
+      const t = spotifyAlbum.tracks.items.find((i) => i.id === track.spotifyID);
       if (!t) continue;
       await TrackModel.createTrack({
         albumSpotifyID: album.spotifyID,

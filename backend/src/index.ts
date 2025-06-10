@@ -32,6 +32,8 @@ app.use("/api/artists", artistRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
 
-app.listen(4000, "0.0.0.0", () => {
-  console.log("Server is running on port 4000");
-});
+if (require.main === module) {
+  app.listen(4000, () => {
+    console.log("Server is running on port 4000");
+  });
+}
