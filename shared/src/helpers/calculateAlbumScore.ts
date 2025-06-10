@@ -1,4 +1,4 @@
-import { DisplayTrack } from "@shared/types";
+import { DisplayTrack } from "../types";
 
 /**
  * Enhanced album scoring system that includes both bonuses for high quality

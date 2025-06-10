@@ -1,4 +1,4 @@
-import { SpotifyAlbum } from "@shared/types";
+import { SpotifyAlbum } from "../types";
 
 /**
  * Formats a duration in milliseconds to a human-readable format
