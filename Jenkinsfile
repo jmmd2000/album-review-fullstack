@@ -13,9 +13,9 @@ pipeline {
       steps {
         sshagent(credentials: ['vps-ssh']) {
           sh '''
-ssh -o StrictHostKeyChecking=no ${env.VPS_HOST} << 'ENDSSH'
+ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
 set -e
-cd ${env.APP_DIR}
+cd $APP_DIR
 echo '⏬ Stopping containers'
 docker-compose down || echo 'No containers to stop'
 ENDSSH
@@ -28,8 +28,8 @@ ENDSSH
       steps {
         sshagent(credentials: ['vps-ssh']) {
           sh '''
-ssh -o StrictHostKeyChecking=no ${env.VPS_HOST} << 'ENDSSH'
-cd ${env.APP_DIR}
+ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
+cd $APP_DIR
 echo '⬇️ Pulling latest code'
 git pull --ff-only
 ENDSSH
@@ -42,8 +42,8 @@ ENDSSH
       steps {
         sshagent(credentials: ['vps-ssh']) {
           sh '''
-ssh -o StrictHostKeyChecking=no ${env.VPS_HOST} << 'ENDSSH'
-cd ${env.APP_DIR}
+ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
+cd $APP_DIR
 echo '🔄 Rebuilding and starting containers'
 docker-compose -f docker-compose.yml up --build -d
 ENDSSH
