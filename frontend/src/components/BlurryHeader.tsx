@@ -1,5 +1,5 @@
 import { ExtractedColor } from "@shared/types";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * The props for the BlurryHeader component.
@@ -19,8 +19,16 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   const defaultColors: ExtractedColor[] = [{ hex: "#00ffff" }];
   const colors = _colors && _colors.length > 0 ? _colors : defaultColors;
 
-  // Reduce blob count based on screen size but maintain distribution
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  // Track viewport size to adjust blob count responsively
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 768);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
   const totalBlobs = isMobile ? 15 : 50;
   const colorCount = colors.length;
 
@@ -29,8 +37,8 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
     const blobsArray = [];
 
     // Create a grid for better distribution
-    const columns = 5;
-    const rows = 3;
+    const columns = isMobile ? 3 : 5;
+    const rows = isMobile ? 2 : 3;
 
     for (let i = 0; i < colorCount; i++) {
       const blobCount = Math.round((totalBlobs / colorCount) * (colorCount - i));
@@ -48,8 +56,10 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
         const randomOffsetX = (Math.random() - 0.5) * (80 / columns);
         const randomOffsetY = (Math.random() - 0.5) * (60 / rows);
 
+        const baseSize = isMobile ? 200 : 250;
+        const randomSize = isMobile ? 150 : 250;
         blobsArray.push({
-          size: Math.floor(Math.random() * 250) + 250,
+          size: Math.floor(Math.random() * randomSize) + baseSize,
           left: Math.max(0, Math.min(100, baseLeft + randomOffsetX)),
           top: Math.max(0, Math.min(100, baseTop + randomOffsetY)),
           color: colors[i].hex,
@@ -70,11 +80,11 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   }, [colorCount, colors, isMobile, totalBlobs]);
 
   return (
-    <div className="relative w-full h-[700px] md:h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900">
+    <div className="relative w-full h-[700px] md:h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900 pointer-events-none">
       {blobs.map((blob, index) => (
         <div
           key={index}
-          className={`absolute rounded-full -z-[5] ${blob.animationClass}`}
+          className={`absolute rounded-full -z-[5] ${blob.animationClass} pointer-events-none`}
           style={{
             width: `${blob.size}px`,
             height: `${blob.size}px`,
