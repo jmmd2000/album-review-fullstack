@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import RatingChip from "./RatingChip";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Bookmark, BookmarkX, Loader2 } from "lucide-react";
+import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -44,9 +44,16 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
           </div>
 
           {album.finalScore != null ? (
-            <div className="grid place-items-center">
-              <RatingChip rating={album.finalScore} options={{ small: true }} />
-            </div>
+            album.affectsArtistScore ? (
+              <div className="grid place-items-center">
+                <RatingChip rating={album.finalScore} options={{ small: true }} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <StarOff className="w-3 h-3 text-yellow-900" />
+                <RatingChip rating={album.finalScore} options={{ small: true }} />
+              </div>
+            )
           ) : (
             <div className="grid place-items-center">
               <BookmarkButton album={album} bookmarked={bookmarked} />

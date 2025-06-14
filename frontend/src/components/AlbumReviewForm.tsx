@@ -1,6 +1,6 @@
 import { DisplayTrack, ExtractedColor, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
-import { useForm, useFieldArray, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, useWatch, UseFormSetValue } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, UseFormSetValue } from "react-hook-form";
 import TrackList from "./TrackList";
 import { BestWorstSong } from "./ReviewDetails";
 import Button from "./Button";
@@ -37,6 +37,8 @@ export type CreateReviewFormData = {
   colors: ExtractedColor[];
   /*** String array of genre strings */
   genres: { name: string }[];
+  /*** Whether or not the review affects the artists score */
+  affectsArtistScore: boolean;
 };
 
 // If it's a SpotifyAlbum, the tracks are included
@@ -54,13 +56,15 @@ interface AlbumReviewFormProps {
   selectedColors: ExtractedColor[];
 }
 
-// Type guard to check if the album is a ReviewedAlbum
+// Type guard for ReviewedAlbum
 const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is ReviewedAlbum => {
   return (album as ReviewedAlbum).reviewScore !== undefined;
 };
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
   const isEditing = isReviewedAlbum(album);
+
+  // Dynamic score state
   const [dynamicScores, setDynamicScores] = useState<{ baseScore: number; bonuses: ReviewBonuses; finalScore: number }>({
     baseScore: 0,
     bonuses: {
@@ -76,53 +80,52 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     finalScore: 0,
   });
 
+  // Prepare track list for form
   let displayTracks: DisplayTrack[] = [];
   if (isEditing) {
-    displayTracks = tracks!.map((track) => ({
-      rating: track.rating,
-      name: track.name,
-      artistName: track.artistName,
-      duration: track.duration,
-      // If track.features is empty, it'll be [], therefore trying to JSON.parse it will result in an error
-      // So check if it's an array first and parse it if it's not
-      features: Array.isArray(track.features) ? track.features : JSON.parse(track.features),
-      spotifyID: track.spotifyID,
-      artistSpotifyID: track.artistSpotifyID,
-    })) as DisplayTrack[];
+    displayTracks = tracks!.map((t) => ({
+      rating: t.rating,
+      name: t.name,
+      artistName: t.artistName,
+      duration: t.duration,
+      features: Array.isArray(t.features) ? t.features : JSON.parse(t.features),
+      spotifyID: t.spotifyID,
+      artistSpotifyID: t.artistSpotifyID,
+    }));
   } else {
-    displayTracks = album.tracks.items.map((track) => ({
-      name: track.name,
-      artistName: track.artists[0].name,
-      duration: track.duration_ms,
-      features: track.artists.slice(1).map((artist) => ({ name: artist.name })),
-      spotifyID: track.id,
-      artistSpotifyID: track.artists[0].id,
+    displayTracks = album.tracks.items.map((t) => ({
+      name: t.name,
+      artistName: t.artists[0].name,
+      duration: t.duration_ms,
+      features: t.artists.slice(1).map((a) => ({ id: a.id, name: a.name })),
+      spotifyID: t.id,
+      artistSpotifyID: t.artists[0].id,
       rating: 0,
-    })) as DisplayTrack[];
+    }));
   }
 
+  // Sync selected colors from parent
   useEffect(() => {
     setSelectedColors(album.colors);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [album]);
+  }, [album, setSelectedColors]);
 
-  // Initialize the form
-  const { control, register, handleSubmit, setValue, getValues } = useForm({
+  // Initialize form with defaults
+  const { control, register, handleSubmit, setValue, getValues } = useForm<CreateReviewFormData>({
     defaultValues: {
       tracks: displayTracks,
       bestSong: isEditing ? album.bestSong : "",
       worstSong: isEditing ? album.worstSong : "",
       reviewContent: isEditing ? album.reviewContent || "" : "",
       colors: selectedColors,
-      genres: isEditing ? album.genres.map((genre) => ({ name: genre })) : [],
+      genres: isEditing ? album.genres.map((g) => ({ name: g })) : [],
+      affectsArtistScore: isEditing ? album.affectsArtistScore : true,
     },
   });
 
-  // Watch the tracks field to calculate the dynamic score to update the RatingChip
+  // Watch tracks to update dynamic scoring
   const watchedTracks = useWatch({ control, name: "tracks" });
-
   useEffect(() => {
-    if (!watchedTracks || watchedTracks.length === 0) return;
+    if (!watchedTracks?.length) return;
     const { baseScore, bonuses, finalScore } = calculateAlbumScore(watchedTracks);
     setDynamicScores({ baseScore, bonuses, finalScore });
   }, [watchedTracks]);
@@ -162,6 +165,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     setSelectedColors(updatedColors);
   };
 
+  // Mutation for submitting review
   const {
     mutate: submitReviewMutation,
     isPending,
@@ -169,9 +173,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isSuccess,
   } = useMutation({
     mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) => submitReview(formData, album),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["albums"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
   });
 
   const onSubmit = (formData: CreateReviewFormData) => {
@@ -183,17 +185,35 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
       <div className="sticky top-0 z-50">
         {isEditing ? (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={album.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: album.reviewScore, bonuses: album.reviewBonuses }} />
-            {dynamicScores.finalScore !== null && <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses }} />}
+            <RatingChip rating={album.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: album.reviewScore, bonuses: album.reviewBonuses, affectsArtistScore: album.affectsArtistScore }} />
+            {dynamicScores.finalScore !== null && (
+              <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: album.affectsArtistScore }} />
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses }} />
+            <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: false }} />
           </div>
         )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8">
+        {/* AAS toggle */}
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="aasToggle"
+            {...register("affectsArtistScore")}
+            className="w-4 h-4 appearance-none bg-zinc-800 border-2 border-zinc-600 rounded cursor-pointer
+             checked:bg-green-500 checked:border-green-700
+             focus:ring-green-400 focus:ring-2"
+          />
+
+          <label htmlFor="aasToggle" className="text-zinc-200 cursor-pointer">
+            Include in artist score
+          </label>
+        </div>
+
         {/* Color Selection */}
         <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
           <label className="block text-zinc-200 font-medium mb-3">
@@ -246,99 +266,64 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
 
 export default AlbumReviewForm;
 
+// Helper to send data to API
 const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum | ReviewedAlbum) => {
-  // Convert all ratings to numbers to avoid type mismatch issues
-  const formattedTracks = formData.tracks.map((track) => ({
-    ...track,
-    // Convert possible string to number, default to 0
-    rating: Number(track.rating) || 0,
-  }));
-
-  // The form data expects an array of genre objects, but the structure
-  // of the DB is an array of strings. So format the genres.
-  const formattedGenres = formData.genres.map((genre) => genre.name);
-
-  // Determine endpoint based on whether it's a new or existing review
+  const formattedTracks = formData.tracks.map((t) => ({ ...t, rating: Number(t.rating) || 0 }));
+  const formattedGenres = formData.genres.map((g) => g.name);
   const isEditing = isReviewedAlbum(album);
   const endpoint = isEditing ? `${API_BASE_URL}/api/albums/${album.spotifyID}/edit` : `${API_BASE_URL}/api/albums/create`;
-
-  // Submit the form
   try {
-    const response = await fetch(endpoint, {
+    const resp = await fetch(endpoint, {
       method: isEditing ? "PUT" : "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        album: album,
+        album,
         reviewContent: formData.reviewContent,
         bestSong: formData.bestSong,
         worstSong: formData.worstSong,
         ratedTracks: formattedTracks,
         colors: formData.colors,
         genres: formattedGenres,
+        affectsArtistScore: formData.affectsArtistScore,
       }),
     });
-
-    if (!response.ok) {
-      console.error("Failed to submit review:", response.statusText);
-    }
-
-    const data = await response.json();
-    if (data.success) {
-      console.log("Review submitted successfully.");
-    }
+    if (!resp.ok) console.error("Failed to submit review:", resp.statusText);
   } catch (e) {
     console.error("Failed to submit review:", e);
   }
 };
 
-// # ------------------------- #
-// #
-// # Custom form components
-// #
-// # ------------------------- #
-
+// Textarea with formatting options
 interface ReviewContentInputProps {
   registration: UseFormRegisterReturn;
   value?: string;
 }
-
 export const ReviewContentInput = ({ registration, value = "" }: ReviewContentInputProps) => {
   const ref = useRef<HTMLTextAreaElement>(null);
-
   useEffect(() => {
     const textarea = ref.current;
-    if (textarea) {
-      const resize = () => {
-        textarea.style.height = "auto";
-        textarea.style.height = `${textarea.scrollHeight}px`;
-      };
-
-      resize();
-
-      textarea.addEventListener("input", resize);
-      return () => textarea.removeEventListener("input", resize);
-    }
+    if (!textarea) return;
+    const resize = () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    };
+    resize();
+    textarea.addEventListener("input", resize);
+    return () => textarea.removeEventListener("input", resize);
   }, [value]);
 
   const applyFormatting = (format: string) => {
     if (!ref.current) return;
-
     const textarea = ref.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-
-    // Make sure some text is selected
     if (start === end) {
       alert("Please select some text first");
       return;
     }
-
     let prefix = "";
     let suffix = "";
-
     switch (format) {
       case "bold":
         prefix = "**";
@@ -357,48 +342,37 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
         suffix = "{color}";
         break;
     }
-
-    const currentValue = textarea.value;
-    const selectedText = currentValue.substring(start, end);
-    const newValue = currentValue.substring(0, start) + prefix + selectedText + suffix + currentValue.substring(end);
-
-    // Update the textarea value
-    textarea.value = newValue;
-
-    // Trigger a change event to update react-hook-form
+    const current = textarea.value;
+    const selected = current.substring(start, end);
+    const updated = current.substring(0, start) + prefix + selected + suffix + current.substring(end);
+    textarea.value = updated;
     const event = new Event("input", { bubbles: true });
     textarea.dispatchEvent(event);
-
-    // Force a resize of the textarea
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
-
-    // Set focus back to the textarea after format is applied
     setTimeout(() => {
       textarea.focus();
-      // Set cursor position after the formatted text
-      const newPosition = start + prefix.length + selectedText.length + suffix.length;
-      textarea.setSelectionRange(newPosition, newPosition);
+      const pos = start + prefix.length + selected.length + suffix.length;
+      textarea.setSelectionRange(pos, pos);
     }, 0);
   };
 
   return (
     <div className="w-full my-6">
       <div className="flex gap-2 mb-2">
-        <button type="button" onClick={() => applyFormatting("bold")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Bold">
+        <button type="button" onClick={() => applyFormatting("bold")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Bold">
           <strong>B</strong>
         </button>
-        <button type="button" onClick={() => applyFormatting("italic")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Italic">
+        <button type="button" onClick={() => applyFormatting("italic")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Italic">
           <em>I</em>
         </button>
-        <button type="button" onClick={() => applyFormatting("underline")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white" title="Underline">
+        <button type="button" onClick={() => applyFormatting("underline")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Underline">
           <u>U</u>
         </button>
-        <button type="button" onClick={() => applyFormatting("color")} className="p-1 px-3 cursor-pointer rounded bg-neutral-700 hover:bg-neutral-600 text-white flex items-center" title="Red Text">
+        <button type="button" onClick={() => applyFormatting("color")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Red Text">
           <span className="text-[#fb2c36]">A</span>
         </button>
       </div>
-
       <div className="rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
         <div className="relative px-5 py-4 border-l-4 border-neutral-800">
           <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
@@ -411,7 +385,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
               defaultValue={value}
               className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-opacity-50 rounded-lg"
               rows={3}
-              placeholder="Write your review here... Use formatting options or select text to format."
+              placeholder="Write your review here..."
             />
           </blockquote>
         </div>
@@ -420,6 +394,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
   );
 };
 
+// Genre selector with searchable dropdown
 interface GenreSelectorProps {
   genreFields: Array<{ id: string; name: string }>;
   register: UseFormRegister<CreateReviewFormData>;
@@ -428,65 +403,45 @@ interface GenreSelectorProps {
   setValue: UseFormSetValue<CreateReviewFormData>;
   genres: string[];
 }
-
-/**
- * This component allows users to select and add genres with a searchable dropdown.
- * It supports dynamic field array operations using react-hook-form.
- */
 const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue, genres }: GenreSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Filter genres based on search term
-  const filteredGenres = genres.filter((genre) => genre.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  // Handle clicking outside to close dropdown
+  const filtered = genres.filter((g) => g.toLowerCase().includes(searchTerm.toLowerCase()));
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  // Handle selecting a genre from dropdown
-  const handleSelectGenre = (genre: string) => {
-    const lastIndex = genreFields.length - 1;
-
-    if (genreFields[lastIndex]?.name === "") {
-      setValue(`genres.${lastIndex}.name`, genre); // ✅ sets value in the input
+  const handleSelect = (genre: string) => {
+    const lastIdx = genreFields.length - 1;
+    if (genreFields[lastIdx]?.name === "") {
+      setValue(`genres.${lastIdx}.name`, genre);
     } else {
       addGenre({ name: genre });
     }
-
     setIsDropdownOpen(false);
     setSearchTerm("");
   };
-
-  // Open dropdown and add empty input for genre
-  const handleAddGenreClick = () => {
+  const handleAdd = () => {
     setSearchTerm("");
     addGenre({ name: "" });
     setIsDropdownOpen(true);
   };
-
   return (
-    <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
+    <div className="w-full mb-6 p-4 rounded-lg bg-neutral-800">
       <label className="block text-zinc-200 font-medium mb-3">Genres</label>
       <div className="flex flex-wrap gap-2 mb-3">
-        {genreFields.map((field, index) => {
-          const isLast = index === genreFields.length - 1;
-
+        {genreFields.map((field, idx) => {
+          const isLast = idx === genreFields.length - 1;
           return (
             <div key={field.id} className="relative group bg-neutral-700/50 rounded-full pl-3 pr-8 py-1.5 text-sm" ref={isLast ? dropdownRef : undefined}>
               <input
-                {...register(`genres.${index}.name`)}
+                {...register(`genres.${idx}.name`)}
                 defaultValue={field.name}
                 className="bg-transparent text-zinc-200 focus:outline-none w-full"
                 placeholder="Enter genre"
@@ -495,21 +450,16 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                   if (isLast) {
                     setSearchTerm(e.target.value);
                     setIsDropdownOpen(true);
-                    setValue(`genres.${index}.name`, e.target.value); // ✅ immediately update form
+                    setValue(`genres.${idx}.name`, e.target.value);
                   }
                 }}
                 onFocus={() => {
-                  if (isLast) {
-                    setIsDropdownOpen(true);
-                  }
+                  if (isLast) setIsDropdownOpen(true);
                 }}
               />
-
-              <button type="button" onClick={() => removeGenre(index)} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-red-400 transition-colors">
+              <button type="button" onClick={() => removeGenre(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-red-400">
                 <X className="w-4 h-4" />
               </button>
-
-              {/* Dropdown for the last input field */}
               {isLast && (
                 <AnimatePresence>
                   {isDropdownOpen && (
@@ -518,13 +468,13 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-md shadow-lg z-50 overflow-hidden"
+                      className="absolute left-0 right-0 top-full mt-1 bg-neutral-800 border border-neutral-700 rounded-md shadow-lg overflow-hidden"
                     >
                       <div className="max-h-48 overflow-y-auto">
-                        {filteredGenres.length > 0 ? (
-                          filteredGenres.map((genre) => (
-                            <div key={genre} className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm transition-colors" onClick={() => handleSelectGenre(genre)}>
-                              {genre}
+                        {filtered.length > 0 ? (
+                          filtered.map((g) => (
+                            <div key={g} className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm" onClick={() => handleSelect(g)}>
+                              {g}
                             </div>
                           ))
                         ) : (
@@ -538,8 +488,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
             </div>
           );
         })}
-
-        <button type="button" onClick={handleAddGenreClick} className="bg-neutral-700/30 hover:bg-neutral-700/50 text-neutral-400 hover:text-neutral-200 rounded-full px-3 py-1.5 text-sm flex items-center transition-colors">
+        <button type="button" onClick={handleAdd} className="bg-neutral-700/30 hover:bg-neutral-700/50 text-neutral-400 hover:text-neutral-200 rounded-full px-3 py-1.5 text-sm flex items-center">
           <span className="mr-1">+</span> Add Genre
         </button>
       </div>

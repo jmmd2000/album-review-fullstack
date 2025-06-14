@@ -26,9 +26,7 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
             <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{artist.name}</h2>
-            <p className="text-xs text-gray-500">
-              #{artist.leaderboardPosition} - {albumCountString}
-            </p>
+            <p className="text-xs text-gray-500">{artist.unrated ? albumCountString : `#${artist.leaderboardPosition} • ${albumCountString}`}</p>
           </div>
           <div className="grid place-items-center">
             <RatingChip rating={Math.ceil(artist.totalScore)} options={{ small: true }} />

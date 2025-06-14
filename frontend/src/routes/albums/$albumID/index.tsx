@@ -66,7 +66,6 @@ function RouteComponent() {
         <AlbumDetails album={album} trackCount={tracks.length} artist={artist} />
         <div className="pb-10">{album.genres && <GenrePills genres={album.genres} />}</div>
       </BlurryHeader>
-
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />
     </>

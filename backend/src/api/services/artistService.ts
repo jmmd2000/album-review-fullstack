@@ -22,6 +22,7 @@ export class ArtistService {
       name: artist.name,
       imageURLs: artist.imageURLs,
       totalScore: artist.totalScore,
+      unrated: artist.unrated,
       albumCount: artist.reviewCount,
       leaderboardPosition: artist.leaderboardPosition,
     }));
