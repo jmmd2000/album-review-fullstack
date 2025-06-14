@@ -74,8 +74,8 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
               <p className="text-zinc-200 mb-2">This artist is unrated. None of their reviews provide them a score.</p>
               <p className="text-zinc-200">There are two potential reasons for this:</p>
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
-                <li className="text-zinc-400">I don't plan to review their entire discography, so their score wouldn't be accurate.</li>
-                <li className="text-zinc-400">
+                <li className="text-zinc-400">I don't plan to review their entire discography, and I feel like basing their score on a fraction of their work isn't accurate.</li>
+                <li className="text-zinc-400 mt-1">
                   I <em>do</em> plan to review their entire discography, but the only reviews right now are non-studio-albums i.e. mixtapes, EPs etc. which I don't want to count towards the artist's overall score.
                 </li>
               </ol>
@@ -91,7 +91,7 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
           {showInfoButton && (
             <motion.button
               onClick={() => setShowBreakdown(true)}
-              className="ml-1 text-gray-600 hover:text-gray-700 transition-colors absolute -top-4 -right-4"
+              className="ml-1 text-gray-600 hover:text-gray-700 transition-colors absolute -top-4 -right-5"
               title="View score breakdown"
               whileHover={{ scale: 1.2, rotate: 15 }}
               whileTap={{ scale: 0.9 }}
@@ -103,8 +103,8 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
       )}
 
       {scoreBreakdown && !scoreBreakdown.affectsArtistScore && (
-        <div className="group absolute top-0 -right-4">
-          <motion.div className="ml-1 text-gray-600 hover:text-gray-700 transition-colors" whileHover={{ scale: 1.2, rotate: 15 }} whileTap={{ scale: 0.9 }}>
+        <div className="group absolute top-1 -right-5">
+          <motion.div className="ml-1 text-gray-600 hover:text-gray-700 transition-colors" whileHover={{ scale: 1.2, rotate: 10 }} whileTap={{ scale: 0.9 }}>
             <StarOff className="w-4 h-4 text-yellow-900" />
           </motion.div>
           <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">

@@ -127,6 +127,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
       worstSong: worstSong,
       genres: randomGenres,
       album,
+      affectsArtistScore: Math.random() < 0.95,
       ratedTracks: album.tracks.items.map((track) => {
         return {
           spotifyID: track.id,
@@ -165,4 +166,4 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
 };
 
 // Disable this call when running tests
-// seed(ALBUM_IDS, REVIEW, true);
+seed(ALBUM_IDS, REVIEW, true);

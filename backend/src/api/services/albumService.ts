@@ -53,7 +53,7 @@ export class AlbumService {
           bonusPoints: 0,
           totalScore: score,
           bonusReason: JSON.stringify([]),
-          reviewCount: 0,
+          reviewCount: 1,
           unrated: !data.affectsArtistScore,
           leaderboardPosition: null,
         });

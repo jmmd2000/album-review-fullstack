@@ -83,11 +83,20 @@ function RouteComponent() {
               <p className="text-gray-400">{albumString}</p>
               <span className="mx-2 text-gray-500">•</span>
               <p className="text-gray-400">{tracks.length} tracks</p>
-              <span className="mx-2 text-gray-500">•</span>
-              <p className="text-gray-400 flex items-center gap-1">
-                Rank #{artist.leaderboardPosition}
-                {podiumCheck(artist.leaderboardPosition)}
-              </p>
+              {artist.unrated ? (
+                <>
+                  <span className="mx-2 text-gray-500">•</span>
+                  <p className="text-gray-400 flex items-center gap-1">Unrated</p>
+                </>
+              ) : (
+                <>
+                  <span className="mx-2 text-gray-500">•</span>
+                  <p className="text-gray-400 flex items-center gap-1">
+                    Rank #{artist.leaderboardPosition}
+                    {podiumCheck(artist.leaderboardPosition)}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
