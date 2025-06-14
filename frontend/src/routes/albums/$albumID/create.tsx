@@ -100,6 +100,7 @@ function RouteComponent() {
       releaseYear: parseInt(data.album.release_date.split("-")[0], 10),
       imageURLs: data.album.images,
       finalScore: null,
+      affectsArtistScore: true,
     };
 
     setRecentAlbums((prev) => {

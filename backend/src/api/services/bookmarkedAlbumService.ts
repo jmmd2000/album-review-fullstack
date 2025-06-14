@@ -35,6 +35,7 @@ export class BookmarkedAlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       finalScore: null,
+      affectsArtistScore: true, // this probably should be boolean | null maybe?
     }));
 
     return { albums: displayAlbums };
@@ -55,6 +56,7 @@ export class BookmarkedAlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       finalScore: null,
+      affectsArtistScore: true, // this probably should be boolean | null maybe?
     }));
 
     return { albums: displayAlbums, furtherPages, totalCount };

@@ -39,7 +39,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
 
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
-            <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
+            <h2 className="w-full max-w-[120px] md:max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
             <p className="text-xs text-gray-500">{album.artistName}</p>
           </div>
 

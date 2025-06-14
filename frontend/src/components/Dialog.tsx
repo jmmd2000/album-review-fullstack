@@ -28,8 +28,8 @@ const Dialog = ({ isOpen, onClose, title, children }: DialogProps) => (
     {isOpen && (
       <>
         {/* Backdrop layers */}
-        <motion.div className="fixed inset-0 bg-black/75" style={{ backdropFilter: "blur(20px) saturate(180%)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-        <motion.div className="fixed inset-0 bg-transparent" style={{ backdropFilter: "blur(12px)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+        <motion.div className="fixed inset-0 bg-black/90 z-49" style={{ backdropFilter: "blur(20px) saturate(180%)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+        <motion.div className="fixed inset-0 bg-transparentz-101" style={{ backdropFilter: "blur(12px)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
 
         {/* Centered modal container */}
         <motion.div className="fixed inset-0 flex items-center justify-center z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>

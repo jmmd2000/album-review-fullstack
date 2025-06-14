@@ -49,7 +49,7 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
   const textStyles = cva([borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"], {
     variants: {
       small: {
-        true: "border-1 text-sm px-1 rounded-sm",
+        true: "border-1 text-xs md:text-sm px-1 rounded-sm",
         false: "border-2 text-4xl px-4 py-2",
       },
     },
@@ -76,7 +76,7 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
                 <li className="text-zinc-400">I don't plan to review their entire discography, so their score wouldn't be accurate.</li>
                 <li className="text-zinc-400">
-                  I <em>do</em> plan to review their entire discography, but the only reviews right now are non-studio-albums i.e. mixtapes, EPs etc.
+                  I <em>do</em> plan to review their entire discography, but the only reviews right now are non-studio-albums i.e. mixtapes, EPs etc. which I don't want to count towards the artist's overall score.
                 </li>
               </ol>
             </Dialog>
