@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import RatingChip from "./RatingChip";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Bookmark, BookmarkX, Loader2 } from "lucide-react";
+import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -39,14 +39,21 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
 
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
-            <h2 className="w-full max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
+            <h2 className="w-full max-w-[120px] md:max-w-[160px] text-sm font-medium truncate">{album.name}</h2>
             <p className="text-xs text-gray-500">{album.artistName}</p>
           </div>
 
           {album.finalScore != null ? (
-            <div className="grid place-items-center">
-              <RatingChip rating={album.finalScore} options={{ small: true }} />
-            </div>
+            album.affectsArtistScore ? (
+              <div className="grid place-items-center">
+                <RatingChip rating={album.finalScore} options={{ small: true }} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <StarOff className="w-3 h-3 text-yellow-900" />
+                <RatingChip rating={album.finalScore} options={{ small: true }} />
+              </div>
+            )
           ) : (
             <div className="grid place-items-center">
               <BookmarkButton album={album} bookmarked={bookmarked} />

@@ -198,7 +198,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
     <motion.button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`relative border border-transparent font-medium rounded overflow-hidden ${getSizeClasses()} ${disabled ? "cursor-not-allowed text-neutral-600 bg-neutral-800/30" : "hover:border-neutral-800 hover:text-neutral-100 cursor-pointer"}`}
+      className={`relative border border-transparent font-medium text-neutral-300 rounded overflow-hidden ${getSizeClasses()} ${disabled ? "cursor-not-allowed text-neutral-600 bg-neutral-800/30" : "hover:border-neutral-800 hover:text-neutral-100 cursor-pointer"}`}
       initial="initial"
       whileHover="hover"
       animate={disabled ? "disabled" : "initial"}

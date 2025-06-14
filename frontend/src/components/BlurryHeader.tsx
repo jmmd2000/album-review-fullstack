@@ -99,8 +99,8 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
           }}
         ></div>
       ))}
-
-      {children}
+      {/* pointer-events-none on parent div was breaking element interaction */}
+      <div className="pointer-events-auto contents">{children}</div>
     </div>
   );
 };

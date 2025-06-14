@@ -188,6 +188,8 @@ export interface ReviewedAlbum {
   reviewBonuses: ReviewBonuses;
   /** The final calculated score */
   finalScore: number;
+  /** Whether or not the album will affect it's artists score */
+  affectsArtistScore: boolean;
   /** Full content of the album review. */
   reviewContent: string | null;
   /** Runtime duration of the album. */
@@ -234,6 +236,8 @@ export interface ReviewedArtist {
   totalScore: number;
   /** Number of albums reviewed by the artist. */
   reviewCount: number;
+  /** Whether or not the artist will receive a score */
+  unrated: boolean;
   /** Timestamp of the last image update. */
   imageUpdatedAt: Date;
 }
@@ -280,6 +284,8 @@ export interface DisplayAlbum {
   imageURLs: SpotifyImage[];
   /** Optional review score given to the album. */
   finalScore: number | null;
+  /** Whether or not the album will affect it's artists score */
+  affectsArtistScore: boolean;
   /** Indicates whether the album is bookmarked. */
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
@@ -295,9 +301,11 @@ export interface DisplayArtist {
   /** Name of the artist. */
   name: string;
   /** Position of the artist in the leaderboard. */
-  leaderboardPosition: number;
+  leaderboardPosition: number | null;
   /** Average review score of the artist's albums. */
   totalScore: number;
+  /** Whether or not the artist is unrated */
+  unrated: boolean;
   /** JSON string containing artist image URLs. */
   imageURLs: SpotifyImage[];
   /** Number of albums reviewed */

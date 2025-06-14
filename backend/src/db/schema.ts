@@ -35,6 +35,7 @@ export const reviewedAlbums = pgTable(
       totalBonus: 0,
     }),
     finalScore: real("final_score"),
+    affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),
   },
@@ -75,11 +76,12 @@ export const reviewedArtists = pgTable(
     imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     headerImage: varchar("header_image", { length: 255 }),
     averageScore: real("average_score").notNull(),
-    leaderboardPosition: integer("leaderboard_position").notNull(),
+    leaderboardPosition: integer("leaderboard_position"),
     bonusPoints: real("bonus_points").notNull().default(0),
     bonusReason: text("bonus_reason"),
     totalScore: real("total_score").notNull().default(0),
     reviewCount: integer("review_count").notNull().default(0),
+    unrated: boolean().notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(),

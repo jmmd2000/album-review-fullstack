@@ -7,6 +7,7 @@ export type ReceivedReviewData = {
   bestSong: string;
   worstSong: string;
   reviewContent: string;
+  affectsArtistScore: boolean;
   album: SpotifyAlbum | ReviewedAlbum;
   colors: ExtractedColor[];
   genres: string[];

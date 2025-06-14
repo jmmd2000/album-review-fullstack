@@ -38,6 +38,7 @@ const ReviewDetails = ({ album }: ReviewDetailsProps) => {
           scoreBreakdown={{
             baseScore: album.reviewScore,
             bonuses: album.reviewBonuses,
+            affectsArtistScore: album.affectsArtistScore,
           }}
         />
       </motion.div>

@@ -62,7 +62,7 @@ export class ArtistModel {
     return db.select().from(reviewedArtists).orderBy(desc(reviewedArtists.totalScore));
   }
 
-  static async updateLeaderboardPosition(id: number, position: number) {
+  static async updateLeaderboardPosition(id: number, position: number | null) {
     return db.update(reviewedArtists).set({ leaderboardPosition: position }).where(eq(reviewedArtists.id, id));
   }
 }
