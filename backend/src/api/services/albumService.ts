@@ -14,6 +14,7 @@ import getTotalDuration from "@shared/helpers/formatDuration";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
+import { GenreModel } from "@/api/models/Genre";
 
 // albumService.ts (or a helpers file)
 function isSpotifyAlbum(a: any): a is SpotifyAlbum {
@@ -94,6 +95,12 @@ export class AlbumService {
       colors: colors.map((c) => ({ hex: c.hex })),
       genres: data.genres,
     });
+
+    const genreIDs = await Promise.all(data.genres.map((name) => GenreModel.findOrCreateGenre(name)));
+
+    // Link new genres & bump related strengths
+    await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs);
+    await GenreModel.incrementRelatedStrength(genreIDs);
 
     // create track entries
     for (const track of data.ratedTracks) {
@@ -227,6 +234,12 @@ export class AlbumService {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
     if (!album) throw new Error("Album not found");
 
+    // Remove old genres and decrement related strengths
+    const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
+    await GenreModel.unlinkGenresFromAlbum(id, oldIDs);
+    await GenreModel.decrementRelatedStrength(oldIDs);
+
+    // Remove tracks and album
     await TrackModel.deleteTracksByAlbumID(id);
     await AlbumModel.deleteAlbum(id);
 
@@ -296,6 +309,20 @@ export class AlbumService {
       finalScore: calculateAlbumScore(data.ratedTracks).finalScore,
       affectsArtistScore: data.affectsArtistScore,
     });
+
+    // Get new vs old genre IDs
+    const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
+    const newIDs = await Promise.all(data.genres.map((name) => GenreModel.findOrCreateGenre(name)));
+    const toAdd = newIDs.filter((nid) => !oldIDs.includes(nid));
+    const toRemove = oldIDs.filter((oid) => !newIDs.includes(oid));
+
+    // Add new genres and increment related strengths
+    await GenreModel.linkGenresToAlbum(albumID, toAdd);
+    await GenreModel.incrementRelatedStrength(toAdd);
+
+    // Remove old genres and decrement related strengths
+    await GenreModel.unlinkGenresFromAlbum(albumID, toRemove);
+    await GenreModel.decrementRelatedStrength(toRemove);
 
     // If the artist was unrated, and this album now affects their score,
     // update their other albums that DONT affect their score.

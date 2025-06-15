@@ -22,7 +22,10 @@ export class AlbumModel {
   }
 
   static async updateAlbum(spotifyID: string, values: Partial<typeof reviewedAlbums.$inferInsert>) {
-    return db.update(reviewedAlbums).set(values).where(eq(reviewedAlbums.spotifyID, spotifyID));
+    return db
+      .update(reviewedAlbums)
+      .set({ ...values, updatedAt: new Date() })
+      .where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
   static async deleteAlbum(spotifyID: string) {

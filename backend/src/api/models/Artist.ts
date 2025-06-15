@@ -48,7 +48,10 @@ export class ArtistModel {
   }
 
   static async updateArtist(spotifyID: string, values: Partial<typeof reviewedArtists.$inferInsert>) {
-    return db.update(reviewedArtists).set(values).where(eq(reviewedArtists.spotifyID, spotifyID));
+    return db
+      .update(reviewedArtists)
+      .set({ ...values, updatedAt: new Date() })
+      .where(eq(reviewedArtists.spotifyID, spotifyID));
   }
 
   static async getArtistCount() {
