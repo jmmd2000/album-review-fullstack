@@ -117,6 +117,9 @@ export class AlbumService {
       await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID);
     }
 
+    // Get all albums for this artist
+    const all = (await AlbumModel.getAlbumsByArtist(artist.spotifyID)) as ReviewedAlbum[];
+
     // If album contributes, handle artist update
     if (data.affectsArtistScore) {
       // If the artist is unrated, and this album is affecting their score, go thru
@@ -132,7 +135,6 @@ export class AlbumService {
         }
       }
       // Recalculate artist metrics
-      const all = (await AlbumModel.getAlbumsByArtist(artist.spotifyID)) as ReviewedAlbum[];
       const { newAverageScore, newBonusPoints, totalScore, bonusReasons } = calculateArtistScore(all);
       await ArtistModel.updateArtist(artist.spotifyID, {
         averageScore: newAverageScore,
@@ -149,6 +151,10 @@ export class AlbumService {
       for (const r of positions) {
         await ArtistModel.updateLeaderboardPosition(r.id, rank++);
       }
+    } else {
+      await ArtistModel.updateArtist(artist.spotifyID, {
+        reviewCount: all.length,
+      });
     }
 
     return album;
