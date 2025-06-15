@@ -34,9 +34,9 @@ export class AlbumModel {
   }
 
   static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetPaginatedAlbumsOptions) {
-    const validOrderBy = ["reviewScore", "releaseYear", "name", "createdAt"] as const;
+    const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
-    const sortField = validOrderBy.includes(orderBy) ? orderBy : "reviewScore";
+    const sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
     const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;

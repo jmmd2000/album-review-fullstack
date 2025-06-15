@@ -443,7 +443,7 @@ export interface GetPaginatedAlbumsOptions {
   /** The page number to retrieve. */
   page?: number;
   /** The data to order the results by */
-  orderBy?: "reviewScore" | "releaseYear" | "name" | "createdAt";
+  orderBy?: "finalScore" | "releaseYear" | "name" | "createdAt";
   /** The order in which to sort the results */
   order?: "asc" | "desc";
   /** The search query to filter the results by */

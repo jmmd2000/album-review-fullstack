@@ -34,7 +34,7 @@ const ArtistLinkCard = ({ artist }: ArtistLinkCardProps) => {
             {name}
           </Link>
         ) : (
-          <p className="text-gray-300 text-sm md:text-lg">{name}!</p>
+          <p className="text-gray-300 text-sm md:text-lg">{name}</p>
         )}
       </div>
     </div>

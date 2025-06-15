@@ -87,7 +87,7 @@ function RouteComponent() {
   const sortSettings: SortDropdownProps = {
     options: [
       // { label: "Score", value: "totalScore" },
-      { label: "Score", value: "reviewScore" },
+      { label: "Score", value: "finalScore" },
       { label: "Name", value: "name" },
       { label: "Date Added", value: "createdAt" },
       { label: "Year", value: "releaseYear" },
