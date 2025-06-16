@@ -62,16 +62,31 @@ export const getAllAlbums = async (req: Request, res: Response) => {
 };
 
 export const getPaginatedAlbums = async (req: Request, res: Response) => {
+  const rawGenres = req.query.genres;
+  let genres: string[] | undefined;
+  if (typeof rawGenres === "string") {
+    genres = rawGenres
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } else if (Array.isArray(rawGenres)) {
+    genres = rawGenres
+      .flatMap((r) => (typeof r === "string" ? r.split(",") : []))
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
   const options: GetPaginatedAlbumsOptions = {
     page: req.query.page as number | undefined,
     orderBy: req.query.orderBy as GetPaginatedAlbumsOptions["orderBy"] | undefined,
     order: req.query.order as GetPaginatedAlbumsOptions["order"] | undefined,
     search: req.query.search as string | undefined,
+    genres: genres,
   };
 
   try {
-    const { albums, furtherPages, totalCount } = await AlbumService.getPaginatedAlbums(options);
-    res.status(200).json({ albums, furtherPages, totalCount });
+    const { albums, furtherPages, totalCount, genres, relatedGenres } = await AlbumService.getPaginatedAlbums(options);
+    res.status(200).json({ albums, furtherPages, totalCount, genres, relatedGenres });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });

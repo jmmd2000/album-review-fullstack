@@ -1,12 +1,11 @@
 import "dotenv/config";
-import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage, SpotifyAlbum } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage, SpotifyAlbum, RelatedGenre, PaginatedAlbumsResult, Genre } from "@shared/types";
 import { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { ArtistLeaderboardData, calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
-import { getAllGenres } from "@/helpers/getAllGenres";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { formatDate } from "@shared/helpers/formatDate";
@@ -14,6 +13,7 @@ import getTotalDuration from "@shared/helpers/formatDuration";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
+import { GenreModel } from "@/api/models/Genre";
 
 // albumService.ts (or a helpers file)
 function isSpotifyAlbum(a: any): a is SpotifyAlbum {
@@ -95,6 +95,12 @@ export class AlbumService {
       genres: data.genres,
     });
 
+    const genreIDs = await Promise.all(data.genres.map((name) => GenreModel.findOrCreateGenre(name)));
+
+    // Link new genres & bump related strengths
+    await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs);
+    await GenreModel.incrementRelatedStrength(genreIDs);
+
     // create track entries
     for (const track of data.ratedTracks) {
       const t = spotifyAlbum.tracks.items.find((i) => i.id === track.spotifyID);
@@ -160,9 +166,18 @@ export class AlbumService {
     return album;
   }
 
-  static async getAlbumByID(id: string, includeGenres: boolean = true) {
-    const album = await AlbumModel.findBySpotifyID(id);
-    const artist = await ArtistModel.getArtistBySpotifyID(album.artistSpotifyID);
+  static async getAlbumByID(
+    id: string,
+    includeGenres: boolean = true
+  ): Promise<{
+    album: ReviewedAlbum;
+    artist: ReviewedArtist;
+    tracks: DisplayTrack[];
+    allGenres?: Genre[];
+    albumGenres?: Genre[];
+  }> {
+    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
+    const artist = (await ArtistModel.getArtistBySpotifyID(album.artistSpotifyID)) as ReviewedArtist;
     const tracks = await TrackModel.getTracksByAlbumID(id);
 
     const displayTracks: DisplayTrack[] = tracks.map((track) => ({
@@ -179,8 +194,10 @@ export class AlbumService {
       return { album, artist, tracks: displayTracks };
     }
 
-    const genres = await getAllGenres();
-    return { album, artist, tracks: displayTracks, genres };
+    const albumGenres = await GenreModel.getGenresForAlbums([album.spotifyID]);
+    const allGenres = await GenreModel.getAllGenres();
+
+    return { album, artist, tracks: displayTracks, allGenres, albumGenres };
   }
 
   static async getAllAlbums(includeCounts = false) {
@@ -205,8 +222,15 @@ export class AlbumService {
     return { albums: displayAlbums, numArtists, numAlbums, numTracks };
   }
 
-  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions) {
+  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
+
+    // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
+
+    const relevantGenres = opts.genres?.length ? await GenreModel.getGenresForAlbums(albums.map((a) => a.spotifyID)) : [];
+
+    const genres: Genre[] = await GenreModel.getAllGenres();
+    genres.sort((a, b) => a.name.localeCompare(b.name));
 
     const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
       spotifyID: album.spotifyID,
@@ -220,13 +244,20 @@ export class AlbumService {
       releaseYear: album.releaseYear,
     }));
 
-    return { albums: displayAlbums, furtherPages, totalCount };
+    return { albums: displayAlbums, furtherPages, totalCount, genres, relatedGenres: relevantGenres };
   }
 
   static async deleteAlbum(id: string) {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
     if (!album) throw new Error("Album not found");
 
+    // Remove old genres, decrement related strengths and deleted genres if unused
+    const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
+    await GenreModel.unlinkGenresFromAlbum(id, oldIDs);
+    await GenreModel.decrementRelatedStrength(oldIDs);
+    await GenreModel.deleteIfUnused(oldIDs);
+
+    // Remove tracks and album
     await TrackModel.deleteTracksByAlbumID(id);
     await AlbumModel.deleteAlbum(id);
 
@@ -296,6 +327,21 @@ export class AlbumService {
       finalScore: calculateAlbumScore(data.ratedTracks).finalScore,
       affectsArtistScore: data.affectsArtistScore,
     });
+
+    // Get new vs old genre IDs
+    const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
+    const newIDs = await Promise.all(data.genres.map((name) => GenreModel.findOrCreateGenre(name)));
+    const toAdd = newIDs.filter((nid) => !oldIDs.includes(nid));
+    const toRemove = oldIDs.filter((oid) => !newIDs.includes(oid));
+
+    // Add new genres and increment related strengths
+    await GenreModel.linkGenresToAlbum(albumID, toAdd);
+    await GenreModel.incrementRelatedStrength(toAdd);
+
+    // Remove old genres, decrement related strengths and delete if unused
+    await GenreModel.unlinkGenresFromAlbum(albumID, toRemove);
+    await GenreModel.decrementRelatedStrength(toRemove);
+    await GenreModel.deleteIfUnused(toRemove);
 
     // If the artist was unrated, and this album now affects their score,
     // update their other albums that DONT affect their score.

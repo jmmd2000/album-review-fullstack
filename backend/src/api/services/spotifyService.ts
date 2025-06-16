@@ -2,6 +2,7 @@ import { SearchAlbumsOptions } from "@shared/types";
 import { Spotify } from "@/api/models/Spotify";
 import { getAllGenres } from "@/helpers/getAllGenres";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
+import { GenreModel } from "../models/Genre";
 
 export class SpotifyService {
   static async getAccessToken() {
@@ -9,7 +10,6 @@ export class SpotifyService {
   }
 
   static async searchAlbums(query: SearchAlbumsOptions) {
-    // console.log("query", query.query);
     return await Spotify.searchAlbums(query);
   }
 
@@ -20,7 +20,7 @@ export class SpotifyService {
       return album;
     }
 
-    const genres = await getAllGenres();
+    const genres = await GenreModel.getAllGenres();
     return { album, artist, genres };
   }
 }

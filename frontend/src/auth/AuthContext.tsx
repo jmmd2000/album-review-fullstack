@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: password }),
       }).then((res) => {
-        console.log(res);
         if (!res.ok) throw new Error("Invalid password");
       }),
     onSuccess: () => {

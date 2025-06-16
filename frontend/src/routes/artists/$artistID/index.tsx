@@ -111,7 +111,7 @@ function RouteComponent() {
         cards={albums.map((album) => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
-        options={{ heading: `Albums by ${artist.name}` }}
+        heading={`Albums by ${artist.name}`}
       />
     </div>
   );

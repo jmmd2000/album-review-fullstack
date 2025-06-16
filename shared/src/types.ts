@@ -448,6 +448,8 @@ export interface GetPaginatedAlbumsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
+  /** The genre to filter the results by */
+  genres?: string[];
 }
 
 /**
@@ -509,4 +511,49 @@ export interface ReviewBonuses {
   noStrongPenalty: number;
   /** Sum of all bonuses and penalties (capped between -5 and +5) */
   totalBonus: number;
+}
+
+export interface Genre {
+  /** Unique ID of the genre */
+  id: number;
+  /** Name of the genre */
+  name: string;
+  /** URL-safe unique slug */
+  slug: string;
+  /** When the row was first inserted */
+  createdAt: Date;
+  /** When the row was last updated */
+  updatedAt: Date;
+}
+
+/** Junction table linking albums and genres */
+export interface AlbumGenre {
+  /** Spotify ID of the album */
+  albumSpotifyID: string;
+  /** Genre ID (FK into genres.id) */
+  genreID: number;
+}
+
+/** Co-occurrence weights for pairs of genres */
+export interface RelatedGenre {
+  /** The first genre in the pair (always =< relatedGenreID) */
+  genreID: number;
+  /** The second genre in the pair */
+  relatedGenreID: number;
+  /** How often those two have appeared together */
+  strength: number;
+  /** When this relationship was created */
+  createdAt: Date;
+  /** When this strength was last updated */
+  updatedAt: Date;
+}
+
+export interface PaginatedAlbumsResult {
+  albums: DisplayAlbum[];
+  totalCount: number;
+  furtherPages: boolean;
+  /** All genres */
+  genres: Genre[];
+  /** All the genres that are related */
+  relatedGenres?: Genre[];
 }

@@ -96,7 +96,7 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.div
-        className="flex items-center justify-between w-44 md:w-48 rounded-sm py-2 bg-neutral-800 px-4 cursor-pointer border border-transparent hover:bg-neutral-900 hover:border-neutral-800"
+        className="flex items-center h-11 justify-between w-44 md:w-48 rounded-sm py-2 bg-neutral-800 px-4 cursor-pointer border border-transparent hover:bg-neutral-900 hover:border-neutral-800"
         onClick={toggleDropdown}
         whileHover={{ scale: 1.02 }}
       >

@@ -24,7 +24,7 @@ export class TrackModel {
   }
 
   static async updateTrackRating(spotifyID: string, rating: number) {
-    return db.update(reviewedTracks).set({ rating }).where(eq(reviewedTracks.spotifyID, spotifyID));
+    return db.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
   static async getTrackCount() {

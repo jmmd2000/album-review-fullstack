@@ -131,7 +131,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       case "compact":
         return "py-1.5 px-3";
       default:
-        return "py-2 px-4";
+        return "py-2 px-4 h-11";
     }
   };
 

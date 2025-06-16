@@ -155,7 +155,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
       }
     } catch (error) {
       if (error instanceof Error) {
-        if (logging) console.log(`\x1b[34mSeed:\x1b[0m \x1b[31m${error.message}\x1b[0m`);
+        if (logging) console.error(error);
       } else {
         if (logging) console.log(`\x1b[34mSeed:\x1b[0m \x1b[31mAn unknown error occurred.\x1b[0m`);
       }
@@ -166,4 +166,4 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
 };
 
 // Disable this call when running tests
-seed(ALBUM_IDS, REVIEW, true);
+// seed(ALBUM_IDS, REVIEW, true);

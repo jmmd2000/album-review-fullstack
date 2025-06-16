@@ -1,6 +1,6 @@
 import { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -9,6 +9,9 @@ export const reviewedAlbums = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(), // Default to current time
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
     artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
       .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
@@ -48,17 +51,20 @@ export const reviewedTracks = pgTable(
     id: serial("id").primaryKey(),
     artistSpotifyID: varchar("artist_spotify_id")
       .notNull()
-      .references(() => reviewedArtists.spotifyID), // Foreign key reference to `artists` table
+      .references(() => reviewedArtists.spotifyID), // Foreign key reference to artists table
     artistName: varchar("artist_name", { length: 255 }).notNull(),
     albumSpotifyID: varchar("album_spotify_id")
       .notNull()
-      .references(() => reviewedAlbums.spotifyID), // Foreign key reference to `albums
+      .references(() => reviewedAlbums.spotifyID), // Foreign key reference to albums
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
     features: jsonb("features").$type<{ id: string; name: string }[]>().notNull(),
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
   },
   (table) => [
     index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
@@ -83,6 +89,9 @@ export const reviewedArtists = pgTable(
     reviewCount: integer("review_count").notNull().default(0),
     unrated: boolean().notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(),
     imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true })
@@ -124,4 +133,61 @@ export const concerts = pgTable(
     supportArtists: text("support_artists").notNull(), // JSON string of support artists
   },
   (table) => [index("artist_spotify_id_concert_idx").on(table.artistSpotifyID)]
+);
+
+export const genres = pgTable(
+  "genres",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .default(sql`now()`)
+      .$onUpdateFn(() => sql`now()`)
+      .notNull(),
+  },
+  (table) => [index("genres_slug_idx").on(table.slug)]
+);
+
+// Many to many relationship between albums and genres
+export const albumGenres = pgTable(
+  "album_genres",
+  {
+    albumSpotifyID: varchar("album_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => reviewedAlbums.spotifyID),
+    genreID: integer("genre_id")
+      .notNull()
+      .references(() => genres.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    index("album_genres_album_idx").on(table.albumSpotifyID), // looking up genres by album
+    index("album_genres_genre_idx").on(table.genreID), // finding all albums in a genre
+    uniqueIndex("album_genres_album_genre_key").on(table.albumSpotifyID, table.genreID),
+  ]
+);
+
+// Stores genre pairs and their "strength" i.e. how many times they appear on an album together
+export const relatedGenres = pgTable(
+  "related_genres",
+  {
+    genreID: integer("genre_id")
+      .notNull()
+      .references(() => genres.id, { onDelete: "cascade" }),
+    relatedGenreID: integer("related_genre_id")
+      .notNull()
+      .references(() => genres.id, { onDelete: "cascade" }),
+    strength: integer("strength").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .default(sql`now()`)
+      .$onUpdateFn(() => sql`now()`)
+      .notNull(),
+  },
+  (table) => [uniqueIndex("related_genres_key").on(table.genreID, table.relatedGenreID)]
 );

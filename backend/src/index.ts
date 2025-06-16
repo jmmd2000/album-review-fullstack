@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+import { drizzle } from "drizzle-orm/node-postgres";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -8,7 +8,6 @@ import spotifyRoutes from "@/api/routes/spotifyRoutes";
 import albumRoutes from "@/api/routes/albumRoutes";
 import trackRoutes from "@/api/routes/trackRoutes";
 import artistRoutes from "@/api/routes/artistRoutes";
-import { drizzle } from "drizzle-orm/node-postgres";
 import authRoutes from "@/api/routes/authRoutes";
 import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
 

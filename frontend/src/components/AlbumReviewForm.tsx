@@ -1,4 +1,4 @@
-import { DisplayTrack, ExtractedColor, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
+import { DisplayTrack, ExtractedColor, Genre, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray, useWatch, UseFormRegisterReturn, UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, UseFormSetValue } from "react-hook-form";
 import TrackList from "./TrackList";
@@ -49,7 +49,7 @@ interface AlbumReviewFormProps {
   /** Optional ReviewedTracks */
   tracks?: ReviewedTrack[];
   /** Array of existing genre objects */
-  genres: string[];
+  genres: Genre[];
   /** Selected colors setter to pass the data back up the tree */
   setSelectedColors: React.Dispatch<React.SetStateAction<ExtractedColor[]>>;
   /** Selected colors */
@@ -401,13 +401,13 @@ interface GenreSelectorProps {
   removeGenre: UseFieldArrayRemove;
   addGenre: UseFieldArrayAppend<CreateReviewFormData, "genres">;
   setValue: UseFormSetValue<CreateReviewFormData>;
-  genres: string[];
+  genres: Genre[];
 }
 const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue, genres }: GenreSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const filtered = genres.filter((g) => g.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = genres.filter((g) => g.name.toLowerCase().includes(searchTerm.toLowerCase()));
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -473,8 +473,8 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                       <div className="max-h-48 overflow-y-auto">
                         {filtered.length > 0 ? (
                           filtered.map((g) => (
-                            <div key={g} className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm" onClick={() => handleSelect(g)}>
-                              {g}
+                            <div key={g.slug} className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm" onClick={() => handleSelect(g.name)}>
+                              {g.name}
                             </div>
                           ))
                         ) : (

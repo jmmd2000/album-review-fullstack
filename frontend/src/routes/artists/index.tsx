@@ -108,12 +108,16 @@ function RouteComponent() {
         cards={data.artists.map((artist) => (
           <ArtistCard key={artist.spotifyID} artist={artist} />
         ))}
-        options={{ search: true, pagination: true, counter: data.totalCount }}
-        nextPage={{ action: handleNextPage, disabled: !data.furtherPages }}
-        previousPage={{ action: handlePrevPage, disabled: options.page === 1 || options.page === undefined }}
-        pageData={{ pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) }}
-        search={handleSearch}
-        sortSettings={sortSettings}
+        counter={data.totalCount}
+        controls={{
+          search: handleSearch,
+          pagination: {
+            next: { action: handleNextPage, disabled: !data.furtherPages },
+            prev: { action: handlePrevPage, disabled: options.page === 1 || options.page === undefined },
+            page: { pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) },
+          },
+          sortSettings: sortSettings,
+        }}
       />
     </motion.div>
   );
