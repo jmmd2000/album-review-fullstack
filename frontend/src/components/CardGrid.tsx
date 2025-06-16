@@ -1,38 +1,25 @@
-import CardGridControls from "@/components/CardGridControls";
+import CardGridControls, { DropdownControlsProps } from "@/components/CardGridControls";
 import { motion } from "framer-motion";
 import { SortDropdownProps } from "@components/SortDropdown";
 
 interface CardGridProps {
   /** The cards to display in the grid */
   cards: React.ReactNode[];
-  /** The width of each card, including the unit */
-  cardWidth?: string;
-  /** Options object to include certain features */
-  options?: {
-    search?: boolean;
-    pagination?: boolean;
-    counter?: number;
-    heading?: string;
+  /** Optional heading */
+  heading?: string;
+  /** Show a results counter */
+  counter?: number;
+  /** Optional control configuration */
+  controls?: {
+    search?: (search: string) => void;
+    pagination?: {
+      next: { action: () => void; disabled?: boolean };
+      prev: { action: () => void; disabled?: boolean };
+      page: { pageNumber: number; totalPages: number };
+    };
+    sortSettings?: SortDropdownProps;
+    genreSettings?: DropdownControlsProps;
   };
-  /** Search callback function */
-  search?: (search: string) => void;
-  /** Pagination control for next page */
-  nextPage?: {
-    action: () => void;
-    disabled?: boolean;
-  };
-  /** Pagination control for previous page */
-  previousPage?: {
-    action: () => void;
-    disabled?: boolean;
-  };
-  /** The current page number and total pages */
-  pageData?: {
-    pageNumber: number;
-    totalPages: number;
-  };
-  /** Options for the sorting dropdown */
-  sortSettings?: SortDropdownProps;
 }
 
 /**
@@ -61,35 +48,37 @@ const itemVariants = {
 /**
  * This component creates a card grid with controls for pagination and search.
  */
-const CardGrid = ({ cards, options, nextPage, previousPage, pageData, search, sortSettings }: CardGridProps) => {
-  const shouldShowControls = options?.search || options?.pagination;
+const CardGrid = ({ cards, heading, counter, controls }: CardGridProps) => {
+  const shouldShowControls = controls?.search || controls?.pagination;
 
   return (
     <>
-      {shouldShowControls && options?.pagination && nextPage && previousPage && pageData && search ? (
-        <CardGridControls pagination={true} nextPage={nextPage} previousPage={previousPage} pageData={pageData} search={search} sortSettings={sortSettings} />
-      ) : shouldShowControls && search ? (
-        <CardGridControls search={search} pagination={false} />
-      ) : null}
+      {shouldShowControls && controls && <CardGridControls search={controls.search} pagination={controls.pagination} sortSettings={controls.sortSettings} genreSettings={controls.genreSettings} />}
 
-      {options?.heading && (
+      {heading && (
         <div className="max-w-[1900px] mx-4 px-2 pt-4 z-10">
-          <h2 className="text-xl font-medium text-neutral-200 text-left">{options.heading}</h2>
+          <h2 className="text-xl font-medium text-neutral-200 text-left">{heading}</h2>
         </div>
       )}
 
-      {options?.counter && (
+      {typeof counter === "number" && (
         <div className="flex justify-start items-center gap-2 max-w-[1900px] mx-4 px-2 z-10">
-          <p className="text-sm text-neutral-400">{`Showing ${options.counter} results`}</p>
+          <p className="text-sm text-neutral-400">{`Showing ${counter} results`}</p>
         </div>
       )}
 
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4">
-        {cards.map((card, index) => (
-          <motion.div key={index} variants={itemVariants}>
-            {card}
-          </motion.div>
-        ))}
+        {cards.length > 0 ? (
+          cards.map((card, index) => (
+            <motion.div key={index} variants={itemVariants} className="flex flex-col">
+              {card}
+            </motion.div>
+          ))
+        ) : (
+          <div className="col-span-full text-center text-neutral-500">
+            <p>No results found.</p>
+          </div>
+        )}
       </motion.div>
     </>
   );

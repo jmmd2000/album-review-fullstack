@@ -89,8 +89,9 @@ function RouteComponent() {
             cards={(albumCards || []).map((album) => (
               <AlbumCard key={album.spotifyID} album={album} bookmarked={album.bookmarked} />
             ))}
-            options={{ search: true, pagination: false, counter: albumCards?.length || 0, heading: gridHeading }}
-            search={handleSearch}
+            heading={gridHeading}
+            counter={albumCards?.length || 0}
+            controls={{ search: handleSearch }}
           />
         </motion.div>
       </RequireAdmin>

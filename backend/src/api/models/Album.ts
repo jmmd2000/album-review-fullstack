@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
-import { GetPaginatedAlbumsOptions } from "@shared/types";
-import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
+import { desc, eq, ilike, asc, or, count, inArray, exists, sql } from "drizzle-orm";
+import { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
+import { albumGenres, genres as genresTable, reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
 import { db } from "@/index";
 
 export class AlbumModel {
@@ -36,7 +36,7 @@ export class AlbumModel {
     return db.select().from(reviewedAlbums);
   }
 
-  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetPaginatedAlbumsOptions) {
+  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "", genres }: GetPaginatedAlbumsOptions) {
     const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
@@ -44,30 +44,44 @@ export class AlbumModel {
     const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;
 
-    // The previous way of building the query meant there would be a duplicated entry
-    // at the end of the 1st page which also would appear on the start of the second page
-    // (seemingly only when sorting by reviewScore ascending). Here we sort first by the selected
-    // field e.g. reviewScore and then alphabetically by album name to break ties, therefore preventing duplicate entries.
-    const baseOrder = sortDirection === "asc" ? [asc(reviewedAlbums[sortField]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[sortField]), desc(reviewedAlbums.name)];
+    // A) if the caller asked for genres, look up the matching album IDs
+    let albumIds: string[] | undefined;
+    if (genres?.length) {
+      albumIds = await this.getAlbumIdsByGenres(genres);
+      // nothing matched → short‐circuit
+      if (albumIds.length === 0) {
+        return { albums: [], totalCount: 0, furtherPages: false };
+      }
+    }
 
-    const albums = search.trim()
-      ? await db
-          .select()
-          .from(reviewedAlbums)
-          .where(or(ilike(reviewedAlbums.name, `%${search}%`), ilike(reviewedAlbums.artistName, `%${search}%`)))
-          .orderBy(...baseOrder)
-          .limit(PAGE_SIZE)
-          .offset(OFFSET)
-      : await db
-          .select()
-          .from(reviewedAlbums)
-          .orderBy(...baseOrder)
-          .limit(PAGE_SIZE)
-          .offset(OFFSET);
+    // B) build your exact same paging query, + one extra WHERE if albumIds is set
+    let q: any = db
+      .select()
+      .from(reviewedAlbums)
+      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
 
-    const [{ count: totalCount }] = await db.select({ count: count() }).from(reviewedAlbums);
+    if (search.trim()) {
+      q = q.where(
+        // you can chain .where() calls
+        sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} 
+           OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})`
+      );
+    }
 
-    const furtherPages = OFFSET + PAGE_SIZE < totalCount;
+    const baseOrder = order === "asc" ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
+
+    const albums: DisplayAlbum[] = await q
+      .orderBy(...baseOrder)
+      .limit(PAGE_SIZE)
+      .offset(OFFSET);
+
+    // C) count with the same IN‐filter
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
+      .from(reviewedAlbums)
+      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
+
+    const furtherPages = OFFSET + PAGE_SIZE < Number(totalCount);
 
     return {
       albums,
@@ -100,5 +114,21 @@ export class AlbumModel {
       spotifyID: r.spotifyID,
       reviewScore: r.reviewScore,
     }));
+  }
+
+  private static async getAlbumIdsByGenres(slugs: string[]): Promise<string[]> {
+    if (!slugs.length) return [];
+
+    // 1) join album_genres → genres, filter slug IN slugs
+    // 2) group by album, require COUNT(*) = slugs.length so we only get albums that matched every slug
+    const rows = await db
+      .select({ id: albumGenres.albumSpotifyID })
+      .from(albumGenres)
+      .innerJoin(genresTable, eq(genresTable.id, albumGenres.genreID))
+      .where(inArray(genresTable.slug, slugs))
+      .groupBy(albumGenres.albumSpotifyID)
+      .having(sql`COUNT(*) = ${slugs.length}`);
+
+    return rows.map((r) => r.id);
   }
 }

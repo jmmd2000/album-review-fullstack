@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage, SpotifyAlbum } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, ReviewedTrack, SpotifyImage, SpotifyAlbum, RelatedGenre, PaginatedAlbumsResult, Genre } from "@shared/types";
 import { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -212,8 +212,15 @@ export class AlbumService {
     return { albums: displayAlbums, numArtists, numAlbums, numTracks };
   }
 
-  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions) {
+  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
+
+    // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
+
+    const relevantGenres = opts.genres?.length ? await GenreModel.getGenresForAlbums(albums.map((a) => a.spotifyID)) : [];
+
+    const genres: Genre[] = await GenreModel.getAllGenres();
+    genres.sort((a, b) => a.name.localeCompare(b.name));
 
     const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
       spotifyID: album.spotifyID,
@@ -227,7 +234,9 @@ export class AlbumService {
       releaseYear: album.releaseYear,
     }));
 
-    return { albums: displayAlbums, furtherPages, totalCount };
+    console.log("genres:", genres);
+
+    return { albums: displayAlbums, furtherPages, totalCount, genres, relatedGenres: relevantGenres };
   }
 
   static async deleteAlbum(id: string) {
