@@ -28,7 +28,6 @@ async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise
   }
 
   const data = await response.json();
-  console.log({ data });
 
   return data;
 }
@@ -138,13 +137,10 @@ function RouteComponent() {
   const genreSettings: DropdownControlsProps = {
     items,
     onSelect: (value) => {
-      const rawGenres = options.genres as string | undefined;
-      const prevGenres = rawGenres?.split(",").filter(Boolean) ?? [];
-      const merged = Array.from(new Set([...prevGenres, ...value]));
       navigate({
         search: (prev) => ({
           ...prev,
-          genres: merged.length > 0 ? merged.join(",") : undefined,
+          genres: value.length > 0 ? value.join(",") : undefined,
         }),
       });
     },

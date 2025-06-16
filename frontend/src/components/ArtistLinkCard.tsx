@@ -23,8 +23,6 @@ const ArtistLinkCard = ({ artist }: ArtistLinkCardProps) => {
   const imageURL = isReviewedArtist(artist) ? artist.imageURLs[2].url : artist.images[2].url;
   const spotifyID = isReviewedArtist(artist) ? artist.spotifyID : artist.id;
   const name = isReviewedArtist(artist) ? artist.name : artist.name;
-
-  console.log(isReviewedArtist(artist), spotifyID);
   return (
     <div className="flex items-center justify-center gap-2 text-sm">
       <img src={imageURL} alt={artist.name} className="rounded-lg h-10 w-10 md:h-12 md:w-12 shadow-2xl" style={{ viewTransitionName: `artist-image-${spotifyID}` }} />

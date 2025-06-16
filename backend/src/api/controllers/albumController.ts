@@ -63,7 +63,6 @@ export const getAllAlbums = async (req: Request, res: Response) => {
 
 export const getPaginatedAlbums = async (req: Request, res: Response) => {
   const rawGenres = req.query.genres;
-  console.log("Received genres query parameter:", rawGenres);
   let genres: string[] | undefined;
   if (typeof rawGenres === "string") {
     genres = rawGenres
@@ -76,8 +75,6 @@ export const getPaginatedAlbums = async (req: Request, res: Response) => {
       .map((s) => s.trim())
       .filter(Boolean);
   }
-
-  console.log(genres);
 
   const options: GetPaginatedAlbumsOptions = {
     page: req.query.page as number | undefined,

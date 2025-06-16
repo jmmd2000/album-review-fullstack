@@ -44,17 +44,17 @@ export class AlbumModel {
     const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;
 
-    // A) if the caller asked for genres, look up the matching album IDs
+    // If requested genres, look up the matching album IDs
     let albumIds: string[] | undefined;
     if (genres?.length) {
       albumIds = await this.getAlbumIdsByGenres(genres);
-      // nothing matched → short‐circuit
+      // nothing matched, early return empty result
       if (albumIds.length === 0) {
         return { albums: [], totalCount: 0, furtherPages: false };
       }
     }
 
-    // B) build your exact same paging query, + one extra WHERE if albumIds is set
+    // Build exact same query, + one extra WHERE if albumIds is set
     let q: any = db
       .select()
       .from(reviewedAlbums)
@@ -62,7 +62,6 @@ export class AlbumModel {
 
     if (search.trim()) {
       q = q.where(
-        // you can chain .where() calls
         sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} 
            OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})`
       );
@@ -75,7 +74,6 @@ export class AlbumModel {
       .limit(PAGE_SIZE)
       .offset(OFFSET);
 
-    // C) count with the same IN‐filter
     const [{ count: totalCount }] = await db
       .select({ count: count() })
       .from(reviewedAlbums)
@@ -119,8 +117,8 @@ export class AlbumModel {
   private static async getAlbumIdsByGenres(slugs: string[]): Promise<string[]> {
     if (!slugs.length) return [];
 
-    // 1) join album_genres → genres, filter slug IN slugs
-    // 2) group by album, require COUNT(*) = slugs.length so we only get albums that matched every slug
+    // join album_genres -> genres, filter slug IN slugs
+    // group by album, require COUNT(*) = slugs.length so we only get albums that matched every slug
     const rows = await db
       .select({ id: albumGenres.albumSpotifyID })
       .from(albumGenres)

@@ -1,4 +1,4 @@
-import { ExtractedColor, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
+import { ExtractedColor, Genre, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
@@ -11,7 +11,7 @@ import AlbumDetails from "@/components/AlbumDetails";
 import { RequireAdmin } from "@/components/RequireAdmin";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: ReviewedTrack[]; genres: string[] }> {
+async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{ album: ReviewedAlbum; artist: ReviewedArtist; tracks: ReviewedTrack[]; allGenres: Genre[]; albumGenres: Genre[] }> {
   const response = await fetch(`${API_BASE_URL}/api/albums/${albumSpotifyID}`);
   return await response.json();
 }
@@ -58,7 +58,7 @@ function RouteComponent() {
           <AlbumDetails album={data.album} trackCount={data.tracks.length} artist={data.artist} />
         </BlurryHeader>
 
-        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.allGenres} />
       </RequireAdmin>
     </>
   );

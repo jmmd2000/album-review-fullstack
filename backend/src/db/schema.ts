@@ -161,7 +161,7 @@ export const albumGenres = pgTable(
       .references(() => reviewedAlbums.spotifyID),
     genreID: integer("genre_id")
       .notNull()
-      .references(() => genres.id),
+      .references(() => genres.id, { onDelete: "cascade" }),
   },
   (table) => [
     index("album_genres_album_idx").on(table.albumSpotifyID), // looking up genres by album
@@ -176,10 +176,10 @@ export const relatedGenres = pgTable(
   {
     genreID: integer("genre_id")
       .notNull()
-      .references(() => genres.id),
+      .references(() => genres.id, { onDelete: "cascade" }),
     relatedGenreID: integer("related_genre_id")
       .notNull()
-      .references(() => genres.id),
+      .references(() => genres.id, { onDelete: "cascade" }),
     strength: integer("strength").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`now()`)

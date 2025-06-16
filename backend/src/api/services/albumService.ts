@@ -6,7 +6,6 @@ import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { ArtistLeaderboardData, calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
-import { getAllGenres } from "@/helpers/getAllGenres";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { formatDate } from "@shared/helpers/formatDate";
@@ -167,9 +166,18 @@ export class AlbumService {
     return album;
   }
 
-  static async getAlbumByID(id: string, includeGenres: boolean = true) {
-    const album = await AlbumModel.findBySpotifyID(id);
-    const artist = await ArtistModel.getArtistBySpotifyID(album.artistSpotifyID);
+  static async getAlbumByID(
+    id: string,
+    includeGenres: boolean = true
+  ): Promise<{
+    album: ReviewedAlbum;
+    artist: ReviewedArtist;
+    tracks: DisplayTrack[];
+    allGenres?: Genre[];
+    albumGenres?: Genre[];
+  }> {
+    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
+    const artist = (await ArtistModel.getArtistBySpotifyID(album.artistSpotifyID)) as ReviewedArtist;
     const tracks = await TrackModel.getTracksByAlbumID(id);
 
     const displayTracks: DisplayTrack[] = tracks.map((track) => ({
@@ -186,8 +194,10 @@ export class AlbumService {
       return { album, artist, tracks: displayTracks };
     }
 
-    const genres = await getAllGenres();
-    return { album, artist, tracks: displayTracks, genres };
+    const albumGenres = await GenreModel.getGenresForAlbums([album.spotifyID]);
+    const allGenres = await GenreModel.getAllGenres();
+
+    return { album, artist, tracks: displayTracks, allGenres, albumGenres };
   }
 
   static async getAllAlbums(includeCounts = false) {
@@ -234,8 +244,6 @@ export class AlbumService {
       releaseYear: album.releaseYear,
     }));
 
-    console.log("genres:", genres);
-
     return { albums: displayAlbums, furtherPages, totalCount, genres, relatedGenres: relevantGenres };
   }
 
@@ -243,10 +251,11 @@ export class AlbumService {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
     if (!album) throw new Error("Album not found");
 
-    // Remove old genres and decrement related strengths
+    // Remove old genres, decrement related strengths and deleted genres if unused
     const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
     await GenreModel.unlinkGenresFromAlbum(id, oldIDs);
     await GenreModel.decrementRelatedStrength(oldIDs);
+    await GenreModel.deleteIfUnused(oldIDs);
 
     // Remove tracks and album
     await TrackModel.deleteTracksByAlbumID(id);
@@ -329,9 +338,10 @@ export class AlbumService {
     await GenreModel.linkGenresToAlbum(albumID, toAdd);
     await GenreModel.incrementRelatedStrength(toAdd);
 
-    // Remove old genres and decrement related strengths
+    // Remove old genres, decrement related strengths and delete if unused
     await GenreModel.unlinkGenresFromAlbum(albumID, toRemove);
     await GenreModel.decrementRelatedStrength(toRemove);
+    await GenreModel.deleteIfUnused(toRemove);
 
     // If the artist was unrated, and this album now affects their score,
     // update their other albums that DONT affect their score.

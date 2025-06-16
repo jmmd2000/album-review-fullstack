@@ -1,7 +1,7 @@
 import { albumGenres, genres, relatedGenres } from "@/db/schema";
 import { db } from "@/index";
 import { Genre, RelatedGenre } from "@shared/types";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 export class GenreModel {
@@ -27,10 +27,23 @@ export class GenreModel {
 
   static async findOrCreateGenre(name: string): Promise<number> {
     const slug = slugify(name, { lower: true, strict: true });
+
+    // Try to find it first
     let g = await this.findBySlug(slug);
     if (g) return g.id;
-    g = await this.createGenre({ name, slug });
-    return g.id;
+
+    // If not found, try to insert
+    try {
+      g = await this.createGenre({ name, slug });
+      return g.id;
+    } catch (err: any) {
+      if (err.code === "23505") {
+        // Someone else inserted it in the meantime — fetch again
+        const fallback = await this.findBySlug(slug);
+        if (fallback) return fallback.id;
+      }
+      throw err;
+    }
   }
 
   static async getGenreIDsForAlbum(albumSpotifyID: string): Promise<number[]> {
@@ -156,5 +169,19 @@ export class GenreModel {
 
   static async deleteGenre(slug: string) {
     return db.delete(genres).where(eq(genres.slug, slug));
+  }
+
+  static async deleteIfUnused(genreIDs: number[]) {
+    for (const genreID of genreIDs) {
+      const [{ count: usageCount }] = await db.select({ count: count() }).from(albumGenres).where(eq(albumGenres.genreID, genreID));
+
+      if (usageCount === 0) {
+        // Delete all related_genres where this genre is in either column
+        await db.delete(relatedGenres).where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
+
+        // Then delete the genre itself
+        await db.delete(genres).where(eq(genres.id, genreID));
+      }
+    }
   }
 }

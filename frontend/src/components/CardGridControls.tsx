@@ -43,11 +43,9 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
     setDropdownOpen(false);
   };
 
-  console.log({ genreSettings });
-
   return (
     <div className="sticky top-0 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 z-10">
-      <div className="flex flex-col sm:flex-row gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
         {search && (
           <div className="flex flex-col sm:flex-row justify-center gap-2 w-full sm:w-auto">
             <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
@@ -55,7 +53,7 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
                 type="text"
                 placeholder="Search..."
                 ref={inputRef}
-                className="w-[75%] sm:w-auto rounded-sm py-2 bg-neutral-800 px-4"
+                className="w-[75%] sm:w-auto rounded-sm py-2 bg-neutral-800 h-11 px-4"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     const val = inputRef.current?.value || "";
@@ -73,26 +71,15 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
             </div>
             <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
               {sortSettings && <SortDropdown {...sortSettings} />}
-              <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} />
-              {pagination && (
-                <div className="flex flex-row justify-evenly items-center ml-auto w-full sm:hidden">
-                  <Button label={<ChevronLeft />} onClick={pagination.prev.action} disabled={pagination.prev.disabled} size="icon" />
-                  <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-[10px] px-4 rounded">
-                    <span className="mx-auto text-center">
-                      {pagination.page.pageNumber} / {pagination.page.totalPages}
-                    </span>
-                  </div>
-                  <Button label={<ChevronRight />} onClick={pagination.next.action} disabled={pagination.next.disabled} size="icon" />
-                </div>
-              )}
+              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} />}
             </div>
           </div>
         )}
 
         {pagination && (
-          <div className=" flex-row justify-center items-center gap-2 mt-4 sm:mt-0 ml-auto w-full hidden sm:w-auto sm:flex">
+          <div className="flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
             <Button label={<ChevronLeft />} onClick={pagination.prev.action} disabled={pagination.prev.disabled} size="icon" />
-            <div aria-label="Page Number" className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 font-medium py-2 px-4 rounded">
+            <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-2 px-4 rounded text-center h-11 flex items-center">
               {pagination.page.pageNumber} / {pagination.page.totalPages}
             </div>
             <Button label={<ChevronRight />} onClick={pagination.next.action} disabled={pagination.next.disabled} size="icon" />
