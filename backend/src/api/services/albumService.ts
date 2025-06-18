@@ -315,6 +315,9 @@ export class AlbumService {
     const artist = await ArtistModel.getArtistBySpotifyID(existingAlbum.artistSpotifyID)!;
     const wasUnrated = artist.unrated;
 
+    const existingTracks = await TrackModel.getTracksByAlbumID(albumID);
+    const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
+
     // update review fields and AAS flag
     await AlbumModel.updateAlbum(albumID, {
       reviewContent: data.reviewContent,
@@ -322,11 +325,34 @@ export class AlbumService {
       worstSong: data.worstSong,
       genres: data.genres,
       colors: data.colors,
-      reviewScore: calculateAlbumScore(data.ratedTracks).baseScore,
-      reviewBonuses: calculateAlbumScore(data.ratedTracks).bonuses,
-      finalScore: calculateAlbumScore(data.ratedTracks).finalScore,
+      reviewScore: baseScore,
+      reviewBonuses: bonuses,
+      finalScore: finalScore,
       affectsArtistScore: data.affectsArtistScore,
     });
+
+    for (const newTrack of data.ratedTracks) {
+      const oldTrack = existingTracks.find((t) => t.spotifyID === newTrack.spotifyID);
+
+      if (!oldTrack) {
+        // new track
+        await TrackModel.createTrack({
+          albumSpotifyID: albumID,
+          artistSpotifyID: existingAlbum.artistSpotifyID,
+          artistName: existingAlbum.artistName,
+          name: newTrack.name,
+          spotifyID: newTrack.spotifyID,
+          duration: newTrack.duration,
+          features: newTrack.features,
+          rating: newTrack.rating ?? 0,
+        });
+      } else if (oldTrack.rating !== newTrack.rating) {
+        // just a rating change
+        if (newTrack.rating !== undefined) {
+          await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating);
+        }
+      }
+    }
 
     // Get new vs old genre IDs
     const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);

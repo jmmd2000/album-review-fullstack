@@ -166,4 +166,4 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
 };
 
 // Disable this call when running tests
-// seed(ALBUM_IDS, REVIEW, true);
+seed(ALBUM_IDS, REVIEW, true);

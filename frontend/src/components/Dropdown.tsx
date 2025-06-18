@@ -80,9 +80,9 @@ export const Dropdown = ({ items, isOpen, setIsOpen, onSelect, dropdownRef }: Dr
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative flex-auto min-w-0 max-w-[20rem] sm:max-w-[20rem]">
       <motion.div
-        className="max-w-[10rem] sm:max-w-[20rem] w-full px-4 py-2.5 bg-neutral-800 border border-transparent hover:bg-neutral-900 hover:border-neutral-800 rounded-md shadow-sm cursor-pointer h-11 text-white overflow-hidden whitespace-nowrap text-ellipsis"
+        className="w-full px-4 py-2.5 bg-neutral-800 border border-transparent hover:bg-neutral-900 hover:border-neutral-800 rounded-md shadow-sm cursor-pointer h-11 text-white overflow-hidden whitespace-nowrap text-ellipsis"
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.02 }}
       >
