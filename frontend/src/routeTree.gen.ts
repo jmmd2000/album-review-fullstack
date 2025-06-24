@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as StatsIndexImport } from './routes/stats/index'
 import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as SearchIndexImport } from './routes/search/index'
 import { Route as BookmarksIndexImport } from './routes/bookmarks/index'
@@ -27,6 +28,12 @@ import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/cre
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const StatsIndexRoute = StatsIndexImport.update({
+  id: '/stats/',
+  path: '/stats/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -130,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/stats/': {
+      id: '/stats/'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/albums/$albumID/create': {
       id: '/albums/$albumID/create'
       path: '/albums/$albumID/create'
@@ -170,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/bookmarks': typeof BookmarksIndexRoute
   '/search': typeof SearchIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/stats': typeof StatsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
@@ -183,6 +198,7 @@ export interface FileRoutesByTo {
   '/bookmarks': typeof BookmarksIndexRoute
   '/search': typeof SearchIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/stats': typeof StatsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
@@ -197,6 +213,7 @@ export interface FileRoutesById {
   '/bookmarks/': typeof BookmarksIndexRoute
   '/search/': typeof SearchIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/stats/': typeof StatsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
   '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
@@ -212,6 +229,7 @@ export interface FileRouteTypes {
     | '/bookmarks'
     | '/search'
     | '/settings'
+    | '/stats'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
@@ -224,6 +242,7 @@ export interface FileRouteTypes {
     | '/bookmarks'
     | '/search'
     | '/settings'
+    | '/stats'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID'
@@ -236,6 +255,7 @@ export interface FileRouteTypes {
     | '/bookmarks/'
     | '/search/'
     | '/settings/'
+    | '/stats/'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
     | '/albums/$albumID/'
@@ -250,6 +270,7 @@ export interface RootRouteChildren {
   BookmarksIndexRoute: typeof BookmarksIndexRoute
   SearchIndexRoute: typeof SearchIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  StatsIndexRoute: typeof StatsIndexRoute
   AlbumsAlbumIDCreateRoute: typeof AlbumsAlbumIDCreateRoute
   AlbumsAlbumIDEditRoute: typeof AlbumsAlbumIDEditRoute
   AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
@@ -263,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookmarksIndexRoute: BookmarksIndexRoute,
   SearchIndexRoute: SearchIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  StatsIndexRoute: StatsIndexRoute,
   AlbumsAlbumIDCreateRoute: AlbumsAlbumIDCreateRoute,
   AlbumsAlbumIDEditRoute: AlbumsAlbumIDEditRoute,
   AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
@@ -285,6 +307,7 @@ export const routeTree = rootRoute
         "/bookmarks/",
         "/search/",
         "/settings/",
+        "/stats/",
         "/albums/$albumID/create",
         "/albums/$albumID/edit",
         "/albums/$albumID/",
@@ -308,6 +331,9 @@ export const routeTree = rootRoute
     },
     "/settings/": {
       "filePath": "settings/index.tsx"
+    },
+    "/stats/": {
+      "filePath": "stats/index.tsx"
     },
     "/albums/$albumID/create": {
       "filePath": "albums/$albumID/create.tsx"
