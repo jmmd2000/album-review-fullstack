@@ -1,12 +1,19 @@
-import { albumGenres, genres, relatedGenres } from "@/db/schema";
+import { albumGenres, genres, relatedGenres, reviewedAlbums } from "@/db/schema";
 import { db } from "@/index";
-import { Genre, RelatedGenre } from "@shared/types";
+import { AlbumGenre, Genre, RelatedGenre, ReviewedAlbum } from "@shared/types";
 import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 export class GenreModel {
-  static async getAllGenres() {
+  static async getAllGenres(): Promise<Genre[]> {
     return db.select().from(genres);
+  }
+
+  static async getGenreCount() {
+    return db
+      .select({ count: count() })
+      .from(genres)
+      .then((r) => r[0].count);
   }
 
   static async findBySlug(slug: string) {
@@ -116,11 +123,19 @@ export class GenreModel {
     }
   }
 
+  /**
+   * Get related genres for a list of slugs.
+   * This will return a list of genres that are related to the given slugs,
+   * sorted by strength and deduplicated. It says "related" genres but it
+   * returns the actual genres themselves rather than the RelatedGenre objects.
+   * @param slugs List of genre slugs to find related genres for
+   * @param limit Maximum number of related genres to return
+   * @return Promise resolving to an array of Genre objects
+   */
   static async getRelatedGenres(slugs: string[], limit = 5): Promise<Genre[]> {
     const allResults: RelatedGenre[] = [];
 
     for (const slug of slugs) {
-      // your existing per‐slug logic
       const found = await this.findBySlug(slug);
       if (!found) continue;
       const genreID = found.id;
@@ -183,5 +198,23 @@ export class GenreModel {
         await db.delete(genres).where(eq(genres.id, genreID));
       }
     }
+  }
+
+  static async getAlbumsByGenre(slug: string): Promise<ReviewedAlbum[]> {
+    const genre = await this.findBySlug(slug);
+    if (!genre) throw new Error(`Genre with slug "${slug}" not found`);
+
+    // Get all album IDs for this genre
+    const albumGenreRows = (await db.select().from(albumGenres).where(eq(albumGenres.genreID, genre.id))) as AlbumGenre[];
+
+    const albumSpotifyIDs = albumGenreRows.map((ag) => ag.albumSpotifyID);
+
+    if (albumSpotifyIDs.length === 0) return [];
+
+    // Get all albums with those IDs
+    const albums = (await db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, albumSpotifyIDs))) as ReviewedAlbum[];
+    const sortedAlbums = albums.sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0));
+
+    return sortedAlbums;
   }
 }

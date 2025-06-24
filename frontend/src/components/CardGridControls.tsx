@@ -71,7 +71,7 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
             </div>
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
               {sortSettings && <SortDropdown {...sortSettings} />}
-              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} />}
+              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} multiple />}
             </div>
           </div>
         )}

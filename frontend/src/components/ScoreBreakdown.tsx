@@ -7,7 +7,7 @@ import Dialog from "./Dialog";
 
 interface ScoreBreakdownProps {
   baseScore: number;
-  bonuses: ReviewBonuses;
+  bonuses: ReviewBonuses | null;
   finalScore: number;
   isOpen: boolean;
   onClose: () => void;
@@ -61,23 +61,23 @@ const ScoreBreakdown = ({ baseScore, bonuses, finalScore, isOpen, onClose }: Sco
       </div>
 
       {/* BONUSES */}
-      {(bonuses.qualityBonus > 0 || bonuses.perfectBonus > 0 || bonuses.consistencyBonus > 0 || bonuses.noWeakBonus > 0) && <div className="text-sm font-medium text-green-500 mb-2">BONUSES</div>}
-      {bonuses.qualityBonus > 0 && <BreakdownRow title="Quality Tracks" description={getBonusDescription("qualityBonus")} bonus={formatBonus(bonuses.qualityBonus)} isPositive animationDelay={0.2} />}
-      {bonuses.perfectBonus > 0 && <BreakdownRow title="Perfect Tracks" description={getBonusDescription("perfectBonus")} bonus={formatBonus(bonuses.perfectBonus)} isPositive animationDelay={0.25} />}
-      {bonuses.consistencyBonus > 0 && <BreakdownRow title="Consistency" description={getBonusDescription("consistencyBonus")} bonus={formatBonus(bonuses.consistencyBonus)} isPositive animationDelay={0.3} />}
-      {bonuses.noWeakBonus > 0 && <BreakdownRow title="No Weak Tracks" description={getBonusDescription("noWeakBonus")} bonus={formatBonus(bonuses.noWeakBonus)} isPositive animationDelay={0.35} />}
+      {bonuses && (bonuses.qualityBonus > 0 || bonuses.perfectBonus > 0 || bonuses.consistencyBonus > 0 || bonuses.noWeakBonus > 0) && <div className="text-sm font-medium text-green-500 mb-2">BONUSES</div>}
+      {bonuses && bonuses.qualityBonus > 0 && <BreakdownRow title="Quality Tracks" description={getBonusDescription("qualityBonus")} bonus={formatBonus(bonuses.qualityBonus)} isPositive animationDelay={0.2} />}
+      {bonuses && bonuses.perfectBonus > 0 && <BreakdownRow title="Perfect Tracks" description={getBonusDescription("perfectBonus")} bonus={formatBonus(bonuses.perfectBonus)} isPositive animationDelay={0.25} />}
+      {bonuses && bonuses.consistencyBonus > 0 && <BreakdownRow title="Consistency" description={getBonusDescription("consistencyBonus")} bonus={formatBonus(bonuses.consistencyBonus)} isPositive animationDelay={0.3} />}
+      {bonuses && bonuses.noWeakBonus > 0 && <BreakdownRow title="No Weak Tracks" description={getBonusDescription("noWeakBonus")} bonus={formatBonus(bonuses.noWeakBonus)} isPositive animationDelay={0.35} />}
 
       {/* PENALTIES */}
-      {(bonuses.terriblePenalty < 0 || bonuses.poorQualityPenalty < 0 || bonuses.noStrongPenalty < 0) && <div className="text-sm font-medium text-red-500 mt-4 mb-2">PENALTIES</div>}
-      {bonuses.terriblePenalty < 0 && <BreakdownRow title="Terrible Tracks" description={getBonusDescription("terriblePenalty")} bonus={formatBonus(bonuses.terriblePenalty)} isPositive={false} animationDelay={0.4} />}
-      {bonuses.poorQualityPenalty < 0 && <BreakdownRow title="Poor Quality" description={getBonusDescription("poorQualityPenalty")} bonus={formatBonus(bonuses.poorQualityPenalty)} isPositive={false} animationDelay={0.45} />}
-      {bonuses.noStrongPenalty < 0 && <BreakdownRow title="No Strong Tracks" description={getBonusDescription("noStrongPenalty")} bonus={formatBonus(bonuses.noStrongPenalty)} isPositive={false} animationDelay={0.5} />}
+      {bonuses && (bonuses.terriblePenalty < 0 || bonuses.poorQualityPenalty < 0 || bonuses.noStrongPenalty < 0) && <div className="text-sm font-medium text-red-500 mt-4 mb-2">PENALTIES</div>}
+      {bonuses && bonuses.terriblePenalty < 0 && <BreakdownRow title="Terrible Tracks" description={getBonusDescription("terriblePenalty")} bonus={formatBonus(bonuses.terriblePenalty)} isPositive={false} animationDelay={0.4} />}
+      {bonuses && bonuses.poorQualityPenalty < 0 && <BreakdownRow title="Poor Quality" description={getBonusDescription("poorQualityPenalty")} bonus={formatBonus(bonuses.poorQualityPenalty)} isPositive={false} animationDelay={0.45} />}
+      {bonuses && bonuses.noStrongPenalty < 0 && <BreakdownRow title="No Strong Tracks" description={getBonusDescription("noStrongPenalty")} bonus={formatBonus(bonuses.noStrongPenalty)} isPositive={false} animationDelay={0.5} />}
 
       {/* Total / Final */}
       <div className="border-t border-neutral-700/50 my-4" />
       <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4">
         <div className="text-gray-400 font-medium">Total Adjustment:</div>
-        <div className={`font-medium text-right ${bonuses.totalBonus > 0 ? "text-green-600" : bonuses.totalBonus < 0 ? "text-red-500" : "text-gray-400"}`}>{formatBonus(bonuses.totalBonus)}</div>
+        <div className={`font-medium text-right ${bonuses && bonuses.totalBonus > 0 ? "text-green-600" : bonuses && bonuses.totalBonus < 0 ? "text-red-500" : "text-gray-400"}`}>{bonuses ? formatBonus(bonuses.totalBonus) : "0"}</div>
         <div className="text-gray-400 font-medium">Final Score:</div>
         <div className="font-bold text-white text-right">{finalScore}</div>
       </div>

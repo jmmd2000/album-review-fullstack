@@ -19,7 +19,7 @@ interface RatingChipProps {
   /** Optional score breakdown data */
   scoreBreakdown?: {
     baseScore: number;
-    bonuses: ReviewBonuses;
+    bonuses: ReviewBonuses | null;
     affectsArtistScore: boolean;
   };
 }

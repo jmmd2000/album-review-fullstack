@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray, exists, sql } from "drizzle-orm";
-import { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
+import { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, genres as genresTable, reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
 import { db } from "@/index";
 
@@ -32,8 +32,8 @@ export class AlbumModel {
     return db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
-  static async getAllAlbums() {
-    return db.select().from(reviewedAlbums);
+  static async getAllAlbums(): Promise<ReviewedAlbum[]> {
+    return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
   }
 
   static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "", genres }: GetPaginatedAlbumsOptions) {

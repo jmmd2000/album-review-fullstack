@@ -22,7 +22,7 @@ const GenrePills = ({ genres }: GenrePillsProps) => {
           to={"/albums"}
           resetScroll={true}
           key={index}
-          className="bg-zinc-800/40 text-gray-400 rounded-full px-2 py-1 text-sm hover:bg-zinc-800 hover:transform hover:-translate-y-1 hover:text-red-500  hover:underline transition-all duration-200 cursor-pointer"
+          className="bg-neutral-900/80 text-gray-400 rounded-full px-2 py-1 text-sm hover:bg-neutral-900 hover:transform hover:-translate-y-1 hover:text-red-500 hover:underline transition-all duration-200 cursor-pointer"
           style={{ viewTransitionName: `genre-pill-${genre.slug}` }}
         >
           {genre.name}

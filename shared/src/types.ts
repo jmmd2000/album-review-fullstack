@@ -185,7 +185,7 @@ export interface ReviewedAlbum {
   /** The numerical review score given to the album via my ratings */
   reviewScore: number;
   /** The bonus points awarded */
-  reviewBonuses: ReviewBonuses;
+  reviewBonuses: ReviewBonuses | null;
   /** The final calculated score */
   finalScore: number;
   /** Whether or not the album will affect it's artists score */

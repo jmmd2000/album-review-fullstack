@@ -10,6 +10,7 @@ import trackRoutes from "@/api/routes/trackRoutes";
 import artistRoutes from "@/api/routes/artistRoutes";
 import authRoutes from "@/api/routes/authRoutes";
 import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
+import statsRoutes from "@/api/routes/statsRoutes";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
@@ -30,6 +31,7 @@ app.use("/api/tracks", trackRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
+app.use("/api/stats", statsRoutes);
 
 if (require.main === module) {
   app.listen(4000, () => {

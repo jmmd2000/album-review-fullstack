@@ -5,8 +5,8 @@ import { db } from "@/index";
 import { GetPaginatedArtistsOptions, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 
 export class ArtistModel {
-  static async getAllArtists() {
-    return db.select().from(reviewedArtists);
+  static async getAllArtists(): Promise<ReviewedArtist[]> {
+    return db.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
   }
 
   static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "" }: GetPaginatedArtistsOptions) {

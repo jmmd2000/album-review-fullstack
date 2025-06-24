@@ -35,6 +35,10 @@ const ROUTES = [
     name: "Artists",
     to: "/artists",
   },
+  {
+    name: "Stats",
+    to: "/stats",
+  },
 ];
 
 const Navbar = () => {
