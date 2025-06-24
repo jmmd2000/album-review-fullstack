@@ -4,7 +4,7 @@ import { DisplayAlbum, DisplayArtist, Genre, RelatedGenre } from "@shared/types"
 import { GenreModel } from "@/api/models/Genre";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
 import { AlbumGenreModel } from "@/api/models/AlbumGenre";
-import { ratingTiers } from "@shared/helpers/ratingTiers";
+import { ratingTiers } from "@/helpers/ratingTiers";
 import { TrackModel } from "../models/Track";
 
 export class StatsService {
