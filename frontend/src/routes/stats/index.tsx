@@ -126,7 +126,6 @@ function RouteComponent() {
       </BentoCard>
       <BentoCard className="col-span-2 lg:col-span-4 row-span-4 lg:row-span-2 col-start-1 row-start-3 lg:row-start-2">
         <div>
-          {/* <div className="flex justify-evenly flex-wrap gap-8 items-center mx-auto"> */}
           <div className="grid grid-cols-2 lg:grid-cols-4 content-center gap-8 items-center mx-auto place-items-center">
             {favourites?.favouriteAlbum && (
               <div className="flex flex-col gap-2 max-w-[200px]">

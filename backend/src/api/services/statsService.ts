@@ -65,7 +65,8 @@ export class StatsService {
     slug: string | null;
     allGenres: Genre[];
   }> {
-    const allGenres = await GenreModel.getAllGenres();
+    let allGenres = await GenreModel.getAllGenres();
+    allGenres.sort((a, b) => a.name.localeCompare(b.name));
     if (!slug) {
       return {
         reviewedAlbumCount: null,
