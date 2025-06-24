@@ -13,7 +13,7 @@ type RatingTier = {
 
 export const ratingTiers: RatingTier[] = [
   {
-    label: "Non-song",
+    label: "Unrated",
     range: [0, 0],
     backgroundColor: "bg-slate-600",
     backgroundColorHex: "#4B5563",
@@ -147,7 +147,7 @@ export const ratingTiers: RatingTier[] = [
 ];
 
 export const getRatingStyles = (rating: number | string | undefined) => {
-  if (rating === undefined) return ratingTiers.find((t) => t.label === "Non-song")!;
+  if (rating === undefined) return ratingTiers.find((t) => t.label === "Unrated")!;
 
   // Handle string labels (like "Amazing", "Meh", etc.)
   if (typeof rating === "string") {

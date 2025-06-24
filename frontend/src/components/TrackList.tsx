@@ -68,7 +68,7 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
     : null;
 
   // Get all rating tiers in order of highest to lowest
-  const ratingOrder = ["Perfect", "Amazing", "Brilliant", "Great", "Good", "Meh", "OK", "Bad", "Awful", "Terrible", "Non-song"];
+  const ratingOrder = ["Perfect", "Amazing", "Brilliant", "Great", "Good", "Meh", "OK", "Bad", "Awful", "Terrible", "Unrated"];
 
   return (
     <div

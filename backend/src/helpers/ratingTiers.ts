@@ -13,7 +13,7 @@ type RatingTier = {
 
 export const ratingTiers: RatingTier[] = [
   {
-    label: "Non-song",
+    label: "Unrated",
     range: [0, 0],
     backgroundColor: "bg-slate-600",
     backgroundColorHex: "#4B5563",
