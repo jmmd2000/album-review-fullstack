@@ -125,11 +125,11 @@ function RouteComponent() {
   const { data: favourites } = useQuery(overviewQueryOptions);
   const { data: counts } = useQuery(countQueryOptions);
 
-  const [selectedResorce, setSelectedResorce] = useState<
+  const [selectedResource, setSelectedResource] = useState<
     "albums" | "tracks" | "artists"
   >("albums");
   const { data: distribution } = useQuery(
-    distributionQueryOptions(selectedResorce)
+    distributionQueryOptions(selectedResource)
   );
 
   const [selectedGenre, setSelectedGenre] = useState<string>(
@@ -160,7 +160,7 @@ function RouteComponent() {
 
   const onSelectResource = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value as "albums" | "tracks" | "artists";
-    setSelectedResorce(value);
+    setSelectedResource(value);
 
     navigate({
       search: prev => ({ ...prev, resource: value }),
@@ -270,7 +270,7 @@ function RouteComponent() {
             <div className="flex flex-row justify-start items-center px-4 gap-2">
               <select
                 className="bg-neutral-800 text-white font-semibold border border-gray-600 rounded"
-                value={selectedResorce}
+                value={selectedResource}
                 onChange={onSelectResource}
               >
                 <option value="albums">Album</option>
@@ -282,7 +282,10 @@ function RouteComponent() {
                 Rating Distribution
               </p>
             </div>
-            <DistributionChart data={distribution} />
+            <DistributionChart
+              data={distribution}
+              resource={selectedResource}
+            />
           </div>
         ) : (
           <NoDataFound message="No data available for rating distribution." />

@@ -1,17 +1,34 @@
 import { getRatingStyles } from "@/helpers/getRatingStyles";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useMediaQuery } from "react-responsive";
 
 interface DistributionChartProps {
   data: { rating: string; count: number }[];
+  resource: "albums" | "tracks" | "artists";
 }
 
-const DistributionChart = ({ data }: DistributionChartProps) => {
+const DistributionChart = ({
+  data,
+  resource = "albums",
+}: DistributionChartProps) => {
   const isSmall = useMediaQuery({ query: "(max-width: 640px)" });
 
   return (
     <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data} margin={{ top: 10, right: 20, left: 20, bottom: 5 }} barCategoryGap="10%">
+      <BarChart
+        data={data}
+        margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
+        barCategoryGap="10%"
+      >
         <CartesianGrid strokeDasharray="1 6" />
         <XAxis
           dataKey="rating"
@@ -23,8 +40,23 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
 
             return (
               <g transform={`translate(${x}, ${y + 10})`}>
-                <rect x={-boxWidth / 2} y={-boxHeight / 2} width={boxWidth} height={boxHeight} fill={tier.backgroundColorLighterHex} fillOpacity={0.2} stroke={tier.backgroundColorHex} strokeWidth={1.5} rx={4} />
-                <text dy="0.35em" fill={tier.backgroundColorHex} fontSize={11} textAnchor="middle">
+                <rect
+                  x={-boxWidth / 2}
+                  y={-boxHeight / 2}
+                  width={boxWidth}
+                  height={boxHeight}
+                  fill={tier.backgroundColorLighterHex}
+                  fillOpacity={0.2}
+                  stroke={tier.backgroundColorHex}
+                  strokeWidth={1.5}
+                  rx={4}
+                />
+                <text
+                  dy="0.35em"
+                  fill={tier.backgroundColorHex}
+                  fontSize={11}
+                  textAnchor="middle"
+                >
                   {label}
                 </text>
               </g>
@@ -36,9 +68,21 @@ const DistributionChart = ({ data }: DistributionChartProps) => {
           hide={isSmall}
         />
 
-        <YAxis tick={{ fill: "#d4d4d8", fontSize: 12 }} width={20} axisLine={false} />
-        <Tooltip content={CustomTooltip} cursor={<CustomCursor />} />
-        <Bar dataKey="count" isAnimationActive={true} animationDuration={800} animationEasing="ease-out">
+        <YAxis
+          tick={{ fill: "#d4d4d8", fontSize: 12 }}
+          width={20}
+          axisLine={false}
+        />
+        <Tooltip
+          content={props => <CustomTooltip {...props} resource={resource} />}
+          cursor={<CustomCursor />}
+        />
+        <Bar
+          dataKey="count"
+          isAnimationActive={true}
+          animationDuration={800}
+          animationEasing="ease-out"
+        >
           {data?.map((entry, index) => {
             const tier = getRatingStyles(entry.rating);
             return (
@@ -72,20 +116,32 @@ interface CustomTooltipProps {
     dataKey: string;
   }>;
   label?: string | number;
+  resource: "albums" | "tracks" | "artists";
 }
 
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  resource,
+}: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
 
     return (
       <div className="rounded-lg px-4 py-3 border border-white/20 shadow-lg text-white backdrop-blur-sm bg-gradient-to-b from-neutral-900/80 via-neutral-900/50 to-neutral-900/20">
-        <h3 style={{ color: getRatingStyles(label).backgroundColorHex }} className="font-semibold text-white mb-2">
+        <h3
+          style={{ color: getRatingStyles(label).backgroundColorHex }}
+          className="font-semibold text-white mb-2"
+        >
           {label}
         </h3>
         <div className="space-y-1">
           <p className="text-neutral-100">
-            <span className="font-medium text-white">Reviews:</span> {data.count.toLocaleString()}
+            <span className="font-medium text-white">
+              {resource.charAt(0).toUpperCase() + resource.slice(1)}:
+            </span>{" "}
+            {data.count.toLocaleString()}
           </p>
         </div>
       </div>
@@ -114,21 +170,67 @@ const CustomCursor = ({ x, y, width, height, payload }: CustomCursorProps) => {
     <g>
       {/* Main cursor rectangle with gradient */}
       <defs>
-        <linearGradient id={`cursor-gradient-${rating}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={tier.backgroundColorHex} stopOpacity={0.3} />
-          <stop offset="100%" stopColor={tier.backgroundColorHex} stopOpacity={0.1} />
+        <linearGradient
+          id={`cursor-gradient-${rating}`}
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stopColor={tier.backgroundColorHex}
+            stopOpacity={0.3}
+          />
+          <stop
+            offset="100%"
+            stopColor={tier.backgroundColorHex}
+            stopOpacity={0.1}
+          />
         </linearGradient>
       </defs>
 
       {/* Background rectangle */}
-      <rect x={x} y={y} width={width} height={height} fill={`url(#cursor-gradient-${rating})`} stroke={tier.backgroundColorHex} strokeWidth={2} strokeOpacity={0.6} rx={4} />
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={`url(#cursor-gradient-${rating})`}
+        stroke={tier.backgroundColorHex}
+        strokeWidth={2}
+        strokeOpacity={0.6}
+        rx={4}
+      />
 
       {/* Top border highlight */}
-      <rect x={x} y={y} width={width} height={3} fill={tier.backgroundColorHex} opacity={0.8} rx={4} />
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={3}
+        fill={tier.backgroundColorHex}
+        opacity={0.8}
+        rx={4}
+      />
 
       {/* Side indicators */}
-      <rect x={x - 2} y={y} width={2} height={height} fill={tier.backgroundColorHex} opacity={0.9} />
-      <rect x={x + width} y={y} width={2} height={height} fill={tier.backgroundColorHex} opacity={0.9} />
+      <rect
+        x={x - 2}
+        y={y}
+        width={2}
+        height={height}
+        fill={tier.backgroundColorHex}
+        opacity={0.9}
+      />
+      <rect
+        x={x + width}
+        y={y}
+        width={2}
+        height={height}
+        fill={tier.backgroundColorHex}
+        opacity={0.9}
+      />
     </g>
   );
 };
