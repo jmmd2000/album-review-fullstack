@@ -1,7 +1,10 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
+import {
+  GetPaginatedAlbumsOptions,
+  PaginatedAlbumsResult,
+} from "@shared/types";
 import AlbumCard from "@components/AlbumCard";
 import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
@@ -9,7 +12,9 @@ import { SortDropdownProps } from "@/components/SortDropdown";
 import { DropdownControlsProps } from "@/components/CardGridControls";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
+async function fetchPaginatedAlbums(
+  options: GetPaginatedAlbumsOptions
+): Promise<PaginatedAlbumsResult> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
@@ -17,11 +22,15 @@ async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise
   if (options.orderBy) queryParams.set("orderBy", options.orderBy);
   if (options.search) queryParams.set("search", options.search);
   if (options.genres) {
-    const genres = Array.isArray(options.genres) ? options.genres.join(",") : options.genres;
+    const genres = Array.isArray(options.genres)
+      ? options.genres.join(",")
+      : options.genres;
     queryParams.set("genres", genres);
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/albums?${queryParams.toString()}`);
+  const response = await fetch(
+    `${API_BASE_URL}/api/albums?${queryParams.toString()}`
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch albums");
@@ -36,7 +45,7 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   queryOptions({
     queryKey: ["albums", options],
     queryFn: () => fetchPaginatedAlbums(options),
-    placeholderData: (prev) => prev,
+    placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -47,8 +56,14 @@ export const Route = createFileRoute("/albums/")({
     orderBy: search.orderBy,
     order: search.order,
   }),
-  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetPaginatedAlbumsOptions }) => {
-    return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
+  loader: async ({
+    deps: { page, search, orderBy, order },
+  }: {
+    deps: GetPaginatedAlbumsOptions;
+  }) => {
+    return queryClient.ensureQueryData(
+      albumQueryOptions({ page, search, orderBy, order })
+    );
   },
   component: RouteComponent,
   head: () => ({
@@ -68,7 +83,10 @@ function RouteComponent() {
   const handleNextPage = () => {
     if (data?.furtherPages) {
       navigate({
-        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, page: (prev.page || 1) + 1 }),
+        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
+          ...prev,
+          page: (prev.page || 1) + 1,
+        }),
       });
     }
   };
@@ -87,7 +105,10 @@ function RouteComponent() {
 
   const handleSearch = (search: string) => {
     navigate({
-      search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, search }),
+      search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
+        ...prev,
+        search,
+      }),
     });
   };
 
@@ -103,21 +124,35 @@ function RouteComponent() {
     defaultDirection: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
-        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({ ...prev, orderBy: value, order: direction }),
+        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
+          ...prev,
+          orderBy: value,
+          order: direction,
+        }),
       });
     },
   };
 
-  const genres = data?.relatedGenres && data.relatedGenres.length > 0 ? data.relatedGenres : data?.genres || [];
+  const genres =
+    data?.relatedGenres && data.relatedGenres.length > 0
+      ? data.relatedGenres
+      : data?.genres || [];
 
   // Get genre slugs from URL (as string or array)
-  const genreSlugs = options.genres ? (Array.isArray(options.genres) ? options.genres : typeof options.genres === "string" ? (options.genres as string).split(",") : []) : [];
+  const genreSlugs = options.genres
+    ? Array.isArray(options.genres)
+      ? options.genres
+      : typeof options.genres === "string"
+        ? (options.genres as string).split(",")
+        : []
+    : [];
 
   // Find corresponding genres in data.genres
-  const selectedGenres = data?.genres?.filter((genre) => genreSlugs.includes(genre.slug)) || [];
+  const selectedGenres =
+    data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
 
   // Map selected genres to items first
-  const selectedItems = selectedGenres.map((genre) => ({
+  const selectedItems = selectedGenres.map(genre => ({
     name: genre.name,
     value: genre.slug,
   }));
@@ -125,20 +160,22 @@ function RouteComponent() {
   // Map all genres to items, excluding already selected
   const otherItems =
     genres
-      ?.filter((genre) => !genreSlugs.includes(genre.slug))
-      .map((genre) => ({
+      ?.filter(genre => !genreSlugs.includes(genre.slug))
+      .map(genre => ({
         name: genre.name,
         value: genre.slug,
       })) || [];
 
   // Combine and sort by name
-  const items = [...selectedItems, ...otherItems].sort((a, b) => a.name.localeCompare(b.name));
+  const items = [...selectedItems, ...otherItems].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 
   const genreSettings: DropdownControlsProps = {
     items,
-    onSelect: (value) => {
+    onSelect: value => {
       navigate({
-        search: (prev) => ({
+        search: prev => ({
           ...prev,
           genres: value.length > 0 ? value.join(",") : undefined,
         }),
@@ -148,9 +185,14 @@ function RouteComponent() {
 
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
-    <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+    <motion.div
+      key={options.page}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <CardGrid
-        cards={data.albums.map((album) => (
+        cards={data.albums.map(album => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
         counter={data.totalCount}
@@ -158,8 +200,14 @@ function RouteComponent() {
           search: handleSearch,
           pagination: {
             next: { action: handleNextPage, disabled: !data.furtherPages },
-            prev: { action: handlePrevPage, disabled: options.page === 1 || options.page === undefined },
-            page: { pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) },
+            prev: {
+              action: handlePrevPage,
+              disabled: options.page === 1 || options.page === undefined,
+            },
+            page: {
+              pageNumber: options.page || 1,
+              totalPages: Math.ceil(data.totalCount / 35),
+            },
           },
           sortSettings: sortSettings,
           genreSettings: genreSettings,

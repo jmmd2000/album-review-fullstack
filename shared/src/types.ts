@@ -453,7 +453,17 @@ export interface GetPaginatedAlbumsOptions {
 }
 
 /**
- * Represents the parameters passed to the getPaginatedAlbums method.
+ * Represents the parameters passed to the GetStatsOptions method.
+ */
+export interface GetStatsOptions {
+  /** The  genre slug to fetch data for. */
+  slug?: string;
+  /** The resource to display distribution data for */
+  resource?: "albums" | "tracks" | "artists";
+}
+
+/**
+ * Represents the parameters passed to the GetPaginatedBookmarkedAlbumsOptions method.
  */
 export interface GetPaginatedBookmarkedAlbumsOptions {
   /** The page number to retrieve. */
@@ -473,7 +483,12 @@ export interface GetPaginatedArtistsOptions {
   /** The page number to retrieve. */
   page?: number;
   /** The data to order the results by */
-  orderBy?: "totalScore" | "reviewCount" | "name" | "createdAt" | "leaderboardPosition";
+  orderBy?:
+    | "totalScore"
+    | "reviewCount"
+    | "name"
+    | "createdAt"
+    | "leaderboardPosition";
   /** The order in which to sort the results */
   order?: "asc" | "desc";
   /** The search query to filter the results by */

@@ -29,9 +29,10 @@ export const getGenreStats = async (req: Request, res: Response) => {
   }
 };
 
-export const getRatingDistribution = async (_req: Request, res: Response) => {
+export const getRatingDistribution = async (req: Request, res: Response) => {
+  const resource = req.query.resource as "albums" | "tracks" | "artists";
   try {
-    const stats = await StatsService.getRatingDistribution();
+    const stats = await StatsService.getRatingDistribution(resource);
     res.status(200).json(stats);
   } catch (error) {
     if (error instanceof Error) {
