@@ -187,8 +187,6 @@ export class StatsService {
       count: distribution[tier.label] || 0,
     }));
 
-    console.log("Rating distribution data:", data);
-
     return data;
   }
 
