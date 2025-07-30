@@ -1,5 +1,8 @@
-import CardGridControls, { DropdownControlsProps } from "@/components/CardGridControls";
+import CardGridControls, {
+  DropdownControlsProps,
+} from "@/components/CardGridControls";
 import { motion } from "framer-motion";
+import { easeOut } from "framer-motion";
 import { SortDropdownProps } from "@components/SortDropdown";
 
 interface CardGridProps {
@@ -42,7 +45,7 @@ const containerVariants = {
  */
 const itemVariants = {
   hidden: { y: 20 },
-  show: { y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  show: { y: 0, transition: { duration: 0.3, ease: easeOut } },
 };
 
 /**
@@ -53,11 +56,20 @@ const CardGrid = ({ cards, heading, counter, controls }: CardGridProps) => {
 
   return (
     <>
-      {shouldShowControls && controls && <CardGridControls search={controls.search} pagination={controls.pagination} sortSettings={controls.sortSettings} genreSettings={controls.genreSettings} />}
+      {shouldShowControls && controls && (
+        <CardGridControls
+          search={controls.search}
+          pagination={controls.pagination}
+          sortSettings={controls.sortSettings}
+          genreSettings={controls.genreSettings}
+        />
+      )}
 
       {heading && (
         <div className="max-w-[1900px] mx-4 px-2 pt-4 z-10">
-          <h2 className="text-xl font-medium text-neutral-200 text-left">{heading}</h2>
+          <h2 className="text-xl font-medium text-neutral-200 text-left">
+            {heading}
+          </h2>
         </div>
       )}
 
@@ -67,10 +79,19 @@ const CardGrid = ({ cards, heading, counter, controls }: CardGridProps) => {
         </div>
       )}
 
-      <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4"
+      >
         {cards.length > 0 ? (
           cards.map((card, index) => (
-            <motion.div key={index} variants={itemVariants} className="flex flex-col">
+            <motion.div
+              key={index}
+              variants={itemVariants}
+              className="flex flex-col"
+            >
               {card}
             </motion.div>
           ))

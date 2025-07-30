@@ -9,22 +9,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data } = useQuery<{ isAdmin: boolean }, Error>({
     queryKey: ["auth", "status"],
     queryFn: () =>
-      fetch(`${API_BASE_URL}/api/auth/status`, { credentials: "include" }).then((res) => {
-        if (!res.ok) throw new Error("Could not fetch auth status");
-        return res.json();
-      }),
+      fetch(`${API_BASE_URL}/api/auth/status`, { credentials: "include" }).then(
+        res => {
+          if (!res.ok) throw new Error("Could not fetch auth status");
+          return res.json();
+        }
+      ),
     retry: false,
     initialData: { isAdmin: false },
   });
 
   const loginMutation = useMutation<void, Error, string>({
-    mutationFn: (password) =>
+    mutationFn: password =>
       fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: password }),
-      }).then((res) => {
+      }).then(res => {
         if (!res.ok) throw new Error("Invalid password");
       }),
     onSuccess: () => {
@@ -37,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
-      }).then((res) => {
+      }).then(res => {
         if (!res.ok) throw new Error("Logout failed");
       }),
     onSuccess: () => {
@@ -48,5 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (password: string) => loginMutation.mutateAsync(password);
   const logout = () => logoutMutation.mutateAsync();
 
-  return <AuthContext.Provider value={{ isAdmin: data.isAdmin, login, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isAdmin: data.isAdmin, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

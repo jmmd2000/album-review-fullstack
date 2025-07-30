@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { easeIn, easeOut } from "framer-motion";
 import { useEffect, useState } from "react";
 import React from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
@@ -32,9 +33,19 @@ interface ButtonProps {
 /**
  * This component creates a button with a label and an optional click handler.
  */
-const Button = ({ label, onClick, disabled, type, states, stateMessages, size = "default" }: ButtonProps) => {
+const Button = ({
+  label,
+  onClick,
+  disabled,
+  type,
+  states,
+  stateMessages,
+  size = "default",
+}: ButtonProps) => {
   const { loading, error, success } = states || {};
-  const [displayState, setDisplayState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [displayState, setDisplayState] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const toastID = React.useId();
 
   // Handle state changes
@@ -62,7 +73,15 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
     } else {
       setDisplayState("idle");
     }
-  }, [loading, success, error, stateMessages?.loading, stateMessages?.success, stateMessages?.error, toastID]);
+  }, [
+    loading,
+    success,
+    error,
+    stateMessages?.loading,
+    stateMessages?.success,
+    stateMessages?.error,
+    toastID,
+  ]);
 
   // Animation variants
   const buttonVariants = {
@@ -110,7 +129,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       scale: 1,
       transition: {
         duration: 0.2,
-        ease: "easeOut",
+        ease: easeOut,
       },
     },
     exit: {
@@ -118,7 +137,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       scale: 0.8,
       transition: {
         duration: 0.15,
-        ease: "easeIn",
+        ease: easeIn,
       },
     },
   };
@@ -152,15 +171,36 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
     switch (displayState) {
       case "loading":
         return (
-          <motion.div key="loader" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
-            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8, ease: "linear" }}>
+          <motion.div
+            key="loader"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex items-center justify-center"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{
+                repeat: Number.POSITIVE_INFINITY,
+                duration: 0.8,
+                ease: "linear",
+              }}
+            >
               <Loader2 className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
             </motion.div>
           </motion.div>
         );
       case "success":
         return (
-          <motion.div key="success" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+          <motion.div
+            key="success"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex items-center justify-center"
+          >
             <CheckCircle className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
           </motion.div>
         );
@@ -187,7 +227,14 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
         );
       case "idle":
         return (
-          <motion.div key="label" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+          <motion.div
+            key="label"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex items-center justify-center"
+          >
             {typeof label === "string" ? <span>{label}</span> : label}
           </motion.div>
         );
@@ -206,10 +253,18 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       type={type}
     >
       {/* Animated background */}
-      <motion.div className="absolute inset-0 rounded" initial="idle" animate={displayState} variants={backgroundVariants} transition={{ duration: 0.3 }} />
+      <motion.div
+        className="absolute inset-0 rounded"
+        initial="idle"
+        animate={displayState}
+        variants={backgroundVariants}
+        transition={{ duration: 0.3 }}
+      />
 
       {/* Content container with size-appropriate dimensions */}
-      <div className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}>
+      <div
+        className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}
+      >
         <AnimatePresence mode="wait">{getStateIcon()}</AnimatePresence>
       </div>
     </motion.button>

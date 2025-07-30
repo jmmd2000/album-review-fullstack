@@ -12,8 +12,16 @@ import { useEffect } from "react";
 import TrackList from "@/components/TrackList";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchReviewedArtist(artistSpotifyID: string): Promise<{ artist: ReviewedArtist; albums: DisplayAlbum[]; tracks: DisplayTrack[] }> {
-  const response = await fetch(`${API_BASE_URL}/api/artists/details/${artistSpotifyID}`);
+async function fetchReviewedArtist(
+  artistSpotifyID: string
+): Promise<{
+  artist: ReviewedArtist;
+  albums: DisplayAlbum[];
+  tracks: DisplayTrack[];
+}> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/artists/details/${artistSpotifyID}`
+  );
   return await response.json();
 }
 
@@ -35,7 +43,7 @@ export const Route = createFileRoute("/artists/$artistID/")({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: loaderData.artist.name,
+        title: loaderData?.artist?.name,
       },
     ],
   }),
@@ -56,7 +64,8 @@ function RouteComponent() {
   const albums = data.data.albums;
   const tracks = data.data.tracks;
 
-  const albumString = albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
+  const albumString =
+    albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
 
   const podiumCheck = (pos: number) => {
     if (pos === 1) return <Crown color="#d4af37" size={16} />;
@@ -75,7 +84,12 @@ function RouteComponent() {
     `,
         }}
       >
-        <HeaderDetails name={artist.name} imageURL={artist.imageURLs[1].url} viewTransitionName={`artist-image-${artist.spotifyID}`} nameBackground />
+        <HeaderDetails
+          name={artist.name}
+          imageURL={artist.imageURLs[1].url}
+          viewTransitionName={`artist-image-${artist.spotifyID}`}
+          nameBackground
+        />
         <div className="w-full mt-4 md:mt-0 px-4 md:w-[90%] lg:w-[70%] mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-evenly gap-3 py-2">
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:text-base">
@@ -86,7 +100,9 @@ function RouteComponent() {
               {artist.unrated ? (
                 <>
                   <span className="mx-2 text-gray-500">•</span>
-                  <p className="text-gray-400 flex items-center gap-1">Unrated</p>
+                  <p className="text-gray-400 flex items-center gap-1">
+                    Unrated
+                  </p>
                 </>
               ) : (
                 <>
@@ -102,13 +118,16 @@ function RouteComponent() {
         </div>
       </div>
       <div className="mb-16">
-        <RatingChip rating={Math.ceil(artist.totalScore)} options={{ textBelow: true }} />
+        <RatingChip
+          rating={Math.ceil(artist.totalScore)}
+          options={{ textBelow: true }}
+        />
       </div>
       <div className="mx-auto max-w-[80ch]">
         <TrackList tracks={tracks} sortByRating maxHeight="500px" />
       </div>
       <CardGrid
-        cards={albums.map((album) => (
+        cards={albums.map(album => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
         heading={`Albums by ${artist.name}`}

@@ -21,6 +21,8 @@
       "@shared/*": ["../shared/src/*"],
       "@components/*": ["src/components/*"]
     },
+    "types": ["vite/client"],
+    "typeRoots": ["./src", "./node_modules/@types"],
 
     /* Linting */
     "strict": true,
@@ -29,5 +31,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "../shared", "src/vite-env.d.ts", "src/env.d.ts"]
 }

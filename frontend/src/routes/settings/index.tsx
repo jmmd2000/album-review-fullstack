@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import Button from "@/components/Button";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { spring } from "framer-motion";
 import { Camera, ImageIcon, ChevronRight } from "lucide-react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 
@@ -16,10 +17,13 @@ export const Route = createFileRoute("/settings/")({
 function RouteComponent() {
   const profileImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/artists/profileImage?all=true`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/api/artists/profileImage?all=true`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
       if (!res.ok) {
         const err = await res.text();
         throw new Error(err || res.statusText);
@@ -29,10 +33,13 @@ function RouteComponent() {
 
   const headerImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/artists/headerImage?all=true`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/api/artists/headerImage?all=true`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
       if (!res.ok) {
         const err = await res.text();
         throw new Error(err || res.statusText);
@@ -46,7 +53,11 @@ function RouteComponent() {
   };
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: spring, stiffness: 100, damping: 15 },
+    },
     hover: {
       scale: 1.03,
       y: -5,
@@ -73,7 +84,8 @@ function RouteComponent() {
       stateMessages: {
         loading: "Updating artist images…",
         success: `Done! Images updated`,
-        error: profileImageMut.error?.message ?? "Failed to update artist images.",
+        error:
+          profileImageMut.error?.message ?? "Failed to update artist images.",
       },
     },
     {
@@ -93,7 +105,8 @@ function RouteComponent() {
       stateMessages: {
         loading: "Updating header images…",
         success: `Done! Headers updated`,
-        error: headerImageMut.error?.message ?? "Failed to update header images.",
+        error:
+          headerImageMut.error?.message ?? "Failed to update header images.",
       },
     },
   ];
@@ -103,23 +116,41 @@ function RouteComponent() {
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="space-y-8">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Settings
+            </h1>
           </div>
 
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" animate="visible">
-            {settingsCards.map((card) => {
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {settingsCards.map(card => {
               const style = getRatingStyles(card.ratingLabel);
               return (
-                <motion.div key={card.id} className="relative overflow-hidden rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-800 flex flex-col" variants={itemVariants} whileHover="hover">
+                <motion.div
+                  key={card.id}
+                  className="relative overflow-hidden rounded-xl border border-neutral-800 bg-gradient-to-br from-neutral-900 to-neutral-800 flex flex-col"
+                  variants={itemVariants}
+                  whileHover="hover"
+                >
                   <div className={`h-1 w-full ${style.backgroundColor}`} />
                   <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-full ${style.backgroundColorLighter} ${style.textColor}`}>{card.icon}</div>
+                      <div
+                        className={`flex items-center justify-center w-12 h-12 rounded-full ${style.backgroundColorLighter} ${style.textColor}`}
+                      >
+                        {card.icon}
+                      </div>
                     </div>
                     <h2 className="text-lg font-medium mb-2">{card.title}</h2>
                     <p className="text-sm text-neutral-400 flex-1">
                       {card.description}
-                      <span className="block mt-2 text-xs text-neutral-500">Last updated: {card.lastUpdated}</span>
+                      <span className="block mt-2 text-xs text-neutral-500">
+                        Last updated: {card.lastUpdated}
+                      </span>
                     </p>
                     <div className="mt-4 pt-4 border-t border-neutral-800">
                       <Button

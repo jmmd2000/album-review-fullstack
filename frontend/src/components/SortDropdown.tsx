@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { easeIn, easeOut } from "framer-motion";
 
 interface SortOption {
   label: string;
@@ -22,16 +23,30 @@ export interface SortDropdownProps {
  * This component creates a dropdown for sorting options.
  * It allows the user to select a sorting option and toggle between ascending and descending order.
  */
-export default function SortDropdown({ options, onSortChange, defaultValue = "createdAt", defaultDirection = "desc" }: SortDropdownProps) {
+export default function SortDropdown({
+  options,
+  onSortChange,
+  defaultValue = "createdAt",
+  defaultDirection = "desc",
+}: SortDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<SortOption | null>(defaultValue ? options.find((option) => option.value === defaultValue) || null : null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultDirection);
+  const [selectedOption, setSelectedOption] = useState<SortOption | null>(
+    defaultValue
+      ? options.find(option => option.value === defaultValue) || null
+      : null
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    defaultDirection
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -67,7 +82,7 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
       scale: 1,
       transition: {
         duration: 0.2,
-        ease: "easeOut",
+        ease: easeOut,
       },
     },
     exit: {
@@ -76,7 +91,7 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
       scale: 0.95,
       transition: {
         duration: 0.15,
-        ease: "easeIn",
+        ease: easeIn,
       },
     },
   };
@@ -100,25 +115,46 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
         onClick={toggleDropdown}
         whileHover={{ scale: 1.02 }}
       >
-        <div className="flex-1 truncate">{selectedOption ? selectedOption.label : "Sort by..."}</div>
+        <div className="flex-1 truncate">
+          {selectedOption ? selectedOption.label : "Sort by..."}
+        </div>
         <div className="flex items-center">
           {selectedOption && (
             <motion.button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 toggleSortDirection();
               }}
               className="p-1 mr-1 rounded-full hover:bg-neutral-900 cursor-pointer"
-              whileHover={{ scale: 1.1, backgroundColor: "rgba(38, 38, 38, 0.8)" }}
+              whileHover={{
+                scale: 1.1,
+                backgroundColor: "rgba(38, 38, 38, 0.8)",
+              }}
             >
               <AnimatePresence mode="wait">
-                <motion.div key={sortDirection} initial={{ opacity: 0, y: sortDirection === "asc" ? 10 : -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: sortDirection === "asc" ? -10 : 10 }} transition={{ duration: 0.2 }}>
-                  {sortDirection === "asc" ? <ArrowUp className="w-4 h-4 text-red-500" /> : <ArrowDown className="w-4 h-4 text-red-500" />}
+                <motion.div
+                  key={sortDirection}
+                  initial={{
+                    opacity: 0,
+                    y: sortDirection === "asc" ? 10 : -10,
+                  }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: sortDirection === "asc" ? -10 : 10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {sortDirection === "asc" ? (
+                    <ArrowUp className="w-4 h-4 text-red-500" />
+                  ) : (
+                    <ArrowDown className="w-4 h-4 text-red-500" />
+                  )}
                 </motion.div>
               </AnimatePresence>
             </motion.button>
           )}
-          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3, type: "spring", stiffness: 200 }}>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+          >
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </motion.div>
         </div>
@@ -126,7 +162,13 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div className="absolute z-10 w-full mt-1 bg-neutral-900 rounded-md shadow-lg overflow-hidden" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
+          <motion.div
+            className="absolute z-10 w-full mt-1 bg-neutral-900 rounded-md shadow-lg overflow-hidden"
+            variants={dropdownVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
             <ul className="border rounded-md border-neutral-800">
               {options.map((option, index) => (
                 <motion.li

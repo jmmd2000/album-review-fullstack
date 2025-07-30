@@ -2,7 +2,13 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
-import { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, SpotifyArtist } from "@shared/types";
+import {
+  DisplayAlbum,
+  ExtractedColor,
+  Genre,
+  SpotifyAlbum,
+  SpotifyArtist,
+} from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
@@ -38,8 +44,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 //# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
-async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{ album: SpotifyAlbum; artist: SpotifyArtist | null; genres: Genre[] }> {
-  const response = await fetch(`${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`);
+async function fetchAlbumFromSpotify(
+  albumSpotifyID: string
+): Promise<{
+  album: SpotifyAlbum;
+  artist: SpotifyArtist | null;
+  genres: Genre[];
+}> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`
+  );
 
   const data = await response.json();
 
@@ -61,13 +75,14 @@ const MAX_RECENT = 14;
 
 // This page is for creating a new album review
 export const Route = createFileRoute("/albums/$albumID/create")({
-  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  loader: ({ params }) =>
+    queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: `Review: ${loaderData.album.name}`,
+        title: `Review: ${loaderData?.album?.name ?? "Album Review"}`,
       },
     ],
   }),
@@ -76,7 +91,10 @@ export const Route = createFileRoute("/albums/$albumID/create")({
 function RouteComponent() {
   // Get the album ID from the URL
   const { albumID } = useParams({ strict: false });
-  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
+  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>(
+    "recentAlbums",
+    []
+  );
 
   // If the album ID is undefined, throw an error
   if (!albumID) {
@@ -89,7 +107,9 @@ function RouteComponent() {
   useEffect(() => {
     if (!data.album.id) return;
 
-    const alreadyExists = recentAlbums.some((album) => album.spotifyID === data.album.id);
+    const alreadyExists = recentAlbums.some(
+      album => album.spotifyID === data.album.id
+    );
     if (alreadyExists) return;
 
     const newAlbum: DisplayAlbum = {
@@ -103,8 +123,8 @@ function RouteComponent() {
       affectsArtistScore: true,
     };
 
-    setRecentAlbums((prev) => {
-      const deduped = prev.filter((album) => album.spotifyID !== data.album.id);
+    setRecentAlbums(prev => {
+      const deduped = prev.filter(album => album.spotifyID !== data.album.id);
       const updated = [newAlbum, ...deduped].slice(0, MAX_RECENT);
       return updated;
     });
@@ -112,17 +132,33 @@ function RouteComponent() {
   }, [data.album.id]);
 
   // State to manage selected colors
-  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.album.colors);
+  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(
+    data.album.colors
+  );
 
   return (
     <>
       <RequireAdmin>
         <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
-          {data.artist && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artist={data.artist} />}
+          <HeaderDetails
+            name={data.album.name}
+            imageURL={data.album.images[1].url}
+          />
+          {data.artist && (
+            <AlbumDetails
+              album={data.album}
+              trackCount={data.album.tracks.items.length}
+              artist={data.artist}
+            />
+          )}
         </BlurryHeader>
 
-        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+        <AlbumReviewForm
+          album={data.album}
+          setSelectedColors={setSelectedColors}
+          selectedColors={selectedColors}
+          genres={data.genres}
+        />
       </RequireAdmin>
     </>
   );
