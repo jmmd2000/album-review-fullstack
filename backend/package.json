@@ -11,7 +11,7 @@
     "test:artist": "jest artist.test.ts --detectOpenHandles",
     "test:spotify": "jest spotify.test.ts --detectOpenHandles",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio --port=1010 --verbose",
+    "db:studio": "drizzle-kit studio --verbose",
     "db:seed": "tsx ./src/db/seed.ts",
     "db:wipe": "tsx ./src/db/wipe.ts"
   },

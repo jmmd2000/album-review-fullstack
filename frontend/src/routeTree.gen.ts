@@ -8,174 +8,74 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as StatsIndexRouteImport } from './routes/stats/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SearchIndexRouteImport } from './routes/search/index'
+import { Route as BookmarksIndexRouteImport } from './routes/bookmarks/index'
+import { Route as ArtistsIndexRouteImport } from './routes/artists/index'
+import { Route as AlbumsIndexRouteImport } from './routes/albums/index'
+import { Route as ArtistsArtistIDIndexRouteImport } from './routes/artists/$artistID/index'
+import { Route as AlbumsAlbumIDIndexRouteImport } from './routes/albums/$albumID/index'
+import { Route as AlbumsAlbumIDEditRouteImport } from './routes/albums/$albumID/edit'
+import { Route as AlbumsAlbumIDCreateRouteImport } from './routes/albums/$albumID/create'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as StatsIndexImport } from './routes/stats/index'
-import { Route as SettingsIndexImport } from './routes/settings/index'
-import { Route as SearchIndexImport } from './routes/search/index'
-import { Route as BookmarksIndexImport } from './routes/bookmarks/index'
-import { Route as ArtistsIndexImport } from './routes/artists/index'
-import { Route as AlbumsIndexImport } from './routes/albums/index'
-import { Route as ArtistsArtistIDIndexImport } from './routes/artists/$artistID/index'
-import { Route as AlbumsAlbumIDIndexImport } from './routes/albums/$albumID/index'
-import { Route as AlbumsAlbumIDEditImport } from './routes/albums/$albumID/edit'
-import { Route as AlbumsAlbumIDCreateImport } from './routes/albums/$albumID/create'
-
-// Create/Update Routes
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const StatsIndexRoute = StatsIndexImport.update({
+const StatsIndexRoute = StatsIndexRouteImport.update({
   id: '/stats/',
   path: '/stats/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const SettingsIndexRoute = SettingsIndexImport.update({
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const SearchIndexRoute = SearchIndexImport.update({
+const SearchIndexRoute = SearchIndexRouteImport.update({
   id: '/search/',
   path: '/search/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const BookmarksIndexRoute = BookmarksIndexImport.update({
+const BookmarksIndexRoute = BookmarksIndexRouteImport.update({
   id: '/bookmarks/',
   path: '/bookmarks/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ArtistsIndexRoute = ArtistsIndexImport.update({
+const ArtistsIndexRoute = ArtistsIndexRouteImport.update({
   id: '/artists/',
   path: '/artists/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AlbumsIndexRoute = AlbumsIndexImport.update({
+const AlbumsIndexRoute = AlbumsIndexRouteImport.update({
   id: '/albums/',
   path: '/albums/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ArtistsArtistIDIndexRoute = ArtistsArtistIDIndexImport.update({
+const ArtistsArtistIDIndexRoute = ArtistsArtistIDIndexRouteImport.update({
   id: '/artists/$artistID/',
   path: '/artists/$artistID/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AlbumsAlbumIDIndexRoute = AlbumsAlbumIDIndexImport.update({
+const AlbumsAlbumIDIndexRoute = AlbumsAlbumIDIndexRouteImport.update({
   id: '/albums/$albumID/',
   path: '/albums/$albumID/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AlbumsAlbumIDEditRoute = AlbumsAlbumIDEditImport.update({
+const AlbumsAlbumIDEditRoute = AlbumsAlbumIDEditRouteImport.update({
   id: '/albums/$albumID/edit',
   path: '/albums/$albumID/edit',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AlbumsAlbumIDCreateRoute = AlbumsAlbumIDCreateImport.update({
+const AlbumsAlbumIDCreateRoute = AlbumsAlbumIDCreateRouteImport.update({
   id: '/albums/$albumID/create',
   path: '/albums/$albumID/create',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/albums/': {
-      id: '/albums/'
-      path: '/albums'
-      fullPath: '/albums'
-      preLoaderRoute: typeof AlbumsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/artists/': {
-      id: '/artists/'
-      path: '/artists'
-      fullPath: '/artists'
-      preLoaderRoute: typeof ArtistsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/bookmarks/': {
-      id: '/bookmarks/'
-      path: '/bookmarks'
-      fullPath: '/bookmarks'
-      preLoaderRoute: typeof BookmarksIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/search/': {
-      id: '/search/'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/settings/': {
-      id: '/settings/'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/stats/': {
-      id: '/stats/'
-      path: '/stats'
-      fullPath: '/stats'
-      preLoaderRoute: typeof StatsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/albums/$albumID/create': {
-      id: '/albums/$albumID/create'
-      path: '/albums/$albumID/create'
-      fullPath: '/albums/$albumID/create'
-      preLoaderRoute: typeof AlbumsAlbumIDCreateImport
-      parentRoute: typeof rootRoute
-    }
-    '/albums/$albumID/edit': {
-      id: '/albums/$albumID/edit'
-      path: '/albums/$albumID/edit'
-      fullPath: '/albums/$albumID/edit'
-      preLoaderRoute: typeof AlbumsAlbumIDEditImport
-      parentRoute: typeof rootRoute
-    }
-    '/albums/$albumID/': {
-      id: '/albums/$albumID/'
-      path: '/albums/$albumID'
-      fullPath: '/albums/$albumID'
-      preLoaderRoute: typeof AlbumsAlbumIDIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/artists/$artistID/': {
-      id: '/artists/$artistID/'
-      path: '/artists/$artistID'
-      fullPath: '/artists/$artistID'
-      preLoaderRoute: typeof ArtistsArtistIDIndexImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -190,7 +90,6 @@ export interface FileRoutesByFullPath {
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
   '/artists/$artistID': typeof ArtistsArtistIDIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/albums': typeof AlbumsIndexRoute
@@ -204,9 +103,8 @@ export interface FileRoutesByTo {
   '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
   '/artists/$artistID': typeof ArtistsArtistIDIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/albums/': typeof AlbumsIndexRoute
   '/artists/': typeof ArtistsIndexRoute
@@ -219,7 +117,6 @@ export interface FileRoutesById {
   '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
   '/artists/$artistID/': typeof ArtistsArtistIDIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -262,7 +159,6 @@ export interface FileRouteTypes {
     | '/artists/$artistID/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlbumsIndexRoute: typeof AlbumsIndexRoute
@@ -275,6 +171,88 @@ export interface RootRouteChildren {
   AlbumsAlbumIDEditRoute: typeof AlbumsAlbumIDEditRoute
   AlbumsAlbumIDIndexRoute: typeof AlbumsAlbumIDIndexRoute
   ArtistsArtistIDIndexRoute: typeof ArtistsArtistIDIndexRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats/': {
+      id: '/stats/'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search/': {
+      id: '/search/'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookmarks/': {
+      id: '/bookmarks/'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof BookmarksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/artists/': {
+      id: '/artists/'
+      path: '/artists'
+      fullPath: '/artists'
+      preLoaderRoute: typeof ArtistsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/': {
+      id: '/albums/'
+      path: '/albums'
+      fullPath: '/albums'
+      preLoaderRoute: typeof AlbumsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/artists/$artistID/': {
+      id: '/artists/$artistID/'
+      path: '/artists/$artistID'
+      fullPath: '/artists/$artistID'
+      preLoaderRoute: typeof ArtistsArtistIDIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/$albumID/': {
+      id: '/albums/$albumID/'
+      path: '/albums/$albumID'
+      fullPath: '/albums/$albumID'
+      preLoaderRoute: typeof AlbumsAlbumIDIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/$albumID/edit': {
+      id: '/albums/$albumID/edit'
+      path: '/albums/$albumID/edit'
+      fullPath: '/albums/$albumID/edit'
+      preLoaderRoute: typeof AlbumsAlbumIDEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/albums/$albumID/create': {
+      id: '/albums/$albumID/create'
+      path: '/albums/$albumID/create'
+      fullPath: '/albums/$albumID/create'
+      preLoaderRoute: typeof AlbumsAlbumIDCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -290,63 +268,6 @@ const rootRouteChildren: RootRouteChildren = {
   AlbumsAlbumIDIndexRoute: AlbumsAlbumIDIndexRoute,
   ArtistsArtistIDIndexRoute: ArtistsArtistIDIndexRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/albums/",
-        "/artists/",
-        "/bookmarks/",
-        "/search/",
-        "/settings/",
-        "/stats/",
-        "/albums/$albumID/create",
-        "/albums/$albumID/edit",
-        "/albums/$albumID/",
-        "/artists/$artistID/"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/albums/": {
-      "filePath": "albums/index.tsx"
-    },
-    "/artists/": {
-      "filePath": "artists/index.tsx"
-    },
-    "/bookmarks/": {
-      "filePath": "bookmarks/index.tsx"
-    },
-    "/search/": {
-      "filePath": "search/index.tsx"
-    },
-    "/settings/": {
-      "filePath": "settings/index.tsx"
-    },
-    "/stats/": {
-      "filePath": "stats/index.tsx"
-    },
-    "/albums/$albumID/create": {
-      "filePath": "albums/$albumID/create.tsx"
-    },
-    "/albums/$albumID/edit": {
-      "filePath": "albums/$albumID/edit.tsx"
-    },
-    "/albums/$albumID/": {
-      "filePath": "albums/$albumID/index.tsx"
-    },
-    "/artists/$artistID/": {
-      "filePath": "artists/$artistID/index.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
