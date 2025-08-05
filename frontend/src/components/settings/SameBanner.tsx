@@ -89,19 +89,8 @@ const SameBanner = ({
           ) : null}
         </div>
         <div className="flex-1">
-          {same && !showStats ? (
-            <div className="flex items-center gap-2">
-              <ArtistImage
-                imageUrl={same.artistImage}
-                artistName={same.artistName}
-                size="w-5 h-5"
-              />
-              <span>
-                <strong>{same.artistName}</strong> {type} unchanged (
-                {same.index}/{same.total})
-              </span>
-            </div>
-          ) : showStats ? (
+          {showStats ? (
+            // Show final stats when done
             <div className="flex items-center gap-4 flex-wrap">
               {changedEntries.length > 0 && (
                 <span className="flex items-center gap-2">
@@ -129,7 +118,21 @@ const SameBanner = ({
                 /{total} total)
               </span>
             </div>
+          ) : same ? (
+            // Show individual "same" result
+            <div className="flex items-center gap-2">
+              <ArtistImage
+                imageUrl={same.artistImage}
+                artistName={same.artistName}
+                size="w-5 h-5"
+              />
+              <span>
+                <strong>{same.artistName}</strong> {type} unchanged (
+                {same.index}/{same.total})
+              </span>
+            </div>
           ) : fetchingProgress ? (
+            // Show fetching progress
             <div className="flex items-center gap-2">
               <ArtistImage
                 imageUrl={fetchingProgress.artistImage}
@@ -142,6 +145,7 @@ const SameBanner = ({
               </span>
             </div>
           ) : currentProgress ? (
+            // Show processing progress
             <div className="flex items-center gap-2">
               <ArtistImage
                 imageUrl={currentProgress.artistImage}
@@ -154,6 +158,7 @@ const SameBanner = ({
               </span>
             </div>
           ) : (
+            // Generic message
             <span>Processing {type} updates...</span>
           )}
         </div>

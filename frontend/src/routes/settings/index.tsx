@@ -68,10 +68,10 @@ function RouteComponent() {
       timeout: 20000,
     });
 
-    socket.on("connect", () => console.log("Socket connected, id:", socket.id));
-    socket.on("disconnect", reason =>
-      console.log("Socket disconnected:", reason)
-    );
+    // socket.on("connect", () => console.log("Socket connected, id:", socket.id));
+    // socket.on("disconnect", reason =>
+    //   console.log("Socket disconnected:", reason)
+    // );
 
     socket.on("artist:images:progress", data => {
       imageDispatch({ type: "PROGRESS", payload: data });
@@ -90,23 +90,18 @@ function RouteComponent() {
     });
 
     socket.on("artist:headers:fetching", data => {
-      console.log("Header fetching:", data.artistName);
       headerDispatch({ type: "FETCHING_PROGRESS", payload: data });
     });
     socket.on("artist:headers:progress", data => {
-      console.log("Header progress:", data.artistName);
       headerDispatch({ type: "PROGRESS", payload: data });
     });
     socket.on("artist:headers:same", data => {
-      console.log("Header same:", data.artistName);
       headerDispatch({ type: "SAME_RESULT", payload: data });
     });
     socket.on("artist:headers:changed", data => {
-      console.log("Header changed:", data.artistName);
       headerDispatch({ type: "CHANGED_RESULT", payload: data });
     });
     socket.on("artist:headers:error", data => {
-      console.log("Header error:", data.artistName);
       headerDispatch({ type: "ERROR_RESULT", payload: data });
     });
     socket.on("artist:headers:done", () => {
@@ -143,7 +138,9 @@ function RouteComponent() {
 
   // Helper function to get current progress for display
   const getCurrentProgress = (state: ProgressState) => {
-    return state.currentProgress || state.sameProgress;
+    return (
+      state.currentProgress || state.sameProgress || state.fetchingProgress
+    );
   };
 
   const containerVariants = {

@@ -216,6 +216,8 @@ export class ArtistService {
               console.error(`Header update failed for ${id}:`, err);
               io.emit("artist:headers:error", {
                 spotifyID: id,
+                index: processedCount,
+                total,
                 artistName: name,
                 artistImage,
                 headerImage: current,
@@ -227,6 +229,8 @@ export class ArtistService {
           console.log(`No header found for ${name} (${id}), skipping update.`);
           io.emit("artist:headers:error", {
             spotifyID: id,
+            total,
+            index: processedCount,
             artistName: FAKE ? `[FAKE] ${name}` : name,
             artistImage,
             headerImage: null,
