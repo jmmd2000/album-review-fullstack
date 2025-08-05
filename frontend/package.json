@@ -26,6 +26,7 @@
     "react-hook-form": "^7.54.2",
     "react-responsive": "^10.0.1",
     "recharts": "^3.0.0",
+    "socket.io-client": "^4.8.1",
     "sonner": "^2.0.3",
     "tailwindcss": "^4.0.8"
   },
@@ -37,6 +38,8 @@
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@types/socket.io": "^3.0.1",
+    "@types/socket.io-client": "^1.4.36",
     "@vitejs/plugin-react": "^4.3.4",
     "cypress": "^14.0.3",
     "eslint": "^9.19.0",

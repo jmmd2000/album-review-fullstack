@@ -34,7 +34,10 @@ export function formatDate(inputDate: string): string {
       daySuffix = "rd";
     }
 
-    return `${formattedDate.replace(`${dayOfMonth}`, `${dayOfMonth}${daySuffix}`)}`;
+    return `${formattedDate.replace(
+      `${dayOfMonth}`,
+      `${dayOfMonth}${daySuffix}`
+    )}`;
   }
 }
 
@@ -56,4 +59,48 @@ export function toSortableDate(dateStr: string, fallbackYear: number): string {
   }
 
   return parsed.toISOString().split("T")[0]; // e.g. '2023-09-22'
+}
+
+/**
+ * Returns a “time ago” string for the given date.
+ * @param dateInput A Date object or ISO-parseable string
+ * @returns
+ *   - "just now"                 if < 60s ago
+ *   - "1 minute ago"             if 1m–<2m ago
+ *   - "x minutes ago"            if < 60m ago
+ *   - "1 hour ago"               if 1h–<2h ago
+ *   - "x hours ago"              if < 24h ago
+ *   - "yesterday"                if 24h–<48h ago
+ *   - "September 22nd, 2023 at 3:05 PM" otherwise
+ */
+export function timeAgo(dateInput: Date | string): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) {
+    return "just now";
+  }
+  if (diffMinutes < 60) {
+    return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+  }
+  if (diffHours < 24) {
+    return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+  }
+  if (diffDays === 1) {
+    return "yesterday";
+  }
+
+  // older than yesterday: full date + time
+  const isoDate = date.toISOString().split("T")[0];
+  const prettyDate = formatDate(isoDate);
+  const timePart = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${prettyDate} at ${timePart}`;
 }

@@ -572,3 +572,15 @@ export interface PaginatedAlbumsResult {
   /** All the genres that are related */
   relatedGenres?: Genre[];
 }
+
+/** Represents the progress of settings operations */
+export type Progress = {
+  index: number;
+  total: number;
+  spotifyID: string;
+  artistName: string;
+  artistImage?: string;
+  newArtistImage?: string;
+  headerImage?: string;
+  newHeaderImage?: string;
+};

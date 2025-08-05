@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
+import http from "http";
 import spotifyRoutes from "@/api/routes/spotifyRoutes";
 import albumRoutes from "@/api/routes/albumRoutes";
 import trackRoutes from "@/api/routes/trackRoutes";
@@ -11,13 +12,22 @@ import artistRoutes from "@/api/routes/artistRoutes";
 import authRoutes from "@/api/routes/authRoutes";
 import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
 import statsRoutes from "@/api/routes/statsRoutes";
+import settingsRoutes from "@/api/routes/settingsRoutes";
+import { initSocket } from "@/socket";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
 export const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:8080", "https://jamesreviewsmusic.com", "http://jamesreviewsmusic.com", "https://www.jamesreviewsmusic.com", "http://www.jamesreviewsmusic.com"],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "https://jamesreviewsmusic.com",
+    "http://jamesreviewsmusic.com",
+    "https://www.jamesreviewsmusic.com",
+    "http://www.jamesreviewsmusic.com",
+  ],
   credentials: true,
 };
 
@@ -32,9 +42,14 @@ app.use("/api/artists", artistRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/settings", settingsRoutes);
+
+// Create HTTP server and attach Socket.IO
+const server = http.createServer(app);
+initSocket(server);
 
 if (require.main === module) {
-  app.listen(4000, () => {
+  server.listen(4000, () => {
     console.log("Server is running on port 4000");
   });
 }

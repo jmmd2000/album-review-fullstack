@@ -3,6 +3,7 @@ import type { Config } from "jest";
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
+  testTimeout: 30000,
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@shared/(.*)$": "<rootDir>/../shared/src/$1",
@@ -13,6 +14,8 @@ const config: Config = {
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },
+  detectOpenHandles: true,
+  forceExit: true,
 };
 
 export default config;

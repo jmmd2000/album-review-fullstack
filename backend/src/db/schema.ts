@@ -218,3 +218,11 @@ export const relatedGenres = pgTable(
     uniqueIndex("related_genres_key").on(table.genreID, table.relatedGenreID),
   ]
 );
+
+// KV store for settings
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
