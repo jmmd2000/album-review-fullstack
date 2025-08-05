@@ -35,6 +35,17 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+app.options("/ws/*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Authorization,Cookie"
+  );
+  res.sendStatus(200);
+});
+
 app.use("/api/spotify", spotifyRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/tracks", trackRoutes);

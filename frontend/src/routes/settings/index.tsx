@@ -60,7 +60,12 @@ function RouteComponent() {
   useEffect(() => {
     const socket: Socket = io(API_BASE_URL, {
       path: "/ws",
-      transports: ["polling", "websocket"],
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      forceNew: true,
+      // debug
+      autoConnect: true,
+      timeout: 20000,
     });
 
     socket.on("connect", () => console.log("Socket connected, id:", socket.id));
