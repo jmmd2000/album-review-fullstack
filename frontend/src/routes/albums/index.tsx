@@ -212,6 +212,8 @@ function RouteComponent() {
           sortSettings: sortSettings,
           genreSettings: genreSettings,
         }}
+        sortedByYear={options.orderBy === "releaseYear"}
+        cardYears={data.albums.map(album => album.releaseYear)}
       />
     </motion.div>
   );

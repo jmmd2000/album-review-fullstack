@@ -1,9 +1,13 @@
+"use client";
+
+import type React from "react";
+
 import CardGridControls, {
-  DropdownControlsProps,
+  type DropdownControlsProps,
 } from "@/components/CardGridControls";
 import { motion } from "framer-motion";
 import { easeOut } from "framer-motion";
-import { SortDropdownProps } from "@components/SortDropdown";
+import type { SortDropdownProps } from "@components/SortDropdown";
 
 interface CardGridProps {
   /** The cards to display in the grid */
@@ -12,6 +16,10 @@ interface CardGridProps {
   heading?: string;
   /** Show a results counter */
   counter?: number;
+  /** Whether the cards are currently sorted by year */
+  sortedByYear?: boolean;
+  /** Array of years corresponding to each card (when sortedByYear is true) */
+  cardYears?: number[];
   /** Optional control configuration */
   controls?: {
     search?: (search: string) => void;
@@ -51,8 +59,75 @@ const itemVariants = {
 /**
  * This component creates a card grid with controls for pagination and search.
  */
-const CardGrid = ({ cards, heading, counter, controls }: CardGridProps) => {
+const CardGrid = ({
+  cards,
+  heading,
+  counter,
+  sortedByYear,
+  cardYears,
+  controls,
+}: CardGridProps) => {
   const shouldShowControls = controls?.search || controls?.pagination;
+
+  const renderCards = () => {
+    if (!sortedByYear || !cardYears || cardYears.length !== cards.length) {
+      // normal grid rendering
+      return cards.map((card, index) => (
+        <motion.div
+          key={index}
+          variants={itemVariants}
+          className="flex flex-col"
+        >
+          {card}
+        </motion.div>
+      ));
+    }
+
+    // group cards by year and render with dividers
+    const groupedCards: React.ReactNode[] = [];
+    let currentYear: number | null = null;
+
+    cards.forEach((card, index) => {
+      const year = cardYears[index];
+
+      // Add year divider if new year
+      if (currentYear !== year) {
+        if (currentYear !== null) {
+          // spacing before the new year divider
+          groupedCards.push(
+            <div key={`spacer-${year}`} className="col-span-full h-4" />
+          );
+        }
+
+        groupedCards.push(
+          <div
+            key={`year-${year}`}
+            className="col-span-full flex items-center gap-4 my-6"
+          >
+            <div className="flex-1 h-px bg-neutral-700"></div>
+            <span className="text-lg font-medium text-neutral-300 px-4">
+              {year}
+            </span>
+            <div className="flex-1 h-px bg-neutral-700"></div>
+          </div>
+        );
+        currentYear = year;
+      }
+
+      // add card
+      groupedCards.push(
+        <motion.div
+          key={`card-${index}`}
+          variants={itemVariants}
+          className="flex flex-col"
+        >
+          {card}
+        </motion.div>
+      );
+    });
+
+    return groupedCards;
+  };
 
   return (
     <>
@@ -86,15 +161,7 @@ const CardGrid = ({ cards, heading, counter, controls }: CardGridProps) => {
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4"
       >
         {cards.length > 0 ? (
-          cards.map((card, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="flex flex-col"
-            >
-              {card}
-            </motion.div>
-          ))
+          renderCards()
         ) : (
           <div className="col-span-full text-center text-neutral-500">
             <p>No results found.</p>
