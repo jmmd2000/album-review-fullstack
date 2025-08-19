@@ -63,15 +63,18 @@
 }
 
 .animate-lava0 {
-  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite alternate;
+  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite
+    alternate;
 }
 
 .animate-lava1 {
-  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite alternate;
+  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite
+    alternate;
 }
 
 .animate-lava2 {
-  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite alternate;
+  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite
+    alternate;
 }
 
 /* Infinite scroll animation for the AlbumScroller */
@@ -85,7 +88,8 @@
 }
 
 .animate-infinite-scroll {
-  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear infinite;
+  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear
+    infinite;
 }
 
 body {
@@ -99,7 +103,9 @@ html {
 
 @font-face {
   font-family: "Cabin";
-  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
+  src:
+    local("cabin-latin-400-normal"),
+    url("../assets/fonts/cabin-latin-400-normal.ttf");
 }
 
 body {
@@ -118,4 +124,17 @@ body {
     /* Firefox */
     scrollbar-width: none;
   }
+}
+
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-16.666%);
+  }
+}
+
+.scrolling-container {
+  animation: scrollUp 30s linear infinite;
 }

@@ -5,10 +5,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@components/ErrorComponent";
 import AlbumScroller from "@components/AlbumScroller";
 import { useCountUp } from "@/hooks/useCountUp";
+import React from "react";
+import BentoCard from "@/components/stats/BentoCard";
+import StatBox from "@/components/stats/StatBox";
+import { NoDataFound } from "./stats";
+import { Disc, Music, Users } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchAllAlbums(): Promise<{ albums: DisplayAlbum[]; numArtists: number; numAlbums: number; numTracks: number }> {
-  const response = await fetch(`${API_BASE_URL}/api/albums/all?includeCounts=true`);
+async function fetchAllAlbums(): Promise<{
+  albums: DisplayAlbum[];
+  numArtists: number;
+  numAlbums: number;
+  numTracks: number;
+}> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/albums/all?includeCounts=true`
+  );
   return await response.json();
 }
 
@@ -28,27 +40,51 @@ function Index() {
   if (!data) return <div>Loading...</div>;
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-12 md:gap-2 w-full">
-        <div className="flex-2">
-          <IntroductoryText />
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <HomeStats numArtists={data.numArtists} numAlbums={data.numAlbums} numTracks={data.numTracks} />
-        </div>
-      </div>
       <AlbumScroller albums={data.albums} />
+      <GradientOverlay>
+        <div className="flex flex-col pt-8 sm:pt-12 md:justify-center md:pt-0 min-h-[calc(100vh-70px)] md:min-h-[calc(100vh-80px)]">
+          <div className="flex flex-col gap-10 sm:gap-12 md:gap-16 w-full md:w-3/4 lg:w-2/3 xl:w-1/2">
+            <IntroductoryText />
+            <HomeStats
+              numArtists={data.numArtists}
+              numAlbums={data.numAlbums}
+              numTracks={data.numTracks}
+            />
+          </div>
+        </div>
+      </GradientOverlay>
     </>
   );
 }
 
 function IntroductoryText() {
   return (
-    <div className="flex flex-col px-8 pt-8 md:pt-20 sm:pt-12 xl:p-16">
-      <h1 className="mb-5 text-2xl font-semibold text-white sm:text-3xl">Welcome!</h1>
-      <p className="mb-8 md:text-lg font-light text-gray-50 sm:text-xl">This is my album review blog, where I share my thoughts on a variety of albums and artists.</p>
-      <p className="mb-5 md:text-lg font-light text-gray-50 sm:text-xl">Whether it's a classic I missed or something brand new, every album I listen to ends up here.</p>
-      <p className="mb-5 md:text-lg font-light text-gray-50 sm:text-xl">Thanks for visiting!</p>
-      <p className="mb-5 md:text-lg font-light text-gray-50 italic sm:text-xl">James.</p>
+    <div className="flex flex-col px-6 pt-8 sm:px-8 sm:pt-12 md:pt-16 lg:px-12 xl:px-20 max-w-2xl">
+      <h1 className="mb-2 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight">
+        Welcome<span className="text-red-500">!</span>
+      </h1>
+      <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-transparent mb-8"></div>
+
+      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
+        This is my album review blog, where I share my thoughts on a variety of
+        albums and artists.
+      </p>
+
+      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
+        Whether it's a classic I missed or something brand new, every album I
+        listen to ends up here.
+      </p>
+
+      <p className="mb-8 text-base sm:text-lg md:text-xl font-light text-gray-100">
+        Thanks for visiting!
+      </p>
+
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-[1px] bg-gray-500"></div>
+        <p className="text-lg sm:text-xl md:text-2xl font-light text-gray-300 italic">
+          James
+        </p>
+      </div>
     </div>
   );
 }
@@ -63,11 +99,76 @@ const HomeStats = ({ numArtists, numAlbums, numTracks }: HomeStatsProps) => {
   const animatedAlbums = useCountUp(numAlbums);
   const animatedArtists = useCountUp(numArtists);
   const animatedTracks = useCountUp(numTracks);
+
   return (
-    <div className="flex lg:flex-col 2xl:flex-row items-center lg:items-start justify-between 2xl:justify-center gap-8 md:gap-0 2xl:gap-20 px-8 md:px-20">
-      <p className="xl:mb-5 text-5xl md:text-7xl lg:text-8xl font-light text-neutral-200 before:content-['albums'] before:text-sm before:block before:uppercase before:text-neutral-400 before:-ml-4 min-w-[1ch] md:min-w-[3ch]">{animatedAlbums}</p>
-      <p className="xl:mb-5 text-5xl md:text-7xl lg:text-8xl font-light text-neutral-200 before:content-['artists'] before:text-sm before:block before:uppercase before:text-neutral-400 before:-ml-4 min-w-[1ch] md:min-w-[3ch]">{animatedArtists}</p>
-      <p className="xl:mb-5 text-5xl md:text-7xl lg:text-8xl font-light text-neutral-200 before:content-['tracks'] before:text-sm before:block before:uppercase before:text-neutral-400 before:-ml-4 min-w-[1ch] md:min-w-[3ch]">{animatedTracks}</p>
+    <div className="flex flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 px-4 sm:px-8 lg:px-12 xl:px-20">
+      <BentoCard className="group hover:scale-105 transition-transform duration-300 border border-white/10 bg-neutral-900/60 md:bg-white/5 backdrop-blur-md md:backdrop-blur-sm">
+        <div className="px-3 py-4 sm:px-6 sm:py-6">
+          {animatedAlbums ? (
+            <StatBox
+              label="Albums"
+              value={animatedAlbums}
+              icon={
+                <Disc className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-blue-500 group-hover:rotate-180 transition-transform duration-700" />
+              }
+            />
+          ) : (
+            <NoDataFound message="Couldn't get data." />
+          )}
+        </div>
+      </BentoCard>
+
+      <BentoCard className="group hover:scale-105 transition-transform duration-300 border border-white/10 bg-neutral-900/60 md:bg-white/5 backdrop-blur-md md:backdrop-blur-sm">
+        <div className="px-3 py-4 sm:px-6 sm:py-6">
+          {animatedArtists ? (
+            <StatBox
+              label="Artists"
+              value={animatedArtists}
+              icon={
+                <Users className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-green-500 group-hover:scale-110 transition-transform duration-300" />
+              }
+            />
+          ) : (
+            <NoDataFound message="Couldn't get data." />
+          )}
+        </div>
+      </BentoCard>
+
+      <BentoCard className="group hover:scale-105 transition-transform duration-300 border border-white/10 bg-neutral-900/60 md:bg-white/5 backdrop-blur-md md:backdrop-blur-sm">
+        <div className="px-3 py-4 sm:px-6 sm:py-6">
+          {animatedTracks ? (
+            <StatBox
+              label="Tracks"
+              value={animatedTracks}
+              icon={
+                <Music className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-orange-500 group-hover:animate-pulse" />
+              }
+            />
+          ) : (
+            <NoDataFound message="Couldn't get data." />
+          )}
+        </div>
+      </BentoCard>
     </div>
+  );
+};
+
+interface GradientOverlayProps {
+  children: React.ReactNode;
+}
+
+const GradientOverlay = ({ children }: GradientOverlayProps) => {
+  return (
+    <>
+      {/* Desktop gradient left to right */}
+      <div className="fixed inset-x-0 bottom-0 top-[70px] md:top-[80px] z-10 hidden md:block bg-gradient-to-r from-neutral-950 via-neutral-950/90 to-transparent">
+        {children}
+      </div>
+
+      {/* Mobile gradient top to bottom */}
+      <div className="fixed inset-x-0 bottom-0 top-[70px] z-10 md:hidden bg-gradient-to-b from-neutral-950 via-neutral-950/70 to-neutral-950/30">
+        {children}
+      </div>
+    </>
   );
 };
