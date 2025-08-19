@@ -403,7 +403,7 @@ interface NoDataFoundProps {
   message: string;
 }
 
-const NoDataFound = ({ message }: NoDataFoundProps) => {
+export const NoDataFound = ({ message }: NoDataFoundProps) => {
   return (
     <p className="flex items-center text-neutral-400 w-full h-full justify-center">
       {message}
