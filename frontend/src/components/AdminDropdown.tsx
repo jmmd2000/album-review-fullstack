@@ -1,9 +1,25 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut } from "lucide-react";
+import {
+  Bookmark,
+  Settings,
+  Search,
+  Lock,
+  LockOpen,
+  Pencil,
+  Trash,
+  LogOut,
+} from "lucide-react";
 import { useState, useRef, useEffect, JSX } from "react";
 import { useAuth } from "@/auth/useAuth";
 import { queryClient } from "@/main";
+import {
+  ReviewedAlbum,
+  ReviewedArtist,
+  DisplayTrack,
+  Genre,
+} from "@shared/types";
+import { timeAgo } from "@shared/helpers/formatDate";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LinkItem {
@@ -15,8 +31,16 @@ interface LinkItem {
 
 const staticLinks: LinkItem[] = [
   { label: "Search", icon: <Search className="w-4 h-4" />, to: "/search" },
-  { label: "Settings", icon: <Settings className="w-4 h-4" />, to: "/settings" },
-  { label: "Bookmarks", icon: <Bookmark className="w-4 h-4" />, to: "/bookmarks" },
+  {
+    label: "Settings",
+    icon: <Settings className="w-4 h-4" />,
+    to: "/settings",
+  },
+  {
+    label: "Bookmarks",
+    icon: <Bookmark className="w-4 h-4" />,
+    to: "/bookmarks",
+  },
 ];
 
 /**
@@ -37,6 +61,17 @@ const AdminDropdown = () => {
   // Extract albumID when on /albums/:id
   const match = pathname.match(/^\/albums\/([^/]+)$/);
   const albumID = match?.[1];
+
+  // Get cached album data if it exists
+  const albumData = albumID
+    ? (queryClient.getQueryData(["albumReview", albumID]) as {
+        album: ReviewedAlbum;
+        artist: ReviewedArtist;
+        tracks: DisplayTrack[];
+        allGenres: Genre[];
+        albumGenres: Genre[];
+      })
+    : null;
 
   const handleDelete = async () => {
     if (!albumID) return;
@@ -114,12 +149,17 @@ const AdminDropdown = () => {
   return (
     <div className="relative inline-block text-left" ref={ref}>
       <button
-        onClick={() => setOpen((prevOpen) => !prevOpen)}
+        onClick={() => setOpen(prevOpen => !prevOpen)}
         className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-700 transition"
         aria-haspopup="true"
         aria-expanded={open}
       >
-        Admin {isAdmin ? <LockOpen className="w-4 h-4 text-green-700" /> : <Lock className="w-4 h-4 text-red-700" />}
+        Admin
+        {isAdmin ? (
+          <LockOpen className="w-4 h-4 text-green-700" />
+        ) : (
+          <Lock className="w-4 h-4 text-red-700" />
+        )}
       </button>
 
       <AnimatePresence>
@@ -133,21 +173,45 @@ const AdminDropdown = () => {
           >
             {!isAdmin ? (
               <div className="flex flex-col gap-2 p-4">
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Admin password" className="w-full rounded bg-neutral-800 px-3 py-2 text-neutral-200" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Admin password"
+                  className="w-full rounded bg-neutral-800 px-3 py-2 text-neutral-200"
+                />
                 {error && <p className="text-sm text-red-500">{error}</p>}
-                <button onClick={handleLogin} className="rounded bg-gradient-to-br from-red-800 to-red-900/60  px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 cursor-pointer transition-colors">
+                <button
+                  onClick={handleLogin}
+                  className="rounded bg-gradient-to-br from-red-800 to-red-900/60  px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 cursor-pointer transition-colors"
+                >
                   Login
                 </button>
               </div>
             ) : (
               <>
-                {links.map((link) => (
-                  <AdminLinkItem key={link.label} icon={link.icon} label={link.label} to={link.to} onClick={link.onClick} />
+                {links.map(link => (
+                  <AdminLinkItem
+                    key={link.label}
+                    icon={link.icon}
+                    label={link.label}
+                    to={link.to}
+                    onClick={link.onClick}
+                  />
                 ))}
-                <button onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
+                >
                   <LogOut className="w-4 h-4" />
                   Logout
                 </button>
+                {albumData && (
+                  <div className="text-xs text-neutral-400 my-2 text-center px-2">
+                    <p>{timeAgo(albumData.album.createdAt)}</p>
+                    <p>{timeAgo(albumData.album.updatedAt)}</p>
+                  </div>
+                )}
               </>
             )}
           </motion.div>
@@ -164,12 +228,18 @@ export default AdminDropdown;
  */
 const AdminLinkItem = ({ icon, label, to, onClick }: LinkItem) =>
   onClick ? (
-    <button onClick={onClick} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
+    >
       {icon}
       {label}
     </button>
   ) : (
-    <Link to={to} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
+    <Link
+      to={to}
+      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
+    >
       {icon}
       {label}
     </Link>

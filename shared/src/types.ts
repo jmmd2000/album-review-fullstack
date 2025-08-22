@@ -182,6 +182,8 @@ export interface ReviewedAlbum {
   imageURLs: SpotifyImage[];
   /** Timestamp when the review was created. */
   createdAt: Date;
+  /** Timestamp when the review was last updated. */
+  updatedAt: Date;
   /** The numerical review score given to the album via my ratings */
   reviewScore: number;
   /** The bonus points awarded */
