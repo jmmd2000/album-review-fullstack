@@ -452,6 +452,10 @@ export interface GetPaginatedAlbumsOptions {
   search?: string;
   /** The genre to filter the results by */
   genres?: string[];
+  /** Secondary sort field (only used when orderBy is "releaseYear") */
+  secondaryOrderBy?: "finalScore" | "name" | "createdAt";
+  /** Secondary sort order (only used when orderBy is "releaseYear") */
+  secondaryOrder?: "asc" | "desc";
 }
 
 /**

@@ -1,7 +1,27 @@
 import "dotenv/config";
-import { desc, eq, ilike, asc, or, count, inArray, exists, sql } from "drizzle-orm";
-import { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
-import { albumGenres, genres as genresTable, reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
+import {
+  desc,
+  eq,
+  ilike,
+  asc,
+  or,
+  count,
+  inArray,
+  exists,
+  sql,
+} from "drizzle-orm";
+import {
+  DisplayAlbum,
+  GetPaginatedAlbumsOptions,
+  ReviewedAlbum,
+} from "@shared/types";
+import {
+  albumGenres,
+  genres as genresTable,
+  reviewedAlbums,
+  reviewedArtists,
+  reviewedTracks,
+} from "@/db/schema";
 import { db } from "@/index";
 
 export class AlbumModel {
@@ -10,7 +30,7 @@ export class AlbumModel {
       .select()
       .from(reviewedAlbums)
       .where(eq(reviewedAlbums.spotifyID, id))
-      .then((r) => r[0]);
+      .then(r => r[0]);
   }
 
   static async createAlbum(values: typeof reviewedAlbums.$inferInsert) {
@@ -18,10 +38,13 @@ export class AlbumModel {
       .insert(reviewedAlbums)
       .values(values)
       .returning()
-      .then((r) => r[0]);
+      .then(r => r[0]);
   }
 
-  static async updateAlbum(spotifyID: string, values: Partial<typeof reviewedAlbums.$inferInsert>) {
+  static async updateAlbum(
+    spotifyID: string,
+    values: Partial<typeof reviewedAlbums.$inferInsert>
+  ) {
     return db
       .update(reviewedAlbums)
       .set({ ...values, updatedAt: new Date() })
@@ -29,15 +52,30 @@ export class AlbumModel {
   }
 
   static async deleteAlbum(spotifyID: string) {
-    return db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, spotifyID));
+    return db
+      .delete(reviewedAlbums)
+      .where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
     return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
   }
 
-  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "", genres }: GetPaginatedAlbumsOptions) {
-    const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
+  static async getPaginatedAlbums({
+    page = 1,
+    orderBy = "createdAt",
+    order = "desc",
+    search = "",
+    genres,
+    secondaryOrderBy,
+    secondaryOrder,
+  }: GetPaginatedAlbumsOptions) {
+    const validOrderBy = [
+      "finalScore",
+      "releaseYear",
+      "name",
+      "createdAt",
+    ] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
@@ -58,7 +96,9 @@ export class AlbumModel {
     let q: any = db
       .select()
       .from(reviewedAlbums)
-      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
+      .where(
+        albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined
+      );
 
     if (search.trim()) {
       q = q.where(
@@ -67,7 +107,45 @@ export class AlbumModel {
       );
     }
 
-    const baseOrder = order === "asc" ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
+    let baseOrder;
+    if (orderBy === "releaseYear") {
+      // When sorting by year, always use a secondary sort (default to finalScore if not provided)
+      const validSecondaryOrderBy = [
+        "finalScore",
+        "name",
+        "createdAt",
+      ] as const;
+      const secondaryField = validSecondaryOrderBy.includes(
+        secondaryOrderBy || "finalScore"
+      )
+        ? secondaryOrderBy || "finalScore"
+        : "finalScore";
+      const secondaryDirection = validOrder.includes(secondaryOrder || "desc")
+        ? secondaryOrder || "desc"
+        : "desc";
+
+      if (order === "asc") {
+        baseOrder = [
+          asc(reviewedAlbums[orderBy]),
+          secondaryDirection === "asc"
+            ? asc(reviewedAlbums[secondaryField])
+            : desc(reviewedAlbums[secondaryField]),
+        ];
+      } else {
+        baseOrder = [
+          desc(reviewedAlbums[orderBy]),
+          secondaryDirection === "asc"
+            ? asc(reviewedAlbums[secondaryField])
+            : desc(reviewedAlbums[secondaryField]),
+        ];
+      }
+    } else {
+      // Default sorting behavior
+      baseOrder =
+        order === "asc"
+          ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)]
+          : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
+    }
 
     const albums: DisplayAlbum[] = await q
       .orderBy(...baseOrder)
@@ -77,7 +155,9 @@ export class AlbumModel {
     const [{ count: totalCount }] = await db
       .select({ count: count() })
       .from(reviewedAlbums)
-      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
+      .where(
+        albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined
+      );
 
     const furtherPages = OFFSET + PAGE_SIZE < Number(totalCount);
 
@@ -92,14 +172,19 @@ export class AlbumModel {
     return db
       .select({ count: count() })
       .from(reviewedAlbums)
-      .then((r) => r[0].count);
+      .then(r => r[0].count);
   }
 
   static async getAlbumsByArtist(spotifyID: string) {
-    return db.select().from(reviewedAlbums).where(eq(reviewedAlbums.artistSpotifyID, spotifyID));
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .where(eq(reviewedAlbums.artistSpotifyID, spotifyID));
   }
 
-  static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {
+  static async getReviewScoresByIds(
+    ids: string[]
+  ): Promise<{ spotifyID: string; reviewScore: number }[]> {
     const rows = await db
       .select({
         spotifyID: reviewedAlbums.spotifyID,
@@ -108,7 +193,7 @@ export class AlbumModel {
       .from(reviewedAlbums)
       .where(inArray(reviewedAlbums.spotifyID, ids));
 
-    return rows.map((r) => ({
+    return rows.map(r => ({
       spotifyID: r.spotifyID,
       reviewScore: r.reviewScore,
     }));
@@ -127,6 +212,6 @@ export class AlbumModel {
       .groupBy(albumGenres.albumSpotifyID)
       .having(sql`COUNT(*) = ${slugs.length}`);
 
-    return rows.map((r) => r.id);
+    return rows.map(r => r.id);
   }
 }

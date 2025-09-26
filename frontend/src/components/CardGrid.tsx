@@ -29,6 +29,7 @@ interface CardGridProps {
       page: { pageNumber: number; totalPages: number };
     };
     sortSettings?: SortDropdownProps;
+    secondarySortSettings?: SortDropdownProps;
     genreSettings?: DropdownControlsProps;
   };
 }
@@ -136,6 +137,7 @@ const CardGrid = ({
           search={controls.search}
           pagination={controls.pagination}
           sortSettings={controls.sortSettings}
+          secondarySortSettings={controls.secondarySortSettings}
           genreSettings={controls.genreSettings}
         />
       )}

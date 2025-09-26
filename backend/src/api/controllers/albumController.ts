@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { AlbumService } from "@/api/services/albumService";
-import { DisplayTrack, ExtractedColor, GetPaginatedAlbumsOptions, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
+import {
+  DisplayTrack,
+  ExtractedColor,
+  GetPaginatedAlbumsOptions,
+  ReviewedAlbum,
+  SpotifyAlbum,
+} from "@shared/types";
 
 export type ReceivedReviewData = {
   ratedTracks: DisplayTrack[];
@@ -25,7 +31,9 @@ export const createAlbumReview = async (req: Request, res: Response) => {
     }
     // Postgres code: 23505 → Duplicate Key Violation
     else if (error.code === "23505") {
-      res.status(400).json({ message: "You have already reviewed this album." });
+      res
+        .status(400)
+        .json({ message: "You have already reviewed this album." });
     } else {
       res.status(500).json({ message: "An unknown error occurred." });
     }
@@ -36,7 +44,10 @@ export const getAlbumByID = async (req: Request, res: Response) => {
   const albumID = req.params.albumID;
   const includeGenres = req.query.includeGenres !== "false";
   try {
-    const reviewedAlbumData = await AlbumService.getAlbumByID(albumID, includeGenres);
+    const reviewedAlbumData = await AlbumService.getAlbumByID(
+      albumID,
+      includeGenres
+    );
     res.status(200).json(reviewedAlbumData);
   } catch (error) {
     if (error instanceof Error) {
@@ -67,26 +78,37 @@ export const getPaginatedAlbums = async (req: Request, res: Response) => {
   if (typeof rawGenres === "string") {
     genres = rawGenres
       .split(",")
-      .map((s) => s.trim())
+      .map(s => s.trim())
       .filter(Boolean);
   } else if (Array.isArray(rawGenres)) {
     genres = rawGenres
-      .flatMap((r) => (typeof r === "string" ? r.split(",") : []))
-      .map((s) => s.trim())
+      .flatMap(r => (typeof r === "string" ? r.split(",") : []))
+      .map(s => s.trim())
       .filter(Boolean);
   }
 
   const options: GetPaginatedAlbumsOptions = {
     page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as GetPaginatedAlbumsOptions["orderBy"] | undefined,
+    orderBy: req.query.orderBy as
+      | GetPaginatedAlbumsOptions["orderBy"]
+      | undefined,
     order: req.query.order as GetPaginatedAlbumsOptions["order"] | undefined,
     search: req.query.search as string | undefined,
     genres: genres,
+    secondaryOrderBy: req.query.secondaryOrderBy as
+      | GetPaginatedAlbumsOptions["secondaryOrderBy"]
+      | undefined,
+    secondaryOrder: req.query.secondaryOrder as
+      | GetPaginatedAlbumsOptions["secondaryOrder"]
+      | undefined,
   };
 
   try {
-    const { albums, furtherPages, totalCount, genres, relatedGenres } = await AlbumService.getPaginatedAlbums(options);
-    res.status(200).json({ albums, furtherPages, totalCount, genres, relatedGenres });
+    const { albums, furtherPages, totalCount, genres, relatedGenres } =
+      await AlbumService.getPaginatedAlbums(options);
+    res
+      .status(200)
+      .json({ albums, furtherPages, totalCount, genres, relatedGenres });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ message: error.message });
@@ -115,7 +137,10 @@ export const updateAlbumReview = async (req: Request, res: Response) => {
   const reviewData: ReceivedReviewData = req.body;
   const albumID = req.params.albumID;
   try {
-    const updatedAlbum = await AlbumService.updateAlbumReview(reviewData, albumID);
+    const updatedAlbum = await AlbumService.updateAlbumReview(
+      reviewData,
+      albumID
+    );
     res.status(200).json(updatedAlbum);
   } catch (error: any) {
     console.error("Failed to create album review:", error);
@@ -124,7 +149,9 @@ export const updateAlbumReview = async (req: Request, res: Response) => {
     }
     // Postgres code: 23505 → Duplicate Key Violation
     else if (error.code === "23505") {
-      res.status(400).json({ message: "You have already reviewed this album." });
+      res
+        .status(400)
+        .json({ message: "You have already reviewed this album." });
     } else {
       res.status(500).json({ message: "An unknown error occurred." });
     }

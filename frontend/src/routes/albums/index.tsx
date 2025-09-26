@@ -27,6 +27,10 @@ async function fetchPaginatedAlbums(
       : options.genres;
     queryParams.set("genres", genres);
   }
+  if (options.secondaryOrderBy)
+    queryParams.set("secondaryOrderBy", options.secondaryOrderBy);
+  if (options.secondaryOrder)
+    queryParams.set("secondaryOrder", options.secondaryOrder);
 
   const response = await fetch(
     `${API_BASE_URL}/api/albums?${queryParams.toString()}`
@@ -55,14 +59,23 @@ export const Route = createFileRoute("/albums/")({
     search: search.search,
     orderBy: search.orderBy,
     order: search.order,
+    secondaryOrderBy: search.secondaryOrderBy,
+    secondaryOrder: search.secondaryOrder,
   }),
   loader: async ({
-    deps: { page, search, orderBy, order },
+    deps: { page, search, orderBy, order, secondaryOrderBy, secondaryOrder },
   }: {
     deps: GetPaginatedAlbumsOptions;
   }) => {
     return queryClient.ensureQueryData(
-      albumQueryOptions({ page, search, orderBy, order })
+      albumQueryOptions({
+        page,
+        search,
+        orderBy,
+        order,
+        secondaryOrderBy,
+        secondaryOrder,
+      })
     );
   },
   component: RouteComponent,
@@ -128,10 +141,40 @@ function RouteComponent() {
           ...prev,
           orderBy: value,
           order: direction,
+          // Set default secondary sort when year is selected, clear when not
+          secondaryOrderBy:
+            value === "releaseYear"
+              ? prev.secondaryOrderBy || "finalScore"
+              : undefined,
+          secondaryOrder:
+            value === "releaseYear" ? prev.secondaryOrder || "desc" : undefined,
         }),
       });
     },
   };
+
+  // Secondary sort settings - only show when primary sort is "Year"
+  const secondarySortSettings: SortDropdownProps | undefined =
+    options.orderBy === "releaseYear"
+      ? {
+          options: [
+            { label: "Score", value: "finalScore" },
+            { label: "Name", value: "name" },
+            { label: "Date Added", value: "createdAt" },
+          ],
+          defaultValue: options.secondaryOrderBy || "finalScore",
+          defaultDirection: options.secondaryOrder || "desc",
+          onSortChange: (value, direction) => {
+            navigate({
+              search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
+                ...prev,
+                secondaryOrderBy: value,
+                secondaryOrder: direction,
+              }),
+            });
+          },
+        }
+      : undefined;
 
   const genres =
     data?.relatedGenres && data.relatedGenres.length > 0
@@ -210,6 +253,7 @@ function RouteComponent() {
             },
           },
           sortSettings: sortSettings,
+          secondarySortSettings: secondarySortSettings,
           genreSettings: genreSettings,
         }}
         sortedByYear={options.orderBy === "releaseYear"}

@@ -21,6 +21,8 @@ interface CardGridControlsProps {
   pagination?: PaginationControls;
   /** Options for the sorting dropdown */
   sortSettings?: SortDropdownProps;
+  /** Secondary sort settings (only shown when primary sort is "Year") */
+  secondarySortSettings?: SortDropdownProps;
   /** Genre dropdown filter settings */
   genreSettings?: DropdownControlsProps;
 }
@@ -31,7 +33,13 @@ interface CardGridControlsProps {
 import { useRef, useState } from "react";
 import { Dropdown } from "./Dropdown";
 
-const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: CardGridControlsProps) => {
+const CardGridControls = ({
+  pagination,
+  search,
+  sortSettings,
+  secondarySortSettings,
+  genreSettings,
+}: CardGridControlsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLUListElement>(null);
@@ -54,7 +62,7 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
                 placeholder="Search..."
                 ref={inputRef}
                 className="w-[75%] sm:w-auto rounded-sm py-2 bg-neutral-800 h-11 px-4"
-                onKeyDown={(e) => {
+                onKeyDown={e => {
                   if (e.key === "Enter") {
                     const val = inputRef.current?.value || "";
                     search(val);
@@ -71,18 +79,40 @@ const CardGridControls = ({ pagination, search, sortSettings, genreSettings }: C
             </div>
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
               {sortSettings && <SortDropdown {...sortSettings} />}
-              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} multiple />}
+              {secondarySortSettings && (
+                <SortDropdown {...secondarySortSettings} />
+              )}
+              {genreSettings && (
+                <Dropdown
+                  items={genreSettings!.items}
+                  dropdownRef={dropdownRef}
+                  isOpen={dropdownOpen}
+                  setIsOpen={setDropdownOpen}
+                  onSelect={onSelect}
+                  multiple
+                />
+              )}
             </div>
           </div>
         )}
 
         {pagination && (
           <div className="flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
-            <Button label={<ChevronLeft />} onClick={pagination.prev.action} disabled={pagination.prev.disabled} size="icon" />
+            <Button
+              label={<ChevronLeft />}
+              onClick={pagination.prev.action}
+              disabled={pagination.prev.disabled}
+              size="icon"
+            />
             <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-2 px-4 rounded text-center h-11 flex items-center">
               {pagination.page.pageNumber} / {pagination.page.totalPages}
             </div>
-            <Button label={<ChevronRight />} onClick={pagination.next.action} disabled={pagination.next.disabled} size="icon" />
+            <Button
+              label={<ChevronRight />}
+              onClick={pagination.next.action}
+              disabled={pagination.next.disabled}
+              size="icon"
+            />
           </div>
         )}
       </div>
