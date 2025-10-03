@@ -226,6 +226,10 @@ export interface ReviewedArtist {
   headerImage: string | null;
   /** Position of the artist in the leaderboard. */
   leaderboardPosition: number;
+  /** Position of the artist in the peak score leaderboard. */
+  peakLeaderboardPosition: number | null;
+  /** Position of the artist in the latest score leaderboard. */
+  latestLeaderboardPosition: number | null;
   /** List of albums associated with the artist. */
   albums?: DisplayAlbum[];
   /** Average review score of the artist's albums. */
@@ -236,6 +240,10 @@ export interface ReviewedArtist {
   bonusReason: string | null;
   /** Total calculated score of the artist. */
   totalScore: number;
+  /** Peak score calculated from top 3 highest rated albums. */
+  peakScore: number;
+  /** Latest score calculated from latest 3 albums. */
+  latestScore: number;
   /** Number of albums reviewed by the artist. */
   reviewCount: number;
   /** Whether or not the artist will receive a score */
@@ -304,8 +312,20 @@ export interface DisplayArtist {
   name: string;
   /** Position of the artist in the leaderboard. */
   leaderboardPosition: number | null;
+  /** Position of the artist in the peak score leaderboard. */
+  peakLeaderboardPosition: number | null;
+  /** Position of the artist in the latest score leaderboard. */
+  latestLeaderboardPosition: number | null;
+  /** Current position based on sort order (calculated on frontend) */
+  currentPosition?: number;
+  /** Score to display based on current sort type (calculated on frontend) */
+  displayScore?: number;
   /** Average review score of the artist's albums. */
   totalScore: number;
+  /** Peak score calculated from top 3 highest rated albums. */
+  peakScore: number;
+  /** Latest score calculated from latest 3 albums. */
+  latestScore: number;
   /** Whether or not the artist is unrated */
   unrated: boolean;
   /** JSON string containing artist image URLs. */
@@ -491,6 +511,8 @@ export interface GetPaginatedArtistsOptions {
   /** The data to order the results by */
   orderBy?:
     | "totalScore"
+    | "peakScore"
+    | "latestScore"
     | "reviewCount"
     | "name"
     | "createdAt"
@@ -499,6 +521,8 @@ export interface GetPaginatedArtistsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
+  /** The score type when ordering by score (overall, peak, latest) */
+  scoreType?: "overall" | "peak" | "latest";
 }
 
 /**

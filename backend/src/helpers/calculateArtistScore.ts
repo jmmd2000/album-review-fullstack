@@ -1,4 +1,13 @@
-import { MinimalAlbum, Reason, ReviewedAlbum, SpotifyImage } from "@shared/types";
+import {
+  MinimalAlbum,
+  Reason,
+  ReviewedAlbum,
+  SpotifyImage,
+} from "@shared/types";
+import {
+  calculatePeakScore,
+  calculateLatestScore,
+} from "./calculatePeakAndLatestScores";
 
 /*** The bonus points awarded for a high-quality album. */
 const GOOD_ALBUM_BONUS = 0.25;
@@ -10,17 +19,19 @@ const BAD_ALBUM_BONUS = 0.25;
  * Calculates the artist's score based on their albums.
  * Only albums with `affectsArtistScore = true` contribute to the score.
  * @param {ReviewedAlbum[]} albums - array of albums to calculate the score for
- * @returns {Object} an object containing the `newAverageScore`, `newBonusPoints`, `totalScore`, and `bonusReasons`
+ * @returns {Object} an object containing the `newAverageScore`, `newBonusPoints`, `totalScore`, `peakScore`, `latestScore`, and `bonusReasons`
  */
 export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
   // filter out non-contributing albums
-  const contributing = albums.filter((album) => album.affectsArtistScore);
+  const contributing = albums.filter(album => album.affectsArtistScore);
 
   if (contributing.length === 0) {
     return {
       newAverageScore: 0,
       newBonusPoints: 0,
       totalScore: 0,
+      peakScore: 0,
+      latestScore: 0,
       bonusReasons: [],
     };
   }
@@ -49,12 +60,24 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
 
       if (album.finalScore < 45) {
         newBonusPoints -= BAD_ALBUM_BONUS;
-        bonusReasons.push({ album: minimalAlbum, reason: "Low quality album", value: -BAD_ALBUM_BONUS });
+        bonusReasons.push({
+          album: minimalAlbum,
+          reason: "Low quality album",
+          value: -BAD_ALBUM_BONUS,
+        });
       } else if (album.finalScore > 45 && album.finalScore < 55) {
-        bonusReasons.push({ album: minimalAlbum, reason: "Mid quality album", value: 0 });
+        bonusReasons.push({
+          album: minimalAlbum,
+          reason: "Mid quality album",
+          value: 0,
+        });
       } else if (album.finalScore > 55) {
         newBonusPoints += GOOD_ALBUM_BONUS;
-        bonusReasons.push({ album: minimalAlbum, reason: "High quality album", value: GOOD_ALBUM_BONUS });
+        bonusReasons.push({
+          album: minimalAlbum,
+          reason: "High quality album",
+          value: GOOD_ALBUM_BONUS,
+        });
       }
     }
   }
@@ -65,5 +88,16 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
   let totalScore = roundedAverage + newBonusPoints;
   if (totalScore > 100) totalScore = 100;
 
-  return { newAverageScore, newBonusPoints, totalScore, bonusReasons };
+  // Calculate peak and latest scores
+  const peakScore = calculatePeakScore(contributing);
+  const latestScore = calculateLatestScore(contributing);
+
+  return {
+    newAverageScore,
+    newBonusPoints,
+    totalScore,
+    peakScore,
+    latestScore,
+    bonusReasons,
+  };
 };

@@ -18,8 +18,67 @@ import {
   normalizeSpotifyImageUrl,
 } from "@/helpers/normaliseSpotifyImageURL";
 import { SettingsService } from "./settingsService";
+import {
+  calculateLeaderboardPositions,
+  ArtistLeaderboardData,
+} from "@/helpers/calculateLeaderboardPositions";
 
 export class ArtistService {
+  /**
+   * Updates all leaderboard positions (overall, peak, latest) for all artists
+   */
+  static async updateAllLeaderboardPositions() {
+    // Get all rated artists
+    const allArtists = await ArtistModel.getAllArtists();
+    const ratedArtists = allArtists.filter(artist => !artist.unrated);
+
+    if (ratedArtists.length === 0) return;
+
+    // Prepare data for each leaderboard type
+    const overallData: ArtistLeaderboardData[] = ratedArtists.map(artist => ({
+      id: artist.id,
+      name: artist.name,
+      score: artist.totalScore,
+    }));
+
+    const peakData: ArtistLeaderboardData[] = ratedArtists.map(artist => ({
+      id: artist.id,
+      name: artist.name,
+      score: artist.peakScore,
+    }));
+
+    const latestData: ArtistLeaderboardData[] = ratedArtists.map(artist => ({
+      id: artist.id,
+      name: artist.name,
+      score: artist.latestScore,
+    }));
+
+    // Calculate positions for each leaderboard
+    const overallPositions = calculateLeaderboardPositions(overallData);
+    const peakPositions = calculateLeaderboardPositions(peakData);
+    const latestPositions = calculateLeaderboardPositions(latestData);
+
+    // Update overall leaderboard positions
+    for (const artist of overallPositions) {
+      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!);
+    }
+
+    // Update peak leaderboard positions
+    for (const artist of peakPositions) {
+      await ArtistModel.updatePeakLeaderboardPosition(
+        artist.id,
+        artist.position!
+      );
+    }
+
+    // Update latest leaderboard positions
+    for (const artist of latestPositions) {
+      await ArtistModel.updateLatestLeaderboardPosition(
+        artist.id,
+        artist.position!
+      );
+    }
+  }
   static async getAllArtists() {
     return ArtistModel.getAllArtists();
   }
@@ -35,9 +94,13 @@ export class ArtistService {
       name: artist.name,
       imageURLs: artist.imageURLs,
       totalScore: artist.totalScore,
+      peakScore: artist.peakScore,
+      latestScore: artist.latestScore,
       unrated: artist.unrated,
       albumCount: artist.reviewCount,
       leaderboardPosition: artist.leaderboardPosition,
+      peakLeaderboardPosition: artist.peakLeaderboardPosition,
+      latestLeaderboardPosition: artist.latestLeaderboardPosition,
     }));
 
     return {

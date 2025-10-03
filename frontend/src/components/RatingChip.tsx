@@ -22,6 +22,11 @@ interface RatingChipProps {
     bonuses: ReviewBonuses | null;
     affectsArtistScore: boolean;
   };
+  /** Optional custom tooltip content for artist scores */
+  tooltipContent?: {
+    title: string;
+    description: string;
+  };
 }
 
 /**
@@ -29,54 +34,106 @@ interface RatingChipProps {
  * When textBelow is true and scoreBreakdown is provided, it allows users to view a detailed breakdown
  * of how the score was calculated including bonuses.
  */
-const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
+const RatingChip = ({
+  rating,
+  options,
+  scoreBreakdown,
+  tooltipContent,
+}: RatingChipProps) => {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
-  const { label, borderColor, textColor, backgroundColorLighter } = getRatingStyles(rating);
+  const { label, borderColor, textColor, backgroundColorLighter } =
+    getRatingStyles(rating);
 
   const isUnrated = rating === 0;
-  const pillContent = isUnrated ? "UNRATED" : options?.ratingString ? label : rating;
+  const pillContent = isUnrated
+    ? "UNRATED"
+    : options?.ratingString
+      ? label
+      : rating;
 
   // Slightly smaller font for unrated when not small variant
   const unratedSizeClass = !options?.small && isUnrated ? "text-3xl" : "";
 
-  const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-max", "mx-auto", "relative", textColor], {
-    variants: {
-      small: { false: "mt-12 mb-4" },
-    },
-  });
-
-  const textStyles = cva([borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"], {
-    variants: {
-      small: {
-        true: "border-1 text-xs md:text-sm px-1 rounded-sm",
-        false: "border-2 text-4xl px-4 py-2",
+  const cardStyles = cva(
+    [
+      "flex",
+      "items-center",
+      "flex-col",
+      "gap-1",
+      "w-max",
+      "mx-auto",
+      "relative",
+      textColor,
+    ],
+    {
+      variants: {
+        small: { false: "mt-12 mb-4" },
       },
-    },
-  });
+    }
+  );
 
-  const showInfoButton = options?.textBelow && scoreBreakdown;
+  const textStyles = cva(
+    [borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"],
+    {
+      variants: {
+        small: {
+          true: "border-1 text-xs md:text-sm px-1 rounded-sm",
+          false: "border-2 text-4xl px-4 py-2",
+        },
+      },
+    }
+  );
+
+  const showInfoButton =
+    options?.textBelow && (scoreBreakdown || tooltipContent);
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
       {/* Pill with optional unrated tooltip */}
       <div className="relative group">
-        <motion.div className={`${textStyles({ small: options?.small ?? false })} ${unratedSizeClass}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+        <motion.div
+          className={`${textStyles({ small: options?.small ?? false })} ${unratedSizeClass}`}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        >
           {pillContent}
         </motion.div>
 
         {isUnrated && !options?.small && (
           <>
-            <motion.button className="absolute -top-4 -right-4 text-gray-600 hover:text-gray-700 transition-colors" whileHover={{ scale: 1.2, rotate: 15 }} whileTap={{ scale: 0.9 }} onClick={() => setDialogOpen(true)}>
+            <motion.button
+              className="absolute -top-4 -right-4 text-gray-600 hover:text-gray-700 transition-colors"
+              whileHover={{ scale: 1.2, rotate: 15 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setDialogOpen(true)}
+            >
               <Info className="w-4 h-4" />
             </motion.button>
-            <Dialog isOpen={isDialogOpen} onClose={() => setDialogOpen(false)} title="Unrated artists">
-              <p className="text-zinc-200 mb-2">This artist is unrated. None of their reviews provide them a score.</p>
-              <p className="text-zinc-200">There are two potential reasons for this:</p>
+            <Dialog
+              isOpen={isDialogOpen}
+              onClose={() => setDialogOpen(false)}
+              title="Unrated artists"
+            >
+              <p className="text-zinc-200 mb-2">
+                This artist is unrated. None of their reviews provide them a
+                score.
+              </p>
+              <p className="text-zinc-200">
+                There are two potential reasons for this:
+              </p>
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
-                <li className="text-zinc-400">I don't plan to review their entire discography, and I feel like basing their score on a fraction of their work isn't accurate.</li>
+                <li className="text-zinc-400">
+                  I don't plan to review their entire discography, and I feel
+                  like basing their score on a fraction of their work isn't
+                  accurate.
+                </li>
                 <li className="text-zinc-400 mt-1">
-                  I <em>do</em> plan to review their entire discography, but the only reviews right now are non-studio-albums i.e. mixtapes, EPs etc. which I don't want to count towards the artist's overall score.
+                  I <em>do</em> plan to review their entire discography, but the
+                  only reviews right now are non-studio-albums i.e. mixtapes,
+                  EPs etc. which I don't want to count towards the artist's
+                  overall score.
                 </li>
               </ol>
             </Dialog>
@@ -85,14 +142,25 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
       </div>
 
       {options?.textBelow && (
-        <motion.div className="flex items-center gap-1" initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
-          {rating > 0 && <p className="uppercase text-center font-medium text-xl">{label}</p>}
+        <motion.div
+          className="flex items-center gap-1"
+          initial={{ y: -5, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          {rating > 0 && (
+            <p className="uppercase text-center font-medium text-xl">{label}</p>
+          )}
 
           {showInfoButton && (
             <motion.button
-              onClick={() => setShowBreakdown(true)}
+              onClick={() =>
+                scoreBreakdown ? setShowBreakdown(true) : setDialogOpen(true)
+              }
               className="ml-1 text-gray-600 hover:text-gray-700 transition-colors absolute -top-4 -right-5"
-              title="View score breakdown"
+              title={
+                scoreBreakdown ? "View score breakdown" : "View score info"
+              }
               whileHover={{ scale: 1.2, rotate: 15 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -104,7 +172,11 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
 
       {scoreBreakdown && !scoreBreakdown.affectsArtistScore && (
         <div className="group absolute top-1 -right-5">
-          <motion.div className="ml-1 text-gray-600 hover:text-gray-700 transition-colors" whileHover={{ scale: 1.2, rotate: 10 }} whileTap={{ scale: 0.9 }}>
+          <motion.div
+            className="ml-1 text-gray-600 hover:text-gray-700 transition-colors"
+            whileHover={{ scale: 1.2, rotate: 10 }}
+            whileTap={{ scale: 0.9 }}
+          >
             <StarOff className="w-4 h-4 text-yellow-900" />
           </motion.div>
           <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
@@ -113,7 +185,25 @@ const RatingChip = ({ rating, options, scoreBreakdown }: RatingChipProps) => {
         </div>
       )}
 
-      {scoreBreakdown && <ScoreBreakdown baseScore={scoreBreakdown.baseScore} bonuses={scoreBreakdown.bonuses} finalScore={rating} isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} />}
+      {scoreBreakdown && (
+        <ScoreBreakdown
+          baseScore={scoreBreakdown.baseScore}
+          bonuses={scoreBreakdown.bonuses}
+          finalScore={rating}
+          isOpen={showBreakdown}
+          onClose={() => setShowBreakdown(false)}
+        />
+      )}
+
+      {tooltipContent && (
+        <Dialog
+          isOpen={isDialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title={tooltipContent.title}
+        >
+          <p className="text-zinc-200">{tooltipContent.description}</p>
+        </Dialog>
+      )}
     </div>
   );
 };

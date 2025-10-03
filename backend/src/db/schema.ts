@@ -103,9 +103,13 @@ export const reviewedArtists = pgTable(
     headerImage: varchar("header_image", { length: 255 }),
     averageScore: real("average_score").notNull(),
     leaderboardPosition: integer("leaderboard_position"),
+    peakLeaderboardPosition: integer("peak_leaderboard_position"),
+    latestLeaderboardPosition: integer("latest_leaderboard_position"),
     bonusPoints: real("bonus_points").notNull().default(0),
     bonusReason: text("bonus_reason"),
     totalScore: real("total_score").notNull().default(0),
+    peakScore: real("peak_score").notNull().default(0),
+    latestScore: real("latest_score").notNull().default(0),
     reviewCount: integer("review_count").notNull().default(0),
     unrated: boolean().notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
