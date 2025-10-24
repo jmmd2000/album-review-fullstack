@@ -333,12 +333,12 @@ function RouteComponent() {
                       {card.icon}
                     </div>
                     <StatusIndicator
-                      sameEntries={card.state.sameEntries}
-                      changedEntries={card.state.changedEntries}
-                      errorEntries={card.state.errorEntries}
-                      isDone={card.state.isDone}
+                      sameEntries={card.state?.sameEntries || []}
+                      changedEntries={card.state?.changedEntries || []}
+                      errorEntries={card.state?.errorEntries || []}
+                      isDone={card.state?.isDone || false}
                       current={card.currentProgress}
-                      total={card.state.total}
+                      total={card.state?.total || null}
                     />
                   </div>
                   <h2 className="text-lg font-medium mb-2">{card.title}</h2>
