@@ -93,7 +93,8 @@ export const getPaginatedBookmarkedAlbums = async (req: Request, res: Response) 
   };
 
   try {
-    const { albums, furtherPages, totalCount } = await BookmarkedAlbumService.getPaginatedAlbums(options);
+    const { albums, furtherPages, totalCount } =
+      await BookmarkedAlbumService.getPaginatedAlbums(options);
     res.status(200).json({ albums, furtherPages, totalCount });
   } catch (error) {
     if (error instanceof Error) {

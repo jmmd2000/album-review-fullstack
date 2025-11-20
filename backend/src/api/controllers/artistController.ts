@@ -18,19 +18,16 @@ export const getAllArtists = async (_req: Request, res: Response) => {
 export const getPaginatedArtists = async (req: Request, res: Response) => {
   const options: GetPaginatedArtistsOptions = {
     page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as
-      | GetPaginatedArtistsOptions["orderBy"]
-      | undefined,
+    orderBy: req.query.orderBy as GetPaginatedArtistsOptions["orderBy"] | undefined,
     order: req.query.order as GetPaginatedArtistsOptions["order"] | undefined,
     search: req.query.search as string | undefined,
-    scoreType: req.query.scoreType as
-      | GetPaginatedArtistsOptions["scoreType"]
-      | undefined,
+    scoreType: req.query.scoreType as GetPaginatedArtistsOptions["scoreType"] | undefined,
   };
 
   try {
-    const { artists, furtherPages, totalCount } =
-      await ArtistService.getPaginatedArtists(options);
+    const { artists, furtherPages, totalCount } = await ArtistService.getPaginatedArtists(
+      options
+    );
     res.status(200).json({ artists, furtherPages, totalCount });
   } catch (error) {
     if (error instanceof Error) {
@@ -87,8 +84,7 @@ export const deleteArtist = async (req: Request, res: Response) => {
 
 export const updateArtistHeaders = async (req: Request, res: Response) => {
   const all = req.query.all === "true";
-  const spotifyID =
-    typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
+  const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
 
   try {
     await ArtistService.updateArtistHeaders(all, spotifyID);
@@ -101,14 +97,34 @@ export const updateArtistHeaders = async (req: Request, res: Response) => {
 
 export const updateArtistImages = async (req: Request, res: Response) => {
   const all = req.query.all === "true";
-  const spotifyID =
-    typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
+  const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
   console.log("Updating artist images", { all, spotifyID });
   try {
     await ArtistService.updateArtistImages(all, spotifyID);
     res.status(204).end(); // no json, just “No Content”
   } catch (error: any) {
     console.error("Image update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateSingleArtistHeader = async (req: Request, res: Response) => {
+  const { artistID } = req.params;
+  const { headerImage } = req.body;
+
+  if (!artistID) {
+    return res.status(400).json({ message: "Artist ID is required" });
+  }
+
+  if (typeof headerImage !== "string" && headerImage !== null) {
+    return res.status(400).json({ message: "headerImage must be a string or null" });
+  }
+
+  try {
+    await ArtistService.updateSingleArtistHeader(artistID, headerImage);
+    res.status(200).json({ message: "Header image updated successfully" });
+  } catch (error: any) {
+    console.error("Header image update error:", error);
     res.status(500).json({ message: error.message });
   }
 };

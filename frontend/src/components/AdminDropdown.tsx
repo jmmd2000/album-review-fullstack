@@ -9,17 +9,21 @@ import {
   Pencil,
   Trash,
   LogOut,
+  ImageIcon,
 } from "lucide-react";
 import { useState, useRef, useEffect, JSX } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/auth/useAuth";
 import { queryClient } from "@/main";
 import {
   ReviewedAlbum,
   ReviewedArtist,
   DisplayTrack,
+  DisplayAlbum,
   Genre,
 } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
+import Dialog from "@/components/Dialog";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LinkItem {
@@ -59,8 +63,12 @@ const AdminDropdown = () => {
   } = useRouterState();
 
   // Extract albumID when on /albums/:id
-  const match = pathname.match(/^\/albums\/([^/]+)$/);
-  const albumID = match?.[1];
+  const albumMatch = pathname.match(/^\/albums\/([^/]+)$/);
+  const albumID = albumMatch?.[1];
+
+  // Extract artistID when on /artists/:id
+  const artistMatch = pathname.match(/^\/artists\/([^/]+)$/);
+  const artistID = artistMatch?.[1];
 
   // Get cached album data if it exists
   const albumData = albumID
@@ -72,6 +80,19 @@ const AdminDropdown = () => {
         albumGenres: Genre[];
       })
     : null;
+
+  // Get cached artist data if it exists
+  const artistData = artistID
+    ? (queryClient.getQueryData(["artistID", artistID]) as {
+        artist: ReviewedArtist;
+        albums: DisplayAlbum[];
+        tracks: DisplayTrack[];
+      })
+    : null;
+
+  // State for header image update modal
+  const [showHeaderModal, setShowHeaderModal] = useState(false);
+  const [headerImageUrl, setHeaderImageUrl] = useState("");
 
   const handleDelete = async () => {
     if (!albumID) return;
@@ -89,6 +110,51 @@ const AdminDropdown = () => {
     } catch {
       alert("Something went wrong while deleting the album.");
     }
+  };
+
+  // Mutation for updating header image
+  const updateHeaderImageMut = useMutation<void, Error, string>({
+    mutationFn: async (headerImage: string) => {
+      if (!artistID) throw new Error("Artist ID is required");
+      const res = await fetch(`${API_BASE_URL}/api/artists/${artistID}/headerImage`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          headerImage: headerImage.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update header image");
+      }
+    },
+    onSuccess: () => {
+      if (artistID) {
+        queryClient.invalidateQueries({ queryKey: ["artistID", artistID] });
+        queryClient.invalidateQueries({ queryKey: ["artists"] });
+      }
+      setShowHeaderModal(false);
+      setHeaderImageUrl("");
+      setOpen(false);
+    },
+    onError: error => {
+      alert(error.message || "Something went wrong while updating the header image.");
+    },
+  });
+
+  const handleUpdateHeaderImage = () => {
+    updateHeaderImageMut.mutate(headerImageUrl);
+  };
+
+  const handleOpenHeaderModal = () => {
+    if (artistData) {
+      setHeaderImageUrl(artistData.artist.headerImage || "");
+    }
+    setShowHeaderModal(true);
   };
 
   // Submit password to log in
@@ -124,6 +190,16 @@ const AdminDropdown = () => {
                 icon: <Trash className="w-4 h-4" />,
                 to: "",
                 onClick: handleDelete,
+              },
+            ]
+          : []),
+        ...(artistID
+          ? [
+              {
+                label: "Update Header Image",
+                icon: <ImageIcon className="w-4 h-4" />,
+                to: "",
+                onClick: handleOpenHeaderModal,
               },
             ]
           : []),
@@ -217,6 +293,59 @@ const AdminDropdown = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog
+        isOpen={showHeaderModal}
+        onClose={() => {
+          setShowHeaderModal(false);
+          setHeaderImageUrl("");
+        }}
+        title="Update Header Image"
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
+              Header Image URL
+            </label>
+            <input
+              type="text"
+              value={headerImageUrl}
+              onChange={e => setHeaderImageUrl(e.target.value)}
+              placeholder="https://i.scdn.co/image/..."
+              className="w-full rounded bg-neutral-800 px-3 py-2 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-600"
+              disabled={updateHeaderImageMut.isPending}
+            />
+            <p className="text-xs text-neutral-400 mt-1">
+              Leave empty to remove the header image
+            </p>
+            <p className="text-xs text-neutral-500 mt-2 font-mono bg-neutral-900/50 p-2 rounded border border-neutral-800">
+              <span className="select-all">
+                document.querySelector('div[data-testid="background-image"]').style.backgroundImage.slice(5,
+                -2)
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => {
+                setShowHeaderModal(false);
+                setHeaderImageUrl("");
+              }}
+              className="rounded bg-neutral-700 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-600 transition-colors cursor-pointer"
+              disabled={updateHeaderImageMut.isPending}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdateHeaderImage}
+              className="rounded bg-gradient-to-br from-red-800 to-red-900/60 px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={updateHeaderImageMut.isPending}
+            >
+              {updateHeaderImageMut.isPending ? "Updating..." : "Update"}
+            </button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };

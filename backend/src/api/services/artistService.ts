@@ -65,18 +65,12 @@ export class ArtistService {
 
     // Update peak leaderboard positions
     for (const artist of peakPositions) {
-      await ArtistModel.updatePeakLeaderboardPosition(
-        artist.id,
-        artist.position!
-      );
+      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!);
     }
 
     // Update latest leaderboard positions
     for (const artist of latestPositions) {
-      await ArtistModel.updateLatestLeaderboardPosition(
-        artist.id,
-        artist.position!
-      );
+      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!);
     }
   }
   static async getAllArtists() {
@@ -121,19 +115,13 @@ export class ArtistService {
     }
     const albums = await AlbumModel.getAlbumsByArtist(artistID);
     const sortedAlbums = albums.sort((a, b) => {
-      const dateA = new Date(
-        toSortableDate(a.releaseDate, a.releaseYear)
-      ).getTime();
-      const dateB = new Date(
-        toSortableDate(b.releaseDate, b.releaseYear)
-      ).getTime();
+      const dateA = new Date(toSortableDate(a.releaseDate, a.releaseYear)).getTime();
+      const dateB = new Date(toSortableDate(b.releaseDate, b.releaseYear)).getTime();
       return dateB - dateA; // descending
     });
 
     const tracks = await TrackModel.getTracksByArtist(artistID);
-    const albumImageMap = new Map(
-      albums.map(album => [album.spotifyID, album.imageURLs])
-    );
+    const albumImageMap = new Map(albums.map(album => [album.spotifyID, album.imageURLs]));
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
       spotifyID: track.spotifyID,
@@ -152,10 +140,17 @@ export class ArtistService {
     return ArtistModel.deleteArtist(artistID);
   }
 
-  static async updateArtistHeaders(
-    all: boolean,
-    spotifyID?: string
+  static async updateSingleArtistHeader(
+    spotifyID: string,
+    headerImage: string | null
   ): Promise<void> {
+    await ArtistModel.updateArtist(spotifyID, {
+      headerImage,
+      imageUpdatedAt: new Date(),
+    });
+  }
+
+  static async updateArtistHeaders(all: boolean, spotifyID?: string): Promise<void> {
     const FAKE = false;
     const BATCH_SIZE = 6; // Process this many at a time
     const io = getSocket();
@@ -166,8 +161,7 @@ export class ArtistService {
       ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
       : [];
 
-    if (!all && !spotifyID)
-      throw new Error("Must specify either all=true or a spotifyID");
+    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
 
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
       ...a,
@@ -194,9 +188,7 @@ export class ArtistService {
         currentArtistID?: string
       ) => {
         if (currentArtistID) {
-          const currentArtist = batch.find(
-            a => a.spotifyID === currentArtistID
-          );
+          const currentArtist = batch.find(a => a.spotifyID === currentArtistID);
           const artistName = currentArtist?.name || "Unknown Artist";
           const artistImage = currentArtist?.imageURLs?.[0]?.url;
 
@@ -241,13 +233,10 @@ export class ArtistService {
         const newHeaderImage = headerResults[id];
 
         if (newHeaderImage) {
-          const current = (await ArtistModel.getArtistBySpotifyID(id))
-            ?.headerImage;
+          const current = (await ArtistModel.getArtistBySpotifyID(id))?.headerImage;
 
           // Normalize URLs for comparison
-          const normalizedCurrent = current
-            ? normalizeSpotifyImageUrl(current)
-            : null;
+          const normalizedCurrent = current ? normalizeSpotifyImageUrl(current) : null;
           const normalizedNew = normalizeSpotifyImageUrl(newHeaderImage);
 
           if (normalizedCurrent === normalizedNew) {
@@ -308,18 +297,13 @@ export class ArtistService {
     }
 
     console.log(
-      `${
-        FAKE ? "FAKE MODE: " : ""
-      }Artist header updates complete. Emitting done event.`
+      `${FAKE ? "FAKE MODE: " : ""}Artist header updates complete. Emitting done event.`
     );
     io.emit("artist:headers:done");
     await SettingsService.setLastRun("headers", new Date());
   }
 
-  static async updateArtistImages(
-    all: boolean,
-    spotifyID?: string
-  ): Promise<void> {
+  static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
     const io = getSocket();
     // Fetch the artist list
     const dbArtists = all
@@ -369,9 +353,7 @@ export class ArtistService {
       // Get only the URL strings, sorted
       const dbRec = await ArtistModel.getArtistBySpotifyID(id);
       const currentUrls = (dbRec?.imageURLs || []).map(img => img.url).sort();
-      const fetchedUrls = (artistData.images as SpotifyImage[])
-        .map(img => img.url)
-        .sort();
+      const fetchedUrls = (artistData.images as SpotifyImage[]).map(img => img.url).sort();
 
       // Compare lengths and each URL
       const same = areImageUrlsSame(currentUrls, fetchedUrls);

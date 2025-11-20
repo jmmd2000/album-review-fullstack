@@ -8,6 +8,7 @@ router.get("/all", artistController.getAllArtists);
 router.get("/", artistController.getPaginatedArtists);
 router.get("/:artistID", artistController.getArtistByID);
 router.get("/details/:artistID", artistController.getArtistDetails);
+router.put("/:artistID/headerImage", requireAdmin, artistController.updateSingleArtistHeader);
 router.delete("/:artistID", requireAdmin, artistController.deleteArtist);
 router.post("/headerImage", requireAdmin, artistController.updateArtistHeaders);
 router.post("/profileImage", requireAdmin, artistController.updateArtistImages);
