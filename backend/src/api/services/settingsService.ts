@@ -18,7 +18,9 @@ export class SettingsService {
   }
 
   // Artist updates specific methods
-  static async getLastRun(type: "images" | "headers"): Promise<Date | null> {
+  static async getLastRun(
+    type: "images" | "headers" | "scores"
+  ): Promise<Date | null> {
     const result = await this.get<string>(`artist_${type}_last_run`);
     return result ? new Date(result) : null;
   }
@@ -38,7 +40,7 @@ export class SettingsService {
   }
 
   static async setLastRun(
-    type: "images" | "headers",
+    type: "images" | "headers" | "scores",
     date: Date = new Date()
   ): Promise<void> {
     await this.set(`artist_${type}_last_run`, date.toISOString());

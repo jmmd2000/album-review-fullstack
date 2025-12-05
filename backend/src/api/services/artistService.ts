@@ -4,6 +4,7 @@ import {
   DisplayAlbum,
   DisplayTrack,
   SpotifyImage,
+  ReviewedAlbum,
   ReviewedArtist,
 } from "@shared/types";
 import { ArtistModel } from "@/api/models/Artist";
@@ -22,8 +23,270 @@ import {
   calculateLeaderboardPositions,
   ArtistLeaderboardData,
 } from "@/helpers/calculateLeaderboardPositions";
+import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 
 export class ArtistService {
+  /**
+   * Recalculate all artist scores from their albums, updating only when values change.
+   * Also refreshes leaderboard positions after any updates.
+   */
+  static async recalculateAllArtistScores() {
+    const artists = await ArtistModel.getAllArtists();
+    const initialSnapshot = new Map<
+      string,
+      {
+        name: string;
+        averageScore: number;
+        bonusPoints: number;
+        totalScore: number;
+        peakScore: number;
+        latestScore: number;
+        reviewCount: number;
+        unrated: boolean;
+        leaderboardPosition: number | null;
+        peakLeaderboardPosition: number | null;
+        latestLeaderboardPosition: number | null;
+      }
+    >();
+
+    for (const a of artists) {
+      initialSnapshot.set(a.spotifyID, {
+        name: a.name,
+        averageScore: a.averageScore,
+        bonusPoints: a.bonusPoints,
+        totalScore: a.totalScore,
+        peakScore: a.peakScore,
+        latestScore: a.latestScore,
+        reviewCount: a.reviewCount,
+        unrated: a.unrated,
+        leaderboardPosition: a.leaderboardPosition,
+        peakLeaderboardPosition: a.peakLeaderboardPosition,
+        latestLeaderboardPosition: a.latestLeaderboardPosition,
+      });
+    }
+
+    const hasNumericChange = (current: number, next: number) =>
+      Math.abs((current ?? 0) - next) > 0.0001;
+
+    for (const artist of artists) {
+      const albums = (await AlbumModel.getAlbumsByArtist(
+        artist.spotifyID
+      )) as ReviewedAlbum[];
+      const reviewCount = albums.length;
+      const contributing = albums.filter(a => a.affectsArtistScore);
+
+      if (contributing.length === 0) {
+        const updates = {
+          unrated: true,
+          averageScore: 0,
+          bonusPoints: 0,
+          totalScore: 0,
+          peakScore: 0,
+          latestScore: 0,
+          bonusReason: JSON.stringify([]),
+          reviewCount,
+          leaderboardPosition: null,
+          peakLeaderboardPosition: null,
+          latestLeaderboardPosition: null,
+        };
+
+        const needsUpdate =
+          artist.unrated === false ||
+          hasNumericChange(artist.averageScore, 0) ||
+          hasNumericChange(artist.bonusPoints, 0) ||
+          hasNumericChange(artist.totalScore, 0) ||
+          hasNumericChange(artist.peakScore, 0) ||
+          hasNumericChange(artist.latestScore, 0) ||
+          (artist.bonusReason ?? "[]") !== updates.bonusReason ||
+          artist.reviewCount !== reviewCount ||
+          artist.leaderboardPosition !== null ||
+          artist.peakLeaderboardPosition !== null ||
+          artist.latestLeaderboardPosition !== null;
+
+        if (needsUpdate) {
+          await ArtistModel.updateArtist(artist.spotifyID, updates);
+        }
+        continue;
+      }
+
+      const {
+        newAverageScore,
+        newBonusPoints,
+        totalScore,
+        peakScore,
+        latestScore,
+        bonusReasons,
+      } = calculateArtistScore(contributing);
+
+      const updates = {
+        averageScore: newAverageScore,
+        bonusPoints: newBonusPoints,
+        totalScore,
+        peakScore,
+        latestScore,
+        bonusReason: JSON.stringify(bonusReasons),
+        reviewCount,
+        unrated: false,
+      };
+
+      const needsUpdate =
+        artist.unrated ||
+        hasNumericChange(artist.averageScore, newAverageScore) ||
+        hasNumericChange(artist.bonusPoints, newBonusPoints) ||
+        hasNumericChange(artist.totalScore, totalScore) ||
+        hasNumericChange(artist.peakScore, peakScore) ||
+        hasNumericChange(artist.latestScore, latestScore) ||
+        (artist.bonusReason ?? "[]") !== updates.bonusReason ||
+        artist.reviewCount !== reviewCount;
+
+      if (needsUpdate) {
+        await ArtistModel.updateArtist(artist.spotifyID, updates);
+      }
+    }
+
+    if (artists.length > 0) {
+      await ArtistService.updateAllLeaderboardPositions();
+    }
+
+    const refreshed = await ArtistModel.getAllArtists();
+    const changedArtists: {
+      spotifyID: string;
+      name: string;
+      changes: {
+        field:
+          | "totalScore"
+          | "peakScore"
+          | "latestScore"
+          | "averageScore"
+          | "bonusPoints"
+          | "reviewCount"
+          | "unrated"
+          | "leaderboardPosition"
+          | "peakLeaderboardPosition"
+          | "latestLeaderboardPosition";
+        before: number | null;
+        after: number | null;
+      }[];
+    }[] = [];
+
+    for (const artist of refreshed) {
+      const before = initialSnapshot.get(artist.spotifyID);
+      if (!before) continue;
+
+      const after = {
+        averageScore: artist.averageScore,
+        bonusPoints: artist.bonusPoints,
+        totalScore: artist.totalScore,
+        peakScore: artist.peakScore,
+        latestScore: artist.latestScore,
+        reviewCount: artist.reviewCount,
+        unrated: artist.unrated,
+        leaderboardPosition: artist.leaderboardPosition,
+        peakLeaderboardPosition: artist.peakLeaderboardPosition,
+        latestLeaderboardPosition: artist.latestLeaderboardPosition,
+      };
+
+      const changes: {
+        field:
+          | "totalScore"
+          | "peakScore"
+          | "latestScore"
+          | "averageScore"
+          | "bonusPoints"
+          | "reviewCount"
+          | "unrated"
+          | "leaderboardPosition"
+          | "peakLeaderboardPosition"
+          | "latestLeaderboardPosition";
+        before: number | null;
+        after: number | null;
+      }[] = [];
+
+      const addChange = (
+        field:
+          | "totalScore"
+          | "peakScore"
+          | "latestScore"
+          | "averageScore"
+          | "bonusPoints"
+          | "reviewCount"
+          | "unrated"
+          | "leaderboardPosition"
+          | "peakLeaderboardPosition"
+          | "latestLeaderboardPosition",
+        beforeVal: number | null,
+        afterVal: number | null
+      ) => {
+        changes.push({ field, before: beforeVal, after: afterVal });
+      };
+
+      if (hasNumericChange(before.totalScore, after.totalScore)) {
+        addChange("totalScore", before.totalScore, after.totalScore);
+      }
+      if (hasNumericChange(before.peakScore, after.peakScore)) {
+        addChange("peakScore", before.peakScore, after.peakScore);
+      }
+      if (hasNumericChange(before.latestScore, after.latestScore)) {
+        addChange("latestScore", before.latestScore, after.latestScore);
+      }
+      if (hasNumericChange(before.averageScore, after.averageScore)) {
+        addChange("averageScore", before.averageScore, after.averageScore);
+      }
+      if (hasNumericChange(before.bonusPoints, after.bonusPoints)) {
+        addChange("bonusPoints", before.bonusPoints, after.bonusPoints);
+      }
+      if (before.reviewCount !== after.reviewCount) {
+        addChange(
+          "reviewCount",
+          before.reviewCount,
+          after.reviewCount
+        );
+      }
+      if (before.unrated !== after.unrated) {
+        addChange("unrated", Number(before.unrated), Number(after.unrated));
+      }
+      if (before.leaderboardPosition !== after.leaderboardPosition) {
+        addChange(
+          "leaderboardPosition",
+          before.leaderboardPosition,
+          after.leaderboardPosition
+        );
+      }
+      if (
+        before.peakLeaderboardPosition !== after.peakLeaderboardPosition
+      ) {
+        addChange(
+          "peakLeaderboardPosition",
+          before.peakLeaderboardPosition,
+          after.peakLeaderboardPosition
+        );
+      }
+      if (
+        before.latestLeaderboardPosition !== after.latestLeaderboardPosition
+      ) {
+        addChange(
+          "latestLeaderboardPosition",
+          before.latestLeaderboardPosition,
+          after.latestLeaderboardPosition
+        );
+      }
+
+      if (changes.length > 0) {
+        changedArtists.push({
+          spotifyID: artist.spotifyID,
+          name: artist.name,
+          changes,
+        });
+      }
+    }
+
+    return {
+      updatedCount: changedArtists.length,
+      totalProcessed: artists.length,
+      changedArtists,
+    };
+  }
+
   /**
    * Updates all leaderboard positions (overall, peak, latest) for all artists
    */

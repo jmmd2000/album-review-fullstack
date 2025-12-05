@@ -336,6 +336,7 @@ export class AlbumService {
     // If no albums left, drop the artist entirely
     if (remaining.length === 0) {
       await ArtistModel.deleteArtist(album.artistSpotifyID);
+      await ArtistService.updateAllLeaderboardPositions();
       return;
     }
 
@@ -349,9 +350,15 @@ export class AlbumService {
         averageScore: 0,
         bonusPoints: 0,
         totalScore: 0,
+        peakScore: 0,
+        latestScore: 0,
         bonusReason: JSON.stringify([]),
         reviewCount: remaining.length,
+        leaderboardPosition: null,
+        peakLeaderboardPosition: null,
+        latestLeaderboardPosition: null,
       });
+      await ArtistService.updateAllLeaderboardPositions();
     } else {
       // Recalculate artist metrics
       const {
@@ -483,10 +490,15 @@ export class AlbumService {
         averageScore: 0,
         bonusPoints: 0,
         totalScore: 0,
+        peakScore: 0,
+        latestScore: 0,
         bonusReason: JSON.stringify([]),
         reviewCount: all.length,
+        leaderboardPosition: null,
+        peakLeaderboardPosition: null,
+        latestLeaderboardPosition: null,
       });
-      await ArtistModel.updateLeaderboardPosition(artist.id, null);
+      await ArtistService.updateAllLeaderboardPositions();
     } else {
       // Recalculate artist metrics
       const {

@@ -2,14 +2,10 @@ import { RequireAdmin } from "@/components/RequireAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import Button from "@/components/Button";
 import { queryClient } from "@/main";
-import {
-  queryOptions,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { spring } from "framer-motion";
-import { Camera, ImageIcon, ChevronRight } from "lucide-react";
+import { Camera, ImageIcon, ChevronRight, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { io, Socket } from "socket.io-client";
 import { useEffect } from "react";
@@ -117,10 +113,10 @@ function RouteComponent() {
   const profileImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
       resetImageState();
-      const res = await fetch(
-        `${API_BASE_URL}/api/artists/profileImage?all=true`,
-        { method: "POST", credentials: "include" }
-      );
+      const res = await fetch(`${API_BASE_URL}/api/artists/profileImage?all=true`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!res.ok) throw new Error((await res.text()) || res.statusText);
     },
   });
@@ -128,19 +124,52 @@ function RouteComponent() {
   const headerImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
       resetHeaderState();
-      const res = await fetch(
-        `${API_BASE_URL}/api/artists/headerImage?all=true`,
-        { method: "POST", credentials: "include" }
-      );
+      const res = await fetch(`${API_BASE_URL}/api/artists/headerImage?all=true`, {
+        method: "POST",
+        credentials: "include",
+      });
       if (!res.ok) throw new Error((await res.text()) || res.statusText);
+    },
+  });
+
+  type RecalcResult = {
+    updatedCount: number;
+    totalProcessed: number;
+    changedArtists: {
+      spotifyID: string;
+      name: string;
+      changes: {
+        field:
+          | "totalScore"
+          | "peakScore"
+          | "latestScore"
+          | "averageScore"
+          | "bonusPoints"
+          | "reviewCount"
+          | "unrated"
+          | "leaderboardPosition"
+          | "peakLeaderboardPosition"
+          | "latestLeaderboardPosition";
+        before: number | null;
+        after: number | null;
+      }[];
+    }[];
+  };
+
+  const recalcScoresMut = useMutation<RecalcResult, Error, void>({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/api/settings/recalculate-scores`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error((await res.text()) || res.statusText);
+      return res.json();
     },
   });
 
   // Helper function to get current progress for display
   const getCurrentProgress = (state: ProgressState) => {
-    return (
-      state.currentProgress || state.sameProgress || state.fetchingProgress
-    );
+    return state.currentProgress || state.sameProgress || state.fetchingProgress;
   };
 
   const containerVariants = {
@@ -174,23 +203,19 @@ function RouteComponent() {
       onClick: () => profileImageMut.mutate(),
       states: {
         loading: profileImageMut.isPending,
-        success:
-          profileImageMut.isSuccess &&
-          (imageState.isDone || !!imageState.sameProgress),
+        success: profileImageMut.isSuccess && (imageState.isDone || !!imageState.sameProgress),
         error: profileImageMut.isError,
       },
       stateMessages: {
         loading: "Updating artist images…",
         success: imageState.sameProgress
           ? `Image is the same for ${imageState.sameProgress.artistName}`
-          : imageState.changedEntries.length > 0 &&
-              imageState.sameEntries.length > 0
+          : imageState.changedEntries.length > 0 && imageState.sameEntries.length > 0
             ? `Done! ${imageState.changedEntries.length} updated, ${imageState.sameEntries.length} unchanged`
             : imageState.changedEntries.length > 0
               ? `Done! ${imageState.changedEntries.length} images updated`
               : "Done! Images updated",
-        error:
-          profileImageMut.error?.message ?? "Failed to update artist images.",
+        error: profileImageMut.error?.message ?? "Failed to update artist images.",
       },
       renderDescription: () => {
         if (imageState.currentProgress) {
@@ -225,22 +250,19 @@ function RouteComponent() {
       states: {
         loading: headerImageMut.isPending,
         success:
-          headerImageMut.isSuccess &&
-          (headerState.isDone || !!headerState.sameProgress),
+          headerImageMut.isSuccess && (headerState.isDone || !!headerState.sameProgress),
         error: headerImageMut.isError,
       },
       stateMessages: {
         loading: "Updating header images…",
         success: headerState.sameProgress
           ? `Header is the same for ${headerState.sameProgress.artistName}`
-          : headerState.changedEntries.length > 0 &&
-              headerState.sameEntries.length > 0
+          : headerState.changedEntries.length > 0 && headerState.sameEntries.length > 0
             ? `Done! ${headerState.changedEntries.length} updated, ${headerState.sameEntries.length} unchanged`
             : headerState.changedEntries.length > 0
               ? `Done! ${headerState.changedEntries.length} headers updated`
               : "Done! Headers updated",
-        error:
-          headerImageMut.error?.message ?? "Failed to update header images.",
+        error: headerImageMut.error?.message ?? "Failed to update header images.",
       },
       renderDescription: () => {
         if (headerState.fetchingProgress) {
@@ -267,6 +289,40 @@ function RouteComponent() {
       // Pass state data to components
       state: headerState,
       currentProgress: getCurrentProgress(headerState),
+    },
+    {
+      id: "recalculate-scores",
+      title: "Recalculate Artist Scores",
+      buttonText: "Recalculate Scores",
+      icon: <RefreshCw className="w-6 h-6" />,
+      ratingLabel: "Great",
+      onClick: () => recalcScoresMut.mutate(),
+      states: {
+        loading: recalcScoresMut.isPending,
+        success: recalcScoresMut.isSuccess,
+        error: recalcScoresMut.isError,
+      },
+      stateMessages: {
+        loading: "Recalculating all artist scores…",
+        success: recalcScoresMut.data
+          ? `Updated ${recalcScoresMut.data.updatedCount} of ${recalcScoresMut.data.totalProcessed} artists`
+          : "Recalculated scores",
+        error: recalcScoresMut.error?.message ?? "Failed to recalculate artist scores.",
+      },
+      renderDescription: () => {
+        if (recalcScoresMut.data) {
+          return `Updated ${recalcScoresMut.data.updatedCount} of ${recalcScoresMut.data.totalProcessed} artists.`;
+        }
+        return "Recompute artist's scores and leaderboard positions.";
+      },
+      renderLastUpdated: () =>
+        recalcScoresMut.isSuccess
+          ? "Completed"
+          : lastRuns[`artist_scores_last_run`]
+            ? timeAgo(lastRuns[`artist_scores_last_run`])
+            : "Never",
+      state: undefined,
+      currentProgress: null,
     },
   ];
 
@@ -315,7 +371,11 @@ function RouteComponent() {
             const style = getRatingStyles(card.ratingLabel);
             const progress = card.currentProgress;
             const color =
-              card.id === "artist-images" ? "bg-blue-500" : "bg-green-500";
+              card.id === "artist-images"
+                ? "bg-blue-500"
+                : card.id === "header-images"
+                  ? "bg-green-500"
+                  : "bg-purple-500";
 
             return (
               <motion.div
@@ -360,6 +420,76 @@ function RouteComponent() {
                       Last updated: {card.renderLastUpdated()}
                     </span>
                   </p>
+
+                  {card.id === "recalculate-scores" &&
+                    recalcScoresMut.data &&
+                    recalcScoresMut.data.changedArtists.length > 0 && (
+                      <div className="mt-4 p-3 border border-neutral-800 rounded-lg bg-neutral-900/60 max-h-48 overflow-auto">
+                        <div className="flex items-center gap-2 text-sm text-neutral-200 mb-2">
+                          <ArrowRightLeft className="w-4 h-4" />
+                          <span>Updated artists</span>
+                        </div>
+                        <div className="space-y-2 text-xs text-neutral-300">
+                          {recalcScoresMut.data.changedArtists.slice(0, 8).map(artist => (
+                            <div
+                              key={artist.spotifyID}
+                              className="border border-neutral-800 rounded-md p-2"
+                            >
+                              <div className="font-medium text-neutral-100 mb-1">
+                                {artist.name}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {artist.changes.map(change => {
+                                  const labelMap: Record<
+                                    RecalcResult["changedArtists"][number]["changes"][number]["field"],
+                                    string
+                                  > = {
+                                    totalScore: "Overall",
+                                    peakScore: "Peak",
+                                    latestScore: "Latest",
+                                    averageScore: "Average",
+                                    bonusPoints: "Bonus",
+                                    reviewCount: "Reviews",
+                                    unrated: "Unrated",
+                                    leaderboardPosition: "Rank",
+                                    peakLeaderboardPosition: "Peak Rank",
+                                    latestLeaderboardPosition: "Latest Rank",
+                                  };
+                                  const formatVal = (val: number | null) => {
+                                    if (val === null || val === undefined) return "—";
+                                    if (change.field === "unrated") {
+                                      return val ? "Yes" : "No";
+                                    }
+                                    if (
+                                      change.field === "leaderboardPosition" ||
+                                      change.field === "peakLeaderboardPosition" ||
+                                      change.field === "latestLeaderboardPosition" ||
+                                      change.field === "reviewCount"
+                                    ) {
+                                      return val;
+                                    }
+                                    return Number(val).toFixed(2);
+                                  };
+                                  return (
+                                    <div key={change.field}>
+                                      <span className="text-neutral-500">
+                                        {labelMap[change.field]}:
+                                      </span>{" "}
+                                      {formatVal(change.before)} → {formatVal(change.after)}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                          {recalcScoresMut.data.changedArtists.length > 8 && (
+                            <div className="text-neutral-500">
+                              + {recalcScoresMut.data.changedArtists.length - 8} more…
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                   <div className="mt-4 pt-4 border-t border-neutral-800">
                     <Button

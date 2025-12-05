@@ -118,68 +118,82 @@ function RouteComponent() {
 
       {/* Artist Scores Section */}
       <div className="mb-16 flex justify-center items-center gap-8">
-        {/* Overall Score - Primary */}
-        <div className="flex flex-col items-center gap-2">
-          <RatingChip
-            rating={Math.ceil(artist.totalScore)}
-            options={{ textBelow: true }}
-            tooltipContent={{
-              title: "Overall Score",
-              description:
-                "Average of all contributing albums plus quality bonuses and penalties. This is the artist's primary score used for ranking.",
-            }}
-          />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm text-gray-400">Overall</span>
-            {artist.leaderboardPosition && (
-              <span className="text-xs text-gray-500">
-                Rank #{artist.leaderboardPosition}
-              </span>
-            )}
+        {artist.unrated ? (
+          <div className="flex flex-col items-center gap-2">
+            <RatingChip
+              rating={0}
+              options={{ textBelow: true }}
+            />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-sm text-gray-400">Unrated</span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Overall Score - Primary */}
+            <div className="flex flex-col items-center gap-2">
+              <RatingChip
+                rating={Math.ceil(artist.totalScore)}
+                options={{ textBelow: true }}
+                tooltipContent={{
+                  title: "Overall Score",
+                  description:
+                    "Average of all contributing albums plus quality bonuses and penalties. This is the artist's primary score used for ranking.",
+                }}
+              />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm text-gray-400">Overall</span>
+                {artist.leaderboardPosition && (
+                  <span className="text-xs text-gray-500">
+                    Rank #{artist.leaderboardPosition}
+                  </span>
+                )}
+              </div>
+            </div>
 
-        {/* Peak Score */}
-        <div className="flex flex-col items-center gap-2">
-          <RatingChip
-            rating={Math.ceil(artist.peakScore)}
-            options={{ textBelow: true }}
-            tooltipContent={{
-              title: "Peak Score",
-              description:
-                "Average of the artist's top 3 highest-rated albums plus bonuses. Shows the artist's potential at their best.",
-            }}
-          />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm text-gray-400">Peak</span>
-            {artist.peakLeaderboardPosition && (
-              <span className="text-xs text-gray-500">
-                Rank #{artist.peakLeaderboardPosition}
-              </span>
-            )}
-          </div>
-        </div>
+            {/* Peak Score */}
+            <div className="flex flex-col items-center gap-2">
+              <RatingChip
+                rating={Math.ceil(artist.peakScore)}
+                options={{ textBelow: true }}
+                tooltipContent={{
+                  title: "Peak Score",
+                  description:
+                    "Average of the artist's top 3 highest-rated albums plus bonuses. Shows the artist's potential at their best.",
+                }}
+              />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm text-gray-400">Peak</span>
+                {artist.peakLeaderboardPosition && (
+                  <span className="text-xs text-gray-500">
+                    Rank #{artist.peakLeaderboardPosition}
+                  </span>
+                )}
+              </div>
+            </div>
 
-        {/* Latest Score */}
-        <div className="flex flex-col items-center gap-2">
-          <RatingChip
-            rating={Math.ceil(artist.latestScore)}
-            options={{ textBelow: true }}
-            tooltipContent={{
-              title: "Latest Score",
-              description:
-                "Average of the artist's latest 3 albums (by release year) plus bonuses. Shows the artist's current form and recent quality.",
-            }}
-          />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm text-gray-400">Latest</span>
-            {artist.latestLeaderboardPosition && (
-              <span className="text-xs text-gray-500">
-                Rank #{artist.latestLeaderboardPosition}
-              </span>
-            )}
-          </div>
-        </div>
+            {/* Latest Score */}
+            <div className="flex flex-col items-center gap-2">
+              <RatingChip
+                rating={Math.ceil(artist.latestScore)}
+                options={{ textBelow: true }}
+                tooltipContent={{
+                  title: "Latest Score",
+                  description:
+                    "Average of the artist's latest 3 albums (by release year) plus bonuses. Shows the artist's current form and recent quality.",
+                }}
+              />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm text-gray-400">Latest</span>
+                {artist.latestLeaderboardPosition && (
+                  <span className="text-xs text-gray-500">
+                    Rank #{artist.latestLeaderboardPosition}
+                  </span>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       <div className="mx-auto max-w-[80ch]">
         <TrackList tracks={tracks} sortByRating maxHeight="500px" />

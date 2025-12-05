@@ -15,6 +15,7 @@ interface RatingChipProps {
     textBelow?: boolean;
     small?: boolean;
     ratingString?: boolean;
+    hideUnratedDialog?: boolean;
   };
   /** Optional score breakdown data */
   scoreBreakdown?: {
@@ -34,38 +35,19 @@ interface RatingChipProps {
  * When textBelow is true and scoreBreakdown is provided, it allows users to view a detailed breakdown
  * of how the score was calculated including bonuses.
  */
-const RatingChip = ({
-  rating,
-  options,
-  scoreBreakdown,
-  tooltipContent,
-}: RatingChipProps) => {
+const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingChipProps) => {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
-  const { label, borderColor, textColor, backgroundColorLighter } =
-    getRatingStyles(rating);
+  const { label, borderColor, textColor, backgroundColorLighter } = getRatingStyles(rating);
 
   const isUnrated = rating === 0;
-  const pillContent = isUnrated
-    ? "UNRATED"
-    : options?.ratingString
-      ? label
-      : rating;
+  const pillContent = isUnrated ? "UNRATED" : options?.ratingString ? label : rating;
 
   // Slightly smaller font for unrated when not small variant
   const unratedSizeClass = !options?.small && isUnrated ? "text-3xl" : "";
 
   const cardStyles = cva(
-    [
-      "flex",
-      "items-center",
-      "flex-col",
-      "gap-1",
-      "w-max",
-      "mx-auto",
-      "relative",
-      textColor,
-    ],
+    ["flex", "items-center", "flex-col", "gap-1", "w-max", "mx-auto", "relative", textColor],
     {
       variants: {
         small: { false: "mt-12 mb-4" },
@@ -86,7 +68,10 @@ const RatingChip = ({
   );
 
   const showInfoButton =
-    options?.textBelow && (scoreBreakdown || tooltipContent);
+    options?.textBelow &&
+    (scoreBreakdown || tooltipContent) &&
+    !isUnrated &&
+    !options?.hideUnratedDialog;
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
@@ -101,7 +86,7 @@ const RatingChip = ({
           {pillContent}
         </motion.div>
 
-        {isUnrated && !options?.small && (
+        {isUnrated && !options?.small && !options?.hideUnratedDialog && (
           <>
             <motion.button
               className="absolute -top-4 -right-4 text-gray-600 hover:text-gray-700 transition-colors"
@@ -117,23 +102,18 @@ const RatingChip = ({
               title="Unrated artists"
             >
               <p className="text-zinc-200 mb-2">
-                This artist is unrated. None of their reviews provide them a
-                score.
+                This artist is unrated. None of their reviews provide them a score.
               </p>
-              <p className="text-zinc-200">
-                There are two potential reasons for this:
-              </p>
+              <p className="text-zinc-200">There are two potential reasons for this:</p>
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
                 <li className="text-zinc-400">
-                  I don't plan to review their entire discography, and I feel
-                  like basing their score on a fraction of their work isn't
-                  accurate.
+                  I don't plan to review their entire discography, and I feel like basing their
+                  score on a fraction of their work isn't accurate.
                 </li>
                 <li className="text-zinc-400 mt-1">
-                  I <em>do</em> plan to review their entire discography, but the
-                  only reviews right now are non-studio-albums i.e. mixtapes,
-                  EPs etc. which I don't want to count towards the artist's
-                  overall score.
+                  I <em>do</em> plan to review their entire discography, but I either haven't
+                  gotten around to it yet, they only have one album, or their other releases
+                  are non-albums (mixtapes, EPs etc.) which I don't count towards their score.
                 </li>
               </ol>
             </Dialog>
@@ -148,19 +128,13 @@ const RatingChip = ({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
-          {rating > 0 && (
-            <p className="uppercase text-center font-medium text-xl">{label}</p>
-          )}
+          {rating > 0 && <p className="uppercase text-center font-medium text-xl">{label}</p>}
 
           {showInfoButton && (
             <motion.button
-              onClick={() =>
-                scoreBreakdown ? setShowBreakdown(true) : setDialogOpen(true)
-              }
+              onClick={() => (scoreBreakdown ? setShowBreakdown(true) : setDialogOpen(true))}
               className="ml-1 text-gray-600 hover:text-gray-700 transition-colors absolute -top-4 -right-5"
-              title={
-                scoreBreakdown ? "View score breakdown" : "View score info"
-              }
+              title={scoreBreakdown ? "View score breakdown" : "View score info"}
               whileHover={{ scale: 1.2, rotate: 15 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -195,7 +169,7 @@ const RatingChip = ({
         />
       )}
 
-      {tooltipContent && (
+      {tooltipContent && !isUnrated && (
         <Dialog
           isOpen={isDialogOpen}
           onClose={() => setDialogOpen(false)}

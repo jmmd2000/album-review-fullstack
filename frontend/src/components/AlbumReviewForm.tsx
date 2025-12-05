@@ -185,14 +185,14 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
       <div className="sticky top-0 z-50">
         {isEditing ? (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={album.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: album.reviewScore, bonuses: album.reviewBonuses, affectsArtistScore: album.affectsArtistScore }} />
+            <RatingChip rating={album.finalScore} options={{ textBelow: true, hideUnratedDialog: true }} scoreBreakdown={{ baseScore: album.reviewScore, bonuses: album.reviewBonuses, affectsArtistScore: album.affectsArtistScore }} />
             {dynamicScores.finalScore !== null && (
-              <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: album.affectsArtistScore }} />
+              <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true, hideUnratedDialog: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: album.affectsArtistScore }} />
             )}
           </div>
         ) : (
           <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
-            <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: false }} />
+            <RatingChip rating={dynamicScores.finalScore} options={{ textBelow: true, hideUnratedDialog: true }} scoreBreakdown={{ baseScore: dynamicScores.baseScore, bonuses: dynamicScores.bonuses, affectsArtistScore: false }} />
           </div>
         )}
       </div>
