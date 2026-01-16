@@ -21,7 +21,7 @@ async function fetchAlbumReview(
   albumSpotifyID: string
 ): Promise<{
   album: ReviewedAlbum;
-  artist: ReviewedArtist;
+  artists: ReviewedArtist[];
   tracks: DisplayTrack[];
   allGenres: Genre[];
   albumGenres: Genre[];
@@ -71,7 +71,7 @@ function RouteComponent() {
   }
 
   const {
-    data: { album, artist, tracks, albumGenres },
+    data: { album, artists, tracks, albumGenres },
   } = useSuspenseQuery(reviewQueryOptions(albumID));
 
   return (
@@ -85,7 +85,11 @@ function RouteComponent() {
         <AlbumDetails
           album={album}
           trackCount={tracks.length}
-          artist={artist}
+          artists={artists.map((artist) => ({
+            spotifyID: artist.spotifyID,
+            name: artist.name,
+            imageURLs: artist.imageURLs,
+          }))}
         />
         <div className="pb-10">
           {album.genres && <GenrePills genres={albumGenres} />}

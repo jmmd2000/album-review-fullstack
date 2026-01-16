@@ -27,6 +27,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export type CreateReviewFormData = {
   /*** An array of track IDs and their ratings*/
   tracks: DisplayTrack[];
+  /*** Selected album artists */
+  selectedArtistIDs: string[];
+  /*** Selected album artists that affect score */
+  scoreArtistIDs: string[];
   /*** The best song on the album */
   bestSong: string;
   /*** The worst song on the album */
@@ -63,6 +67,16 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
   const isEditing = isReviewedAlbum(album);
+  const albumArtists =
+    "albumArtists" in album && Array.isArray(album.albumArtists) && album.albumArtists.length > 0
+      ? album.albumArtists
+      : !isEditing
+        ? album.artists.map((artist) => ({
+            spotifyID: artist.id,
+            name: artist.name,
+            imageURLs: [],
+          }))
+        : [];
 
   // Dynamic score state
   const [dynamicScores, setDynamicScores] = useState<{ baseScore: number; bonuses: ReviewBonuses; finalScore: number }>({
@@ -113,6 +127,14 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
   const { control, register, handleSubmit, setValue, getValues } = useForm<CreateReviewFormData>({
     defaultValues: {
       tracks: displayTracks,
+      selectedArtistIDs: isEditing
+        ? album.artistSpotifyIDs && album.artistSpotifyIDs.length > 0
+          ? album.artistSpotifyIDs
+          : albumArtists.map((artist) => artist.spotifyID)
+        : albumArtists.map((artist) => artist.spotifyID),
+      scoreArtistIDs: isEditing
+        ? album.artistScoreIDs ?? []
+        : albumArtists.map((artist) => artist.spotifyID),
       bestSong: isEditing ? album.bestSong : "",
       worstSong: isEditing ? album.worstSong : "",
       reviewContent: isEditing ? album.reviewContent || "" : "",
@@ -122,8 +144,15 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     },
   });
 
+  useEffect(() => {
+    register("selectedArtistIDs");
+    register("scoreArtistIDs");
+  }, [register]);
+
   // Watch tracks to update dynamic scoring
   const watchedTracks = useWatch({ control, name: "tracks" });
+  const watchedArtists = useWatch({ control, name: "selectedArtistIDs" });
+  const watchedScoreArtists = useWatch({ control, name: "scoreArtistIDs" });
   useEffect(() => {
     if (!watchedTracks?.length) return;
     const { baseScore, bonuses, finalScore } = calculateAlbumScore(watchedTracks);
@@ -198,21 +227,106 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8">
-        {/* AAS toggle */}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="aasToggle"
-            {...register("affectsArtistScore")}
-            className="w-4 h-4 appearance-none bg-zinc-800 border-2 border-zinc-600 rounded cursor-pointer
-             checked:bg-green-500 checked:border-green-700
-             focus:ring-green-400 focus:ring-2"
-          />
+        {/* AAS toggle for solo albums */}
+        {albumArtists.length <= 1 && (
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="aasToggle"
+              {...register("affectsArtistScore")}
+              className="w-4 h-4 appearance-none bg-zinc-800 border-2 border-zinc-600 rounded cursor-pointer
+               checked:bg-green-500 checked:border-green-700
+               focus:ring-green-400 focus:ring-2"
+            />
 
-          <label htmlFor="aasToggle" className="text-zinc-200 cursor-pointer">
-            Include in artist score
-          </label>
-        </div>
+            <label htmlFor="aasToggle" className="text-zinc-200 cursor-pointer">
+              Include in artist score
+            </label>
+          </div>
+        )}
+
+        {/* Artist Selection */}
+        {albumArtists.length > 1 && (
+          <div className="w-full mb-6 p-4 rounded-lg bg-neutral-800">
+            <label className="block text-zinc-200 font-medium mb-3">Album Artists</label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {albumArtists.map((artist) => {
+                const isChecked = watchedArtists?.includes(artist.spotifyID) ?? false;
+                const affectsScore = watchedScoreArtists?.includes(artist.spotifyID) ?? false;
+                const imageURL = artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
+                return (
+                  <label
+                    key={artist.spotifyID}
+                    className={`flex items-center gap-3 rounded-lg border border-neutral-700/60 bg-neutral-900/40 px-3 py-2 cursor-pointer hover:border-neutral-600 ${isChecked ? "" : "opacity-60"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        const current = watchedArtists ?? [];
+                        const scoreCurrent = watchedScoreArtists ?? [];
+                        if (isChecked && current.length <= 1) return;
+                        const updated = isChecked
+                          ? current.filter((id) => id !== artist.spotifyID)
+                          : [...current, artist.spotifyID];
+                        setValue("selectedArtistIDs", updated, { shouldDirty: true });
+                        if (isChecked) {
+                          setValue(
+                            "scoreArtistIDs",
+                            scoreCurrent.filter((id) => id !== artist.spotifyID),
+                            { shouldDirty: true }
+                          );
+                        } else {
+                          setValue(
+                            "scoreArtistIDs",
+                            scoreCurrent.includes(artist.spotifyID)
+                              ? scoreCurrent
+                              : [...scoreCurrent, artist.spotifyID],
+                            { shouldDirty: true }
+                          );
+                        }
+                      }}
+                      className="w-4 h-4 appearance-none bg-zinc-800 border-2 border-zinc-600 rounded cursor-pointer
+                        checked:bg-green-500 checked:border-green-700
+                        focus:ring-green-400 focus:ring-2"
+                    />
+                    {imageURL ? (
+                      <img src={imageURL} alt={artist.name} className="h-12 w-12 rounded-lg object-cover" />
+                    ) : (
+                      <div className="h-12 w-12 rounded-lg bg-neutral-700 flex items-center justify-center text-sm text-neutral-200">
+                        {artist.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-zinc-200 text-sm">{artist.name}</span>
+                      {albumArtists.length > 1 && (
+                        <div className="flex items-center gap-2 text-xs text-neutral-400">
+                          <input
+                            type="checkbox"
+                            checked={affectsScore}
+                            disabled={!isChecked}
+                            onChange={() => {
+                              const scoreCurrent = watchedScoreArtists ?? [];
+                              const updatedScore = affectsScore
+                                ? scoreCurrent.filter((id) => id !== artist.spotifyID)
+                                : [...scoreCurrent, artist.spotifyID];
+                              setValue("scoreArtistIDs", updatedScore, { shouldDirty: true });
+                            }}
+                            className="w-3 h-3 appearance-none bg-zinc-800 border border-zinc-600 rounded cursor-pointer
+                              checked:bg-green-500 checked:border-green-700
+                              focus:ring-green-400 focus:ring-2 disabled:opacity-50"
+                          />
+                          <span>Include in artist score</span>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-neutral-500 mt-2">At least one artist must be selected.</p>
+          </div>
+        )}
 
         {/* Color Selection */}
         <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
@@ -286,6 +400,8 @@ const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum 
         colors: formData.colors,
         genres: formattedGenres,
         affectsArtistScore: formData.affectsArtistScore,
+        selectedArtistIDs: formData.selectedArtistIDs,
+        scoreArtistIDs: formData.scoreArtistIDs,
       }),
     });
     if (!resp.ok) console.error("Failed to submit review:", resp.statusText);

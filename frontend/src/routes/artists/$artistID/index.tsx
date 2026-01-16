@@ -15,6 +15,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 async function fetchReviewedArtist(artistSpotifyID: string): Promise<{
   artist: ReviewedArtist;
   albums: DisplayAlbum[];
+  featuredAlbums: DisplayAlbum[];
   tracks: DisplayTrack[];
 }> {
   const response = await fetch(
@@ -60,6 +61,7 @@ function RouteComponent() {
 
   const artist = data.data.artist;
   const albums = data.data.albums;
+  const featuredAlbums = data.data.featuredAlbums ?? [];
   const tracks = data.data.tracks;
 
   const albumString =
@@ -204,6 +206,14 @@ function RouteComponent() {
         ))}
         heading={`Albums by ${artist.name}`}
       />
+      {featuredAlbums.length > 0 && (
+        <CardGrid
+          cards={featuredAlbums.map(album => (
+            <AlbumCard key={album.spotifyID} album={album} />
+          ))}
+          heading="Featured on"
+        />
+      )}
     </div>
   );
 }

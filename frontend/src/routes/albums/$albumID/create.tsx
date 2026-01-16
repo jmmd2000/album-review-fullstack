@@ -7,7 +7,7 @@ import {
   ExtractedColor,
   Genre,
   SpotifyAlbum,
-  SpotifyArtist,
+  AlbumArtist,
 } from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
@@ -48,7 +48,7 @@ async function fetchAlbumFromSpotify(
   albumSpotifyID: string
 ): Promise<{
   album: SpotifyAlbum;
-  artist: SpotifyArtist | null;
+  artists: AlbumArtist[];
   genres: Genre[];
 }> {
   const response = await fetch(
@@ -144,11 +144,11 @@ function RouteComponent() {
             name={data.album.name}
             imageURL={data.album.images[1].url}
           />
-          {data.artist && (
+          {data.artists && data.artists.length > 0 && (
             <AlbumDetails
               album={data.album}
               trackCount={data.album.tracks.items.length}
-              artist={data.artist}
+              artists={data.artists}
             />
           )}
         </BlurryHeader>

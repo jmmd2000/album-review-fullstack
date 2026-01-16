@@ -51,6 +51,23 @@ ENDSSH
         }
       }
     }
+
+    stage('Run DB Migrations') {
+      steps {
+        withCredentials([string(credentialsId: 'db-url', variable: 'DB_URL')]) {
+          sshagent(credentials: ['vps-ssh']) {
+            sh '''
+ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
+cd $APP_DIR
+echo 'Running DB migrations'
+docker exec -i album-review-fullstack-db-1 psql "$DB_URL" < backend/migrations/20260116_multi_artist.sql
+docker exec -i album-review-fullstack-db-1 psql "$DB_URL" < backend/migrations/20260116_backfill_featured_track_artists.sql
+ENDSSH
+'''
+          }
+        }
+      }
+    }
   }
 
   post {

@@ -62,6 +62,8 @@ export interface SpotifyAlbum {
   tracks: { items: SpotifyTrack[] };
   /** The extracted colours from the album cover */
   colors: ExtractedColor[];
+  /** Optional expanded artist data for album UI */
+  albumArtists?: AlbumArtist[];
 }
 
 /** Represents the artist data that comes with a Spotify album */
@@ -78,6 +80,18 @@ export interface SimpleSpotifyArtist {
   type: string;
   /** Spotify URI for the artist. */
   uri: string;
+}
+
+/**
+ * Represents artist data attached to an album for display/selection.
+ */
+export interface AlbumArtist {
+  /** Spotify ID of the artist. */
+  spotifyID: string;
+  /** Name of the artist. */
+  name: string;
+  /** List of artist images. */
+  imageURLs: SpotifyImage[];
 }
 
 /**
@@ -208,6 +222,12 @@ export interface ReviewedAlbum {
   tracks?: ReviewedTrack[];
   /** String array of genres */
   genres: string[];
+  /** Full album artist list (for selection/display) */
+  albumArtists: AlbumArtist[];
+  /** Selected album artist IDs */
+  artistSpotifyIDs?: string[];
+  /** Selected album artist IDs that affect score */
+  artistScoreIDs?: string[];
 }
 
 /**
@@ -286,6 +306,10 @@ export interface DisplayAlbum {
   artistSpotifyID: string;
   /** Name of the artist. */
   artistName: string;
+  /** Full album artist list (for selection/display) */
+  albumArtists?: AlbumArtist[];
+  /** Selected album artist IDs */
+  artistSpotifyIDs?: string[];
   /** Name of the album. */
   name: string;
   /** Year the album was released. */

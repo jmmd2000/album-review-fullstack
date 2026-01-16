@@ -21,7 +21,7 @@ async function fetchAlbumFromDB(
   albumSpotifyID: string
 ): Promise<{
   album: ReviewedAlbum;
-  artist: ReviewedArtist;
+  artists: ReviewedArtist[];
   tracks: ReviewedTrack[];
   allGenres: Genre[];
   albumGenres: Genre[];
@@ -77,7 +77,11 @@ function RouteComponent() {
           <AlbumDetails
             album={data.album}
             trackCount={data.tracks.length}
-            artist={data.artist}
+            artists={data.artists.map((artist) => ({
+              spotifyID: artist.spotifyID,
+              name: artist.name,
+              imageURLs: artist.imageURLs,
+            }))}
           />
         </BlurryHeader>
 
