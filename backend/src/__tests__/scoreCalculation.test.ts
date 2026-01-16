@@ -429,6 +429,7 @@ function createMockAlbum(
     reviewContent: "Test review",
     colors: [],
     genres: [],
+    albumArtists: [],
     tracks: [],
   } as ReviewedAlbum;
 }

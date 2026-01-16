@@ -56,13 +56,13 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 
   const returned: {
     album: ReviewedAlbum;
-    artist: ReviewedArtist;
+    artists: ReviewedArtist[];
     tracks: ReviewedTrack[];
   } = response.body;
 
   expect(returned.album).toHaveProperty("spotifyID");
   expect(returned.album).toHaveProperty("name");
-  expect(returned.artist).toHaveProperty("averageScore");
+  expect(returned.artists[0]).toHaveProperty("averageScore");
   expect(returned.tracks[0]).toHaveProperty("rating");
 });
 
@@ -98,3 +98,44 @@ test("PUT /api/albums/:albumID/edit - should update album review", async () => {
   expect(updated.body.album.reviewScore).toBe(90);
   expect(updated.body.album.reviewContent).toBe(mockUpdateData.reviewContent);
 }, 15000);
+
+test("POST /api/albums/create - should persist per-artist score flags", async () => {
+  const collabData = JSON.parse(JSON.stringify(mockReviewData));
+  collabData.album = {
+    ...mockReviewData.album,
+    id: "collab_album_1",
+    artists: [
+      mockReviewData.album.artists[0],
+      {
+        external_urls: {
+          spotify: "https://open.spotify.com/artist/collab_artist_2",
+        },
+        href: "https://api.spotify.com/v1/artists/collab_artist_2",
+        id: "collab_artist_2",
+        name: "Collab Artist 2",
+        type: "artist",
+        uri: "spotify:artist:collab_artist_2",
+      },
+    ],
+  };
+  collabData.selectedArtistIDs = [
+    mockReviewData.album.artists[0].id,
+    "collab_artist_2",
+  ];
+  collabData.scoreArtistIDs = [];
+
+  const response = await request(app)
+    .post("/api/albums/create")
+    .set("Cookie", authCookie)
+    .send(collabData);
+
+  expect(response.status).toBe(201);
+
+  const links = await query(
+    "SELECT artist_spotify_id, affects_score FROM album_artists WHERE album_spotify_id = $1 ORDER BY artist_spotify_id",
+    ["collab_album_1"]
+  );
+
+  expect(links.rowCount).toBe(2);
+  expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
+});

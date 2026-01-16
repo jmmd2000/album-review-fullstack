@@ -7,11 +7,11 @@ import {
   ReviewedAlbum,
   ReviewedArtist,
   ReviewedTrack,
-  SpotifyImage,
   SpotifyAlbum,
   RelatedGenre,
   PaginatedAlbumsResult,
   Genre,
+  AlbumArtist,
 } from "@shared/types";
 import { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
@@ -27,7 +27,6 @@ import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { ArtistService } from "./artistService";
 import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
-import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
@@ -59,43 +58,31 @@ export class AlbumService {
       data.ratedTracks
     );
 
-    // fetch or create artist
-    let artist = await ArtistModel.getArtistBySpotifyID(
-      spotifyAlbum.artists[0].id
-    );
-    if (!artist) {
-      const fetched = await fetchArtistFromSpotify(
-        spotifyAlbum.artists[0].id,
-        spotifyAlbum.artists[0].href
-      );
-      let headerImage: string | null = null;
-      try {
-        headerImage = await fetchArtistHeaderFromSpotify(
-          spotifyAlbum.artists[0].id
-        );
-      } catch (err) {
-        console.warn(
-          "Could not fetch artist header image, skipping scraper:",
-          err
-        );
-      }
-      if (fetched) {
-        const score = data.affectsArtistScore ? finalScore : 0;
-        artist = await ArtistModel.createArtist({
-          name: fetched.name,
-          spotifyID: fetched.id,
-          imageURLs: fetched.images,
-          headerImage,
-          averageScore: score,
-          bonusPoints: 0,
-          totalScore: score,
-          bonusReason: JSON.stringify([]),
-          reviewCount: 1,
-          unrated: !data.affectsArtistScore,
-          leaderboardPosition: null,
-        });
-      }
+    const albumArtists = await AlbumService.resolveAlbumArtists(spotifyAlbum);
+    if (albumArtists.length === 0) {
+      throw new Error("Album artists could not be resolved");
     }
+    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(
+      data.selectedArtistIDs,
+      albumArtists
+    );
+    // Allow per-artist scoring for collabs, but keep the solo toggle behavior
+    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
+      data.scoreArtistIDs,
+      selectedArtistIDs,
+      albumArtists.length === 1 ? data.affectsArtistScore : undefined
+    );
+    const primaryArtist =
+      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
+      albumArtists[0];
+
+    // Ensure all selected artists exist before linking tracks/albums
+    await AlbumService.ensureArtists(
+      selectedArtistIDs,
+      albumArtists,
+      scoreArtistIDs,
+      finalScore
+    );
 
     // prepare misc album data
     const releaseDate = formatDate(spotifyAlbum.release_date);
@@ -125,11 +112,12 @@ export class AlbumService {
       reviewScore: baseScore,
       reviewBonuses: bonuses,
       finalScore,
-      affectsArtistScore: data.affectsArtistScore,
-      artistSpotifyID: artist.spotifyID,
-      artistName: artist.name,
+      affectsArtistScore: scoreArtistIDs.length > 0,
+      artistSpotifyID: primaryArtist.spotifyID,
+      artistName: primaryArtist.name,
       colors: colors.map(c => ({ hex: c.hex })),
       genres: data.genres,
+      albumArtists,
     });
 
     const genreIDs = await Promise.all(
@@ -140,22 +128,49 @@ export class AlbumService {
     await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs);
     await GenreModel.incrementRelatedStrength(genreIDs);
 
+    await AlbumModel.upsertAlbumArtists(
+      album.spotifyID,
+      selectedArtistIDs.map(artistSpotifyID => ({
+        artistSpotifyID,
+        affectsScore: scoreArtistIDs.includes(artistSpotifyID),
+      }))
+    );
+
     // create track entries
+    const trackArtistIDs = Array.from(
+      new Set(
+        spotifyAlbum.tracks.items.flatMap(track =>
+          track.artists.map(a => a.id)
+        )
+      )
+    );
+    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(
+      trackArtistIDs
+    );
+    const existingArtistIDs = new Set(
+      existingTrackArtists.map(a => a.spotifyID)
+    );
+    selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
+
     for (const track of data.ratedTracks) {
       const t = spotifyAlbum.tracks.items.find(i => i.id === track.spotifyID);
       if (!t) continue;
       await TrackModel.createTrack({
         albumSpotifyID: album.spotifyID,
-        artistSpotifyID: artist.spotifyID,
-        artistName: artist.name,
+        artistSpotifyID: primaryArtist.spotifyID,
+        artistName: primaryArtist.name,
         name: t.name,
         spotifyID: t.id,
         duration: t.duration_ms,
         features: t.artists
-          .filter(x => x.id !== artist.spotifyID)
+          .filter(x => !selectedArtistIDs.includes(x.id))
           .map(x => ({ id: x.id, name: x.name })),
         rating: track.rating!,
       });
+      const linkArtistIDs = t.artists
+        .map(a => a.id)
+        .filter(id => existingArtistIDs.has(id));
+      await TrackModel.linkArtistsToTrack(t.id, linkArtistIDs);
     }
 
     // Remove from bookmarks
@@ -166,53 +181,7 @@ export class AlbumService {
       await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID);
     }
 
-    // Get all albums for this artist
-    const all = (await AlbumModel.getAlbumsByArtist(
-      artist.spotifyID
-    )) as ReviewedAlbum[];
-
-    // If album contributes, handle artist update
-    if (data.affectsArtistScore) {
-      // If the artist is unrated, and this album is affecting their score, go thru
-      // all of their previous albums with `affectsArtistScore` set to false, and set them to true
-      if (artist.unrated) {
-        const legacy = (await AlbumModel.getAlbumsByArtist(
-          artist.spotifyID
-        )) as ReviewedAlbum[];
-        for (const a of legacy) {
-          if (!a.affectsArtistScore) {
-            await AlbumModel.updateAlbum(a.spotifyID, {
-              affectsArtistScore: true,
-            });
-          }
-        }
-      }
-      // Recalculate artist metrics
-      const {
-        newAverageScore,
-        newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReasons,
-      } = calculateArtistScore(all);
-      await ArtistModel.updateArtist(artist.spotifyID, {
-        averageScore: newAverageScore,
-        bonusPoints: newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReason: JSON.stringify(bonusReasons),
-        reviewCount: all.length,
-        unrated: false,
-      });
-      // update all leaderboard positions
-      await ArtistService.updateAllLeaderboardPositions();
-    } else {
-      await ArtistModel.updateArtist(artist.spotifyID, {
-        reviewCount: all.length,
-      });
-    }
+    await AlbumService.refreshArtists(selectedArtistIDs);
 
     return album;
   }
@@ -222,15 +191,21 @@ export class AlbumService {
     includeGenres: boolean = true
   ): Promise<{
     album: ReviewedAlbum;
-    artist: ReviewedArtist;
+    artists: ReviewedArtist[];
     tracks: DisplayTrack[];
     allGenres?: Genre[];
     albumGenres?: Genre[];
   }> {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
-    const artist = (await ArtistModel.getArtistBySpotifyID(
-      album.artistSpotifyID
-    )) as ReviewedArtist;
+    const artistLinks = await AlbumModel.getAlbumArtistLinks(album.spotifyID);
+    const artistIDs = artistLinks.map(link => link.artistSpotifyID);
+    const artists = (await ArtistModel.getArtistsBySpotifyIDs(
+      artistIDs
+    )) as ReviewedArtist[];
+    album.artistSpotifyIDs = artistIDs;
+    album.artistScoreIDs = artistLinks
+      .filter(link => link.affectsScore)
+      .map(link => link.artistSpotifyID);
     const tracks = await TrackModel.getTracksByAlbumID(id);
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
@@ -244,17 +219,19 @@ export class AlbumService {
     }));
 
     if (!includeGenres) {
-      return { album, artist, tracks: displayTracks };
+      return { album, artists, tracks: displayTracks };
     }
 
     const albumGenres = await GenreModel.getGenresForAlbums([album.spotifyID]);
     const allGenres = await GenreModel.getAllGenres();
 
-    return { album, artist, tracks: displayTracks, allGenres, albumGenres };
+    return { album, artists, tracks: displayTracks, allGenres, albumGenres };
   }
 
   static async getAllAlbums(includeCounts = false) {
     const albums = await AlbumModel.getAllAlbums();
+    const albumIDs = albums.map(album => album.spotifyID);
+    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
     const displayAlbums: DisplayAlbum[] = albums.map(album => ({
       name: album.name,
       spotifyID: album.spotifyID,
@@ -264,6 +241,8 @@ export class AlbumService {
       artistName: album.artistName,
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
+      albumArtists: album.albumArtists,
+      artistSpotifyIDs: artistMap.get(album.spotifyID) ?? [],
     }));
 
     if (!includeCounts) return { albums: displayAlbums };
@@ -300,7 +279,16 @@ export class AlbumService {
       artistName: album.artistName,
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
+      albumArtists: album.albumArtists,
     }));
+
+    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(
+      albums.map(a => a.spotifyID)
+    );
+    for (const displayAlbum of displayAlbums) {
+      displayAlbum.artistSpotifyIDs =
+        artistMap.get(displayAlbum.spotifyID) ?? [];
+    }
 
     return {
       albums: displayAlbums,
@@ -314,6 +302,7 @@ export class AlbumService {
   static async deleteAlbum(id: string) {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
     if (!album) throw new Error("Album not found");
+    const artistIDs = await AlbumModel.getAlbumArtistIDs(id);
 
     // Remove old genres, decrement related strengths and deleted genres if unused
     const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
@@ -325,65 +314,7 @@ export class AlbumService {
     await TrackModel.deleteTracksByAlbumID(id);
     await AlbumModel.deleteAlbum(id);
 
-    // If it didn't affect score, stop here
-    if (!album.affectsArtistScore) return;
-
-    //  Get remaining albums
-    const remaining = (await AlbumModel.getAlbumsByArtist(
-      album.artistSpotifyID
-    )) as ReviewedAlbum[];
-
-    // If no albums left, drop the artist entirely
-    if (remaining.length === 0) {
-      await ArtistModel.deleteArtist(album.artistSpotifyID);
-      await ArtistService.updateAllLeaderboardPositions();
-      return;
-    }
-
-    // Otherwise split out contributing set
-    const contributing = remaining.filter(a => a.affectsArtistScore);
-
-    if (contributing.length === 0) {
-      // No more contributing albums -> mark artist unrated & zero their score
-      await ArtistModel.updateArtist(album.artistSpotifyID, {
-        unrated: true,
-        averageScore: 0,
-        bonusPoints: 0,
-        totalScore: 0,
-        peakScore: 0,
-        latestScore: 0,
-        bonusReason: JSON.stringify([]),
-        reviewCount: remaining.length,
-        leaderboardPosition: null,
-        peakLeaderboardPosition: null,
-        latestLeaderboardPosition: null,
-      });
-      await ArtistService.updateAllLeaderboardPositions();
-    } else {
-      // Recalculate artist metrics
-      const {
-        newAverageScore,
-        newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReasons,
-      } = calculateArtistScore(contributing);
-
-      await ArtistModel.updateArtist(album.artistSpotifyID, {
-        averageScore: newAverageScore,
-        bonusPoints: newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReason: JSON.stringify(bonusReasons),
-        reviewCount: remaining.length,
-        unrated: false,
-      });
-
-      // update all leaderboard positions
-      await ArtistService.updateAllLeaderboardPositions();
-    }
+    await AlbumService.refreshArtists(artistIDs);
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
@@ -392,14 +323,46 @@ export class AlbumService {
     )) as ReviewedAlbum;
     if (!existingAlbum) throw new Error("Album not found");
 
-    const artist = await ArtistModel.getArtistBySpotifyID(
-      existingAlbum.artistSpotifyID
-    )!;
-    const wasUnrated = artist.unrated;
-
     const existingTracks = await TrackModel.getTracksByAlbumID(albumID);
     const { baseScore, bonuses, finalScore } = calculateAlbumScore(
       data.ratedTracks
+    );
+
+    const albumArtists = await AlbumService.resolveAlbumArtists(
+      data.album ?? existingAlbum
+    );
+    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(
+      data.selectedArtistIDs,
+      albumArtists
+    );
+    // Preserve "no score" state if all score toggles are off
+    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
+      data.scoreArtistIDs,
+      selectedArtistIDs,
+      albumArtists.length === 1 ? data.affectsArtistScore : undefined
+    );
+    const primaryArtist =
+      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
+      albumArtists[0] ?? {
+        spotifyID: existingAlbum.artistSpotifyID,
+        name: existingAlbum.artistName,
+        imageURLs: existingAlbum.imageURLs,
+      };
+
+    const previousArtistIDs = await AlbumModel.getAlbumArtistIDs(albumID);
+    const addedArtistIDs = selectedArtistIDs.filter(
+      id => !previousArtistIDs.includes(id)
+    );
+    const removedArtistIDs = previousArtistIDs.filter(
+      id => !selectedArtistIDs.includes(id)
+    );
+
+    // Ensure any newly added artists exist before updates
+    await AlbumService.ensureArtists(
+      addedArtistIDs,
+      albumArtists,
+      scoreArtistIDs,
+      finalScore
     );
 
     // update review fields and AAS flag
@@ -412,8 +375,36 @@ export class AlbumService {
       reviewScore: baseScore,
       reviewBonuses: bonuses,
       finalScore: finalScore,
-      affectsArtistScore: data.affectsArtistScore,
+      affectsArtistScore: scoreArtistIDs.length > 0,
+      artistSpotifyID: primaryArtist.spotifyID,
+      artistName: primaryArtist.name,
+      albumArtists,
     });
+
+    await AlbumModel.upsertAlbumArtists(
+      albumID,
+      selectedArtistIDs.map(artistSpotifyID => ({
+        artistSpotifyID,
+        affectsScore: scoreArtistIDs.includes(artistSpotifyID),
+      }))
+    );
+    await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs);
+
+    const trackArtistIDs = Array.from(
+      new Set(
+        data.ratedTracks.flatMap(track => [
+          track.artistSpotifyID,
+          ...track.features.map(f => f.id),
+        ])
+      )
+    );
+    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(
+      trackArtistIDs
+    );
+    const existingArtistIDs = new Set(
+      existingTrackArtists.map(a => a.spotifyID)
+    );
+    selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
 
     for (const newTrack of data.ratedTracks) {
       const oldTrack = existingTracks.find(
@@ -424,8 +415,8 @@ export class AlbumService {
         // new track
         await TrackModel.createTrack({
           albumSpotifyID: albumID,
-          artistSpotifyID: existingAlbum.artistSpotifyID,
-          artistName: existingAlbum.artistName,
+          artistSpotifyID: newTrack.artistSpotifyID,
+          artistName: newTrack.artistName,
           name: newTrack.name,
           spotifyID: newTrack.spotifyID,
           duration: newTrack.duration,
@@ -441,6 +432,23 @@ export class AlbumService {
           );
         }
       }
+
+      if (
+        oldTrack &&
+        JSON.stringify(oldTrack.features ?? []) !==
+          JSON.stringify(newTrack.features ?? [])
+      ) {
+        await TrackModel.updateTrackFeatures(
+          newTrack.spotifyID,
+          newTrack.features
+        );
+      }
+      const linkArtistIDs = [
+        newTrack.artistSpotifyID,
+        ...newTrack.features.map(f => f.id),
+      ].filter(id => existingArtistIDs.has(id));
+      await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID);
+      await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs);
     }
 
     // Get new vs old genre IDs
@@ -460,47 +468,163 @@ export class AlbumService {
     await GenreModel.decrementRelatedStrength(toRemove);
     await GenreModel.deleteIfUnused(toRemove);
 
-    // If the artist was unrated, and this album now affects their score,
-    // update their other albums that DONT affect their score.
-    if (wasUnrated && data.affectsArtistScore) {
-      const legacy = (await AlbumModel.getAlbumsByArtist(
-        artist.spotifyID
-      )) as ReviewedAlbum[];
-      for (const alb of legacy) {
-        if (!alb.affectsArtistScore) {
-          await AlbumModel.updateAlbum(alb.spotifyID, {
-            affectsArtistScore: true,
-          });
+    await AlbumService.refreshArtists([
+      ...new Set([...previousArtistIDs, ...selectedArtistIDs]),
+    ]);
+
+    return AlbumModel.findBySpotifyID(albumID);
+  }
+
+  static async getReviewScoresByIds(ids: string[]) {
+    return AlbumModel.getReviewScoresByIds(ids);
+  }
+
+  private static resolveSelectedArtistIDs(
+    selectedArtistIDs: string[] | undefined,
+    albumArtists: AlbumArtist[]
+  ) {
+    if (albumArtists.length === 0) {
+      return selectedArtistIDs ?? [];
+    }
+    const candidateIDs =
+      selectedArtistIDs && selectedArtistIDs.length > 0
+        ? selectedArtistIDs
+        : albumArtists.map(a => a.spotifyID);
+    const allowed = new Set(albumArtists.map(a => a.spotifyID));
+    const filtered = candidateIDs.filter(id => allowed.has(id));
+    return filtered.length > 0
+      ? filtered
+      : [albumArtists[0].spotifyID];
+  }
+
+  private static resolveScoreArtistIDs(
+    scoreArtistIDs: string[] | undefined,
+    selectedArtistIDs: string[],
+    soloAffectsScore: boolean | undefined
+  ) {
+    // Solo albums keep the global toggle behavior
+    if (soloAffectsScore !== undefined) {
+      return soloAffectsScore ? selectedArtistIDs : [];
+    }
+    if (scoreArtistIDs === undefined) {
+      return [...selectedArtistIDs];
+    }
+    const allowed = new Set(selectedArtistIDs);
+    return scoreArtistIDs.filter(id => allowed.has(id));
+  }
+
+  private static async resolveAlbumArtists(
+    album: SpotifyAlbum | ReviewedAlbum
+  ): Promise<AlbumArtist[]> {
+    if ("albumArtists" in album && album.albumArtists?.length) {
+      return album.albumArtists;
+    }
+    if (isSpotifyAlbum(album)) {
+      return album.artists.map(a => ({
+        spotifyID: a.id,
+        name: a.name,
+        imageURLs: [],
+      }));
+    }
+    return [];
+  }
+
+  private static async ensureArtists(
+    artistIDs: string[],
+    albumArtists: AlbumArtist[],
+    scoreArtistIDs: string[],
+    finalScore: number
+  ) {
+    const infoMap = new Map(
+      albumArtists.map(a => [a.spotifyID, a])
+    );
+
+    for (const artistID of artistIDs) {
+      let artist = await ArtistModel.getArtistBySpotifyID(artistID);
+      if (!artist) {
+        const info = infoMap.get(artistID);
+        if (!info) continue;
+
+        let headerImage: string | null = null;
+        try {
+          headerImage = await fetchArtistHeaderFromSpotify(artistID);
+        } catch (err) {
+          console.warn(
+            "Could not fetch artist header image, skipping scraper:",
+            err
+          );
+        }
+
+        const affectsScore = scoreArtistIDs.includes(artistID);
+        const score = affectsScore ? finalScore : 0;
+        artist = await ArtistModel.createArtist({
+          name: info.name,
+          spotifyID: artistID,
+          imageURLs: info.imageURLs,
+          headerImage,
+          averageScore: score,
+          bonusPoints: 0,
+          totalScore: score,
+          bonusReason: JSON.stringify([]),
+          reviewCount: 0,
+          unrated: !affectsScore,
+          leaderboardPosition: null,
+        });
+
+        // Backfill any existing featured tracks now that the artist exists
+        const featuredTracks = await TrackModel.getTracksFeaturingArtist(
+          artistID
+        );
+        for (const track of featuredTracks) {
+          await TrackModel.linkArtistsToTrack(track.spotifyID, [artistID]);
         }
       }
     }
+  }
 
-    // Re-fetch all albums for this artist
-    const all = (await AlbumModel.getAlbumsByArtist(
-      existingAlbum.artistSpotifyID
-    )) as ReviewedAlbum[];
+  private static async refreshArtists(artistIDs: string[]) {
+    const uniqueArtistIDs = Array.from(new Set(artistIDs)).filter(Boolean);
+    if (uniqueArtistIDs.length === 0) return;
 
-    // Determine which are still contributing
-    const contributing = all.filter(a => a.affectsArtistScore);
+    let updated = false;
 
-    if (contributing.length === 0) {
-      // No contributing albums -> mark artist unrated & zero their score
-      await ArtistModel.updateArtist(existingAlbum.artistSpotifyID, {
-        unrated: true,
-        averageScore: 0,
-        bonusPoints: 0,
-        totalScore: 0,
-        peakScore: 0,
-        latestScore: 0,
-        bonusReason: JSON.stringify([]),
-        reviewCount: all.length,
-        leaderboardPosition: null,
-        peakLeaderboardPosition: null,
-        latestLeaderboardPosition: null,
-      });
-      await ArtistService.updateAllLeaderboardPositions();
-    } else {
-      // Recalculate artist metrics
+    for (const artistID of uniqueArtistIDs) {
+      const artist = await ArtistModel.getArtistBySpotifyID(artistID);
+      if (!artist) continue;
+
+      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(
+        artistID
+      );
+      const all = albumLinks.map(link => link.album) as ReviewedAlbum[];
+
+      if (all.length === 0) {
+        await ArtistModel.deleteArtist(artistID);
+        updated = true;
+        continue;
+      }
+
+      const contributing = albumLinks
+        .filter(link => link.affectsScore)
+        .map(link => link.album) as ReviewedAlbum[];
+
+      if (contributing.length === 0) {
+        await ArtistModel.updateArtist(artistID, {
+          unrated: true,
+          averageScore: 0,
+          bonusPoints: 0,
+          totalScore: 0,
+          peakScore: 0,
+          latestScore: 0,
+          bonusReason: JSON.stringify([]),
+          reviewCount: all.length,
+          leaderboardPosition: null,
+          peakLeaderboardPosition: null,
+          latestLeaderboardPosition: null,
+        });
+        updated = true;
+        continue;
+      }
+
       const {
         newAverageScore,
         newBonusPoints,
@@ -510,7 +634,7 @@ export class AlbumService {
         bonusReasons,
       } = calculateArtistScore(contributing);
 
-      await ArtistModel.updateArtist(existingAlbum.artistSpotifyID, {
+      await ArtistModel.updateArtist(artistID, {
         averageScore: newAverageScore,
         bonusPoints: newBonusPoints,
         totalScore,
@@ -520,15 +644,11 @@ export class AlbumService {
         reviewCount: all.length,
         unrated: false,
       });
-
-      // Refresh all leaderboard positions
-      await ArtistService.updateAllLeaderboardPositions();
+      updated = true;
     }
 
-    return AlbumModel.findBySpotifyID(albumID);
-  }
-
-  static async getReviewScoresByIds(ids: string[]) {
-    return AlbumModel.getReviewScoresByIds(ids);
+    if (updated) {
+      await ArtistService.updateAllLeaderboardPositions();
+    }
   }
 }

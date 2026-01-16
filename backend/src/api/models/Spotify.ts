@@ -1,4 +1,4 @@
-import { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, SpotifySearchResponse } from "@shared/types";
+import { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, SpotifyArtist, SpotifySearchResponse } from "@shared/types";
 import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
@@ -107,5 +107,35 @@ export class Spotify {
     data.colors = imageColors;
 
     return data as SpotifyAlbum;
+  }
+
+  static async getArtists(ids: string[]): Promise<SpotifyArtist[]> {
+    if (ids.length === 0) return [];
+
+    const accessToken = await this.getAccessToken();
+    const chunkSize = 50;
+    const chunks: string[][] = [];
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      chunks.push(ids.slice(i, i + chunkSize));
+    }
+
+    const results: SpotifyArtist[] = [];
+
+    for (const chunk of chunks) {
+      const endpoint = `https://api.spotify.com/v1/artists?ids=${encodeURIComponent(chunk.join(","))}`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + accessToken,
+        },
+      });
+      const data = await response.json();
+      if (Array.isArray(data.artists)) {
+        results.push(...data.artists);
+      }
+    }
+
+    return results;
   }
 }

@@ -9,6 +9,8 @@ import {
   inArray,
   exists,
   sql,
+  and,
+  isNull,
 } from "drizzle-orm";
 import {
   DisplayAlbum,
@@ -17,10 +19,12 @@ import {
 } from "@shared/types";
 import {
   albumGenres,
+  albumArtists,
   genres as genresTable,
   reviewedAlbums,
   reviewedArtists,
   reviewedTracks,
+  trackArtists,
 } from "@/db/schema";
 import { db } from "@/index";
 
@@ -59,6 +63,14 @@ export class AlbumModel {
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
     return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
+  }
+
+  static async getAlbumsBySpotifyIDs(ids: string[]) {
+    if (ids.length === 0) return [];
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .where(inArray(reviewedAlbums.spotifyID, ids));
   }
 
   static async getPaginatedAlbums({
@@ -176,10 +188,128 @@ export class AlbumModel {
   }
 
   static async getAlbumsByArtist(spotifyID: string) {
-    return db
+    const rows = await db
       .select()
       .from(reviewedAlbums)
-      .where(eq(reviewedAlbums.artistSpotifyID, spotifyID));
+      .innerJoin(
+        albumArtists,
+        eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID)
+      )
+      .where(eq(albumArtists.artistSpotifyID, spotifyID));
+    return rows.map(r => r.reviewed_albums);
+  }
+
+  static async getAlbumsByArtistWithAffects(spotifyID: string) {
+    // Include per-artist score attribution from the join table
+    return db
+      .select({
+        album: reviewedAlbums,
+        affectsScore: albumArtists.affectsScore,
+      })
+      .from(reviewedAlbums)
+      .innerJoin(
+        albumArtists,
+        eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID)
+      )
+      .where(eq(albumArtists.artistSpotifyID, spotifyID));
+  }
+
+  static async getFeaturedAlbumIDsByArtist(artistID: string) {
+    const rows = await db
+      .select({ albumSpotifyID: reviewedTracks.albumSpotifyID })
+      .from(reviewedTracks)
+      .innerJoin(
+        trackArtists,
+        eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)
+      )
+      .leftJoin(
+        albumArtists,
+        and(
+          eq(albumArtists.albumSpotifyID, reviewedTracks.albumSpotifyID),
+          eq(albumArtists.artistSpotifyID, artistID)
+        )
+      )
+      .where(
+        and(
+          eq(trackArtists.artistSpotifyID, artistID),
+          isNull(albumArtists.artistSpotifyID)
+        )
+      )
+      .groupBy(reviewedTracks.albumSpotifyID);
+
+    return rows.map(r => r.albumSpotifyID);
+  }
+
+  static async getAlbumArtistIDs(albumSpotifyID: string): Promise<string[]> {
+    const rows = await db
+      .select({ artistSpotifyID: albumArtists.artistSpotifyID })
+      .from(albumArtists)
+      .where(eq(albumArtists.albumSpotifyID, albumSpotifyID));
+    return rows.map(r => r.artistSpotifyID);
+  }
+
+  static async getAlbumArtistLinks(albumSpotifyID: string) {
+    return db
+      .select({
+        artistSpotifyID: albumArtists.artistSpotifyID,
+        affectsScore: albumArtists.affectsScore,
+      })
+      .from(albumArtists)
+      .where(eq(albumArtists.albumSpotifyID, albumSpotifyID));
+  }
+
+  static async getAlbumArtistIDsForAlbums(albumIDs: string[]) {
+    if (albumIDs.length === 0) return new Map<string, string[]>();
+    const rows = await db
+      .select({
+        albumSpotifyID: albumArtists.albumSpotifyID,
+        artistSpotifyID: albumArtists.artistSpotifyID,
+      })
+      .from(albumArtists)
+      .where(inArray(albumArtists.albumSpotifyID, albumIDs));
+
+    const map = new Map<string, string[]>();
+    for (const row of rows) {
+      const current = map.get(row.albumSpotifyID) ?? [];
+      current.push(row.artistSpotifyID);
+      map.set(row.albumSpotifyID, current);
+    }
+    return map;
+  }
+
+  static async upsertAlbumArtists(
+    albumSpotifyID: string,
+    entries: { artistSpotifyID: string; affectsScore: boolean }[]
+  ) {
+    if (entries.length === 0) return;
+    return db
+      .insert(albumArtists)
+      .values(
+        entries.map(entry => ({
+          albumSpotifyID,
+          artistSpotifyID: entry.artistSpotifyID,
+          affectsScore: entry.affectsScore,
+        }))
+      )
+      .onConflictDoUpdate({
+        target: [albumArtists.albumSpotifyID, albumArtists.artistSpotifyID],
+        set: { affectsScore: sql`excluded.affects_score` },
+      });
+  }
+
+  static async unlinkArtistsFromAlbum(
+    albumSpotifyID: string,
+    artistIDs: string[]
+  ) {
+    if (artistIDs.length === 0) return;
+    return db
+      .delete(albumArtists)
+      .where(
+        and(
+          eq(albumArtists.albumSpotifyID, albumSpotifyID),
+          inArray(albumArtists.artistSpotifyID, artistIDs)
+        )
+      );
   }
 
   static async getReviewScoresByIds(

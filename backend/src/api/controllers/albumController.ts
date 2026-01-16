@@ -17,6 +17,8 @@ export type ReceivedReviewData = {
   album: SpotifyAlbum | ReviewedAlbum;
   colors: ExtractedColor[];
   genres: string[];
+  selectedArtistIDs: string[];
+  scoreArtistIDs: string[];
 };
 
 export const createAlbumReview = async (req: Request, res: Response) => {

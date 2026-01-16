@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { desc, eq, ilike, asc, or, count } from "drizzle-orm";
+import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
 import { db } from "@/index";
 import {
@@ -68,6 +68,14 @@ export class ArtistModel {
       .from(reviewedArtists)
       .where(eq(reviewedArtists.spotifyID, artistID))
       .then(r => r[0]);
+  }
+
+  static async getArtistsBySpotifyIDs(ids: string[]) {
+    if (ids.length === 0) return [];
+    return db
+      .select()
+      .from(reviewedArtists)
+      .where(inArray(reviewedArtists.spotifyID, ids));
   }
 
   static async deleteArtist(artistID: string) {

@@ -55,8 +55,33 @@ export const reviewedAlbums = pgTable(
     affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),
+    albumArtists: jsonb("album_artists")
+      .$type<{ spotifyID: string; name: string; imageURLs: { url: string; height: number; width: number }[] }[]>()
+      .notNull()
+      .default([]),
   },
   table => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
+);
+
+export const albumArtists = pgTable(
+  "album_artists",
+  {
+    albumSpotifyID: varchar("album_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => reviewedAlbums.spotifyID, { onDelete: "cascade" }),
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => reviewedArtists.spotifyID, { onDelete: "cascade" }),
+    affectsScore: boolean("affects_score").notNull().default(true),
+  },
+  table => [
+    index("album_artists_album_idx").on(table.albumSpotifyID),
+    index("album_artists_artist_idx").on(table.artistSpotifyID),
+    uniqueIndex("album_artists_album_artist_key").on(
+      table.albumSpotifyID,
+      table.artistSpotifyID
+    ),
+  ]
 );
 
 export const reviewedTracks = pgTable(
@@ -88,6 +113,26 @@ export const reviewedTracks = pgTable(
     index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
     index("artist_spotify_id_track_idx").on(table.artistSpotifyID), // Index on artist DB ID for faster lookups
     index("album_spotify_id_track_idx").on(table.albumSpotifyID), // Index on album DB ID for faster lookups
+  ]
+);
+
+export const trackArtists = pgTable(
+  "track_artists",
+  {
+    trackSpotifyID: varchar("track_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => reviewedTracks.spotifyID, { onDelete: "cascade" }),
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => reviewedArtists.spotifyID, { onDelete: "cascade" }),
+  },
+  table => [
+    index("track_artists_track_idx").on(table.trackSpotifyID),
+    index("track_artists_artist_idx").on(table.artistSpotifyID),
+    uniqueIndex("track_artists_track_artist_key").on(
+      table.trackSpotifyID,
+      table.artistSpotifyID
+    ),
   ]
 );
 

@@ -69,11 +69,14 @@ export class ArtistService {
       Math.abs((current ?? 0) - next) > 0.0001;
 
     for (const artist of artists) {
-      const albums = (await AlbumModel.getAlbumsByArtist(
+      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(
         artist.spotifyID
-      )) as ReviewedAlbum[];
+      );
+      const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
       const reviewCount = albums.length;
-      const contributing = albums.filter(a => a.affectsArtistScore);
+      const contributing = albumLinks
+        .filter(link => link.affectsScore)
+        .map(link => link.album) as ReviewedAlbum[];
 
       if (contributing.length === 0) {
         const updates = {
@@ -377,14 +380,39 @@ export class ArtistService {
       throw new Error("Artist not found");
     }
     const albums = await AlbumModel.getAlbumsByArtist(artistID);
-    const sortedAlbums = albums.sort((a, b) => {
+    const sortByDateDesc = <T extends { releaseDate: string; releaseYear: number }>(
+      a: T,
+      b: T
+    ) => {
       const dateA = new Date(toSortableDate(a.releaseDate, a.releaseYear)).getTime();
       const dateB = new Date(toSortableDate(b.releaseDate, b.releaseYear)).getTime();
       return dateB - dateA; // descending
-    });
+    };
+    const sortedAlbums = albums.sort(sortByDateDesc);
+
+    const featuredAlbumIDs = await AlbumModel.getFeaturedAlbumIDsByArtist(
+      artistID
+    );
+    const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(
+      featuredAlbumIDs
+    )).sort(sortByDateDesc);
+
+    const albumIDs = [...new Set([...sortedAlbums, ...featuredAlbums].map(a => a.spotifyID))];
+    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
+    for (const album of sortedAlbums) {
+      (album as any).artistSpotifyIDs = artistMap.get(album.spotifyID) ?? [];
+    }
+    for (const album of featuredAlbums) {
+      (album as any).artistSpotifyIDs = artistMap.get(album.spotifyID) ?? [];
+    }
 
     const tracks = await TrackModel.getTracksByArtist(artistID);
-    const albumImageMap = new Map(albums.map(album => [album.spotifyID, album.imageURLs]));
+    const albumImageMap = new Map(
+      [...sortedAlbums, ...featuredAlbums].map(album => [
+        album.spotifyID,
+        album.imageURLs,
+      ])
+    );
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
       spotifyID: track.spotifyID,
@@ -396,7 +424,12 @@ export class ArtistService {
       features: track.features,
       imageURLs: albumImageMap.get(track.albumSpotifyID) || [],
     }));
-    return { artist, albums: sortedAlbums, tracks: displayTracks };
+    return {
+      artist,
+      albums: sortedAlbums,
+      featuredAlbums,
+      tracks: displayTracks,
+    };
   }
 
   static async deleteArtist(artistID: string) {
