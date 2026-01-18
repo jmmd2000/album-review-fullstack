@@ -172,15 +172,15 @@ export class StatsService {
         console.log("Fetching all artists for rating distribution...");
         const artists = await ArtistModel.getAllArtists();
         for (const artist of artists) {
-          if (artist.totalScore !== null && artist.totalScore !== undefined) {
-            const tier = ratingTiers.find(
-              t =>
-                t.range[0] <= artist.totalScore &&
-                t.range[1] >= artist.totalScore
-            );
-            if (tier) {
-              distribution[tier.label] += 1;
-            }
+          let score = artist.totalScore ?? 0;
+          if (score < 1) score = 0;
+          if (!Number.isFinite(score)) continue;
+          const roundedScore = Math.ceil(score);
+          const tier = ratingTiers.find(
+            t => t.range[0] <= roundedScore && t.range[1] >= roundedScore
+          );
+          if (tier) {
+            distribution[tier.label] += 1;
           }
         }
         break;

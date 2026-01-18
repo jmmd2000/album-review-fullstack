@@ -418,7 +418,7 @@ export class ArtistService {
       spotifyID: track.spotifyID,
       artistSpotifyID: track.artistSpotifyID,
       name: track.name,
-      artistName: artist.name,
+      artistName: track.artistName,
       duration: track.duration,
       rating: track.rating,
       features: track.features,
