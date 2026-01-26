@@ -328,9 +328,13 @@ export class AlbumService {
       data.ratedTracks
     );
 
-    const albumArtists = await AlbumService.resolveAlbumArtists(
+    let albumArtists = await AlbumService.resolveAlbumArtists(
       data.album ?? existingAlbum
     );
+    if (albumArtists.length === 0 && existingAlbum.albumArtists?.length) {
+      // Preserve existing album artists if the update payload omits them
+      albumArtists = existingAlbum.albumArtists;
+    }
     const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(
       data.selectedArtistIDs,
       albumArtists
