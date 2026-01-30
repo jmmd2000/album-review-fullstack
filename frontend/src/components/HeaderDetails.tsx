@@ -4,7 +4,7 @@ interface HeaderDetailsProps {
   /*** The name to be displayed */
   name: string;
   /** The image to be displayed */
-  imageURL: string;
+  imageURL?: string;
   /** Optional view transition name to bind the transition */
   viewTransitionName?: string;
   /** Whether to add a small blurred background to the name to make it more readable against the background, mainly used for artist detail pages  */
@@ -63,12 +63,14 @@ const HeaderDetails = ({
 
   return (
     <div className={containerStyles({ nameBackground })}>
-      <img
-        src={imageURL}
-        alt={name}
-        className="rounded-lg h-60 w-60 lg:h-72 lg:w-72 shadow-2xl border-1 border-neutral-900/30"
-        style={{ viewTransitionName: viewTransitionName }}
-      />
+      {imageURL ? (
+        <img
+          src={imageURL}
+          alt={name}
+          className="rounded-lg h-60 w-60 lg:h-72 lg:w-72 shadow-2xl border-1 border-neutral-900/30"
+          style={{ viewTransitionName: viewTransitionName }}
+        />
+      ) : null}
       <div className="flex flex-col gap-2 px-0 py-1 relative">
         <h1 className={nameStyles({ nameBackground })}>{name}</h1>
       </div>

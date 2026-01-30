@@ -63,6 +63,8 @@ function RouteComponent() {
   const albums = data.data.albums;
   const featuredAlbums = data.data.featuredAlbums ?? [];
   const tracks = data.data.tracks;
+  const artistImageURL =
+    artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
 
   const albumString =
     albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
@@ -86,7 +88,7 @@ function RouteComponent() {
       >
         <HeaderDetails
           name={artist.name}
-          imageURL={artist.imageURLs[1].url}
+          imageURL={artistImageURL}
           viewTransitionName={`artist-image-${artist.spotifyID}`}
           nameBackground
         />

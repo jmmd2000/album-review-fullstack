@@ -14,6 +14,7 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
     artist.albumCount === 1
       ? `${artist.albumCount} album`
       : `${artist.albumCount} albums`;
+  const imageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
   return (
     <Link
       params={{ artistID: artist.spotifyID }}
@@ -31,12 +32,20 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
         }}
         className="flex flex-col rounded-xl items-center w-full max-w-[240px]"
       >
-        <img
-          src={artist.imageURLs[1].url}
-          alt={artist.name}
-          className="w-full aspect-square rounded-lg"
-          style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-        />
+        {imageURL ? (
+          <img
+            src={imageURL}
+            alt={artist.name}
+            className="w-full aspect-square rounded-lg"
+            style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
+          />
+        ) : (
+          <div
+            className="w-full aspect-square rounded-lg bg-neutral-800/40"
+            style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
+            aria-label={`${artist.name} image unavailable`}
+          />
+        )}
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
             <h2 className="w-full max-w-[160px] text-sm font-medium truncate">
