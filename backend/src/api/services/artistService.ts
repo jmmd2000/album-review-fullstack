@@ -24,6 +24,7 @@ import {
   ArtistLeaderboardData,
 } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
+import { AppError } from "../middleware/errorHandler";
 
 export class ArtistService {
   /**
@@ -69,9 +70,7 @@ export class ArtistService {
       Math.abs((current ?? 0) - next) > 0.0001;
 
     for (const artist of artists) {
-      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(
-        artist.spotifyID
-      );
+      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(artist.spotifyID);
       const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
       const reviewCount = albums.length;
       const contributing = albumLinks
@@ -239,11 +238,7 @@ export class ArtistService {
         addChange("bonusPoints", before.bonusPoints, after.bonusPoints);
       }
       if (before.reviewCount !== after.reviewCount) {
-        addChange(
-          "reviewCount",
-          before.reviewCount,
-          after.reviewCount
-        );
+        addChange("reviewCount", before.reviewCount, after.reviewCount);
       }
       if (before.unrated !== after.unrated) {
         addChange("unrated", Number(before.unrated), Number(after.unrated));
@@ -255,18 +250,14 @@ export class ArtistService {
           after.leaderboardPosition
         );
       }
-      if (
-        before.peakLeaderboardPosition !== after.peakLeaderboardPosition
-      ) {
+      if (before.peakLeaderboardPosition !== after.peakLeaderboardPosition) {
         addChange(
           "peakLeaderboardPosition",
           before.peakLeaderboardPosition,
           after.peakLeaderboardPosition
         );
       }
-      if (
-        before.latestLeaderboardPosition !== after.latestLeaderboardPosition
-      ) {
+      if (before.latestLeaderboardPosition !== after.latestLeaderboardPosition) {
         addChange(
           "latestLeaderboardPosition",
           before.latestLeaderboardPosition,
@@ -371,14 +362,15 @@ export class ArtistService {
   }
 
   static async getArtistByID(artistID: string) {
-    return ArtistModel.getArtistBySpotifyID(artistID);
+    const artist = await ArtistModel.getArtistBySpotifyID(artistID);
+    if (!artist) throw new AppError("Artist not found.", 404);
+    return artist;
   }
 
   static async getArtistDetails(artistID: string) {
     const artist = await ArtistModel.getArtistBySpotifyID(artistID);
-    if (!artist) {
-      throw new Error("Artist not found");
-    }
+    if (!artist) throw new AppError("Artist not found", 404);
+
     const albums = await AlbumModel.getAlbumsByArtist(artistID);
     const sortByDateDesc = <T extends { releaseDate: string; releaseYear: number }>(
       a: T,
@@ -390,12 +382,10 @@ export class ArtistService {
     };
     const sortedAlbums = albums.sort(sortByDateDesc);
 
-    const featuredAlbumIDs = await AlbumModel.getFeaturedAlbumIDsByArtist(
-      artistID
+    const featuredAlbumIDs = await AlbumModel.getFeaturedAlbumIDsByArtist(artistID);
+    const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(featuredAlbumIDs)).sort(
+      sortByDateDesc
     );
-    const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(
-      featuredAlbumIDs
-    )).sort(sortByDateDesc);
 
     const albumIDs = [...new Set([...sortedAlbums, ...featuredAlbums].map(a => a.spotifyID))];
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
@@ -408,10 +398,7 @@ export class ArtistService {
 
     const tracks = await TrackModel.getTracksByArtist(artistID);
     const albumImageMap = new Map(
-      [...sortedAlbums, ...featuredAlbums].map(album => [
-        album.spotifyID,
-        album.imageURLs,
-      ])
+      [...sortedAlbums, ...featuredAlbums].map(album => [album.spotifyID, album.imageURLs])
     );
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
@@ -433,6 +420,8 @@ export class ArtistService {
   }
 
   static async deleteArtist(artistID: string) {
+    const artist = await ArtistModel.getArtistBySpotifyID(artistID);
+    if (!artist) throw new AppError("Artist not found.", 404);
     return ArtistModel.deleteArtist(artistID);
   }
 
@@ -440,6 +429,8 @@ export class ArtistService {
     spotifyID: string,
     headerImage: string | null
   ): Promise<void> {
+    const artist = await ArtistModel.getArtistBySpotifyID(spotifyID);
+    if (!artist) throw new AppError("Artist not found.", 404);
     await ArtistModel.updateArtist(spotifyID, {
       headerImage,
       imageUpdatedAt: new Date(),
@@ -454,8 +445,8 @@ export class ArtistService {
     const dbArtists = all
       ? await ArtistModel.getAllArtists()
       : spotifyID
-      ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
-      : [];
+        ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
+        : [];
 
     if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
 
@@ -605,8 +596,8 @@ export class ArtistService {
     const dbArtists = all
       ? await ArtistModel.getAllArtists()
       : spotifyID
-      ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
-      : [];
+        ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
+        : [];
     if (!all && !spotifyID) {
       throw new Error("Must specify either all=true or a spotifyID");
     }

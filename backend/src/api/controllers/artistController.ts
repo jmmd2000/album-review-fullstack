@@ -1,130 +1,95 @@
 import { Request, Response } from "express";
 import { ArtistService } from "@/api/services/artistService";
 import { GetPaginatedArtistsOptions } from "@shared/types";
+import { asyncHandler } from "../middleware/asyncHandler";
+import z from "zod";
+import { AppError } from "../middleware/errorHandler";
 
-export const getAllArtists = async (_req: Request, res: Response) => {
-  try {
-    const artists = await ArtistService.getAllArtists();
-    res.status(200).json(artists);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
+export const getAllArtists = asyncHandler(async (_req: Request, res: Response) => {
+  const artists = await ArtistService.getAllArtists();
+  res.status(200).json(artists);
+});
+
+const getPaginatedArtistsSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  orderBy: z
+    .enum([
+      "totalScore",
+      "peakScore",
+      "latestScore",
+      "reviewCount",
+      "name",
+      "createdAt",
+      "leaderboardPosition",
+    ])
+    .optional(),
+  order: z.enum(["asc", "desc"]).optional(),
+  search: z.string().optional(),
+  scoreType: z.enum(["overall", "peak", "latest"]).optional(),
+});
+
+export const getPaginatedArtists = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = getPaginatedArtistsSchema.safeParse(req.query);
+  if (!parsed.success) {
+    throw new AppError(parsed.error.message, 400);
   }
-};
 
-export const getPaginatedArtists = async (req: Request, res: Response) => {
-  const options: GetPaginatedArtistsOptions = {
-    page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as GetPaginatedArtistsOptions["orderBy"] | undefined,
-    order: req.query.order as GetPaginatedArtistsOptions["order"] | undefined,
-    search: req.query.search as string | undefined,
-    scoreType: req.query.scoreType as GetPaginatedArtistsOptions["scoreType"] | undefined,
-  };
+  const { artists, furtherPages, totalCount } = await ArtistService.getPaginatedArtists(
+    parsed.data
+  );
+  res.status(200).json({ artists, furtherPages, totalCount });
+});
 
-  try {
-    const { artists, furtherPages, totalCount } = await ArtistService.getPaginatedArtists(
-      options
-    );
-    res.status(200).json({ artists, furtherPages, totalCount });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
-
-// This endpoint is for fetching a specific artist by their Spotify ID.
-export const getArtistByID = async (req: Request, res: Response) => {
-  const artistID = req.params.artistID;
-  try {
-    const artist = await ArtistService.getArtistByID(artistID);
-    res.status(200).json(artist);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getArtistByID = asyncHandler(async (req: Request, res: Response) => {
+  const artist = await ArtistService.getArtistByID(req.params.artistID);
+  res.status(200).json(artist);
+});
 
 // This endpoint is for fetching detailed information about an artist, including their albums and tracks.
-export const getArtistDetails = async (req: Request, res: Response) => {
-  const artistID = req.params.artistID;
-  try {
-    const data = await ArtistService.getArtistDetails(artistID);
-    res.status(200).json(data);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getArtistDetails = asyncHandler(async (req: Request, res: Response) => {
+  const data = await ArtistService.getArtistDetails(req.params.artistID);
+  res.status(200).json(data);
+});
 
-export const deleteArtist = async (req: Request, res: Response) => {
-  const artistID = req.params.artistID;
-  try {
-    await ArtistService.deleteArtist(artistID);
-    res.status(204).end();
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
+  await ArtistService.deleteArtist(req.params.artistID);
+  res.status(204).end();
+});
 
-export const updateArtistHeaders = async (req: Request, res: Response) => {
+export const updateArtistHeaders = asyncHandler(async (req: Request, res: Response) => {
   const all = req.query.all === "true";
   const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
 
-  try {
-    await ArtistService.updateArtistHeaders(all, spotifyID);
-    res.status(204).end(); // no json, just “No Content”
-  } catch (error: any) {
-    console.error("Header update error:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
+  await ArtistService.updateArtistHeaders(all, spotifyID);
+  res.status(204).end(); // no json, just “No Content”
+});
 
-export const updateArtistImages = async (req: Request, res: Response) => {
+export const updateArtistImages = asyncHandler(async (req: Request, res: Response) => {
   const all = req.query.all === "true";
   const spotifyID = typeof req.query.spotifyID === "string" ? req.query.spotifyID : undefined;
-  console.log("Updating artist images", { all, spotifyID });
-  try {
-    await ArtistService.updateArtistImages(all, spotifyID);
-    res.status(204).end(); // no json, just “No Content”
-  } catch (error: any) {
-    console.error("Image update error:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
 
-export const updateSingleArtistHeader = async (req: Request, res: Response) => {
-  const { artistID } = req.params;
-  const { headerImage } = req.body;
+  await ArtistService.updateArtistImages(all, spotifyID);
+  res.status(204).end(); // no json, just “No Content”
+});
 
-  if (!artistID) {
-    return res.status(400).json({ message: "Artist ID is required" });
-  }
+const updateSingleArtistHeaderBodySchema = z.object({
+  headerImage: z.string().nullable(),
+});
 
-  if (typeof headerImage !== "string" && headerImage !== null) {
-    return res.status(400).json({ message: "headerImage must be a string or null" });
-  }
+const updateSingleArtistHeaderParamsSchema = z.object({
+  artistID: z.string().min(1, "Artist ID is required"),
+});
 
-  try {
-    await ArtistService.updateSingleArtistHeader(artistID, headerImage);
-    res.status(200).json({ message: "Header image updated successfully" });
-  } catch (error: any) {
-    console.error("Header image update error:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
+export const updateSingleArtistHeader = asyncHandler(async (req: Request, res: Response) => {
+  const bodyValid = updateSingleArtistHeaderBodySchema.safeParse(req.body);
+  if (!bodyValid.success) throw new AppError(bodyValid.error.message, 400);
+
+  const paramsValid = updateSingleArtistHeaderParamsSchema.safeParse(req.params);
+  if (!paramsValid.success) throw new AppError(paramsValid.error.message, 400);
+
+  await ArtistService.updateSingleArtistHeader(
+    paramsValid.data.artistID,
+    bodyValid.data.headerImage
+  );
+  res.status(200).json({ message: "Header image updated successfully" });
+});
