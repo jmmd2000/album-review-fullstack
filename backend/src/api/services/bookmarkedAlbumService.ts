@@ -5,11 +5,12 @@ import {
   GetPaginatedBookmarkedAlbumsOptions,
 } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
+import { AppError } from "../middleware/errorHandler";
 
 export class BookmarkedAlbumService {
   static async bookmarkAlbum(album: DisplayAlbum) {
     const existingAlbum = await BookmarkedAlbumModel.findBySpotifyID(album.spotifyID);
-    if (existingAlbum) throw new Error("Album already bookmarked");
+    if (existingAlbum) throw new AppError("Album already bookmarked", 400);
 
     return await BookmarkedAlbumModel.bookmarkAlbum({
       name: album.name,
@@ -22,7 +23,9 @@ export class BookmarkedAlbumService {
   }
 
   static async getAlbumByID(id: string) {
-    return await BookmarkedAlbumModel.findBySpotifyID(id);
+    const bookmarkedAlbum = await BookmarkedAlbumModel.findBySpotifyID(id);
+    if (!bookmarkedAlbum) throw new AppError("Bookmarked album not found.", 404);
+    return bookmarkedAlbum;
   }
 
   static async getBookmarkedByIds(ids: string[]): Promise<string[]> {
@@ -30,8 +33,8 @@ export class BookmarkedAlbumService {
   }
 
   static async getAllAlbums() {
-    const albums = await BookmarkedAlbumModel.getAllBookmarkedAlbums();
-    const displayAlbums: DisplayAlbum[] = albums.map(album => ({
+    const bookmarkedAlbums = await BookmarkedAlbumModel.getAllBookmarkedAlbums();
+    const displayAlbums: DisplayAlbum[] = bookmarkedAlbums.map(album => ({
       name: album.name,
       spotifyID: album.spotifyID,
       imageURLs: album.imageURLs,
@@ -68,8 +71,7 @@ export class BookmarkedAlbumService {
 
   static async removeBookmarkedAlbum(id: string) {
     const album = await BookmarkedAlbumModel.findBySpotifyID(id);
-    if (!album) throw new Error("Album not found");
-
+    if (!album) throw new AppError("Bookmarked album not found.", 404);
     await BookmarkedAlbumModel.removeBookmarkedAlbum(id);
   }
 }

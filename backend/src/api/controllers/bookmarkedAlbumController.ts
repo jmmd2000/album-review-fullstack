@@ -1,50 +1,36 @@
 import { Request, Response } from "express";
 import { BookmarkedAlbumService } from "@/api/services/bookmarkedAlbumService";
 import { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import { asyncHandler } from "../middleware/asyncHandler";
+import z from "zod";
+import { AppError } from "../middleware/errorHandler";
 
 export const bookmarkAlbum = async (req: Request, res: Response) => {
-  const album: DisplayAlbum = req.body;
-  try {
-    const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(album);
-    res.status(200).json(bookmarkedAlbum);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
+  const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(req.body);
+  res.status(200).json(bookmarkedAlbum);
 };
 
-export const removeBookmarkedAlbum = async (req: Request, res: Response) => {
-  const albumID = req.params.albumID;
-  try {
-    await BookmarkedAlbumService.removeBookmarkedAlbum(albumID);
-    res.status(204).end();
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const removeBookmarkedAlbum = asyncHandler(async (req: Request, res: Response) => {
+  await BookmarkedAlbumService.removeBookmarkedAlbum(req.params.albumID);
+  res.status(204).end();
+});
 
-export const getBookmarkedAlbum = async (req: Request, res: Response) => {
-  const albumID = req.params.albumID;
-  try {
-    const album = await BookmarkedAlbumService.getAlbumByID(albumID);
-    res.status(200).json(album);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getBookmarkedAlbum = asyncHandler(async (req: Request, res: Response) => {
+  const album = await BookmarkedAlbumService.getAlbumByID(req.params.albumID);
+  res.status(200).json(album);
+});
 
-export const getBookmarkStatuses = async (req: Request, res: Response) => {
+const getBookmarkStatusesSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  orderBy: z.enum(["finalScore", "releaseYear", "name", "createdAt"]).optional(),
+  order: z.enum(["asc", "desc"]).optional(),
+  search: z.string().optional(),
+  genres: z.string().optional(),
+  secondaryOrderBy: z.enum(["finalScore", "name", "createdAt"]).optional(),
+  secondaryOrder: z.enum(["asc", "desc"]).optional(),
+});
+
+export const getBookmarkStatuses = asyncHandler(async (req: Request, res: Response) => {
   // Accept ?ids=1,2,3 or multiple ?ids=1&ids=2
   const raw = req.query.ids;
   let ids: string[] = [];
@@ -55,52 +41,37 @@ export const getBookmarkStatuses = async (req: Request, res: Response) => {
     ids = raw.includes(",") ? raw.split(",") : [raw];
   }
 
-  try {
-    const bookmarkedIds = await BookmarkedAlbumService.getBookmarkedByIds(ids);
-    const statusMap: Record<string, boolean> = {};
-    for (const id of ids) {
-      statusMap[id] = bookmarkedIds.includes(id);
-    }
-    res.status(200).json(statusMap);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
+  if (ids.length === 0) throw new AppError("ids parameter is required.", 400);
+
+  const bookmarkedIds = await BookmarkedAlbumService.getBookmarkedByIds(ids);
+  const statusMap: Record<string, boolean> = {};
+  for (const id of ids) {
+    statusMap[id] = bookmarkedIds.includes(id);
   }
-};
+  res.status(200).json(statusMap);
+});
 
-export const getAllBookmarkedAlbums = async (req: Request, res: Response) => {
-  try {
-    const albums = await BookmarkedAlbumService.getAllAlbums();
-    res.status(200).json(albums);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getAllBookmarkedAlbums = asyncHandler(async (_req: Request, res: Response) => {
+  const albums = await BookmarkedAlbumService.getAllAlbums();
+  res.status(200).json(albums);
+});
 
-export const getPaginatedBookmarkedAlbums = async (req: Request, res: Response) => {
-  const options: GetPaginatedBookmarkedAlbumsOptions = {
-    page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as GetPaginatedBookmarkedAlbumsOptions["orderBy"] | undefined,
-    order: req.query.order as GetPaginatedBookmarkedAlbumsOptions["order"] | undefined,
-    search: req.query.search as string | undefined,
-  };
+const getPaginatedBookmarkedAlbumsSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  orderBy: z.enum(["artistName", "releaseYear", "name", "createdAt"]).optional(),
+  order: z.enum(["asc", "desc"]).optional(),
+  search: z.string().optional(),
+});
 
-  try {
+export const getPaginatedBookmarkedAlbums = asyncHandler(
+  async (req: Request, res: Response) => {
+    const parsed = getPaginatedBookmarkedAlbumsSchema.safeParse(req.query);
+    if (!parsed.success) throw new AppError(parsed.error.message, 400);
+
+    const { page, orderBy, order, search } = parsed.data;
+
     const { albums, furtherPages, totalCount } =
-      await BookmarkedAlbumService.getPaginatedAlbums(options);
+      await BookmarkedAlbumService.getPaginatedAlbums({ page, orderBy, order, search });
     res.status(200).json({ albums, furtherPages, totalCount });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
   }
-};
+);
