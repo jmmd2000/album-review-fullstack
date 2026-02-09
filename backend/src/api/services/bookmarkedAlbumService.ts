@@ -1,5 +1,9 @@
 import "dotenv/config";
-import { DisplayAlbum, SpotifyImage, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import {
+  DisplayAlbum,
+  SpotifyImage,
+  GetPaginatedBookmarkedAlbumsOptions,
+} from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 
 export class BookmarkedAlbumService {
@@ -10,7 +14,7 @@ export class BookmarkedAlbumService {
     return await BookmarkedAlbumModel.bookmarkAlbum({
       name: album.name,
       spotifyID: album.spotifyID,
-      artistSpotifyID: album.spotifyID,
+      artistSpotifyID: album.artistSpotifyID,
       artistName: album.artistName,
       releaseYear: album.releaseYear,
       imageURLs: album.imageURLs as SpotifyImage[],
@@ -27,7 +31,7 @@ export class BookmarkedAlbumService {
 
   static async getAllAlbums() {
     const albums = await BookmarkedAlbumModel.getAllBookmarkedAlbums();
-    const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
+    const displayAlbums: DisplayAlbum[] = albums.map(album => ({
       name: album.name,
       spotifyID: album.spotifyID,
       imageURLs: album.imageURLs,
@@ -47,7 +51,7 @@ export class BookmarkedAlbumService {
     const furtherPages = albums.length > 35;
     if (furtherPages) albums.pop();
 
-    const displayAlbums: DisplayAlbum[] = albums.map((album) => ({
+    const displayAlbums: DisplayAlbum[] = albums.map(album => ({
       spotifyID: album.spotifyID,
       name: album.name,
       image: album.imageURLs[0]?.url ?? null,
