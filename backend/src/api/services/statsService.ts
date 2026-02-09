@@ -7,6 +7,7 @@ import {
   RelatedGenre,
 } from "@shared/types";
 import { GenreModel } from "@/api/models/Genre";
+import { GenreService } from "./genreService";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
 import { AlbumGenreModel } from "@/api/models/AlbumGenre";
 import { ratingTiers } from "@/helpers/ratingTiers";
@@ -97,8 +98,8 @@ export class StatsService {
         allGenres: allGenres,
       };
     }
-    const relatedGenres = await GenreModel.getRelatedGenres([slug]);
-    const albumsWithGenre = await GenreModel.getAlbumsByGenre(slug);
+    const relatedGenres = await GenreService.getRelatedGenres([slug]);
+    const albumsWithGenre = await GenreService.getAlbumsByGenre(slug);
     const reviewedAlbumCount = albumsWithGenre.length;
     let averageScore =
       reviewedAlbumCount > 0

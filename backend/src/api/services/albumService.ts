@@ -30,6 +30,7 @@ import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
+import { GenreService } from "./genreService";
 import { AppError } from "../middleware/errorHandler";
 
 // albumService.ts (or a helpers file)
@@ -117,7 +118,7 @@ export class AlbumService {
     });
 
     const genreIDs = await Promise.all(
-      data.genres.map(name => GenreModel.findOrCreateGenre(name))
+      data.genres.map(name => GenreService.findOrCreateGenre(name))
     );
 
     // Link new genres & bump related strengths
@@ -204,7 +205,7 @@ export class AlbumService {
       return { album, artists, tracks: displayTracks };
     }
 
-    const albumGenres = await GenreModel.getGenresForAlbums([album.spotifyID]);
+    const albumGenres = await GenreService.getGenresForAlbums([album.spotifyID]);
     const allGenres = await GenreModel.getAllGenres();
 
     return { album, artists, tracks: displayTracks, allGenres, albumGenres };
@@ -244,7 +245,7 @@ export class AlbumService {
     // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
 
     const relevantGenres = opts.genres?.length
-      ? await GenreModel.getGenresForAlbums(albums.map(a => a.spotifyID))
+      ? await GenreService.getGenresForAlbums(albums.map(a => a.spotifyID))
       : [];
 
     const genres: Genre[] = await GenreModel.getAllGenres();
@@ -288,7 +289,7 @@ export class AlbumService {
     const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
     await GenreModel.unlinkGenresFromAlbum(id, oldIDs);
     await GenreModel.decrementRelatedStrength(oldIDs);
-    await GenreModel.deleteIfUnused(oldIDs);
+    await GenreService.deleteIfUnused(oldIDs);
 
     // Remove tracks and album
     await TrackModel.deleteTracksByAlbumID(id);
@@ -409,7 +410,7 @@ export class AlbumService {
     // Get new vs old genre IDs
     const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
     const newIDs = await Promise.all(
-      data.genres.map(name => GenreModel.findOrCreateGenre(name))
+      data.genres.map(name => GenreService.findOrCreateGenre(name))
     );
     const toAdd = newIDs.filter(nid => !oldIDs.includes(nid));
     const toRemove = oldIDs.filter(oid => !newIDs.includes(oid));
@@ -421,7 +422,7 @@ export class AlbumService {
     // Remove old genres, decrement related strengths and delete if unused
     await GenreModel.unlinkGenresFromAlbum(albumID, toRemove);
     await GenreModel.decrementRelatedStrength(toRemove);
-    await GenreModel.deleteIfUnused(toRemove);
+    await GenreService.deleteIfUnused(toRemove);
 
     await AlbumService.refreshArtists([
       ...new Set([...previousArtistIDs, ...selectedArtistIDs]),
