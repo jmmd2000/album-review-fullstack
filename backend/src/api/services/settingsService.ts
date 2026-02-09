@@ -1,4 +1,5 @@
 import { SettingsModel } from "@/api/models/Settings";
+import { AppError } from "../middleware/errorHandler";
 
 export type SettingValue =
   | string
@@ -14,6 +15,9 @@ export class SettingsService {
   }
 
   static async set(key: string, value: SettingValue): Promise<void> {
+    if (value === undefined) {
+      throw new AppError("Value is required", 400);
+    }
     await SettingsModel.upsert(key, value);
   }
 
@@ -21,6 +25,9 @@ export class SettingsService {
   static async getLastRun(
     type: "images" | "headers" | "scores"
   ): Promise<Date | null> {
+    if (type !== "images" && type !== "headers" && type !== "scores") {
+      throw new AppError("Type must be 'images', 'headers', or 'scores'", 400);
+    }
     const result = await this.get<string>(`artist_${type}_last_run`);
     return result ? new Date(result) : null;
   }
@@ -35,7 +42,6 @@ export class SettingsService {
         : null;
     }
 
-    console.log("Last runs:", lastRuns);
     return lastRuns;
   }
 
