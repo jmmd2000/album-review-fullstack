@@ -30,6 +30,7 @@ import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
+import { AppError } from "../middleware/errorHandler";
 
 // albumService.ts (or a helpers file)
 function isSpotifyAlbum(a: any): a is SpotifyAlbum {
@@ -44,19 +45,15 @@ function isSpotifyAlbum(a: any): a is SpotifyAlbum {
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {
     if (!isSpotifyAlbum(data.album))
-      throw new Error(
-        "Invalid album data: Expected a SpotifyAlbum, received something else"
-      );
+      throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
 
     const spotifyAlbum = data.album;
     if (await AlbumModel.findBySpotifyID(spotifyAlbum.id)) {
-      throw new Error("Album already exists");
+      throw new AppError("You have already reviewed this album.", 400);
     }
 
     // calculate album score
-    const { baseScore, bonuses, finalScore } = calculateAlbumScore(
-      data.ratedTracks
-    );
+    const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
 
     const albumArtists = await AlbumService.resolveAlbumArtists(spotifyAlbum);
     if (albumArtists.length === 0) {
@@ -73,8 +70,7 @@ export class AlbumService {
       albumArtists.length === 1 ? data.affectsArtistScore : undefined
     );
     const primaryArtist =
-      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
-      albumArtists[0];
+      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ?? albumArtists[0];
 
     // Ensure all selected artists exist before linking tracks/albums
     await AlbumService.ensureArtists(
@@ -138,18 +134,10 @@ export class AlbumService {
 
     // create track entries
     const trackArtistIDs = Array.from(
-      new Set(
-        spotifyAlbum.tracks.items.flatMap(track =>
-          track.artists.map(a => a.id)
-        )
-      )
+      new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id)))
     );
-    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(
-      trackArtistIDs
-    );
-    const existingArtistIDs = new Set(
-      existingTrackArtists.map(a => a.spotifyID)
-    );
+    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
+    const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
     selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
 
     for (const track of data.ratedTracks) {
@@ -167,16 +155,12 @@ export class AlbumService {
           .map(x => ({ id: x.id, name: x.name })),
         rating: track.rating!,
       });
-      const linkArtistIDs = t.artists
-        .map(a => a.id)
-        .filter(id => existingArtistIDs.has(id));
+      const linkArtistIDs = t.artists.map(a => a.id).filter(id => existingArtistIDs.has(id));
       await TrackModel.linkArtistsToTrack(t.id, linkArtistIDs);
     }
 
     // Remove from bookmarks
-    const isBookmarked = await BookmarkedAlbumModel.findBySpotifyID(
-      album.spotifyID
-    );
+    const isBookmarked = await BookmarkedAlbumModel.findBySpotifyID(album.spotifyID);
     if (isBookmarked) {
       await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID);
     }
@@ -199,9 +183,7 @@ export class AlbumService {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
     const artistLinks = await AlbumModel.getAlbumArtistLinks(album.spotifyID);
     const artistIDs = artistLinks.map(link => link.artistSpotifyID);
-    const artists = (await ArtistModel.getArtistsBySpotifyIDs(
-      artistIDs
-    )) as ReviewedArtist[];
+    const artists = (await ArtistModel.getArtistsBySpotifyIDs(artistIDs)) as ReviewedArtist[];
     album.artistSpotifyIDs = artistIDs;
     album.artistScoreIDs = artistLinks
       .filter(link => link.affectsScore)
@@ -257,8 +239,7 @@ export class AlbumService {
   static async getPaginatedAlbums(
     opts: GetPaginatedAlbumsOptions
   ): Promise<PaginatedAlbumsResult> {
-    const { albums, totalCount, furtherPages } =
-      await AlbumModel.getPaginatedAlbums(opts);
+    const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
 
     // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
 
@@ -286,8 +267,7 @@ export class AlbumService {
       albums.map(a => a.spotifyID)
     );
     for (const displayAlbum of displayAlbums) {
-      displayAlbum.artistSpotifyIDs =
-        artistMap.get(displayAlbum.spotifyID) ?? [];
+      displayAlbum.artistSpotifyIDs = artistMap.get(displayAlbum.spotifyID) ?? [];
     }
 
     return {
@@ -301,7 +281,7 @@ export class AlbumService {
 
   static async deleteAlbum(id: string) {
     const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
-    if (!album) throw new Error("Album not found");
+    if (!album) throw new AppError("Album not found", 404);
     const artistIDs = await AlbumModel.getAlbumArtistIDs(id);
 
     // Remove old genres, decrement related strengths and deleted genres if unused
@@ -318,19 +298,13 @@ export class AlbumService {
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
-    const existingAlbum = (await AlbumModel.findBySpotifyID(
-      albumID
-    )) as ReviewedAlbum;
-    if (!existingAlbum) throw new Error("Album not found");
+    const existingAlbum = (await AlbumModel.findBySpotifyID(albumID)) as ReviewedAlbum;
+    if (!existingAlbum) throw new AppError("Album not found", 404);
 
     const existingTracks = await TrackModel.getTracksByAlbumID(albumID);
-    const { baseScore, bonuses, finalScore } = calculateAlbumScore(
-      data.ratedTracks
-    );
+    const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
 
-    let albumArtists = await AlbumService.resolveAlbumArtists(
-      data.album ?? existingAlbum
-    );
+    let albumArtists = await AlbumService.resolveAlbumArtists(data.album ?? existingAlbum);
     if (albumArtists.length === 0 && existingAlbum.albumArtists?.length) {
       // Preserve existing album artists if the update payload omits them
       albumArtists = existingAlbum.albumArtists;
@@ -345,8 +319,7 @@ export class AlbumService {
       selectedArtistIDs,
       albumArtists.length === 1 ? data.affectsArtistScore : undefined
     );
-    const primaryArtist =
-      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
+    const primaryArtist = albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
       albumArtists[0] ?? {
         spotifyID: existingAlbum.artistSpotifyID,
         name: existingAlbum.artistName,
@@ -354,20 +327,11 @@ export class AlbumService {
       };
 
     const previousArtistIDs = await AlbumModel.getAlbumArtistIDs(albumID);
-    const addedArtistIDs = selectedArtistIDs.filter(
-      id => !previousArtistIDs.includes(id)
-    );
-    const removedArtistIDs = previousArtistIDs.filter(
-      id => !selectedArtistIDs.includes(id)
-    );
+    const addedArtistIDs = selectedArtistIDs.filter(id => !previousArtistIDs.includes(id));
+    const removedArtistIDs = previousArtistIDs.filter(id => !selectedArtistIDs.includes(id));
 
     // Ensure any newly added artists exist before updates
-    await AlbumService.ensureArtists(
-      addedArtistIDs,
-      albumArtists,
-      scoreArtistIDs,
-      finalScore
-    );
+    await AlbumService.ensureArtists(addedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
 
     // update review fields and AAS flag
     await AlbumModel.updateAlbum(albumID, {
@@ -402,18 +366,12 @@ export class AlbumService {
         ])
       )
     );
-    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(
-      trackArtistIDs
-    );
-    const existingArtistIDs = new Set(
-      existingTrackArtists.map(a => a.spotifyID)
-    );
+    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
+    const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
     selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
 
     for (const newTrack of data.ratedTracks) {
-      const oldTrack = existingTracks.find(
-        t => t.spotifyID === newTrack.spotifyID
-      );
+      const oldTrack = existingTracks.find(t => t.spotifyID === newTrack.spotifyID);
 
       if (!oldTrack) {
         // new track
@@ -430,22 +388,15 @@ export class AlbumService {
       } else if (oldTrack.rating !== newTrack.rating) {
         // just a rating change
         if (newTrack.rating !== undefined) {
-          await TrackModel.updateTrackRating(
-            newTrack.spotifyID,
-            newTrack.rating
-          );
+          await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating);
         }
       }
 
       if (
         oldTrack &&
-        JSON.stringify(oldTrack.features ?? []) !==
-          JSON.stringify(newTrack.features ?? [])
+        JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])
       ) {
-        await TrackModel.updateTrackFeatures(
-          newTrack.spotifyID,
-          newTrack.features
-        );
+        await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features);
       }
       const linkArtistIDs = [
         newTrack.artistSpotifyID,
@@ -496,9 +447,7 @@ export class AlbumService {
         : albumArtists.map(a => a.spotifyID);
     const allowed = new Set(albumArtists.map(a => a.spotifyID));
     const filtered = candidateIDs.filter(id => allowed.has(id));
-    return filtered.length > 0
-      ? filtered
-      : [albumArtists[0].spotifyID];
+    return filtered.length > 0 ? filtered : [albumArtists[0].spotifyID];
   }
 
   private static resolveScoreArtistIDs(
@@ -539,9 +488,7 @@ export class AlbumService {
     scoreArtistIDs: string[],
     finalScore: number
   ) {
-    const infoMap = new Map(
-      albumArtists.map(a => [a.spotifyID, a])
-    );
+    const infoMap = new Map(albumArtists.map(a => [a.spotifyID, a]));
 
     for (const artistID of artistIDs) {
       let artist = await ArtistModel.getArtistBySpotifyID(artistID);
@@ -553,10 +500,7 @@ export class AlbumService {
         try {
           headerImage = await fetchArtistHeaderFromSpotify(artistID);
         } catch (err) {
-          console.warn(
-            "Could not fetch artist header image, skipping scraper:",
-            err
-          );
+          console.warn("Could not fetch artist header image, skipping scraper:", err);
         }
 
         const affectsScore = scoreArtistIDs.includes(artistID);
@@ -576,9 +520,7 @@ export class AlbumService {
         });
 
         // Backfill any existing featured tracks now that the artist exists
-        const featuredTracks = await TrackModel.getTracksFeaturingArtist(
-          artistID
-        );
+        const featuredTracks = await TrackModel.getTracksFeaturingArtist(artistID);
         for (const track of featuredTracks) {
           await TrackModel.linkArtistsToTrack(track.spotifyID, [artistID]);
         }
@@ -596,9 +538,7 @@ export class AlbumService {
       const artist = await ArtistModel.getArtistBySpotifyID(artistID);
       if (!artist) continue;
 
-      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(
-        artistID
-      );
+      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(artistID);
       const all = albumLinks.map(link => link.album) as ReviewedAlbum[];
 
       if (all.length === 0) {

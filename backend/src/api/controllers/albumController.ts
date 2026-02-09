@@ -7,6 +7,9 @@ import {
   ReviewedAlbum,
   SpotifyAlbum,
 } from "@shared/types";
+import { asyncHandler } from "../middleware/asyncHandler";
+import z from "zod";
+import { AppError } from "../middleware/errorHandler";
 
 export type ReceivedReviewData = {
   ratedTracks: DisplayTrack[];
@@ -21,149 +24,101 @@ export type ReceivedReviewData = {
   scoreArtistIDs: string[];
 };
 
-export const createAlbumReview = async (req: Request, res: Response) => {
-  const reviewData: ReceivedReviewData = req.body;
-  try {
-    const reviewedAlbum = await AlbumService.createAlbumReview(reviewData);
-    res.status(201).json(reviewedAlbum);
-  } catch (error: any) {
-    console.error("Failed to create album review:", error);
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    }
-    // Postgres code: 23505 → Duplicate Key Violation
-    else if (error.code === "23505") {
-      res.status(400).json({ message: "You have already reviewed this album." });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const createAlbumReview = asyncHandler(async (req: Request, res: Response) => {
+  const reviewedAlbum = await AlbumService.createAlbumReview(req.body);
+  res.status(201).json(reviewedAlbum);
+});
 
-export const getAlbumByID = async (req: Request, res: Response) => {
-  const albumID = req.params.albumID;
-  const includeGenres = req.query.includeGenres !== "false";
-  try {
-    const reviewedAlbumData = await AlbumService.getAlbumByID(albumID, includeGenres);
-    res.status(200).json(reviewedAlbumData);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getAlbumByID = asyncHandler(async (req: Request, res: Response) => {
+  const reviewedAlbumData = await AlbumService.getAlbumByID(
+    req.params.albumID,
+    req.query.includeGenres !== "false"
+  );
+  res.status(200).json(reviewedAlbumData);
+});
 
-export const getAllAlbums = async (req: Request, res: Response) => {
-  const includeCounts = req.query.includeCounts === "true";
-  try {
-    const albums = await AlbumService.getAllAlbums(includeCounts);
-    res.status(200).json(albums);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+export const getAllAlbums = asyncHandler(async (req: Request, res: Response) => {
+  const albums = await AlbumService.getAllAlbums(req.query.includeCounts === "true");
+  res.status(200).json(albums);
+});
 
-export const getPaginatedAlbums = async (req: Request, res: Response) => {
-  const rawGenres = req.query.genres;
+const getPaginatedAlbumsSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  orderBy: z.enum(["finalScore", "releaseYear", "name", "createdAt"]).optional(),
+  order: z.enum(["asc", "desc"]).optional(),
+  search: z.string().optional(),
+  genres: z.string().optional(),
+  secondaryOrderBy: z.enum(["finalScore", "name", "createdAt"]).optional(),
+  secondaryOrder: z.enum(["asc", "desc"]).optional(),
+});
+
+export const getPaginatedAlbums = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = getPaginatedAlbumsSchema.safeParse(req.query);
+  if (!parsed.success) {
+    throw new AppError(parsed.error.message, 400);
+  }
+
+  const {
+    page,
+    orderBy,
+    order,
+    search,
+    genres: genresString,
+    secondaryOrderBy,
+    secondaryOrder,
+  } = parsed.data;
+
   let genres: string[] | undefined;
-  if (typeof rawGenres === "string") {
-    genres = rawGenres
+  if (genresString) {
+    genres = genresString
       .split(",")
       .map(s => s.trim())
       .filter(Boolean);
-  } else if (Array.isArray(rawGenres)) {
-    genres = rawGenres
-      .flatMap(r => (typeof r === "string" ? r.split(",") : []))
-      .map(s => s.trim())
-      .filter(Boolean);
+  }
+  const {
+    albums,
+    furtherPages,
+    totalCount,
+    genres: returnedGenres,
+    relatedGenres,
+  } = await AlbumService.getPaginatedAlbums({
+    page,
+    orderBy,
+    order,
+    search,
+    genres,
+    secondaryOrderBy,
+    secondaryOrder,
+  });
+
+  res
+    .status(200)
+    .json({ albums, furtherPages, totalCount, genres: returnedGenres, relatedGenres });
+});
+
+export const deleteAlbum = asyncHandler(async (req: Request, res: Response) => {
+  await AlbumService.deleteAlbum(req.params.albumID);
+  res.status(204).end();
+});
+
+export const updateAlbumReview = asyncHandler(async (req: Request, res: Response) => {
+  const updatedAlbum = await AlbumService.updateAlbumReview(req.body, req.params.albumID);
+  res.status(200).json(updatedAlbum);
+});
+
+const getReviewScoresByIdsSchema = z.object({
+  ids: z.string().min(1, "ids parameter is required"),
+});
+
+export const getReviewScoresByIds = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = getReviewScoresByIdsSchema.safeParse({ ids: req.query.ids });
+  if (!parsed.success) {
+    throw new AppError("ids parameter is required", 400);
   }
 
-  const options: GetPaginatedAlbumsOptions = {
-    page: req.query.page as number | undefined,
-    orderBy: req.query.orderBy as GetPaginatedAlbumsOptions["orderBy"] | undefined,
-    order: req.query.order as GetPaginatedAlbumsOptions["order"] | undefined,
-    search: req.query.search as string | undefined,
-    genres: genres,
-    secondaryOrderBy: req.query.secondaryOrderBy as
-      | GetPaginatedAlbumsOptions["secondaryOrderBy"]
-      | undefined,
-    secondaryOrder: req.query.secondaryOrder as
-      | GetPaginatedAlbumsOptions["secondaryOrder"]
-      | undefined,
-  };
+  const idsString = parsed.data.ids;
+  const ids = idsString.includes(",") ? idsString.split(",").map(s => s.trim()) : [idsString];
 
-  try {
-    const { albums, furtherPages, totalCount, genres, relatedGenres } =
-      await AlbumService.getPaginatedAlbums(options);
-    res.status(200).json({ albums, furtherPages, totalCount, genres, relatedGenres });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
-
-export const deleteAlbum = async (req: Request, res: Response) => {
-  const albumID = req.params.albumID;
-  console.log("Deleting album with ID:", albumID);
-  try {
-    await AlbumService.deleteAlbum(albumID);
-    res.status(204).end();
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
-
-export const updateAlbumReview = async (req: Request, res: Response) => {
-  const reviewData: ReceivedReviewData = req.body;
-  const albumID = req.params.albumID;
-  try {
-    const updatedAlbum = await AlbumService.updateAlbumReview(reviewData, albumID);
-    res.status(200).json(updatedAlbum);
-  } catch (error: any) {
-    console.error("Failed to create album review:", error);
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    }
-    // Postgres code: 23505 → Duplicate Key Violation
-    else if (error.code === "23505") {
-      res.status(400).json({ message: "You have already reviewed this album." });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
-
-export const getReviewScoresByIds = async (req: Request, res: Response) => {
-  let raw = req.query.ids;
-  let ids: string[] = [];
-
-  if (Array.isArray(raw)) {
-    ids = raw as string[];
-  } else if (typeof raw === "string") {
-    ids = raw.includes(",") ? raw.split(",") : [raw];
-  }
-
-  try {
-    const scores = await AlbumService.getReviewScoresByIds(ids);
-    res.status(200).json(scores);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: "An unknown error occurred." });
-    }
-  }
-};
+  const scores = await AlbumService.getReviewScoresByIds(ids);
+  res.status(200).json(scores);
+});
