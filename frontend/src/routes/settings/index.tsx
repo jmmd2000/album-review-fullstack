@@ -4,7 +4,6 @@ import Button from "@/components/Button";
 import { queryClient } from "@/main";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { spring } from "framer-motion";
 import { Camera, ImageIcon, ChevronRight, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { io, Socket } from "socket.io-client";
@@ -166,7 +165,7 @@ function RouteComponent() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: spring, stiffness: 100, damping: 15 },
+      transition: { type: "spring" as const, stiffness: 100, damping: 15 },
     },
     hover: {
       scale: 1.03,
