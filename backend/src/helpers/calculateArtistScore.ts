@@ -1,19 +1,6 @@
-import {
-  MinimalAlbum,
-  Reason,
-  ReviewedAlbum,
-  SpotifyImage,
-} from "@shared/types";
-import {
-  calculatePeakScore,
-  calculateLatestScore,
-} from "./calculatePeakAndLatestScores";
-
-/*** The bonus points awarded for a high-quality album. */
-const GOOD_ALBUM_BONUS = 0.25;
-
-/*** The penalty points deducted for a low-quality album.*/
-const BAD_ALBUM_BONUS = 0.25;
+import { MinimalAlbum, Reason, ReviewedAlbum, SpotifyImage } from "@shared/types";
+import { calculatePeakScore, calculateLatestScore } from "./calculatePeakAndLatestScores";
+import { BAD_ALBUM_BONUS, GOOD_ALBUM_BONUS, MAX_SCORE } from "@/config/constants";
 
 /**
  * Calculates the artist's score based on their albums.
@@ -86,7 +73,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
   const newAverageScore = average;
   const roundedAverage = Math.ceil(newAverageScore);
   let totalScore = roundedAverage + newBonusPoints;
-  if (totalScore > 100) totalScore = 100;
+  if (totalScore > MAX_SCORE) totalScore = MAX_SCORE;
 
   // Calculate peak and latest scores
   const peakScore = calculatePeakScore(contributing);

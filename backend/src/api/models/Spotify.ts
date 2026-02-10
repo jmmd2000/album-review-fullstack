@@ -10,6 +10,7 @@ import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
 import { AppError } from "../middleware/errorHandler";
+import { SPOTIFY_CHUNK_SIZE } from "@/config/constants";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -142,10 +143,9 @@ export class Spotify {
 
     try {
       const accessToken = await this.getAccessToken();
-      const chunkSize = 50;
       const chunks: string[][] = [];
-      for (let i = 0; i < ids.length; i += chunkSize) {
-        chunks.push(ids.slice(i, i + chunkSize));
+      for (let i = 0; i < ids.length; i += SPOTIFY_CHUNK_SIZE) {
+        chunks.push(ids.slice(i, i + SPOTIFY_CHUNK_SIZE));
       }
 
       const results: SpotifyArtist[] = [];

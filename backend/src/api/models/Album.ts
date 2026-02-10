@@ -12,11 +12,7 @@ import {
   and,
   isNull,
 } from "drizzle-orm";
-import {
-  DisplayAlbum,
-  GetPaginatedAlbumsOptions,
-  ReviewedAlbum,
-} from "@shared/types";
+import { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import {
   albumGenres,
   albumArtists,
@@ -27,6 +23,7 @@ import {
   trackArtists,
 } from "@/db/schema";
 import { db } from "@/index";
+import { PAGE_SIZE } from "@/config/constants";
 
 export class AlbumModel {
   static async findBySpotifyID(id: string) {
@@ -56,9 +53,7 @@ export class AlbumModel {
   }
 
   static async deleteAlbum(spotifyID: string) {
-    return db
-      .delete(reviewedAlbums)
-      .where(eq(reviewedAlbums.spotifyID, spotifyID));
+    return db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
@@ -67,10 +62,7 @@ export class AlbumModel {
 
   static async getAlbumsBySpotifyIDs(ids: string[]) {
     if (ids.length === 0) return [];
-    return db
-      .select()
-      .from(reviewedAlbums)
-      .where(inArray(reviewedAlbums.spotifyID, ids));
+    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, ids));
   }
 
   static async getPaginatedAlbums({
@@ -82,16 +74,10 @@ export class AlbumModel {
     secondaryOrderBy,
     secondaryOrder,
   }: GetPaginatedAlbumsOptions) {
-    const validOrderBy = [
-      "finalScore",
-      "releaseYear",
-      "name",
-      "createdAt",
-    ] as const;
+    const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
-    const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;
 
     // If requested genres, look up the matching album IDs
@@ -108,9 +94,7 @@ export class AlbumModel {
     let q: any = db
       .select()
       .from(reviewedAlbums)
-      .where(
-        albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined
-      );
+      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
 
     if (search.trim()) {
       q = q.where(
@@ -122,14 +106,8 @@ export class AlbumModel {
     let baseOrder;
     if (orderBy === "releaseYear") {
       // When sorting by year, always use a secondary sort (default to finalScore if not provided)
-      const validSecondaryOrderBy = [
-        "finalScore",
-        "name",
-        "createdAt",
-      ] as const;
-      const secondaryField = validSecondaryOrderBy.includes(
-        secondaryOrderBy || "finalScore"
-      )
+      const validSecondaryOrderBy = ["finalScore", "name", "createdAt"] as const;
+      const secondaryField = validSecondaryOrderBy.includes(secondaryOrderBy || "finalScore")
         ? secondaryOrderBy || "finalScore"
         : "finalScore";
       const secondaryDirection = validOrder.includes(secondaryOrder || "desc")
@@ -167,9 +145,7 @@ export class AlbumModel {
     const [{ count: totalCount }] = await db
       .select({ count: count() })
       .from(reviewedAlbums)
-      .where(
-        albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined
-      );
+      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
 
     const furtherPages = OFFSET + PAGE_SIZE < Number(totalCount);
 
@@ -191,10 +167,7 @@ export class AlbumModel {
     const rows = await db
       .select()
       .from(reviewedAlbums)
-      .innerJoin(
-        albumArtists,
-        eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID)
-      )
+      .innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
       .where(eq(albumArtists.artistSpotifyID, spotifyID));
     return rows.map(r => r.reviewed_albums);
   }
@@ -207,10 +180,7 @@ export class AlbumModel {
         affectsScore: albumArtists.affectsScore,
       })
       .from(reviewedAlbums)
-      .innerJoin(
-        albumArtists,
-        eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID)
-      )
+      .innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
       .where(eq(albumArtists.artistSpotifyID, spotifyID));
   }
 
@@ -218,10 +188,7 @@ export class AlbumModel {
     const rows = await db
       .select({ albumSpotifyID: reviewedTracks.albumSpotifyID })
       .from(reviewedTracks)
-      .innerJoin(
-        trackArtists,
-        eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)
-      )
+      .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
       .leftJoin(
         albumArtists,
         and(
@@ -230,10 +197,7 @@ export class AlbumModel {
         )
       )
       .where(
-        and(
-          eq(trackArtists.artistSpotifyID, artistID),
-          isNull(albumArtists.artistSpotifyID)
-        )
+        and(eq(trackArtists.artistSpotifyID, artistID), isNull(albumArtists.artistSpotifyID))
       )
       .groupBy(reviewedTracks.albumSpotifyID);
 
@@ -297,10 +261,7 @@ export class AlbumModel {
       });
   }
 
-  static async unlinkArtistsFromAlbum(
-    albumSpotifyID: string,
-    artistIDs: string[]
-  ) {
+  static async unlinkArtistsFromAlbum(albumSpotifyID: string, artistIDs: string[]) {
     if (artistIDs.length === 0) return;
     return db
       .delete(albumArtists)

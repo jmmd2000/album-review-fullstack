@@ -1,10 +1,5 @@
+import { BAD_ALBUM_BONUS, GOOD_ALBUM_BONUS, MAX_SCORE } from "@/config/constants";
 import { ReviewedAlbum } from "@shared/types";
-
-/*** The bonus points awarded for a high-quality album. */
-const GOOD_ALBUM_BONUS = 0.25;
-
-/*** The penalty points deducted for a low-quality album.*/
-const BAD_ALBUM_BONUS = 0.25;
 
 /**
  * Calculates the peak score for an artist based on their top 3 highest rated albums.
@@ -20,9 +15,7 @@ export const calculatePeakScore = (albums: ReviewedAlbum[]): number => {
   }
 
   // Sort by final score in descending order and take top 3
-  const topAlbums = contributing
-    .sort((a, b) => b.finalScore - a.finalScore)
-    .slice(0, 3);
+  const topAlbums = contributing.sort((a, b) => b.finalScore - a.finalScore).slice(0, 3);
 
   // Calculate average of top 3 albums
   const sum = topAlbums.reduce((acc, album) => acc + album.finalScore, 0);
@@ -62,9 +55,7 @@ export const calculateLatestScore = (albums: ReviewedAlbum[]): number => {
   }
 
   // Sort by release year in descending order (latest first) and take latest 3
-  const latestAlbums = contributing
-    .sort((a, b) => b.releaseYear - a.releaseYear)
-    .slice(0, 3);
+  const latestAlbums = contributing.sort((a, b) => b.releaseYear - a.releaseYear).slice(0, 3);
 
   // Calculate average of latest 3 albums
   const sum = latestAlbums.reduce((acc, album) => acc + album.finalScore, 0);
@@ -85,7 +76,7 @@ export const calculateLatestScore = (albums: ReviewedAlbum[]): number => {
   }
 
   let totalScore = roundedAverage + bonusPoints;
-  if (totalScore > 100) totalScore = 100;
+  if (totalScore > MAX_SCORE) totalScore = MAX_SCORE;
 
   return totalScore;
 };

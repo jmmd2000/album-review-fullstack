@@ -1,6 +1,7 @@
 import { ExtractedColor } from "@shared/types";
 import { extractColors } from "extract-colors";
 import getPixels from "get-pixels";
+import { COLOR_EXTRACTION } from "@/config/constants";
 
 /**
  * Extracts prominent colors from an album cover using specified options.
@@ -25,31 +26,27 @@ import getPixels from "get-pixels";
  */
 export const getImageColors = async (imageUrl: string): Promise<ExtractedColor[]> => {
   const options = {
-    pixels: 409600,
-    distance: 0.45,
+    pixels: COLOR_EXTRACTION.pixels,
+    distance: COLOR_EXTRACTION.distance,
     colorValidator: (red: number, green: number, blue: number, alpha = 255) => {
       // Remove fully transparent colors
-      if (alpha <= 250) return false;
-
-      // Define tolerance levels for near-black and near-white
-      const nearBlackThreshold = 70; // Colors with all RGB values < 30 are too dark
-      const nearWhiteThreshold = 210; // Colors with all RGB values > 225 are too bright
+      if (alpha <= COLOR_EXTRACTION.alphaThreshold) return false;
 
       // Remove near-black colors
-      if (red < nearBlackThreshold && green < nearBlackThreshold && blue < nearBlackThreshold) {
+      if (red < COLOR_EXTRACTION.nearBlackThreshold && green < COLOR_EXTRACTION.nearBlackThreshold && blue < COLOR_EXTRACTION.nearBlackThreshold) {
         return false;
       }
 
       // Remove near-white colors
-      if (red > nearWhiteThreshold && green > nearWhiteThreshold && blue > nearWhiteThreshold) {
+      if (red > COLOR_EXTRACTION.nearWhiteThreshold && green > COLOR_EXTRACTION.nearWhiteThreshold && blue > COLOR_EXTRACTION.nearWhiteThreshold) {
         return false;
       }
 
       return true; // Keep all other colors
     },
-    saturationDistance: 0.3,
-    lightnessDistance: 0.28,
-    hueDistance: 0.12,
+    saturationDistance: COLOR_EXTRACTION.saturationDistance,
+    lightnessDistance: COLOR_EXTRACTION.lightnessDistance,
+    hueDistance: COLOR_EXTRACTION.hueDistance,
   };
   return new Promise((resolve, reject) => {
     getPixels(imageUrl, (err, pixels) => {

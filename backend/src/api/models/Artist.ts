@@ -2,11 +2,8 @@ import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import { reviewedAlbums, reviewedArtists, reviewedTracks } from "@/db/schema";
 import { db } from "@/index";
-import {
-  GetPaginatedArtistsOptions,
-  ReviewedAlbum,
-  ReviewedArtist,
-} from "@shared/types";
+import { GetPaginatedArtistsOptions, ReviewedAlbum, ReviewedArtist } from "@shared/types";
+import { PAGE_SIZE } from "@/config/constants";
 
 export class ArtistModel {
   static async getAllArtists(): Promise<ReviewedArtist[]> {
@@ -32,7 +29,6 @@ export class ArtistModel {
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
-    const PAGE_SIZE = 35;
     const OFFSET = (page - 1) * PAGE_SIZE;
 
     // Determine which score field to use based on orderBy and scoreType
@@ -72,16 +68,11 @@ export class ArtistModel {
 
   static async getArtistsBySpotifyIDs(ids: string[]) {
     if (ids.length === 0) return [];
-    return db
-      .select()
-      .from(reviewedArtists)
-      .where(inArray(reviewedArtists.spotifyID, ids));
+    return db.select().from(reviewedArtists).where(inArray(reviewedArtists.spotifyID, ids));
   }
 
   static async deleteArtist(artistID: string) {
-    return db
-      .delete(reviewedArtists)
-      .where(eq(reviewedArtists.spotifyID, artistID));
+    return db.delete(reviewedArtists).where(eq(reviewedArtists.spotifyID, artistID));
   }
 
   static async createArtist(values: typeof reviewedArtists.$inferInsert) {
@@ -110,10 +101,7 @@ export class ArtistModel {
   }
 
   static async findAllArtistsSortedByTotalScore() {
-    return db
-      .select()
-      .from(reviewedArtists)
-      .orderBy(desc(reviewedArtists.totalScore));
+    return db.select().from(reviewedArtists).orderBy(desc(reviewedArtists.totalScore));
   }
 
   static async updateLeaderboardPosition(id: number, position: number | null) {
@@ -123,20 +111,14 @@ export class ArtistModel {
       .where(eq(reviewedArtists.id, id));
   }
 
-  static async updatePeakLeaderboardPosition(
-    id: number,
-    position: number | null
-  ) {
+  static async updatePeakLeaderboardPosition(id: number, position: number | null) {
     return db
       .update(reviewedArtists)
       .set({ peakLeaderboardPosition: position })
       .where(eq(reviewedArtists.id, id));
   }
 
-  static async updateLatestLeaderboardPosition(
-    id: number,
-    position: number | null
-  ) {
+  static async updateLatestLeaderboardPosition(id: number, position: number | null) {
     return db
       .update(reviewedArtists)
       .set({ latestLeaderboardPosition: position })

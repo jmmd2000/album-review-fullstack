@@ -14,6 +14,7 @@ import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
 import statsRoutes from "@/api/routes/statsRoutes";
 import settingsRoutes from "@/api/routes/settingsRoutes";
 import { initSocket } from "@/socket";
+import { errorHandler } from "./api/middleware/errorHandler";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
@@ -39,10 +40,7 @@ app.options("/ws/*", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization,Cookie"
-  );
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Cookie");
   res.sendStatus(200);
 });
 
@@ -54,6 +52,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/settings", settingsRoutes);
+
+app.use(errorHandler);
 
 // Create HTTP server and attach Socket.IO
 const server = http.createServer(app);
