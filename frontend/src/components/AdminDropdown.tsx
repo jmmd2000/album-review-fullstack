@@ -25,6 +25,7 @@ import {
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@/components/Dialog";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 interface LinkItem {
   label: string;
@@ -93,18 +94,17 @@ const AdminDropdown = () => {
   // State for header image update modal
   const [showHeaderModal, setShowHeaderModal] = useState(false);
   const [headerImageUrl, setHeaderImageUrl] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = async () => {
     if (!albumID) return;
-    if (!confirm("Are you sure you want to delete this album?")) return;
     try {
       await api.delete(`/api/albums/${albumID}`);
       queryClient.invalidateQueries({ queryKey: ["artists"] });
       queryClient.invalidateQueries({ queryKey: ["albums"] });
-
       navigate({ to: "/albums" });
     } catch {
-      alert("Something went wrong while deleting the album.");
+      toast.error("Something went wrong while deleting the album.");
     }
   };
 
@@ -126,7 +126,7 @@ const AdminDropdown = () => {
       setOpen(false);
     },
     onError: error => {
-      alert(error.message || "Something went wrong while updating the header image.");
+      toast.error(error.message || "Something went wrong while updating the header image.");
     },
   });
 
@@ -173,7 +173,7 @@ const AdminDropdown = () => {
                 label: "Delete Album",
                 icon: <Trash className="w-4 h-4" />,
                 to: "",
-                onClick: handleDelete,
+                onClick: () => setShowDeleteConfirm(true),
               },
             ]
           : []),
@@ -328,6 +328,32 @@ const AdminDropdown = () => {
               {updateHeaderImageMut.isPending ? "Updating..." : "Update"}
             </button>
           </div>
+        </div>
+      </Dialog>
+      <Dialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Album"
+      >
+        <p className="text-neutral-300 mb-4">
+          Are you sure you want to delete this album? This cannot be undone.
+        </p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => setShowDeleteConfirm(false)}
+            className="rounded bg-neutral-700 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-600 transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              handleDelete();
+            }}
+            className="rounded bg-red-700 px-4 py-2 text-sm text-white hover:bg-red-600 transition-colors cursor-pointer"
+          >
+            Delete
+          </button>
         </div>
       </Dialog>
     </div>

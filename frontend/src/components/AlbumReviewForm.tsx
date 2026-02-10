@@ -28,6 +28,7 @@ import RatingChip from "./RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { queryClient } from "@/main";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 //# --------------------------------------------------------------------------------------------- #
 //# This form is used for both creating a new review and editing an existing review
@@ -543,7 +544,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     if (start === end) {
-      alert("Please select some text first");
+      toast.info("Please select some text first");
       return;
     }
     let prefix = "";
