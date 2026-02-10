@@ -13,14 +13,12 @@ import SameBanner from "@/components/settings/SameBanner";
 import StatusIndicator from "@/components/settings/StatusIndicator";
 import { ProgressState, useProgressState } from "@/hooks/useProgressState";
 import { timeAgo } from "@shared/helpers/formatDate";
+import { api } from "@/lib/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL!;
+const SOCKET_URL = import.meta.env.VITE_API_URL!;
 
 async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
-  const response = await fetch(`${API_BASE_URL}/api/settings/last-runs`, {
-    credentials: "include",
-  });
-  return await response.json();
+  return api.get("/api/settings/last-runs");
 }
 
 const settingsQueryOptions = () =>
@@ -54,7 +52,7 @@ function RouteComponent() {
   const { data: lastRuns } = useSuspenseQuery(settingsQueryOptions());
 
   useEffect(() => {
-    const socket: Socket = io(API_BASE_URL, {
+    const socket: Socket = io(SOCKET_URL, {
       path: "/ws",
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -113,22 +111,14 @@ function RouteComponent() {
   const profileImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
       resetImageState();
-      const res = await fetch(`${API_BASE_URL}/api/artists/profileImage?all=true`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error((await res.text()) || res.statusText);
+      await api.post("/api/artists/profileImage?all=true");
     },
   });
 
   const headerImageMut = useMutation<void, Error, void>({
     mutationFn: async () => {
       resetHeaderState();
-      const res = await fetch(`${API_BASE_URL}/api/artists/headerImage?all=true`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error((await res.text()) || res.statusText);
+      await api.post("/api/artists/headerImage?all=true");
     },
   });
 
@@ -158,12 +148,7 @@ function RouteComponent() {
 
   const recalcScoresMut = useMutation<RecalcResult, Error, void>({
     mutationFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/settings/recalculate-scores`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error((await res.text()) || res.statusText);
-      return res.json();
+      return api.post<RecalcResult>("/api/settings/recalculate-scores");
     },
   });
 

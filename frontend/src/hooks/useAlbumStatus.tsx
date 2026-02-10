@@ -1,19 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { DisplayAlbum } from "@shared/types";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 export function useAlbumStatus(albums: DisplayAlbum[]) {
-  const ids = albums.map((a) => a.spotifyID);
-  const qs = new URLSearchParams(ids.map((id) => Array.from(["ids", id]))).toString();
+  const ids = albums.map(a => a.spotifyID);
+  const qs = new URLSearchParams(ids.map(id => Array.from(["ids", id]))).toString();
 
   // Bookmark‐status query
-  const { data: bookmarkData = {}, isLoading: isLoadingBookmarks } = useQuery<Record<string, boolean>, Error>({
+  const { data: bookmarkData = {}, isLoading: isLoadingBookmarks } = useQuery<
+    Record<string, boolean>,
+    Error
+  >({
     queryKey: ["bookmarks", ids],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/bookmarks/status?${qs}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch bookmark statuses");
-      return res.json();
+      return api.get<Record<string, boolean>>(`/api/bookmarks/status?${qs}`);
     },
     staleTime: 0,
     refetchOnMount: "always",
@@ -21,12 +21,15 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   });
 
   // review‐score query
-  const { data: scoreArray = [], isLoading: isLoadingScores } = useQuery<Array<{ spotifyID: string; reviewScore: number }>, Error>({
+  const { data: scoreArray = [], isLoading: isLoadingScores } = useQuery<
+    Array<{ spotifyID: string; reviewScore: number }>,
+    Error
+  >({
     queryKey: ["albums", "status", ids],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/albums/status?${qs}`);
-      if (!res.ok) throw new Error("Failed to fetch review scores");
-      return res.json();
+      return api.get<Array<{ spotifyID: string; reviewScore: number }>>(
+        `/api/albums/status?${qs}`
+      );
     },
     // scores rarely change so no need to auto refetch
     staleTime: Infinity,
@@ -39,7 +42,7 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   }
 
   // Merge into albums
-  const enriched = albums.map((album) => ({
+  const enriched = albums.map(album => ({
     ...album,
     bookmarked: Boolean(bookmarkData[album.spotifyID]),
     // override or fill in the score from cache

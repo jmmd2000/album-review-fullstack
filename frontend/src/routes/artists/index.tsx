@@ -6,11 +6,9 @@ import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
 import ArtistCard from "@/components/ArtistCard";
 import { SortDropdownProps } from "@/components/SortDropdown";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
-async function fetchPaginatedArtists(
-  options: GetPaginatedArtistsOptions
-): Promise<{
+async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions): Promise<{
   artists: DisplayArtist[];
   furtherPages: boolean;
   totalCount: number;
@@ -23,15 +21,11 @@ async function fetchPaginatedArtists(
   if (options.search) queryParams.set("search", options.search);
   if (options.scoreType) queryParams.set("scoreType", options.scoreType);
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/artists?${queryParams.toString()}`
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch artists");
-  }
-
-  return await response.json();
+  return api.get<{
+    artists: DisplayArtist[];
+    furtherPages: boolean;
+    totalCount: number;
+  }>(`/api/artists?${queryParams.toString()}`);
 }
 
 const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
@@ -43,19 +37,13 @@ const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
   });
 
 export const Route = createFileRoute("/artists/")({
-  validateSearch: (
-    search: Record<string, unknown>
-  ): GetPaginatedArtistsOptions => {
+  validateSearch: (search: Record<string, unknown>): GetPaginatedArtistsOptions => {
     const result: GetPaginatedArtistsOptions = {
       page: Number(search.page) || 1,
       search: (search.search as string) || "",
-      orderBy:
-        (search.orderBy as GetPaginatedArtistsOptions["orderBy"]) ||
-        "totalScore",
+      orderBy: (search.orderBy as GetPaginatedArtistsOptions["orderBy"]) || "totalScore",
       order: (search.order as GetPaginatedArtistsOptions["order"]) || "desc",
-      scoreType:
-        (search.scoreType as GetPaginatedArtistsOptions["scoreType"]) ||
-        "overall",
+      scoreType: (search.scoreType as GetPaginatedArtistsOptions["scoreType"]) || "overall",
     };
 
     // Only include non-default values in the URL
@@ -143,8 +131,7 @@ function RouteComponent() {
           orderBy: value as GetPaginatedArtistsOptions["orderBy"],
           order: direction,
           // Clear scoreType when not sorting by score
-          scoreType:
-            value === "totalScore" ? prev.scoreType || "overall" : undefined,
+          scoreType: value === "totalScore" ? prev.scoreType || "overall" : undefined,
         }),
       });
     },

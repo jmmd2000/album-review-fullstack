@@ -4,19 +4,14 @@ import GenrePills from "@/components/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { queryClient } from "@/main";
-import {
-  Genre,
-  DisplayAlbum,
-  DisplayArtist,
-  GetStatsOptions,
-} from "@shared/types";
+import { Genre, DisplayAlbum, DisplayArtist, GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Music, Users, Disc, Headphones } from "lucide-react";
 import DistributionChart from "@/components/stats/DistributionChart";
 import { Dropdown } from "@/components/Dropdown";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 async function fetchOverview(): Promise<{
   leastFavouriteGenre: Genre | null;
@@ -26,8 +21,7 @@ async function fetchOverview(): Promise<{
   leastFavouriteArtist: DisplayArtist | null;
   favouriteArtist: DisplayArtist | null;
 }> {
-  const res = await fetch(`${API_BASE_URL}/api/stats/favourites`);
-  return await res.json();
+  return api.get("/api/stats/favourites");
 }
 
 async function fetchGenreStats(slug: string): Promise<{
@@ -44,10 +38,7 @@ async function fetchGenreStats(slug: string): Promise<{
 }> {
   const queryParams = new URLSearchParams();
   if (slug) queryParams.set("slug", slug);
-  const res = await fetch(
-    `${API_BASE_URL}/api/stats/genres?${queryParams.toString()}`
-  );
-  return await res.json();
+  return api.get(`/api/stats/genres?${queryParams.toString()}`);
 }
 
 async function fetchRatingDistribution(
@@ -55,10 +46,7 @@ async function fetchRatingDistribution(
 ): Promise<{ rating: string; count: number }[]> {
   const queryParams = new URLSearchParams();
   if (resource) queryParams.set("resource", resource);
-  const res = await fetch(
-    `${API_BASE_URL}/api/stats/distribution?${queryParams.toString()}`
-  );
-  return await res.json();
+  return api.get(`/api/stats/distribution?${queryParams.toString()}`);
 }
 
 async function fetchResourceCounts(): Promise<{
@@ -67,8 +55,7 @@ async function fetchResourceCounts(): Promise<{
   genreCount: number;
   trackCount: number;
 }> {
-  const res = await fetch(`${API_BASE_URL}/api/stats/counts`);
-  return await res.json();
+  return api.get("/api/stats/counts");
 }
 
 const overviewQueryOptions = queryOptions({
@@ -125,16 +112,12 @@ function RouteComponent() {
   const { data: favourites } = useQuery(overviewQueryOptions);
   const { data: counts } = useQuery(countQueryOptions);
 
-  const [selectedResource, setSelectedResource] = useState<
-    "albums" | "tracks" | "artists"
-  >("albums");
-  const { data: distribution } = useQuery(
-    distributionQueryOptions(selectedResource)
+  const [selectedResource, setSelectedResource] = useState<"albums" | "tracks" | "artists">(
+    "albums"
   );
+  const { data: distribution } = useQuery(distributionQueryOptions(selectedResource));
 
-  const [selectedGenre, setSelectedGenre] = useState<string>(
-    options.slug || ""
-  );
+  const [selectedGenre, setSelectedGenre] = useState<string>(options.slug || "");
   const { data: genre } = useQuery(genresQueryOptions(selectedGenre));
 
   if (!selectedGenre && genre?.allGenres?.length) {
@@ -179,9 +162,7 @@ function RouteComponent() {
           <StatBox
             label="Albums"
             value={counts.albumCount}
-            icon={
-              <Disc className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-blue-500" />
-            }
+            icon={<Disc className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-blue-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -192,9 +173,7 @@ function RouteComponent() {
           <StatBox
             label="Artists"
             value={counts.artistCount}
-            icon={
-              <Users className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-green-500" />
-            }
+            icon={<Users className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-green-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -205,9 +184,7 @@ function RouteComponent() {
           <StatBox
             label="Tracks"
             value={counts.trackCount}
-            icon={
-              <Music className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-orange-500" />
-            }
+            icon={<Music className="w-6 h-6 lg:w-10 lg:h-10 opacity-80 text-orange-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -231,25 +208,19 @@ function RouteComponent() {
           <div className="grid grid-cols-2 lg:grid-cols-4 content-center gap-8 items-center mx-auto place-items-center">
             {favourites?.favouriteAlbum && (
               <div className="flex flex-col gap-2 max-w-[200px]">
-                <p className="text-xs text-gray-400 my-1 text-center">
-                  Favourite Album
-                </p>
+                <p className="text-xs text-gray-400 my-1 text-center">Favourite Album</p>
                 <AlbumCard album={favourites.favouriteAlbum} />
               </div>
             )}
             {favourites?.favouriteArtist && (
               <div className="flex flex-col gap-2 max-w-[200px]">
-                <p className="text-xs text-gray-400 my-1 text-center">
-                  Favourite Artist
-                </p>
+                <p className="text-xs text-gray-400 my-1 text-center">Favourite Artist</p>
                 <ArtistCard artist={favourites.favouriteArtist} />
               </div>
             )}
             {favourites?.leastFavouriteAlbum && (
               <div className="flex flex-col gap-2 max-w-[200px]">
-                <p className="text-xs text-gray-400 my-1 text-center">
-                  Least Favourite Album
-                </p>
+                <p className="text-xs text-gray-400 my-1 text-center">Least Favourite Album</p>
                 <AlbumCard album={favourites.leastFavouriteAlbum} />
               </div>
             )}
@@ -277,15 +248,9 @@ function RouteComponent() {
                 <option value="tracks">Track</option>
                 <option value="artists">Artist</option>
               </select>
-              <p className="text-lg font-semibold tracking-wide">
-                {" "}
-                Rating Distribution
-              </p>
+              <p className="text-lg font-semibold tracking-wide"> Rating Distribution</p>
             </div>
-            <DistributionChart
-              data={distribution}
-              resource={selectedResource}
-            />
+            <DistributionChart data={distribution} resource={selectedResource} />
           </div>
         ) : (
           <NoDataFound message="No data available for rating distribution." />
@@ -318,9 +283,7 @@ function RouteComponent() {
       <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-9 lg:row-start-2 z-50">
         {genre && genre.slug && genre.name ? (
           <div>
-            <p className="text-lg px-4 mb-2 font-semibold tracking-wide">
-              Genre Stats
-            </p>
+            <p className="text-lg px-4 mb-2 font-semibold tracking-wide">Genre Stats</p>
             <div className="flex justify-evenly items-center px-4">
               <div className="flex-4/5">
                 {genre.allGenres && (
@@ -343,9 +306,7 @@ function RouteComponent() {
                   <p className="text-2xl lg:text-4xl font-bold text-white">
                     {genre.reviewedAlbumCount}
                   </p>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">
-                    Reviews
-                  </p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide">Reviews</p>
                 </div>
 
                 <div>
@@ -386,9 +347,7 @@ function RouteComponent() {
       <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-12 lg:row-start-5 mb-8 lg:mb-0">
         {genre?.relatedGenres && genre.relatedGenres.length > 0 ? (
           <div className="mb-4 flex flex-col gap-4 items-start">
-            <p className="text-lg px-4 mb-2 font-semibold tracking-wide">
-              Top Related Genres
-            </p>
+            <p className="text-lg px-4 mb-2 font-semibold tracking-wide">Top Related Genres</p>
             <GenrePills genres={genre.relatedGenres || []} />
           </div>
         ) : (

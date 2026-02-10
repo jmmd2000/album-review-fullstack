@@ -2,46 +2,26 @@ import { type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { AuthContext } from "@/auth/context";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 // Export the Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data } = useQuery<{ isAdmin: boolean }, Error>({
     queryKey: ["auth", "status"],
-    queryFn: () =>
-      fetch(`${API_BASE_URL}/api/auth/status`, { credentials: "include" }).then(
-        res => {
-          if (!res.ok) throw new Error("Could not fetch auth status");
-          return res.json();
-        }
-      ),
+    queryFn: () => api.get<{ isAdmin: boolean }>("/api/auth/status"),
     retry: false,
     initialData: { isAdmin: false },
   });
 
   const loginMutation = useMutation<void, Error, string>({
-    mutationFn: password =>
-      fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: password }),
-      }).then(res => {
-        if (!res.ok) throw new Error("Invalid password");
-      }),
+    mutationFn: password => api.post("/api/auth/login", { password }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
     },
   });
 
   const logoutMutation = useMutation<void, Error, void>({
-    mutationFn: () =>
-      fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      }).then(res => {
-        if (!res.ok) throw new Error("Logout failed");
-      }),
+    mutationFn: () => api.post("/api/auth/logout"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
     },

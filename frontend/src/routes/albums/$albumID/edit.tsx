@@ -15,19 +15,22 @@ import ErrorComponent from "@components/ErrorComponent";
 import HeaderDetails from "@/components/HeaderDetails";
 import AlbumDetails from "@/components/AlbumDetails";
 import { RequireAdmin } from "@/components/RequireAdmin";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
-async function fetchAlbumFromDB(
-  albumSpotifyID: string
-): Promise<{
+async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{
   album: ReviewedAlbum;
   artists: ReviewedArtist[];
   tracks: ReviewedTrack[];
   allGenres: Genre[];
   albumGenres: Genre[];
 }> {
-  const response = await fetch(`${API_BASE_URL}/api/albums/${albumSpotifyID}`);
-  return await response.json();
+  return api.get<{
+    album: ReviewedAlbum;
+    artists: ReviewedArtist[];
+    tracks: ReviewedTrack[];
+    allGenres: Genre[];
+    albumGenres: Genre[];
+  }>(`/api/albums/${albumSpotifyID}`);
 }
 
 const albumQueryOptions = (albumSpotifyID: string) =>
@@ -37,8 +40,7 @@ const albumQueryOptions = (albumSpotifyID: string) =>
   });
 
 export const Route = createFileRoute("/albums/$albumID/edit")({
-  loader: ({ params }) =>
-    queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   errorComponent: ErrorComponent,
   component: RouteComponent,
   head: ({ loaderData }) => ({
@@ -63,21 +65,17 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
 
   const initialColors = data.album.colors;
-  const [selectedColors, setSelectedColors] =
-    useState<ExtractedColor[]>(initialColors);
+  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(initialColors);
 
   return (
     <>
       <RequireAdmin>
         <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails
-            name={data.album.name}
-            imageURL={data.album.imageURLs[1].url}
-          />
+          <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} />
           <AlbumDetails
             album={data.album}
             trackCount={data.tracks.length}
-            artists={data.artists.map((artist) => ({
+            artists={data.artists.map(artist => ({
               spotifyID: artist.spotifyID,
               name: artist.name,
               imageURLs: artist.imageURLs,

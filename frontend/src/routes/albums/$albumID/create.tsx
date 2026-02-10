@@ -2,13 +2,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
-import {
-  DisplayAlbum,
-  ExtractedColor,
-  Genre,
-  SpotifyAlbum,
-  AlbumArtist,
-} from "@shared/types";
+import { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, AlbumArtist } from "@shared/types";
 import ErrorComponent from "@components/ErrorComponent";
 import BlurryHeader from "@components/BlurryHeader";
 import AlbumReviewForm from "@components/AlbumReviewForm";
@@ -16,7 +10,7 @@ import HeaderDetails from "@/components/HeaderDetails";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import AlbumDetails from "@/components/AlbumDetails";
 import { RequireAdmin } from "@/components/RequireAdmin";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 //# --------------------------------------------------------------------------------------------- #
 //# The usual structure for a route would be like:
@@ -44,24 +38,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 //# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
-async function fetchAlbumFromSpotify(
-  albumSpotifyID: string
-): Promise<{
+async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{
   album: SpotifyAlbum;
   artists: AlbumArtist[];
   genres: Genre[];
 }> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/spotify/albums/${albumSpotifyID}`
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch album");
-  }
-
-  return data;
+  return api.get<{
+    album: SpotifyAlbum;
+    artists: AlbumArtist[];
+    genres: Genre[];
+  }>(`/api/spotify/albums/${albumSpotifyID}`);
 }
 
 const albumQueryOptions = (albumSpotifyID: string) =>
@@ -75,8 +61,7 @@ const MAX_RECENT = 14;
 
 // This page is for creating a new album review
 export const Route = createFileRoute("/albums/$albumID/create")({
-  loader: ({ params }) =>
-    queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
   head: ({ loaderData }) => ({
@@ -91,10 +76,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
 function RouteComponent() {
   // Get the album ID from the URL
   const { albumID } = useParams({ strict: false });
-  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>(
-    "recentAlbums",
-    []
-  );
+  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
 
   // If the album ID is undefined, throw an error
   if (!albumID) {
@@ -107,9 +89,7 @@ function RouteComponent() {
   useEffect(() => {
     if (!data.album.id) return;
 
-    const alreadyExists = recentAlbums.some(
-      album => album.spotifyID === data.album.id
-    );
+    const alreadyExists = recentAlbums.some(album => album.spotifyID === data.album.id);
     if (alreadyExists) return;
 
     const newAlbum: DisplayAlbum = {
@@ -132,18 +112,13 @@ function RouteComponent() {
   }, [data.album.id]);
 
   // State to manage selected colors
-  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(
-    data.album.colors
-  );
+  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.album.colors);
 
   return (
     <>
       <RequireAdmin>
         <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails
-            name={data.album.name}
-            imageURL={data.album.images[1].url}
-          />
+          <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
           {data.artists && data.artists.length > 0 && (
             <AlbumDetails
               album={data.album}

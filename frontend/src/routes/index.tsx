@@ -10,7 +10,7 @@ import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { NoDataFound } from "./stats";
 import { Disc, Music, Users } from "lucide-react";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 async function fetchAllAlbums(): Promise<{
   albums: DisplayAlbum[];
@@ -18,10 +18,13 @@ async function fetchAllAlbums(): Promise<{
   numAlbums: number;
   numTracks: number;
 }> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/albums/all?includeCounts=true`
-  );
-  return await response.json();
+  const data = await api.get<{
+    albums: DisplayAlbum[];
+    numArtists: number;
+    numAlbums: number;
+    numTracks: number;
+  }>("/api/albums/all?includeCounts=true");
+  return data;
 }
 
 const statsQueryOptions = queryOptions({
@@ -66,13 +69,13 @@ function IntroductoryText() {
       <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-transparent mb-8"></div>
 
       <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        This is my album review blog, where I share my thoughts on a variety of
-        albums and artists.
+        This is my album review blog, where I share my thoughts on a variety of albums and
+        artists.
       </p>
 
       <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        Whether it's a classic I missed or something brand new, every album I
-        listen to ends up here.
+        Whether it's a classic I missed or something brand new, every album I listen to ends up
+        here.
       </p>
 
       <p className="mb-8 text-base sm:text-lg md:text-xl font-light text-gray-100">
@@ -81,9 +84,7 @@ function IntroductoryText() {
 
       <div className="flex items-center gap-3">
         <div className="w-12 h-[1px] bg-gray-500"></div>
-        <p className="text-lg sm:text-xl md:text-2xl font-light text-gray-300 italic">
-          James
-        </p>
+        <p className="text-lg sm:text-xl md:text-2xl font-light text-gray-300 italic">James</p>
       </div>
     </div>
   );

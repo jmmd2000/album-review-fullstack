@@ -24,7 +24,7 @@ import {
 } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@/components/Dialog";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 interface LinkItem {
   label: string;
@@ -98,11 +98,7 @@ const AdminDropdown = () => {
     if (!albumID) return;
     if (!confirm("Are you sure you want to delete this album?")) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/albums/${albumID}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error();
+      await api.delete(`/api/albums/${albumID}`);
       queryClient.invalidateQueries({ queryKey: ["artists"] });
       queryClient.invalidateQueries({ queryKey: ["albums"] });
 
@@ -116,21 +112,9 @@ const AdminDropdown = () => {
   const updateHeaderImageMut = useMutation<void, Error, string>({
     mutationFn: async (headerImage: string) => {
       if (!artistID) throw new Error("Artist ID is required");
-      const res = await fetch(`${API_BASE_URL}/api/artists/${artistID}/headerImage`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          headerImage: headerImage.trim() || null,
-        }),
+      await api.put(`/api/artists/${artistID}/headerImage`, {
+        headerImage: headerImage.trim() || null,
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update header image");
-      }
     },
     onSuccess: () => {
       if (artistID) {

@@ -1,16 +1,13 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  GetPaginatedAlbumsOptions,
-  PaginatedAlbumsResult,
-} from "@shared/types";
+import { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
 import AlbumCard from "@components/AlbumCard";
 import CardGrid from "@components/CardGrid";
 import { motion } from "framer-motion";
 import { SortDropdownProps } from "@/components/SortDropdown";
 import { DropdownControlsProps } from "@/components/CardGridControls";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 async function fetchPaginatedAlbums(
   options: GetPaginatedAlbumsOptions
@@ -22,27 +19,13 @@ async function fetchPaginatedAlbums(
   if (options.orderBy) queryParams.set("orderBy", options.orderBy);
   if (options.search) queryParams.set("search", options.search);
   if (options.genres) {
-    const genres = Array.isArray(options.genres)
-      ? options.genres.join(",")
-      : options.genres;
+    const genres = Array.isArray(options.genres) ? options.genres.join(",") : options.genres;
     queryParams.set("genres", genres);
   }
-  if (options.secondaryOrderBy)
-    queryParams.set("secondaryOrderBy", options.secondaryOrderBy);
-  if (options.secondaryOrder)
-    queryParams.set("secondaryOrder", options.secondaryOrder);
+  if (options.secondaryOrderBy) queryParams.set("secondaryOrderBy", options.secondaryOrderBy);
+  if (options.secondaryOrder) queryParams.set("secondaryOrder", options.secondaryOrder);
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/albums?${queryParams.toString()}`
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch albums");
-  }
-
-  const data = await response.json();
-
-  return data;
+  return api.get(`/api/albums?${queryParams.toString()}`);
 }
 
 const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
@@ -143,11 +126,8 @@ function RouteComponent() {
           order: direction,
           // Set default secondary sort when year is selected, clear when not
           secondaryOrderBy:
-            value === "releaseYear"
-              ? prev.secondaryOrderBy || "finalScore"
-              : undefined,
-          secondaryOrder:
-            value === "releaseYear" ? prev.secondaryOrder || "desc" : undefined,
+            value === "releaseYear" ? prev.secondaryOrderBy || "finalScore" : undefined,
+          secondaryOrder: value === "releaseYear" ? prev.secondaryOrder || "desc" : undefined,
         }),
       });
     },
@@ -191,8 +171,7 @@ function RouteComponent() {
     : [];
 
   // Find corresponding genres in data.genres
-  const selectedGenres =
-    data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
+  const selectedGenres = data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
 
   // Map selected genres to items first
   const selectedItems = selectedGenres.map(genre => ({
@@ -210,9 +189,7 @@ function RouteComponent() {
       })) || [];
 
   // Combine and sort by name
-  const items = [...selectedItems, ...otherItems].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  const items = [...selectedItems, ...otherItems].sort((a, b) => a.name.localeCompare(b.name));
 
   const genreSettings: DropdownControlsProps = {
     items,

@@ -10,7 +10,7 @@ import CardGrid from "@/components/CardGrid";
 import AlbumCard from "@/components/AlbumCard";
 import { useEffect } from "react";
 import TrackList from "@/components/TrackList";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import { api } from "@/lib/api";
 
 async function fetchReviewedArtist(artistSpotifyID: string): Promise<{
   artist: ReviewedArtist;
@@ -18,10 +18,12 @@ async function fetchReviewedArtist(artistSpotifyID: string): Promise<{
   featuredAlbums: DisplayAlbum[];
   tracks: DisplayTrack[];
 }> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/artists/details/${artistSpotifyID}`
-  );
-  return await response.json();
+  return api.get<{
+    artist: ReviewedArtist;
+    albums: DisplayAlbum[];
+    featuredAlbums: DisplayAlbum[];
+    tracks: DisplayTrack[];
+  }>(`/api/artists/details/${artistSpotifyID}`);
 }
 
 const artistQueryOptions = (artistID: string) =>
@@ -63,11 +65,9 @@ function RouteComponent() {
   const albums = data.data.albums;
   const featuredAlbums = data.data.featuredAlbums ?? [];
   const tracks = data.data.tracks;
-  const artistImageURL =
-    artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
+  const artistImageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
 
-  const albumString =
-    albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
+  const albumString = albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
 
   const podiumCheck = (pos: number) => {
     if (pos === 1) return <Crown color="#d4af37" size={16} />;
@@ -102,9 +102,7 @@ function RouteComponent() {
               {artist.unrated ? (
                 <>
                   <span className="mx-2 text-gray-500">•</span>
-                  <p className="text-gray-400 flex items-center gap-1">
-                    Unrated
-                  </p>
+                  <p className="text-gray-400 flex items-center gap-1">Unrated</p>
                 </>
               ) : (
                 <>
@@ -124,10 +122,7 @@ function RouteComponent() {
       <div className="mb-16 flex justify-center items-center gap-8">
         {artist.unrated ? (
           <div className="flex flex-col items-center gap-2">
-            <RatingChip
-              rating={0}
-              options={{ textBelow: true }}
-            />
+            <RatingChip rating={0} options={{ textBelow: true }} />
             <div className="flex flex-col items-center gap-1">
               <span className="text-sm text-gray-400">Unrated</span>
             </div>

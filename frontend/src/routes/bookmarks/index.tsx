@@ -2,14 +2,16 @@ import AlbumCard from "@/components/AlbumCard";
 import CardGrid from "@/components/CardGrid";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { SortDropdownProps } from "@/components/SortDropdown";
+import { api } from "@/lib/api";
 import { queryClient } from "@/main";
 import { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
+async function fetchPaginatedBookmarkedAlbums(
+  options: GetPaginatedBookmarkedAlbumsOptions
+): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
@@ -17,22 +19,18 @@ async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlb
   if (options.orderBy) queryParams.set("orderBy", options.orderBy);
   if (options.search) queryParams.set("search", options.search);
 
-  const response = await fetch(`${API_BASE_URL}/api/bookmarks?${queryParams.toString()}`, {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch albums");
-  }
-
-  return await response.json();
+  return api.get<{
+    albums: DisplayAlbum[];
+    furtherPages: boolean;
+    totalCount: number;
+  }>(`/api/bookmarks?${queryParams.toString()}`);
 }
 
 const albumQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>
   queryOptions({
     queryKey: ["bookmarkedAlbums", options],
     queryFn: () => fetchPaginatedBookmarkedAlbums(options),
-    placeholderData: (prev) => prev,
+    placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -43,7 +41,11 @@ export const Route = createFileRoute("/bookmarks/")({
     orderBy: search.orderBy,
     order: search.order,
   }),
-  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetPaginatedBookmarkedAlbumsOptions }) => {
+  loader: async ({
+    deps: { page, search, orderBy, order },
+  }: {
+    deps: GetPaginatedBookmarkedAlbumsOptions;
+  }) => {
     return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,
@@ -64,7 +66,10 @@ function RouteComponent() {
   const handleNextPage = () => {
     if (data?.furtherPages) {
       navigate({
-        search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({ ...prev, page: (prev.page || 1) + 1 }),
+        search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({
+          ...prev,
+          page: (prev.page || 1) + 1,
+        }),
       });
     }
   };
@@ -98,7 +103,11 @@ function RouteComponent() {
     defaultDirection: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
-        search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({ ...prev, orderBy: value, order: direction }),
+        search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({
+          ...prev,
+          orderBy: value,
+          order: direction,
+        }),
       });
     },
   };
@@ -106,9 +115,14 @@ function RouteComponent() {
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
     <RequireAdmin>
-      <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <motion.div
+        key={options.page}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <CardGrid
-          cards={data.albums.map((album) => (
+          cards={data.albums.map(album => (
             <AlbumCard key={album.spotifyID} album={album} bookmarked />
           ))}
           counter={data.totalCount}
@@ -116,8 +130,14 @@ function RouteComponent() {
             search: handleSearch,
             pagination: {
               next: { action: handleNextPage, disabled: !data.furtherPages },
-              prev: { action: handlePrevPage, disabled: options.page === 1 || options.page === undefined },
-              page: { pageNumber: options.page || 1, totalPages: Math.ceil(data.totalCount / 35) },
+              prev: {
+                action: handlePrevPage,
+                disabled: options.page === 1 || options.page === undefined,
+              },
+              page: {
+                pageNumber: options.page || 1,
+                totalPages: Math.ceil(data.totalCount / 35),
+              },
             },
             sortSettings: sortSettings,
           }}

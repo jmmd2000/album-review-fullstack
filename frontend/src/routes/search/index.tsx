@@ -3,25 +3,19 @@ import CardGrid from "@/components/CardGrid";
 import { RequireAdmin } from "@/components/RequireAdmin";
 import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { api } from "@/lib/api";
 import { queryClient } from "@/main";
 import { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 async function searchSpotifyAlbums(query: SearchAlbumsOptions): Promise<DisplayAlbum[]> {
   const queryParams = new URLSearchParams();
   if (query) queryParams.set("query", String(query.query));
 
-  const response = await fetch(`${API_BASE_URL}/api/spotify/albums/search?${queryParams.toString()}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch albums");
-  }
-
-  return await response.json();
+  return api.get<DisplayAlbum[]>(`/api/spotify/albums/search?${queryParams.toString()}`);
 }
 
 const searchQueryOptions = (query: SearchAlbumsOptions) =>
@@ -68,7 +62,9 @@ function RouteComponent() {
 
   const dataIsEmpty = data?.length === 0;
   const albumCards = dataIsEmpty ? recentAlbumsWithStatus : data;
-  const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search results for "${options.query}"`;
+  const gridHeading = dataIsEmpty
+    ? "Recently viewed albums"
+    : `Search results for "${options.query}"`;
 
   const handleSearch = (query: string) => {
     setPageTitle(`Search results for "${query}"`);
@@ -84,9 +80,13 @@ function RouteComponent() {
         {/* Setting the title via <title> rather than in the head option of createFileRoute()
         because it was annoying and finnicky to access the search params to update the title.  */}
         <title>{pageTitle}</title>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <CardGrid
-            cards={(albumCards || []).map((album) => (
+            cards={(albumCards || []).map(album => (
               <AlbumCard key={album.spotifyID} album={album} bookmarked={album.bookmarked} />
             ))}
             heading={gridHeading}
