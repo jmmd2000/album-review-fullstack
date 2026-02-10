@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import http from "http";
 import spotifyRoutes from "@/api/routes/spotifyRoutes";
 import albumRoutes from "@/api/routes/albumRoutes";
@@ -35,6 +36,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+app.use(helmet());
 
 app.options("/ws/*", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");

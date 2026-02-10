@@ -29,6 +29,7 @@
     "express": "^4.21.2",
     "extract-colors": "^4.1.1",
     "get-pixels": "^3.3.3",
+    "helmet": "^8.1.0",
     "node-mocks-http": "^1.16.2",
     "pg": "^8.13.3",
     "puppeteer": "^24.6.1",
