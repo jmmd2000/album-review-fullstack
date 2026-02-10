@@ -1,26 +1,20 @@
 import "dotenv/config";
-import { count, eq, sql } from "drizzle-orm";
+import { count, eq, sql, asc } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db } from "@/index";
 import { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {
-    const tracks = await db
+    return db
       .select()
       .from(reviewedTracks)
-      .where(eq(reviewedTracks.albumSpotifyID, albumID));
-
-    // Really random bug where sometimes these dont return in the correct order
-    return tracks.sort(
-      (a, b) => a.createdAt!.getTime() - b.createdAt!.getTime()
-    );
+      .where(eq(reviewedTracks.albumSpotifyID, albumID))
+      .orderBy(asc(reviewedTracks.createdAt));
   }
 
   static async deleteTracksByAlbumID(albumID: string) {
-    return db
-      .delete(reviewedTracks)
-      .where(eq(reviewedTracks.albumSpotifyID, albumID));
+    return db.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
   }
 
   static async createTrack(values: typeof reviewedTracks.$inferInsert) {
@@ -59,10 +53,7 @@ export class TrackModel {
     const rows = await db
       .select()
       .from(reviewedTracks)
-      .innerJoin(
-        trackArtists,
-        eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)
-      )
+      .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
       .where(eq(trackArtists.artistSpotifyID, artistID));
     return rows.map(r => r.reviewed_tracks);
   }
@@ -80,10 +71,7 @@ export class TrackModel {
     return db.select().from(reviewedTracks) as Promise<ReviewedTrack[]>;
   }
 
-  static async linkArtistsToTrack(
-    trackSpotifyID: string,
-    artistIDs: string[]
-  ) {
+  static async linkArtistsToTrack(trackSpotifyID: string, artistIDs: string[]) {
     if (artistIDs.length === 0) return;
     return db
       .insert(trackArtists)
@@ -99,8 +87,6 @@ export class TrackModel {
   }
 
   static async unlinkArtistsFromTrack(trackSpotifyID: string) {
-    return db
-      .delete(trackArtists)
-      .where(eq(trackArtists.trackSpotifyID, trackSpotifyID));
+    return db.delete(trackArtists).where(eq(trackArtists.trackSpotifyID, trackSpotifyID));
   }
 }
