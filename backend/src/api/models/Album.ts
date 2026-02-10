@@ -139,15 +139,16 @@ export class AlbumModel {
 
     const albums: DisplayAlbum[] = await q
       .orderBy(...baseOrder)
-      .limit(PAGE_SIZE)
+      .limit(PAGE_SIZE + 1)
       .offset(OFFSET);
+
+    const furtherPages = albums.length > PAGE_SIZE;
+    if (furtherPages) albums.pop();
 
     const [{ count: totalCount }] = await db
       .select({ count: count() })
       .from(reviewedAlbums)
       .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
-
-    const furtherPages = OFFSET + PAGE_SIZE < Number(totalCount);
 
     return {
       albums,
