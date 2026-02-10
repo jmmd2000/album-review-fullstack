@@ -11,7 +11,6 @@ export const query = (text: string, params?: any[]) => pool.query(text, params);
 
 export const closeDatabase = async () => {
   await pool.end();
-  console.log("Database connection closed.");
 };
 
 export default pool;

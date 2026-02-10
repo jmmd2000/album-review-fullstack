@@ -1,11 +1,6 @@
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
-import {
-  DisplayAlbum,
-  DisplayArtist,
-  Genre,
-  RelatedGenre,
-} from "@shared/types";
+import { DisplayAlbum, DisplayArtist, Genre, RelatedGenre } from "@shared/types";
 import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "./genreService";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
@@ -28,8 +23,7 @@ export class StatsService {
       (a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0)
     );
     const favouriteAlbum = filteredSortedAlbums[0] ?? null;
-    const leastFavouriteAlbum =
-      filteredSortedAlbums[filteredSortedAlbums.length - 1] ?? null;
+    const leastFavouriteAlbum = filteredSortedAlbums[filteredSortedAlbums.length - 1] ?? null;
 
     // Fetch fav / least fav artists
     const artists = await ArtistModel.getAllArtists();
@@ -103,10 +97,8 @@ export class StatsService {
     const reviewedAlbumCount = albumsWithGenre.length;
     let averageScore =
       reviewedAlbumCount > 0
-        ? albumsWithGenre.reduce(
-            (sum, album) => sum + (album.finalScore ?? 0),
-            0
-          ) / reviewedAlbumCount
+        ? albumsWithGenre.reduce((sum, album) => sum + (album.finalScore ?? 0), 0) /
+          reviewedAlbumCount
         : 0;
     // Round to 2 decimal places
     averageScore = Math.round(averageScore * 100) / 100;
@@ -117,10 +109,13 @@ export class StatsService {
       reviewedAlbumCount,
       averageScore,
       relatedGenres,
-      albums: {
-        highestRated: albumsWithGenre[0],
-        lowestRated: albumsWithGenre[albumsWithGenre.length - 1],
-      },
+      albums:
+        albumsWithGenre.length > 0
+          ? {
+              highestRated: albumsWithGenre[0],
+              lowestRated: albumsWithGenre[albumsWithGenre.length - 1],
+            }
+          : null,
       name: genre?.name ?? "Unknown Genre",
       slug: genre?.slug ?? "unknown-genre",
       allGenres: allGenres,
@@ -140,12 +135,10 @@ export class StatsService {
 
     switch (resource) {
       case "albums":
-        console.log("Fetching all albums for rating distribution...");
         for (const album of albums) {
           if (album.finalScore !== null && album.finalScore !== undefined) {
             const tier = ratingTiers.find(
-              t =>
-                t.range[0] <= album.finalScore && t.range[1] >= album.finalScore
+              t => t.range[0] <= album.finalScore && t.range[1] >= album.finalScore
             );
             if (tier) {
               distribution[tier.label] += 1;
@@ -154,7 +147,6 @@ export class StatsService {
         }
         break;
       case "tracks":
-        console.log("Fetching all tracks for rating distribution...");
         const tracks = await TrackModel.getAllTracks();
         for (const track of tracks) {
           if (track.rating !== null && track.rating !== undefined) {
@@ -170,7 +162,6 @@ export class StatsService {
         }
         break;
       case "artists":
-        console.log("Fetching all artists for rating distribution...");
         const artists = await ArtistModel.getAllArtists();
         for (const artist of artists) {
           let score = artist.totalScore ?? 0;
@@ -201,14 +192,12 @@ export class StatsService {
     genreCount: number;
     trackCount: number;
   }> {
-    const [albumCount, artistCount, genreCount, trackCount] = await Promise.all(
-      [
-        AlbumModel.getAlbumCount(),
-        ArtistModel.getArtistCount(),
-        GenreModel.getGenreCount(),
-        TrackModel.getTrackCount(),
-      ]
-    );
+    const [albumCount, artistCount, genreCount, trackCount] = await Promise.all([
+      AlbumModel.getAlbumCount(),
+      ArtistModel.getArtistCount(),
+      GenreModel.getGenreCount(),
+      TrackModel.getTrackCount(),
+    ]);
 
     return {
       albumCount,
