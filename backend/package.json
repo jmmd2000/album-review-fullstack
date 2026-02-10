@@ -21,6 +21,7 @@
   "description": "",
   "dependencies": {
     "@album-reviews/shared": "file:../shared",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -30,6 +31,7 @@
     "extract-colors": "^4.1.1",
     "get-pixels": "^3.3.3",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "node-mocks-http": "^1.16.2",
     "pg": "^8.13.3",
     "puppeteer": "^24.6.1",
@@ -42,10 +44,12 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/get-pixels": "^3.3.4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.13.4",
     "@types/pg": "^8.11.11",
     "@types/socket.io": "^3.0.1",

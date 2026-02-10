@@ -12,7 +12,7 @@ const albumID = mockReviewData.album.id;
 beforeAll(async () => {
   const res = await request(app)
     .post("/api/auth/login")
-    .send({ password: process.env.ADMIN_PASSWORD ?? "123" });
+    .send({ password: process.env.ADMIN_PASSWORD! });
   expect(res.status).toBe(204);
   const setCookie = res.get("set-cookie");
   authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
