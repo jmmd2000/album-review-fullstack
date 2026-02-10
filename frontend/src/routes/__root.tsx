@@ -6,7 +6,6 @@ import {
   Outlet,
   HeadContent,
 } from "@tanstack/react-router";
-// import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
@@ -22,7 +21,6 @@ export const Route = createRootRoute({
           <Outlet />
         </div>
       </AuthProvider>
-      {/* <TanStackRouterDevtools /> */}
     </>
   ),
 });

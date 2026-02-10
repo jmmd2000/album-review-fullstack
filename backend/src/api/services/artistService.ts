@@ -505,8 +505,6 @@ export class ArtistService {
 
         processedCount++;
 
-        console.log(`Processing artist ${processedCount}/${total}: ${name}`);
-
         // ALWAYS emit progress first (for live banner updates)
         io.emit("artist:headers:progress", {
           index: processedCount,
@@ -565,7 +563,6 @@ export class ArtistService {
             }
           }
         } else {
-          console.log(`No header found for ${name} (${id}), skipping update.`);
           io.emit("artist:headers:error", {
             spotifyID: id,
             total,
@@ -579,13 +576,8 @@ export class ArtistService {
           });
         }
       }
-
-      console.log(`Batch ${batchIndex + 1}/${batches.length} complete.`);
     }
 
-    console.log(
-      `${FAKE ? "FAKE MODE: " : ""}Artist header updates complete. Emitting done event.`
-    );
     io.emit("artist:headers:done");
     await SettingsService.setLastRun("headers", new Date());
   }

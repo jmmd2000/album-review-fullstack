@@ -119,8 +119,7 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
               onChange={(e) => {
                 const newRating = Number(e.target.value);
                 field.onChange(newRating);
-                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                handleRatingChange && handleRatingChange(index, newRating);
+                handleRatingChange?.(index, newRating);
               }}
             >
               {[...Array(11)].map((_, idx) => {

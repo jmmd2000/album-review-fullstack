@@ -148,8 +148,6 @@ function RouteComponent() {
     navigate({
       search: prev => ({ ...prev, resource: value }),
     });
-
-    console.log("Selected resource:", value);
     queryClient.invalidateQueries({
       queryKey: distributionQueryOptions(value).queryKey,
     });

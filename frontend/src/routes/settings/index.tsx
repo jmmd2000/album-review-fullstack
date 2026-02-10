@@ -61,10 +61,6 @@ function RouteComponent() {
       timeout: 20000,
     });
 
-    // socket.on("connect", () => console.log("Socket connected, id:", socket.id));
-    // socket.on("disconnect", reason =>
-    //   console.log("Socket disconnected:", reason)
-    // );
 
     socket.on("artist:images:progress", data => {
       imageDispatch({ type: "PROGRESS", payload: data });

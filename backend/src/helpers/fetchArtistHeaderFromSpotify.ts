@@ -69,12 +69,7 @@ export async function fetchArtistHeaderFromSpotify(
   spotifyArtistID: string,
   fake: boolean = false
 ): Promise<string | null> {
-  const results = await fetchArtistHeadersFromSpotify(
-    [spotifyArtistID],
-    3,
-    undefined,
-    fake
-  );
+  const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
   return results[spotifyArtistID] || null;
 }
 
@@ -114,11 +109,6 @@ export async function fetchArtistHeadersFromSpotify(
       await Promise.all(promises);
     }
 
-    console.log(
-      `FAKE MODE: Batch complete. Results: ${
-        Object.values(results).filter(Boolean).length
-      }/${spotifyArtistIDs.length} headers "found"`
-    );
     return results;
   }
   // -- /fake mode for testing
@@ -215,9 +205,7 @@ export async function fetchArtistHeadersFromSpotify(
         // If no banner found with selectors, try to find any image with Spotify CDN
         if (!bannerUrl) {
           bannerUrl = await page.evaluate(() => {
-            const images = document.querySelectorAll(
-              'img, [style*="background-image"]'
-            );
+            const images = document.querySelectorAll('img, [style*="background-image"]');
             for (const img of images) {
               let src = "";
               if (img.tagName === "IMG") {
@@ -230,11 +218,7 @@ export async function fetchArtistHeadersFromSpotify(
                 }
               }
 
-              if (
-                src &&
-                src.includes("i.scdn.co") &&
-                src.includes("ab676161")
-              ) {
+              if (src && src.includes("i.scdn.co") && src.includes("ab676161")) {
                 return src;
               }
             }
@@ -244,26 +228,14 @@ export async function fetchArtistHeadersFromSpotify(
 
         results[spotifyArtistID] = bannerUrl;
 
-        if (bannerUrl) {
-          console.log(
-            `Successfully found banner for ${spotifyArtistID}: ${bannerUrl}`
-          );
-        } else {
-          console.log(`No banner found for ${spotifyArtistID}`);
-        }
-
         // Emit progress after each completion
         completed++;
         if (onProgress) {
           onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        console.error(
-          `Failed to fetch header for ${spotifyArtistID}:`,
-          errorMessage
-        );
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error(`Failed to fetch header for ${spotifyArtistID}:`, errorMessage);
 
         // Log additional debugging info
         try {
@@ -290,11 +262,6 @@ export async function fetchArtistHeadersFromSpotify(
     await Promise.all(promises);
   }
 
-  console.log(
-    `Batch complete. Results: ${
-      Object.values(results).filter(Boolean).length
-    }/${spotifyArtistIDs.length} headers found`
-  );
   return results;
 }
 
