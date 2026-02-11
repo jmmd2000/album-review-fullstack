@@ -89,6 +89,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
         {isUnrated && !options?.small && !options?.hideUnratedDialog && (
           <>
             <motion.button
+              aria-label="Why is this artist unrated?"
               className="absolute -top-4 -right-4 text-gray-600 hover:text-gray-700 transition-colors"
               whileHover={{ scale: 1.2, rotate: 15 }}
               whileTap={{ scale: 0.9 }}
@@ -133,6 +134,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
           {showInfoButton && (
             <motion.button
               onClick={() => (scoreBreakdown ? setShowBreakdown(true) : setDialogOpen(true))}
+              aria-label={scoreBreakdown ? "View score breakdown" : "View score info"}
               className="ml-1 text-gray-600 hover:text-gray-700 transition-colors absolute -top-4 -right-5"
               title={scoreBreakdown ? "View score breakdown" : "View score info"}
               whileHover={{ scale: 1.2, rotate: 15 }}
@@ -151,7 +153,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
             whileHover={{ scale: 1.2, rotate: 10 }}
             whileTap={{ scale: 0.9 }}
           >
-            <StarOff className="w-4 h-4 text-yellow-900" />
+            <StarOff className="w-4 h-4 text-yellow-900" aria-label="Does not affect artist score" />
           </motion.div>
           <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
             This review does not affect this artist's overall score.

@@ -48,7 +48,7 @@ const Dialog = ({ isOpen, onClose, title, children }: DialogProps) => (
             {/* Header: title + close */}
             <div className="flex justify-between items-center border-b border-neutral-700/50 p-4">
               {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
-              <motion.button onClick={onClose} className="text-gray-400 hover:text-red-600" whileHover={{ rotate: 90 }} transition={{ duration: 0.2 }}>
+              <motion.button onClick={onClose} aria-label="Close dialog" className="text-gray-400 hover:text-red-600" whileHover={{ rotate: 90 }} transition={{ duration: 0.2 }}>
                 <X className="w-5 h-5" />
               </motion.button>
             </div>

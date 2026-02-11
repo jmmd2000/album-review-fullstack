@@ -27,7 +27,7 @@ export const mockDisplayAlbum: DisplayAlbum = {
       name: "Billie Eilish",
       imageURLs: [
         {
-          url: "https://i.scdn.co/image/ab6761610000e5eb",
+          url: "https://i.scdn.co/image/ab67616d00001e022a038d3bf875d23e4aeaa84e",
           height: 226,
           width: 226,
         },
@@ -46,7 +46,7 @@ export const mockDisplayArtist: DisplayArtist = {
   name: "Billie Eilish",
   imageURLs: [
     {
-      url: "https://i.scdn.co/image/ab6761610000e5eb",
+      url: "https://i.scdn.co/image/ab67616d00001e022a038d3bf875d23e4aeaa84e",
       height: 226,
       width: 226,
     },

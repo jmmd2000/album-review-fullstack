@@ -70,7 +70,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <StarOff className="w-3 h-3 text-yellow-900" />
+                <StarOff className="w-3 h-3 text-yellow-900" aria-label="Does not affect artist score" />
                 <RatingChip rating={album.finalScore} options={{ small: true }} />
               </div>
             )
