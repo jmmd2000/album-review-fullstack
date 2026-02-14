@@ -1,7 +1,8 @@
 import { cva } from "class-variance-authority";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { useState } from "react";
-import ScoreBreakdown from "./ScoreBreakdown";
+import ScoreBreakdown from "@/components/album/ScoreBreakdown";
+
 import { ReviewBonuses } from "@shared/types";
 import { motion } from "framer-motion";
 import { Info, StarOff } from "lucide-react";

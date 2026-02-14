@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import HeaderDetails from "../HeaderDetails";
+import HeaderDetails from "@components/layout/HeaderDetails";
 
 describe("HeaderDetails", () => {
   it("renders the name as a heading", async () => {

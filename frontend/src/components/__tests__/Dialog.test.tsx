@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import Dialog from "../Dialog";
+import Dialog from "@components/ui/Dialog";
 
 describe("Dialog", () => {
   it("renders children when open", async () => {

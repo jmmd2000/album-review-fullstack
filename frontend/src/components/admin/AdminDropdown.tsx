@@ -23,7 +23,7 @@ import {
   Genre,
 } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
-import Dialog from "@/components/Dialog";
+import Dialog from "@components/ui/Dialog";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 

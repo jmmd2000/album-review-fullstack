@@ -3,7 +3,7 @@
 import { DisplayArtist } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import RatingChip from "./RatingChip";
+import RatingChip from "@/components/ui/RatingChip";
 
 interface ArtistCardProps {
   artist: DisplayArtist;

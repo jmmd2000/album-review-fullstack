@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import ArtistStack from "../ArtistStack";
+import ArtistStack from "@components/artist/ArtistStack";
 
 const mockArtists = [
   {

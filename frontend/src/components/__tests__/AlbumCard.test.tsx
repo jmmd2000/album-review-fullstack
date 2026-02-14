@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import AlbumCard from "../AlbumCard";
+import AlbumCard from "@components/album/AlbumCard";
 import { mockDisplayAlbum, mockUnreviewedAlbum } from "@/__tests__/constants";
 
 describe("AlbumCard", () => {

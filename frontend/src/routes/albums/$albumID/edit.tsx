@@ -8,13 +8,13 @@ import {
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
-import BlurryHeader from "@components/BlurryHeader";
-import AlbumReviewForm from "@components/AlbumReviewForm";
+import BlurryHeader from "@components/layout/BlurryHeader";
+import AlbumReviewForm from "@components/form/AlbumReviewForm";
 import { useState } from "react";
-import ErrorComponent from "@components/ErrorComponent";
-import HeaderDetails from "@/components/HeaderDetails";
-import AlbumDetails from "@/components/AlbumDetails";
-import { RequireAdmin } from "@/components/RequireAdmin";
+import ErrorComponent from "@components/ui/ErrorComponent";
+import HeaderDetails from "@/components/layout/HeaderDetails";
+import AlbumDetails from "@/components/album/AlbumDetails";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { api } from "@/lib/api";
 
 async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{

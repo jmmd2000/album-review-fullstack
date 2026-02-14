@@ -1,7 +1,7 @@
-import AlbumCard from "@/components/AlbumCard";
-import CardGrid from "@/components/CardGrid";
-import { RequireAdmin } from "@/components/RequireAdmin";
-import { SortDropdownProps } from "@/components/SortDropdown";
+import AlbumCard from "@/components/album/AlbumCard";
+import CardGrid from "@/components/ui/CardGrid";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
+import { SortDropdownProps } from "@/components/ui/SortDropdown";
 import { api } from "@/lib/api";
 import { queryClient } from "@/main";
 import { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";

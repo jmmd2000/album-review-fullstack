@@ -1,6 +1,6 @@
-import AlbumCard from "@/components/AlbumCard";
-import ArtistCard from "@/components/ArtistCard";
-import GenrePills from "@/components/GenrePills";
+import AlbumCard from "@/components/album/AlbumCard";
+import ArtistCard from "@/components/artist/ArtistCard";
+import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { queryClient } from "@/main";
@@ -10,7 +10,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Music, Users, Disc, Headphones } from "lucide-react";
 import DistributionChart from "@/components/stats/DistributionChart";
-import { Dropdown } from "@/components/Dropdown";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { api } from "@/lib/api";
 
 async function fetchOverview(): Promise<{

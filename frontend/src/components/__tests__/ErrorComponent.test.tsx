@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import ErrorComponent from "../ErrorComponent";
+import ErrorComponent from "@components/ui/ErrorComponent";
 
 describe("ErrorComponent", () => {
   it("displays the error message", async () => {

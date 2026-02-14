@@ -1,6 +1,6 @@
-import AlbumCard from "@/components/AlbumCard";
-import CardGrid from "@/components/CardGrid";
-import { RequireAdmin } from "@/components/RequireAdmin";
+import AlbumCard from "@/components/album/AlbumCard";
+import CardGrid from "@/components/ui/CardGrid";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { api } from "@/lib/api";

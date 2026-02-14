@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import RatingChip from "../RatingChip";
+import RatingChip from "@components/ui/RatingChip";
 
 describe("RatingChip", () => {
   it("displays the numeric rating", async () => {

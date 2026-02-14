@@ -1,5 +1,5 @@
 import { AuthProvider } from "@/auth/AuthContext";
-import AdminDropdown from "@/components/AdminDropdown";
+import AdminDropdown from "@/components/admin/AdminDropdown";
 import {
   createRootRoute,
   Link,

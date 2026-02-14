@@ -2,12 +2,10 @@
 
 import type React from "react";
 
-import CardGridControls, {
-  type DropdownControlsProps,
-} from "@/components/CardGridControls";
+import CardGridControls, { type DropdownControlsProps } from "@components/ui/CardGridControls";
 import { motion } from "framer-motion";
 import { easeOut } from "framer-motion";
-import type { SortDropdownProps } from "@components/SortDropdown";
+import type { SortDropdownProps } from "@components/ui/SortDropdown";
 
 interface CardGridProps {
   /** The cards to display in the grid */
@@ -74,11 +72,7 @@ const CardGrid = ({
     if (!sortedByYear || !cardYears || cardYears.length !== cards.length) {
       // normal grid rendering
       return cards.map((card, index) => (
-        <motion.div
-          key={index}
-          variants={itemVariants}
-          className="flex flex-col"
-        >
+        <motion.div key={index} variants={itemVariants} className="flex flex-col">
           {card}
         </motion.div>
       ));
@@ -95,20 +89,13 @@ const CardGrid = ({
       if (currentYear !== year) {
         if (currentYear !== null) {
           // spacing before the new year divider
-          groupedCards.push(
-            <div key={`spacer-${year}`} className="col-span-full h-4" />
-          );
+          groupedCards.push(<div key={`spacer-${year}`} className="col-span-full h-4" />);
         }
 
         groupedCards.push(
-          <div
-            key={`year-${year}`}
-            className="col-span-full flex items-center gap-4 my-6"
-          >
+          <div key={`year-${year}`} className="col-span-full flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-neutral-700"></div>
-            <span className="text-lg font-medium text-neutral-300 px-4">
-              {year}
-            </span>
+            <span className="text-lg font-medium text-neutral-300 px-4">{year}</span>
             <div className="flex-1 h-px bg-neutral-700"></div>
           </div>
         );
@@ -117,11 +104,7 @@ const CardGrid = ({
 
       // add card
       groupedCards.push(
-        <motion.div
-          key={`card-${index}`}
-          variants={itemVariants}
-          className="flex flex-col"
-        >
+        <motion.div key={`card-${index}`} variants={itemVariants} className="flex flex-col">
           {card}
         </motion.div>
       );
@@ -144,9 +127,7 @@ const CardGrid = ({
 
       {heading && (
         <div className="max-w-[1900px] mx-4 px-2 pt-4 z-10">
-          <h2 className="text-xl font-medium text-neutral-200 text-left">
-            {heading}
-          </h2>
+          <h2 className="text-xl font-medium text-neutral-200 text-left">{heading}</h2>
         </div>
       )}
 

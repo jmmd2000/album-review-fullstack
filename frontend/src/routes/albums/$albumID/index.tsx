@@ -2,13 +2,13 @@ import { DisplayTrack, Genre, ReviewedAlbum, ReviewedArtist } from "@shared/type
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
-import BlurryHeader from "@components/BlurryHeader";
-import ErrorComponent from "@components/ErrorComponent";
-import TrackList from "@components/TrackList";
-import AlbumDetails from "@components/AlbumDetails";
-import ReviewDetails from "@components/ReviewDetails";
-import GenrePills from "@/components/GenrePills";
-import HeaderDetails from "@/components/HeaderDetails";
+import BlurryHeader from "@components/layout/BlurryHeader";
+import ErrorComponent from "@components/ui/ErrorComponent";
+import TrackList from "@components/track/TrackList";
+import AlbumDetails from "@components/album/AlbumDetails";
+import ReviewDetails from "@components/album/ReviewDetails";
+import GenrePills from "@/components/ui/GenrePills";
+import HeaderDetails from "@/components/layout/HeaderDetails";
 import { useEffect } from "react";
 import { api } from "@/lib/api";
 

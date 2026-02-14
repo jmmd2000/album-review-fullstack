@@ -1,10 +1,10 @@
 import { DisplayTrack, ReviewedAlbum } from "@shared/types";
-import RatingChip from "./RatingChip";
+import RatingChip from "@/components/ui/RatingChip";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
 import React, { useMemo } from "react";
 import { parseReviewContent } from "@shared/helpers/parseReviewContent";
-import { FormattedText } from "./FormattedText";
+import { FormattedText } from "@/components/ui/FormattedText";
 
 /**
  * The props for the ReviewDetails component.

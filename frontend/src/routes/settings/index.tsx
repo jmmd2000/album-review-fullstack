@@ -1,6 +1,6 @@
-import { RequireAdmin } from "@/components/RequireAdmin";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { createFileRoute } from "@tanstack/react-router";
-import Button from "@/components/Button";
+import Button from "@/components/ui/Button";
 import { queryClient } from "@/main";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";

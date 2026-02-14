@@ -1,7 +1,7 @@
 import { DisplayTrack } from "@shared/types";
-import TrackCard from "@components/TrackCard";
+import TrackCard from "./TrackCard";
 import { Controller, UseFormReturn } from "react-hook-form";
-import { CreateReviewFormData } from "./AlbumReviewForm";
+import { CreateReviewFormData } from "@components/form/AlbumReviewForm";
 import { useState } from "react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 

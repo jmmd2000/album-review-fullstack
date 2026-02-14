@@ -2,10 +2,10 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
-import CardGrid from "@components/CardGrid";
+import CardGrid from "@components/ui/CardGrid";
 import { motion } from "framer-motion";
-import ArtistCard from "@/components/ArtistCard";
-import { SortDropdownProps } from "@/components/SortDropdown";
+import ArtistCard from "@/components/artist/ArtistCard";
+import { SortDropdownProps } from "@/components/ui/SortDropdown";
 import { api } from "@/lib/api";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions): Promise<{

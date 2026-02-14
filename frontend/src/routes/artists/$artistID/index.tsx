@@ -1,15 +1,15 @@
-import ErrorComponent from "@components/ErrorComponent";
+import ErrorComponent from "@components/ui/ErrorComponent";
 import { queryClient } from "@/main";
 import { DisplayAlbum, DisplayTrack, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import HeaderDetails from "@/components/HeaderDetails";
-import RatingChip from "@/components/RatingChip";
+import HeaderDetails from "@/components/layout/HeaderDetails";
+import RatingChip from "@/components/ui/RatingChip";
 import { Crown, Medal, Trophy } from "lucide-react";
-import CardGrid from "@/components/CardGrid";
-import AlbumCard from "@/components/AlbumCard";
+import CardGrid from "@/components/ui/CardGrid";
+import AlbumCard from "@/components/album/AlbumCard";
 import { useEffect } from "react";
-import TrackList from "@/components/TrackList";
+import TrackList from "@/components/track/TrackList";
 import { api } from "@/lib/api";
 
 async function fetchReviewedArtist(artistSpotifyID: string): Promise<{

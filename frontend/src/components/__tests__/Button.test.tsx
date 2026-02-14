@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import Button from "../Button";
+import Button from "@components/ui/Button";
 
 describe("Button", () => {
   it("renders the label text", async () => {

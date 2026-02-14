@@ -1,6 +1,6 @@
 import { DisplayAlbum } from "@shared/types";
 import { Link } from "@tanstack/react-router";
-import RatingChip from "./RatingChip";
+import RatingChip from "@/components/ui/RatingChip";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
@@ -70,7 +70,10 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <StarOff className="w-3 h-3 text-yellow-900" aria-label="Does not affect artist score" />
+                <StarOff
+                  className="w-3 h-3 text-yellow-900"
+                  aria-label="Does not affect artist score"
+                />
                 <RatingChip rating={album.finalScore} options={{ small: true }} />
               </div>
             )

@@ -3,13 +3,13 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
 import { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, AlbumArtist } from "@shared/types";
-import ErrorComponent from "@components/ErrorComponent";
-import BlurryHeader from "@components/BlurryHeader";
-import AlbumReviewForm from "@components/AlbumReviewForm";
-import HeaderDetails from "@/components/HeaderDetails";
+import ErrorComponent from "@components/ui/ErrorComponent";
+import BlurryHeader from "@components/layout/BlurryHeader";
+import AlbumReviewForm from "@components/form/AlbumReviewForm";
+import HeaderDetails from "@/components/layout/HeaderDetails";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import AlbumDetails from "@/components/AlbumDetails";
-import { RequireAdmin } from "@/components/RequireAdmin";
+import AlbumDetails from "@/components/album/AlbumDetails";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { api } from "@/lib/api";
 
 //# --------------------------------------------------------------------------------------------- #

@@ -2,11 +2,11 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
-import AlbumCard from "@components/AlbumCard";
-import CardGrid from "@components/CardGrid";
+import AlbumCard from "@components/album/AlbumCard";
+import CardGrid from "@components/ui/CardGrid";
 import { motion } from "framer-motion";
-import { SortDropdownProps } from "@/components/SortDropdown";
-import { DropdownControlsProps } from "@/components/CardGridControls";
+import { SortDropdownProps } from "@/components/ui/SortDropdown";
+import { DropdownControlsProps } from "@/components/ui/CardGridControls";
 import { api } from "@/lib/api";
 
 async function fetchPaginatedAlbums(
