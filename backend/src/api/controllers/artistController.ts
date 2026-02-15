@@ -41,18 +41,18 @@ export const getPaginatedArtists = asyncHandler(async (req: Request, res: Respon
 });
 
 export const getArtistByID = asyncHandler(async (req: Request, res: Response) => {
-  const artist = await ArtistService.getArtistByID(req.params.artistID);
+  const artist = await ArtistService.getArtistByID(req.params.artistID as string);
   res.status(200).json(artist);
 });
 
 // This endpoint is for fetching detailed information about an artist, including their albums and tracks.
 export const getArtistDetails = asyncHandler(async (req: Request, res: Response) => {
-  const data = await ArtistService.getArtistDetails(req.params.artistID);
+  const data = await ArtistService.getArtistDetails(req.params.artistID as string);
   res.status(200).json(data);
 });
 
 export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
-  await ArtistService.deleteArtist(req.params.artistID);
+  await ArtistService.deleteArtist(req.params.artistID as string);
   res.status(204).end();
 });
 

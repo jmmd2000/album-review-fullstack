@@ -1,18 +1,21 @@
 # Stage 1: Build stage
 FROM node:18-alpine AS build
 
+RUN corepack enable
+
 WORKDIR /app
 
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
-# Copy package files
-COPY package*.json ./
-COPY frontend/package*.json ./frontend/
-COPY shared/package*.json ./shared/
+# Copy workspace and package files
+COPY pnpm-workspace.yaml .
+COPY package.json pnpm-lock.yaml ./
+COPY frontend/package.json ./frontend/
+COPY shared/package.json ./shared/
 
 # Set up structure for shared dependencies
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY frontend ./frontend
@@ -21,10 +24,7 @@ COPY shared ./shared
 # Build the frontend
 WORKDIR /app/frontend
 
-# Fix for Rollup in Alpine Linux
-RUN npm install @rollup/rollup-linux-x64-musl
-
-RUN npm run build
+RUN pnpm run build
 
 # Stage 2: Production stage
 FROM nginx:alpine AS production

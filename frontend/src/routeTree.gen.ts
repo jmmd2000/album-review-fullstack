@@ -79,16 +79,16 @@ const AlbumsAlbumIDCreateRoute = AlbumsAlbumIDCreateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/albums': typeof AlbumsIndexRoute
-  '/artists': typeof ArtistsIndexRoute
-  '/bookmarks': typeof BookmarksIndexRoute
-  '/search': typeof SearchIndexRoute
-  '/settings': typeof SettingsIndexRoute
-  '/stats': typeof StatsIndexRoute
+  '/albums/': typeof AlbumsIndexRoute
+  '/artists/': typeof ArtistsIndexRoute
+  '/bookmarks/': typeof BookmarksIndexRoute
+  '/search/': typeof SearchIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/stats/': typeof StatsIndexRoute
   '/albums/$albumID/create': typeof AlbumsAlbumIDCreateRoute
   '/albums/$albumID/edit': typeof AlbumsAlbumIDEditRoute
-  '/albums/$albumID': typeof AlbumsAlbumIDIndexRoute
-  '/artists/$artistID': typeof ArtistsArtistIDIndexRoute
+  '/albums/$albumID/': typeof AlbumsAlbumIDIndexRoute
+  '/artists/$artistID/': typeof ArtistsArtistIDIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -121,16 +121,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/albums'
-    | '/artists'
-    | '/bookmarks'
-    | '/search'
-    | '/settings'
-    | '/stats'
+    | '/albums/'
+    | '/artists/'
+    | '/bookmarks/'
+    | '/search/'
+    | '/settings/'
+    | '/stats/'
     | '/albums/$albumID/create'
     | '/albums/$albumID/edit'
-    | '/albums/$albumID'
-    | '/artists/$artistID'
+    | '/albums/$albumID/'
+    | '/artists/$artistID/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -185,56 +185,56 @@ declare module '@tanstack/react-router' {
     '/stats/': {
       id: '/stats/'
       path: '/stats'
-      fullPath: '/stats'
+      fullPath: '/stats/'
       preLoaderRoute: typeof StatsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
       id: '/settings/'
       path: '/settings'
-      fullPath: '/settings'
+      fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search/': {
       id: '/search/'
       path: '/search'
-      fullPath: '/search'
+      fullPath: '/search/'
       preLoaderRoute: typeof SearchIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookmarks/': {
       id: '/bookmarks/'
       path: '/bookmarks'
-      fullPath: '/bookmarks'
+      fullPath: '/bookmarks/'
       preLoaderRoute: typeof BookmarksIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/artists/': {
       id: '/artists/'
       path: '/artists'
-      fullPath: '/artists'
+      fullPath: '/artists/'
       preLoaderRoute: typeof ArtistsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/albums/': {
       id: '/albums/'
       path: '/albums'
-      fullPath: '/albums'
+      fullPath: '/albums/'
       preLoaderRoute: typeof AlbumsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/artists/$artistID/': {
       id: '/artists/$artistID/'
       path: '/artists/$artistID'
-      fullPath: '/artists/$artistID'
+      fullPath: '/artists/$artistID/'
       preLoaderRoute: typeof ArtistsArtistIDIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/albums/$albumID/': {
       id: '/albums/$albumID/'
       path: '/albums/$albumID'
-      fullPath: '/albums/$albumID'
+      fullPath: '/albums/$albumID/'
       preLoaderRoute: typeof AlbumsAlbumIDIndexRouteImport
       parentRoute: typeof rootRouteImport
     }

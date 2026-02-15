@@ -31,7 +31,7 @@ export const createAlbumReview = asyncHandler(async (req: Request, res: Response
 
 export const getAlbumByID = asyncHandler(async (req: Request, res: Response) => {
   const reviewedAlbumData = await AlbumService.getAlbumByID(
-    req.params.albumID,
+    req.params.albumID as string,
     req.query.includeGenres !== "false"
   );
   res.status(200).json(reviewedAlbumData);
@@ -97,12 +97,12 @@ export const getPaginatedAlbums = asyncHandler(async (req: Request, res: Respons
 });
 
 export const deleteAlbum = asyncHandler(async (req: Request, res: Response) => {
-  await AlbumService.deleteAlbum(req.params.albumID);
+  await AlbumService.deleteAlbum(req.params.albumID as string);
   res.status(204).end();
 });
 
 export const updateAlbumReview = asyncHandler(async (req: Request, res: Response) => {
-  const updatedAlbum = await AlbumService.updateAlbumReview(req.body, req.params.albumID);
+  const updatedAlbum = await AlbumService.updateAlbumReview(req.body, req.params.albumID as string);
   res.status(200).json(updatedAlbum);
 });
 

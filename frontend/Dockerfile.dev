@@ -2,14 +2,17 @@
 
 FROM node:latest
 
+RUN corepack enable
+
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY pnpm-workspace.yaml ../pnpm-workspace.yaml
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev"]
+CMD ["pnpm", "run", "dev"]

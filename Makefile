@@ -7,10 +7,10 @@ dev:
 	wait
 
 dev-frontend:
-	cd frontend && npm run dev
+	cd frontend && pnpm dev
 
 dev-backend:
-	cd backend && npm run dev
+	cd backend && pnpm dev
 
 test: test-frontend test-backend
 
@@ -18,11 +18,11 @@ test-frontend:
 	@$(MAKE) dev-frontend & \
 	$(MAKE) dev-backend & \
 	sleep 5; \
-	cd frontend && npm run test && npm run e2e:run; \
+	cd frontend && pnpm test && pnpm e2e:run; \
 	kill %1 %2 2>/dev/null || true
 
 test-backend:
-	cd backend && npm run test
+	cd backend && pnpm test
 
 help:
 	@echo "Available commands:"

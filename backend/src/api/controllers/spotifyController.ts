@@ -18,11 +18,11 @@ export const searchAlbums = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const getAlbum = asyncHandler(async (req: Request, res: Response) => {
-  const albumID = req.params.albumID;
+  const albumID = req.params.albumID as string;
   if (!albumID) throw new AppError("Album ID is required.", 400);
 
   const spotifyAlbumData = await SpotifyService.getAlbum(
-    req.params.albumID,
+    albumID,
     req.query.includeGenres !== "false"
   );
   res.status(200).json(spotifyAlbumData);

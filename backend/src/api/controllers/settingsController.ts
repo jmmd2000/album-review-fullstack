@@ -24,13 +24,13 @@ export const getLastRun = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getSetting = asyncHandler(async (req: Request, res: Response) => {
-  const { key } = req.params;
+  const { key } = req.params as { key: string };
   const value = await SettingsService.get(key);
   res.status(200).json({ key, value });
 });
 
 export const setSetting = asyncHandler(async (req: Request, res: Response) => {
-  const { key } = req.params;
+  const { key } = req.params as { key: string };
   const { value } = req.body;
 
   await SettingsService.set(key, value);

@@ -16,7 +16,7 @@ See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start both frontend and backend
 make dev
@@ -32,13 +32,13 @@ make dev-backend # http://localhost:4000
 cd backend
 
 # Push db changes
-npm run db:push
+pnpm db:push
 
 # Seed with sample data
-npm run db:seed
+pnpm db:seed
 
 # Wipe current data
-npm run db:wipe
+pnpm db:wipe
 ```
 
 ## Testing

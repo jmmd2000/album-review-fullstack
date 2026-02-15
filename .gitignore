@@ -14,6 +14,9 @@ dist-ssr
 coverage/
 frontend/cypress/screenshots/
 
+# pnpm
+.pnpm-store/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

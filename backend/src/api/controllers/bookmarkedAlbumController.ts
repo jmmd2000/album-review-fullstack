@@ -11,12 +11,12 @@ export const bookmarkAlbum = async (req: Request, res: Response) => {
 };
 
 export const removeBookmarkedAlbum = asyncHandler(async (req: Request, res: Response) => {
-  await BookmarkedAlbumService.removeBookmarkedAlbum(req.params.albumID);
+  await BookmarkedAlbumService.removeBookmarkedAlbum(req.params.albumID as string);
   res.status(204).end();
 });
 
 export const getBookmarkedAlbum = asyncHandler(async (req: Request, res: Response) => {
-  const album = await BookmarkedAlbumService.getAlbumByID(req.params.albumID);
+  const album = await BookmarkedAlbumService.getAlbumByID(req.params.albumID as string);
   res.status(200).json(album);
 });
 
