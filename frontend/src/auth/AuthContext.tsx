@@ -6,11 +6,10 @@ import { api } from "@/lib/api";
 
 // Export the Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data } = useQuery<{ isAdmin: boolean }, Error>({
+  const { data, isPending } = useQuery<{ isAdmin: boolean }, Error>({
     queryKey: ["auth", "status"],
     queryFn: () => api.get<{ isAdmin: boolean }>("/api/auth/status"),
     retry: false,
-    initialData: { isAdmin: false },
   });
 
   const loginMutation = useMutation<void, Error, string>({
@@ -31,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => logoutMutation.mutateAsync();
 
   return (
-    <AuthContext.Provider value={{ isAdmin: data.isAdmin, login, logout }}>
+    <AuthContext.Provider value={{ isAdmin: data?.isAdmin ?? false, isPending, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

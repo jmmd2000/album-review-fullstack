@@ -7,16 +7,16 @@ import { useNavigate } from "@tanstack/react-router";
  * Redirects to "/" if not authenticated.
  */
 export const RequireAdmin = ({ children }: { children: ReactNode }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isPending } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isPending && !isAdmin) {
       navigate({ to: "/" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [isAdmin, isPending]);
 
-  if (!isAdmin) return null;
+  if (isPending || !isAdmin) return null;
   return <>{children}</>;
 };

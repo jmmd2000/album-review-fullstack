@@ -559,6 +559,7 @@ export interface SearchAlbumsOptions {
 
 export type AuthContextType = {
   isAdmin: boolean;
+  isPending: boolean;
   login: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
