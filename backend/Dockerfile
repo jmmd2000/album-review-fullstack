@@ -38,13 +38,15 @@ COPY package.json pnpm-lock.yaml ./
 COPY backend/package.json ./backend/
 COPY shared/package.json ./shared/
 
-# Install only prod deps
-RUN pnpm install --prod --frozen-lockfile
+# Copy shared source
+COPY --from=build /app/shared ./shared
 
 # Copy the compiled app from build
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/tsconfig.json ./dist/backend/tsconfig.json
-COPY --from=build /app/shared ./shared
+
+# Install only prod deps
+RUN pnpm install --prod --frozen-lockfile
 
 # Set environment
 ENV NODE_ENV=production
