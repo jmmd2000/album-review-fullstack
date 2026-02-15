@@ -33,7 +33,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy workspace files and package files
-COPY pnpm-workspace.yaml ..
+COPY pnpm-workspace.yaml .
 COPY package.json pnpm-lock.yaml ./
 COPY backend/package.json ./backend/
 COPY shared/package.json ./shared/
