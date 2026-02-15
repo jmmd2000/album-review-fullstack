@@ -22,13 +22,20 @@ interface TrackListProps {
 /**
  * This component creates a list of TrackCards.
  */
-const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = false }: TrackListProps) => {
+const TrackList = ({
+  tracks,
+  formMethods,
+  maxHeight = "500px",
+  sortByRating = false,
+}: TrackListProps) => {
   // Local state to force re-renders when ratings change
   const [updatedTracks, setUpdatedTracks] = useState(tracks);
 
   // Function to handle rating changes
   const handleRatingChange = (index: number, newRating: number) => {
-    const newTracks = updatedTracks.map((track, i) => (i === index ? { ...track, rating: newRating } : track));
+    const newTracks = updatedTracks.map((track, i) =>
+      i === index ? { ...track, rating: newRating } : track
+    );
 
     // update local state to force re-render so the colour changes
     setUpdatedTracks(newTracks);
@@ -68,7 +75,19 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
     : null;
 
   // Get all rating tiers in order of highest to lowest
-  const ratingOrder = ["Perfect", "Amazing", "Brilliant", "Great", "Good", "Meh", "OK", "Bad", "Awful", "Terrible", "Unrated"];
+  const ratingOrder = [
+    "Perfect",
+    "Amazing",
+    "Brilliant",
+    "Great",
+    "Good",
+    "Meh",
+    "OK",
+    "Bad",
+    "Awful",
+    "Terrible",
+    "Unrated",
+  ];
 
   return (
     <div
@@ -82,31 +101,57 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
     >
       {sortByRating && groupedTracks
         ? // Render tracks grouped by rating tier
-          ratingOrder.map((tierLabel) => {
+          ratingOrder.map(tierLabel => {
             const tierTracks = groupedTracks[tierLabel];
             if (!tierTracks || tierTracks.length === 0) return null;
             const { backgroundColorLighter } = getRatingStyles(tierLabel);
 
             return (
               <div key={tierLabel} className="w-full max-w-[80ch] mx-auto">
-                <h3 className={`text-lg font-medium mb-2 sticky top-0 ${backgroundColorLighter} backdrop-blur-xl border border-neutral-800/30 rounded-md p-2 z-10`}>
+                <h3
+                  className={`text-lg font-medium mb-2 sticky top-0 ${backgroundColorLighter} backdrop-blur-xl border border-neutral-800/30 rounded-md p-2 z-10`}
+                >
                   {tierLabel} <span className="text-neutral-400">({tierTracks.length})</span>
                 </h3>
-                <div className="flex flex-col gap-2 mb-4">{tierTracks.map((track) => renderTrackCard(track, tierTracks.indexOf(track), formMethods, handleRatingChange))}</div>
+                <div className="flex flex-col gap-2 mb-4">
+                  {tierTracks.map(track =>
+                    renderTrackCard(
+                      track,
+                      tierTracks.indexOf(track),
+                      formMethods,
+                      handleRatingChange
+                    )
+                  )}
+                </div>
               </div>
             );
           })
         : // Render tracks in original order
-          sortedTracks.map((track, index) => renderTrackCard(track, index, formMethods, handleRatingChange))}
+          sortedTracks.map((track, index) =>
+            renderTrackCard(track, index, formMethods, handleRatingChange)
+          )}
     </div>
   );
 
   // Helper function to render a track card
-  function renderTrackCard(track: DisplayTrack, index: number, formMethods?: TrackListProps["formMethods"], handleRatingChange?: (index: number, rating: number) => void) {
+  function renderTrackCard(
+    track: DisplayTrack,
+    index: number,
+    formMethods?: TrackListProps["formMethods"],
+    handleRatingChange?: (index: number, rating: number) => void
+  ) {
     return formMethods ? (
-      <TrackCard key={track.spotifyID} track={track} trackNumber={sortByRating ? undefined : index + 1}>
+      <TrackCard
+        key={track.spotifyID}
+        track={track}
+        trackNumber={sortByRating ? undefined : index + 1}
+      >
         {/* Hidden input for track ID */}
-        <input type="hidden" {...formMethods.register(`tracks.${index}.spotifyID`)} value={track.spotifyID} />
+        <input
+          type="hidden"
+          {...formMethods.register(`tracks.${index}.spotifyID`)}
+          value={track.spotifyID}
+        />
 
         {/* Rating dropdown */}
         <Controller
@@ -116,16 +161,22 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
             <select
               {...field}
               className="uppercase"
-              onChange={(e) => {
+              onChange={e => {
                 const newRating = Number(e.target.value);
                 field.onChange(newRating);
                 handleRatingChange?.(index, newRating);
               }}
+              data-testid="track-rating-select"
             >
               {[...Array(11)].map((_, idx) => {
                 const { label, textColor } = getRatingStyles(idx * 10);
                 return (
-                  <option key={idx} value={idx} className={`text-center uppercase font-bold ${textColor}`}>
+                  <option
+                    key={idx}
+                    value={idx}
+                    className={`text-center uppercase font-bold ${textColor}`}
+                    data-testid="track-rating-option"
+                  >
                     {label}
                   </option>
                 );
@@ -135,7 +186,11 @@ const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = fa
         />
       </TrackCard>
     ) : (
-      <TrackCard key={track.spotifyID} track={track} trackNumber={sortByRating ? undefined : index + 1} />
+      <TrackCard
+        key={track.spotifyID}
+        track={track}
+        trackNumber={sortByRating ? undefined : index + 1}
+      />
     );
   }
 };

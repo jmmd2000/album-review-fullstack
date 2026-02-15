@@ -213,6 +213,7 @@ const AdminDropdown = () => {
         className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-700 transition"
         aria-haspopup="true"
         aria-expanded={open}
+        data-testid="admin-dropdown-button"
       >
         Admin
         {isAdmin ? (
@@ -239,6 +240,7 @@ const AdminDropdown = () => {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Admin password"
                   className="w-full rounded bg-neutral-800 px-3 py-2 text-neutral-200"
+                  data-testid="admin-password-input"
                 />
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button

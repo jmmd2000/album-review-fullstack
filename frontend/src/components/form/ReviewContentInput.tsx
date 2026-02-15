@@ -115,6 +115,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
               className="w-full bg-transparent resize-none leading-relaxed text-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-opacity-50 rounded-lg"
               rows={3}
               placeholder="Write your review here..."
+              data-testid="review-content-textarea"
             />
           </blockquote>
         </div>

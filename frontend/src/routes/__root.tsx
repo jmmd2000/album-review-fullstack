@@ -105,7 +105,7 @@ const Navbar = () => {
         {ROUTES.map(r => (
           <NavLink key={r.to} to={r.to} name={r.name} />
         ))}
-        <div className="ml-auto">
+        <div className="ml-auto" data-testid="admin-dropdown-desktop">
           <AdminDropdown />
         </div>
       </header>

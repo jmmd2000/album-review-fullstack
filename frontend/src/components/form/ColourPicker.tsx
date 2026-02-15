@@ -44,6 +44,7 @@ export const ColourPicker = ({ selectedColors, setSelectedColors }: ColourPicker
                 value={color.hex}
                 onChange={e => handleColorChange(index, e.target.value)}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                data-testid="colour-picker-input"
               />
             </div>
             <button
@@ -60,6 +61,7 @@ export const ColourPicker = ({ selectedColors, setSelectedColors }: ColourPicker
             type="button"
             onClick={addColor}
             className="w-12 h-12 rounded-full border-2 border-dashed border-neutral-600 flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:border-neutral-400 transition-colors"
+            data-testid="color-picker-button"
           >
             +
           </button>

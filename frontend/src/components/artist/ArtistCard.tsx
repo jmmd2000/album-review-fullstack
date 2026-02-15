@@ -11,9 +11,7 @@ interface ArtistCardProps {
 
 const ArtistCard = ({ artist }: ArtistCardProps) => {
   const albumCountString =
-    artist.albumCount === 1
-      ? `${artist.albumCount} album`
-      : `${artist.albumCount} albums`;
+    artist.albumCount === 1 ? `${artist.albumCount} album` : `${artist.albumCount} albums`;
   const imageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
   return (
     <Link
@@ -22,6 +20,7 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
       resetScroll={true}
       viewTransition
       className="block"
+      data-testid="artist-card"
     >
       <motion.div
         initial={{ opacity: 0, y: 10 }}

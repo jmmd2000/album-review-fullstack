@@ -38,6 +38,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
       resetScroll
       viewTransition
       className="block"
+      data-testid="album-card"
     >
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -152,6 +153,7 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
       aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
       title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
       disabled={isLoading}
+      data-testid="bookmark-button"
       className="rounded-md bg-neutral-800 bg-opacity-60 p-1 backdrop-blur-md transition-all duration-200 hover:bg-neutral-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 active:scale-95 disabled:opacity-50 cursor-pointer"
     >
       {isLoading ? (

@@ -17,10 +17,10 @@ import RatingChip from "@components/ui/RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { queryClient } from "@/main";
 import { api } from "@/lib/api";
-import ColourPicker from "./ColourPicker";
-import ArtistSelector from "./ArtistSelector";
-import { ReviewContentInput } from "./ReviewContentInput";
-import GenreSelector from "./GenreSelector";
+import { ColourPicker } from "@components/form/ColourPicker";
+import ArtistSelector from "@components/form/ArtistSelector";
+import { ReviewContentInput } from "@components/form/ReviewContentInput";
+import GenreSelector from "@components/form/GenreSelector";
 
 //# --------------------------------------------------------------------------------------------- #
 //# This form is used for both creating a new review and editing an existing review
@@ -261,6 +261,7 @@ const AlbumReviewForm = ({
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8"
+        data-testid="album-review-form"
       >
         {/* AAS toggle for solo albums */}
         {albumArtists.length <= 1 && (

@@ -61,6 +61,7 @@ const CardGridControls = ({
                 type="text"
                 placeholder="Search..."
                 ref={inputRef}
+                data-testid="search-input"
                 className="w-[75%] sm:w-auto rounded-sm py-2 bg-neutral-800 h-11 px-4"
                 onKeyDown={e => {
                   if (e.key === "Enter") {
@@ -75,6 +76,7 @@ const CardGridControls = ({
                   search(inputRef.current?.value || "");
                 }}
                 size="compact"
+                data-testid="search-button"
               />
             </div>
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
@@ -103,6 +105,7 @@ const CardGridControls = ({
               onClick={pagination.prev.action}
               disabled={pagination.prev.disabled}
               size="icon"
+              data-testid="pagination-prev"
             />
             <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-2 px-4 rounded text-center h-11 flex items-center">
               {pagination.page.pageNumber} / {pagination.page.totalPages}
@@ -112,6 +115,7 @@ const CardGridControls = ({
               onClick={pagination.next.action}
               disabled={pagination.next.disabled}
               size="icon"
+              data-testid="pagination-next"
             />
           </div>
         )}
