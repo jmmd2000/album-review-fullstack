@@ -1,19 +1,61 @@
-# Album Reviews v3
+# Album Reviews
 
-This is v3 of my album review blog, this time built properly fullstack in a monorepo, rather than with the T3 stack.
+## Overview
 
-## Frontend
+A personal music review app for tracking album reviews. Uses the Spotify API and allows me to rate albums, track score statistics and bookmark albums for later. Built as a monorepo with a React frontend and Express backend.
 
-- React
-- Vite
-- TailwindCSS
-- Typescript
-- Cypress
+See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
 
-## Backend
+## Tech Stack
 
-- Express
-- Drizzle ORM
-- PostgreSQL
-- Typescript
-- Jest
+**Frontend:** React, Vite, TailwindCSS, TypeScript, TanStack Router, React Query, Vitest, Cypress
+
+**Backend:** Express, TypeScript, Drizzle ORM, PostgreSQL, Jest
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start both frontend and backend
+make dev
+
+# Can also run individually with:
+make dev-frontend # http://localhost:5173
+make dev-backend # http://localhost:4000
+```
+
+## Database
+
+```bash
+cd backend
+
+# Push db changes
+npm run db:push
+
+# Seed with sample data
+npm run db:seed
+
+# Wipe current data
+npm run db:wipe
+```
+
+## Testing
+
+```bash
+# Run all tests
+make test
+
+# Run backend tests only
+make test-backend
+
+# Run frontend tests only (unit + e2e)
+make test-frontend
+```
+
+## Project Structure
+
+- `backend/` - Express server
+- `frontend/` - React app
+- `shared/` - Shared types and utilities used by both frontend and backend
