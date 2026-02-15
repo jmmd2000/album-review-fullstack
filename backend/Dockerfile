@@ -22,31 +22,24 @@ COPY shared ./shared
 WORKDIR /app/backend
 RUN pnpm run build
 
+# Deploy prod deps to a clean directory
+WORKDIR /app
+RUN pnpm --filter @album-reviews/backend deploy --prod /deploy
+
 # Stage 2: Production stage
 FROM node:18-alpine AS production
 
-RUN apk add --no-cache \
-    chromium
-
-RUN corepack enable
+RUN apk add --no-cache chromium
 
 WORKDIR /app
 
 # Copy workspace files and package files
-COPY pnpm-workspace.yaml .
-COPY package.json pnpm-lock.yaml ./
-COPY backend/package.json ./backend/
-COPY shared/package.json ./shared/
-
-# Copy shared source
-COPY --from=build /app/shared ./shared
+COPY --from=build /deploy/node_modules ./node_modules
 
 # Copy the compiled app from build
 COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/tsconfig.json ./dist/backend/tsconfig.json
-
-# Install only prod deps
-RUN pnpm install --prod --frozen-lockfile
+COPY --from=build /app/shared ./shared
 
 # Set environment
 ENV NODE_ENV=production
