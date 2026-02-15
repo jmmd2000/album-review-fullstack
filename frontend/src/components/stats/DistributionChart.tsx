@@ -39,7 +39,7 @@ const DistributionChart = ({
             const boxHeight = 18;
 
             return (
-              <g transform={`translate(${x}, ${y + 10})`}>
+              <g transform={`translate(${x}, ${(y as number) + 10})`}>
                 <rect
                   x={-boxWidth / 2}
                   y={-boxHeight / 2}
@@ -110,7 +110,7 @@ interface ChartData {
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: Array<{
+  payload?: ReadonlyArray<{
     payload: ChartData;
     value: number;
     dataKey: string;
