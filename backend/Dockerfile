@@ -57,4 +57,4 @@ ENV TS_NODE_PROJECT=./dist/backend/tsconfig.json
 EXPOSE 4000
 
 # Run DB migration then app
-CMD ["sh", "-c", "pnpm exec drizzle-kit push --config $DRIZZLE_CONFIG_PATH && node -r tsconfig-paths/register dist/backend/src/index.js"]
+CMD ["sh", "-c", "./node_modules/.bin/drizzle-kit push --config $DRIZZLE_CONFIG_PATH && node -r tsconfig-paths/register dist/backend/src/index.js"]
