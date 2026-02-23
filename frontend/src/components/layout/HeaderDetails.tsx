@@ -5,6 +5,8 @@ interface HeaderDetailsProps {
   name: string;
   /** The image to be displayed */
   imageURL?: string;
+  /** The large image to be displayed on big screens */
+  largeImageURL?: string;
   /** Optional view transition name to bind the transition */
   viewTransitionName?: string;
   /** Whether to add a small blurred background to the name to make it more readable against the background, mainly used for artist detail pages  */
@@ -14,6 +16,7 @@ interface HeaderDetailsProps {
 const HeaderDetails = ({
   name,
   imageURL,
+  largeImageURL,
   viewTransitionName,
   nameBackground,
 }: HeaderDetailsProps) => {
@@ -30,7 +33,9 @@ const HeaderDetails = ({
       "md:h-full",
       "items-center",
       "gap-8",
+      "3xl:gap-12",
       "justify-center",
+      "3xl:pb-28",
     ],
     {
       variants: {
@@ -46,6 +51,7 @@ const HeaderDetails = ({
     [
       "text-5xl",
       "lg:text-6xl",
+      "3xl:text-7xl",
       "flex-col",
       "font-bold",
       "drop-shadow-lg",
@@ -66,8 +72,10 @@ const HeaderDetails = ({
       {imageURL ? (
         <img
           src={imageURL}
+          srcSet={largeImageURL ? `${largeImageURL} 640w, ${imageURL} 300w` : undefined}
+          sizes="(min-width: 1921px) 640px, 300px"
           alt={name}
-          className="rounded-lg h-60 w-60 lg:h-72 lg:w-72 shadow-2xl border-1 border-neutral-900/30"
+          className="rounded-lg h-60 w-60 lg:h-72 lg:w-72 3xl:h-96 3xl:w-96 shadow-2xl border border-neutral-900/30"
           style={{ viewTransitionName: viewTransitionName }}
         />
       ) : null}

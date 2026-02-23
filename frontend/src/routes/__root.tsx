@@ -1,11 +1,6 @@
 import { AuthProvider } from "@/auth/AuthContext";
 import AdminDropdown from "@/components/admin/AdminDropdown";
-import {
-  createRootRoute,
-  Link,
-  Outlet,
-  HeadContent,
-} from "@tanstack/react-router";
+import { createRootRoute, Link, Outlet, HeadContent } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
@@ -50,8 +45,8 @@ const Navbar = () => {
   return (
     <>
       {/* Mobile Header */}
-      <header className="flex sm:hidden items-center justify-between bg-neutral-900 text-white px-5 py-5 z-[9999] relative">
-        <img src="/favicon.ico" alt="logo" className="h-[40px]" />
+      <header className="flex sm:hidden items-center justify-between bg-neutral-900 text-white px-5 py-5 z-9999 relative">
+        <img src="/favicon.ico" alt="logo" className="h-10" />
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 rounded-md focus:outline-none"
@@ -64,8 +59,8 @@ const Navbar = () => {
       {/* Mobile Sidebar */}
       <aside
         className={`
-          fixed inset-y-0 left-0 w-[250px] bg-neutral-900 text-white p-5
-          transform transition-transform duration-300 z-[9998] flex flex-col
+          fixed inset-y-0 left-0 w-62.5 bg-neutral-900 text-white p-5
+          transform transition-transform duration-300 z-9998 flex flex-col
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
@@ -76,15 +71,10 @@ const Navbar = () => {
         >
           <X size={24} />
         </button>
-        <img src="/favicon.ico" alt="logo" className="h-[40px] w-[40px] mb-6" />
+        <img src="/favicon.ico" alt="logo" className="h-10 w-10 mb-6" />
         <nav className="flex flex-col gap-4">
           {ROUTES.map(r => (
-            <NavLink
-              key={r.to}
-              to={r.to}
-              name={r.name}
-              onClick={() => setIsOpen(false)}
-            />
+            <NavLink key={r.to} to={r.to} name={r.name} onClick={() => setIsOpen(false)} />
           ))}
         </nav>
         <div className="mt-auto">
@@ -94,14 +84,14 @@ const Navbar = () => {
 
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9997]"
+          className="fixed inset-0 bg-black bg-opacity-50 z-9997"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Desktop Navbar */}
-      <header className="hidden sm:flex bg-neutral-900 text-white px-5 py-5 gap-5 items-center z-[9999] relative">
-        <img src="/favicon.ico" alt="logo" className="h-[40px]" />
+      <header className="hidden sm:flex bg-neutral-900 text-white px-5 py-5 3xl:px-8 3xl:py-6 gap-5 items-center z-9999 relative">
+        <img src="/favicon.ico" alt="logo" className="h-10 3xl:h-14" />
         {ROUTES.map(r => (
           <NavLink key={r.to} to={r.to} name={r.name} />
         ))}
@@ -122,7 +112,7 @@ const NavLink = ({ to, name, onClick }: NavLinkProps) => (
   <Link
     to={to}
     onClick={onClick}
-    className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2 text-lg md:text-2xl"
+    className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2 text-lg md:text-2xl 3xl:text-3xl"
   >
     {name}
   </Link>

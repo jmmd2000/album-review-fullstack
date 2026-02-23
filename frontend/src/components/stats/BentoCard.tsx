@@ -14,7 +14,13 @@ interface BentoCardProps {
  *  @returns {JSX.Element} The rendered card component
  */
 const BentoCard = ({ children, className }: BentoCardProps) => {
-  return <div className={`bg-neutral-800/50 backdrop-blur-sm border-neutral-600/50 hover:bg-neutral-800/80 transition-all duration-200 flex flex-col gap-6 rounded-lg border py-3 shadow-sm ${className}`}>{children}</div>;
+  return (
+    <div
+      className={`bg-neutral-800/50 backdrop-blur-sm border-neutral-600/50 hover:bg-neutral-800/80 transition-all duration-200 flex flex-col gap-6 rounded-lg border py-3 3xl:py-5 shadow-sm ${className}`}
+    >
+      {children}
+    </div>
+  );
 };
 
 export default BentoCard;

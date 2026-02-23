@@ -20,12 +20,12 @@ interface StatBoxProps {
  */
 const StatBox = ({ icon, label, value }: StatBoxProps) => {
   return (
-    <div className="flex items-center justify-evenly gap-4 h-full">
+    <div className="flex items-center justify-evenly gap-4 3xl:gap-6 h-full px-2 3xl:px-4">
       <div>
-        <p className="text-2xl md:text-4xl font-bold text-white">
+        <p className="text-2xl md:text-4xl 3xl:text-5xl font-bold text-white">
           {value.toLocaleString()}
         </p>
-        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">{label}</p>
       </div>
       {icon}
     </div>

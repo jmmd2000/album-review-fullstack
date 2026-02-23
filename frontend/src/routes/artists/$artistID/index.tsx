@@ -66,6 +66,7 @@ function RouteComponent() {
   const featuredAlbums = data.data.featuredAlbums ?? [];
   const tracks = data.data.tracks;
   const artistImageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
+  const artistLargeImageURL = artist.imageURLs?.[0]?.url;
 
   const albumString = albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
 
@@ -78,7 +79,7 @@ function RouteComponent() {
   return (
     <div>
       <div
-        className="relative w-full h-[600px] md:h-[500px] pb-28 overflow-hidden bg-cover bg-center"
+        className="relative w-full h-150 md:h-125 3xl:h-200 pb-28 3xl:pt-28 overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `
       linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(23,23,23,0.1) 50%, #171717 100%),
@@ -89,6 +90,7 @@ function RouteComponent() {
         <HeaderDetails
           name={artist.name}
           imageURL={artistImageURL}
+          largeImageURL={artistLargeImageURL}
           viewTransitionName={`artist-image-${artist.spotifyID}`}
           nameBackground
         />

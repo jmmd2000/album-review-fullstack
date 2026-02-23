@@ -5,6 +5,9 @@
   --animation-duration-lava1: 180s;
   --animation-duration-lava2: 200s;
   --animation-duration-infinite-scroll: 320s;
+
+  --breakpoint-3xl: 120.5rem;
+  --breakpoint-4xl: 137.5rem;
 }
 
 /* Blurry header animations */
@@ -63,18 +66,15 @@
 }
 
 .animate-lava0 {
-  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite
-    alternate;
+  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite alternate;
 }
 
 .animate-lava1 {
-  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite
-    alternate;
+  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite alternate;
 }
 
 .animate-lava2 {
-  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite
-    alternate;
+  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite alternate;
 }
 
 /* Infinite scroll animation for the AlbumScroller */
@@ -88,8 +88,7 @@
 }
 
 .animate-infinite-scroll {
-  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear
-    infinite;
+  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear infinite;
 }
 
 body {
@@ -97,15 +96,14 @@ body {
 }
 
 html {
+  font-size: clamp(1rem, 0.347vw + 0.584rem, 1.25rem);
   @apply bg-neutral-900;
   @apply text-white;
 }
 
 @font-face {
   font-family: "Cabin";
-  src:
-    local("cabin-latin-400-normal"),
-    url("../assets/fonts/cabin-latin-400-normal.ttf");
+  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
 }
 
 body {

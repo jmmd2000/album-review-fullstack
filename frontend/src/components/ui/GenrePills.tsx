@@ -15,14 +15,14 @@ interface GenrePillsProps {
  */
 const GenrePills = ({ genres }: GenrePillsProps) => {
   return (
-    <div className="flex flex-wrap gap-1 mx-auto items-center justify-center">
+    <div className="flex flex-wrap gap-1 3xl:gap-2 mx-auto items-center justify-center">
       {genres.map((genre, index) => (
         <Link
           search={{ genres: genre.slug }}
           to={"/albums"}
           resetScroll={true}
           key={index}
-          className="bg-neutral-900/80 text-gray-400 rounded-full px-2 py-1 text-sm hover:bg-neutral-900 hover:transform hover:-translate-y-1 hover:text-red-500 hover:underline transition-all duration-200 cursor-pointer"
+          className="bg-neutral-900/80 text-gray-400 rounded-full px-2 py-1 3xl:px-3 3xl:py-1.5 text-sm 3xl:text-base hover:bg-neutral-900 hover:transform hover:-translate-y-1 hover:text-red-500 hover:underline transition-all duration-200 cursor-pointer"
           style={{ viewTransitionName: `genre-pill-${genre.slug}` }}
         >
           {genre.name}

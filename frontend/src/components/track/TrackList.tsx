@@ -107,7 +107,7 @@ const TrackList = ({
             const { backgroundColorLighter } = getRatingStyles(tierLabel);
 
             return (
-              <div key={tierLabel} className="w-full max-w-[80ch] mx-auto">
+              <div key={tierLabel} className="w-full max-w-[80ch] 3xl:max-w-[100ch] mx-auto">
                 <h3
                   className={`text-lg font-medium mb-2 sticky top-0 ${backgroundColorLighter} backdrop-blur-xl border border-neutral-800/30 rounded-md p-2 z-10`}
                 >

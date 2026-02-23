@@ -20,6 +20,7 @@ interface AlbumCardProps {
 /**
  * This component creates a card for an album with an image, name, artist, and review score.
  * @param {DisplayAlbum} album The album to display
+ * @param {boolean} bookmarked Whether or not the album is bookmarked
  */
 const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
   const toURL = album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create";
@@ -30,6 +31,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
           .map(artist => artist.name)
           .join(", ")
       : album.artistName;
+  const largeImageURL = album.imageURLs[0]?.url;
 
   return (
     <Link
@@ -45,10 +47,14 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         whileHover={{ y: -10 }}
-        className="flex flex-col rounded-xl items-center w-full max-w-[240px]"
+        className="flex flex-col rounded-xl items-center w-full max-w-60 3xl:max-w-none"
       >
         <img
           src={album.imageURLs[1].url}
+          srcSet={
+            largeImageURL ? `${largeImageURL} 640w, ${album.imageURLs[1].url} 300w` : undefined
+          }
+          sizes="(min-width: 1921px) 640px, 300px"
           alt={album.name}
           className="w-full aspect-square rounded-lg"
           style={{
@@ -58,7 +64,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
 
         <div className="flex justify-between w-full">
           <div className="flex flex-col px-0 py-1 w-[90%] relative">
-            <h2 className="w-full max-w-[120px] md:max-w-[160px] text-sm font-medium truncate">
+            <h2 className="w-full max-w-30 md:max-w-40 3xl:max-w-none text-sm font-medium truncate">
               {album.name}
             </h2>
             <p className="text-xs text-gray-500 truncate">{artistNames}</p>

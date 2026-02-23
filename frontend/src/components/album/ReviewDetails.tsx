@@ -29,7 +29,7 @@ const slideInFromLeft = (delay: number) => ({
  */
 const ReviewDetails = ({ album }: ReviewDetailsProps) => {
   return (
-    <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] mx-auto mb-8">
+    <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] 3xl:w-[90ch] mx-auto mb-8">
       <motion.div {...slideInFromLeft(0.2)}>
         <RatingChip
           rating={album.finalScore}
@@ -45,9 +45,7 @@ const ReviewDetails = ({ album }: ReviewDetailsProps) => {
         />
       </motion.div>
       <BestWorstSong bestSong={album.bestSong} worstSong={album.worstSong} />
-      {album.reviewContent && (
-        <ReviewContent reviewContent={album.reviewContent} />
-      )}
+      {album.reviewContent && <ReviewContent reviewContent={album.reviewContent} />}
     </div>
   );
 };
@@ -92,11 +90,11 @@ export const BestWorstSong = ({
           </p>
         </div>
         {bestInput ? (
-          <div className="p-3 text-center font-medium text-emerald-50 bg-gradient-to-b from-emerald-900/40 to-transparent truncate">
+          <div className="p-3 text-center font-medium text-emerald-50 bg-linear-to-b from-emerald-900/40 to-transparent truncate">
             {bestInput}
           </div>
         ) : (
-          <p className="p-3 text-center font-medium text-emerald-50 bg-gradient-to-b from-emerald-900/40 to-transparent truncate">
+          <p className="p-3 text-center font-medium text-emerald-50 bg-linear-to-b from-emerald-900/40 to-transparent truncate">
             {bestSong}
           </p>
         )}
@@ -113,11 +111,11 @@ export const BestWorstSong = ({
           </p>
         </div>
         {worstInput ? (
-          <div className="p-3 text-center font-medium text-red-50 bg-gradient-to-b from-red-900/40 to-transparent truncate">
+          <div className="p-3 text-center font-medium text-red-50 bg-linear-to-b from-red-900/40 to-transparent truncate">
             {worstInput}
           </div>
         ) : (
-          <p className="p-3 text-center font-medium text-red-50 bg-gradient-to-b from-red-900/40 to-transparent truncate">
+          <p className="p-3 text-center font-medium text-red-50 bg-linear-to-b from-red-900/40 to-transparent truncate">
             {worstSong}
           </p>
         )}
@@ -133,14 +131,11 @@ interface ReviewContentProps {
 
 export const ReviewContent = ({ reviewContent }: ReviewContentProps) => {
   // Parse the content into tokens
-  const tokens = useMemo(
-    () => parseReviewContent(reviewContent),
-    [reviewContent]
-  );
+  const tokens = useMemo(() => parseReviewContent(reviewContent), [reviewContent]);
 
   return (
     <motion.div {...slideInFromLeft(0.8)}>
-      <div className="w-full mt-6 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
+      <div className="w-full mt-6 rounded-lg bg-linear-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
         <div className="px-5 py-4 border-l-4 border-neutral-800 text-zinc-200 text-sm sm:text-base font-light leading-relaxed">
           <FormattedText tokens={tokens} />
         </div>

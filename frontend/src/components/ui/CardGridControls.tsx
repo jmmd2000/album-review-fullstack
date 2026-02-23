@@ -52,8 +52,8 @@ const CardGridControls = ({
   };
 
   return (
-    <div className="sticky top-0 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 z-10">
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 max-w-[1900px] mx-4 backdrop-blur-sm px-2 py-4 z-10">
+    <div className="sticky top-0 bg-linear-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 z-10">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 max-w-475 3xl:max-w-600 4xl:max-w-750 mx-4 backdrop-blur-sm px-2 py-4 z-10">
         {search && (
           <div className="flex flex-col sm:flex-row justify-center gap-2 w-full sm:w-auto">
             <div className="flex flex-row justify-center gap-2 w-full sm:w-auto">
@@ -81,9 +81,7 @@ const CardGridControls = ({
             </div>
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
               {sortSettings && <SortDropdown {...sortSettings} />}
-              {secondarySortSettings && (
-                <SortDropdown {...secondarySortSettings} />
-              )}
+              {secondarySortSettings && <SortDropdown {...secondarySortSettings} />}
               {genreSettings && (
                 <Dropdown
                   items={genreSettings!.items}

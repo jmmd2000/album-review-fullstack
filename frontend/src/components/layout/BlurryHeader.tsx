@@ -19,72 +19,88 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   const defaultColors: ExtractedColor[] = [{ hex: "#00ffff" }];
   const colors = _colors && _colors.length > 0 ? _colors : defaultColors;
 
-  // Track viewport size to adjust blob count responsively
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 768);
+  const mobileQuery = "(max-width: 768px)";
+  const ultrawideQuery = "(min-width: 120.5rem)";
+
+  const [tier, setTier] = useState<"mobile" | "desktop" | "ultrawide">(() => {
+    if (typeof window === "undefined") return "desktop";
+    if (window.matchMedia(mobileQuery).matches) return "mobile";
+    if (window.matchMedia(ultrawideQuery).matches) return "ultrawide";
+    return "desktop";
+  });
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
+    const mobile = window.matchMedia(mobileQuery);
+    const ultrawide = window.matchMedia(ultrawideQuery);
+    const update = () => {
+      if (mobile.matches) setTier("mobile");
+      else if (ultrawide.matches) setTier("ultrawide");
+      else setTier("desktop");
+    };
+    mobile.addEventListener("change", update);
+    ultrawide.addEventListener("change", update);
+    return () => {
+      mobile.removeEventListener("change", update);
+      ultrawide.removeEventListener("change", update);
+    };
   }, []);
 
-  const totalBlobs = isMobile ? 15 : 50;
+  const totalBlobs = tier === "mobile" ? 15 : tier === "ultrawide" ? 80 : 50;
   const colorCount = colors.length;
 
   // Generate blobs with proportional color distribution and better spread
   const blobs = useMemo(() => {
     const blobsArray = [];
 
-    // Create a grid for better distribution
-    const columns = isMobile ? 3 : 5;
-    const rows = isMobile ? 2 : 3;
+    const columns = tier === "mobile" ? 3 : tier === "ultrawide" ? 7 : 5;
+    const rows = tier === "mobile" ? 2 : tier === "ultrawide" ? 4 : 3;
 
     for (let i = 0; i < colorCount; i++) {
       const blobCount = Math.round((totalBlobs / colorCount) * (colorCount - i));
 
       for (let j = 0; j < blobCount; j++) {
-        // Calculate position based on grid to ensure better distribution
         const gridCol = j % columns;
         const gridRow = Math.floor(j / columns) % rows;
 
-        // Base positions from grid with some randomness
         const baseLeft = gridCol * (100 / columns) + 100 / columns / 2;
         const baseTop = gridRow * (100 / rows) + 100 / rows / 2;
 
-        // Add randomness but keep within the cell area
         const randomOffsetX = (Math.random() - 0.5) * (80 / columns);
         const randomOffsetY = (Math.random() - 0.5) * (60 / rows);
 
-        const baseSize = isMobile ? 200 : 250;
-        const randomSize = isMobile ? 150 : 250;
+        const baseSize = tier === "mobile" ? 200 : tier === "ultrawide" ? 350 : 250;
+        const randomSize = tier === "mobile" ? 150 : tier === "ultrawide" ? 350 : 250;
         blobsArray.push({
           size: Math.floor(Math.random() * randomSize) + baseSize,
           left: Math.max(0, Math.min(100, baseLeft + randomOffsetX)),
           top: Math.max(0, Math.min(100, baseTop + randomOffsetY)),
           color: colors[i].hex,
-          blur: isMobile ? Math.floor(Math.random() * 40) + 30 : Math.floor(Math.random() * 60) + 40,
-          opacity: Math.random() * 0.5 + 0.5, // Back to original opacity range
-          animationClass: `animate-lava${j % 3}`, // Original animation classes
+          blur:
+            tier === "mobile"
+              ? Math.floor(Math.random() * 40) + 30
+              : tier === "ultrawide"
+                ? Math.floor(Math.random() * 80) + 50
+                : Math.floor(Math.random() * 60) + 40,
+          opacity: Math.random() * 0.5 + 0.5,
+          animationClass: `animate-lava${j % 3}`,
         });
       }
     }
 
-    // Shuffle to add randomness to the z-index layering
     for (let i = blobsArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [blobsArray[i], blobsArray[j]] = [blobsArray[j], blobsArray[i]];
     }
 
     return blobsArray;
-  }, [colorCount, colors, isMobile, totalBlobs]);
+  }, [colorCount, colors, tier, totalBlobs]);
 
   return (
-    <div className="relative w-full h-[700px] md:h-[500px] pb-28 overflow-hidden bg-gradient-to-b from-black/0 via-neutral-900/10 to-neutral-900 pointer-events-none">
+    <div className="relative w-full h-175 md:h-125 3xl:h-200 pb-28 3xl:pt-28 overflow-hidden bg-linear-to-b from-black/0 via-neutral-900/10 to-neutral-900 pointer-events-none">
       {blobs.map((blob, index) => (
         <div
           key={index}
-          className={`absolute rounded-full -z-[5] ${blob.animationClass} pointer-events-none`}
+          className={`absolute rounded-full -z-5 ${blob.animationClass} pointer-events-none`}
           style={{
             width: `${blob.size}px`,
             height: `${blob.size}px`,

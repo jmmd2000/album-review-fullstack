@@ -76,6 +76,7 @@ function RouteComponent() {
         <HeaderDetails
           name={album.name}
           imageURL={album.imageURLs[1].url}
+          largeImageURL={album.imageURLs[0]?.url}
           viewTransitionName={`album-image-${album.spotifyID}`}
         />
         <AlbumDetails
@@ -87,7 +88,9 @@ function RouteComponent() {
             imageURLs: artist.imageURLs,
           }))}
         />
-        <div className="pb-10">{album.genres && <GenrePills genres={albumGenres} />}</div>
+        <div className="3xl:mt-8 pb-10">
+          {album.genres && <GenrePills genres={albumGenres} />}
+        </div>
       </BlurryHeader>
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />

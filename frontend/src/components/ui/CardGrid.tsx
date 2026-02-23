@@ -126,13 +126,13 @@ const CardGrid = ({
       )}
 
       {heading && (
-        <div className="max-w-[1900px] mx-4 px-2 pt-4 z-10">
+        <div className="max-w-475 3xl:max-w-600 4xl:max-w-750 mx-4 px-2 pt-4 z-10">
           <h2 className="text-xl font-medium text-neutral-200 text-left">{heading}</h2>
         </div>
       )}
 
       {typeof counter === "number" && (
-        <div className="flex justify-start items-center gap-2 max-w-[1900px] mx-4 px-2 z-10">
+        <div className="flex justify-start items-center gap-2 max-w-475 3xl:max-w-600 4xl:max-w-750 mx-4 px-2 z-10">
           <p className="text-sm text-neutral-400">{`Showing ${counter} results`}</p>
         </div>
       )}
@@ -141,7 +141,7 @@ const CardGrid = ({
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 max-w-[1900px] mx-auto my-8 px-4"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 3xl:gap-6 max-w-475 3xl:max-w-600 4xl:max-w-750 mx-auto my-8 px-4"
         data-testid="album-grid"
       >
         {cards.length > 0 ? (

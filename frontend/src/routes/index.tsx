@@ -46,7 +46,7 @@ function Index() {
       <AlbumScroller albums={data.albums} />
       <GradientOverlay>
         <div className="flex flex-col pt-8 sm:pt-12 md:justify-center md:pt-0 min-h-[calc(100vh-70px)] md:min-h-[calc(100vh-80px)]">
-          <div className="flex flex-col gap-10 sm:gap-12 md:gap-16 w-full md:w-3/4 lg:w-2/3 xl:w-1/2">
+          <div className="flex flex-col gap-10 sm:gap-12 md:gap-16 w-full md:w-3/4 lg:w-2/3 xl:w-1/2 3xl:w-2/5">
             <IntroductoryText />
             <HomeStats
               numArtists={data.numArtists}
@@ -62,11 +62,11 @@ function Index() {
 
 function IntroductoryText() {
   return (
-    <div className="flex flex-col px-6 pt-8 sm:px-8 sm:pt-12 md:pt-16 lg:px-12 xl:px-20 max-w-2xl">
-      <h1 className="mb-2 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight">
+    <div className="flex flex-col px-6 pt-8 sm:px-8 sm:pt-12 md:pt-16 lg:px-12 xl:px-20 max-w-2xl 3xl:max-w-3xl">
+      <h1 className="mb-2 text-3xl sm:text-4xl md:text-5xl lg:text-6xl 3xl:text-7xl font-bold text-white tracking-tight">
         Welcome<span className="text-red-500">!</span>
       </h1>
-      <div className="w-20 h-1 bg-gradient-to-r from-red-500 to-transparent mb-8"></div>
+      <div className="w-20 h-1 bg-linear-to-r from-red-500 to-transparent mb-8"></div>
 
       <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
         This is my album review blog, where I share my thoughts on a variety of albums and
@@ -83,7 +83,7 @@ function IntroductoryText() {
       </p>
 
       <div className="flex items-center gap-3">
-        <div className="w-12 h-[1px] bg-gray-500"></div>
+        <div className="w-12 h-px bg-gray-500"></div>
         <p className="text-lg sm:text-xl md:text-2xl font-light text-gray-300 italic">James</p>
       </div>
     </div>
@@ -102,7 +102,7 @@ const HomeStats = ({ numArtists, numAlbums, numTracks }: HomeStatsProps) => {
   const animatedTracks = useCountUp(numTracks);
 
   return (
-    <div className="flex flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 px-4 sm:px-8 lg:px-12 xl:px-20">
+    <div className="flex flex-row items-center justify-center gap-3 sm:gap-6 md:gap-8 3xl:gap-12 px-4 sm:px-8 lg:px-12 xl:px-20">
       <BentoCard className="group hover:scale-105 transition-transform duration-300 border border-white/10 bg-neutral-900/60 md:bg-white/5 backdrop-blur-md md:backdrop-blur-sm">
         <div className="px-3 py-4 sm:px-6 sm:py-6">
           {animatedAlbums ? (
@@ -162,12 +162,12 @@ const GradientOverlay = ({ children }: GradientOverlayProps) => {
   return (
     <>
       {/* Desktop gradient left to right */}
-      <div className="fixed inset-x-0 bottom-0 top-[70px] md:top-[80px] z-10 hidden md:block bg-gradient-to-r from-neutral-950 via-neutral-950/90 to-transparent">
+      <div className="fixed inset-x-0 bottom-0 top-17.5 md:top-20 z-10 hidden md:block bg-linear-to-r from-neutral-950 via-neutral-950/90 to-transparent">
         {children}
       </div>
 
       {/* Mobile gradient top to bottom */}
-      <div className="fixed inset-x-0 bottom-0 top-[70px] z-10 md:hidden bg-gradient-to-b from-neutral-950 via-neutral-950/70 to-neutral-950/30">
+      <div className="fixed inset-x-0 bottom-0 top-17.5 z-10 md:hidden bg-linear-to-b from-neutral-950 via-neutral-950/70 to-neutral-950/30">
         {children}
       </div>
     </>
