@@ -1,12 +1,12 @@
 // This e2e test checks the flow of creating an album
 // First it logs in via the admin dropdown
-// Then it uses the search to find an abba album.
+// Then it uses the search to find a clairo album.
 // It enters review data and submits it
 // Then it checks that the album appears on the grid on /albums and that the review details page loads
 // It then does the same for the artist.
 
 describe("Create Album Review Flow", () => {
-  const searchTerm = "abba";
+  const searchTerm = "clairo";
   const reviewText = "great album, I enjoyed it";
 
   it("complete album review creation flow", () => {

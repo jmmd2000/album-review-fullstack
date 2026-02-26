@@ -10,9 +10,6 @@ export const GOOD_ALBUM_BONUS = 0.25;
 /** Penalty deducted from artist score for each album scoring < 45. */
 export const BAD_ALBUM_BONUS = 0.25;
 
-/** Number of Spotify IDs to fetch per batch request. */
-export const SPOTIFY_CHUNK_SIZE = 50;
-
 /** Configuration for album cover color extraction. */
 export const COLOR_EXTRACTION = {
   pixels: 409600,

@@ -10,7 +10,6 @@ import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
 import { AppError } from "../middleware/errorHandler";
-import { SPOTIFY_CHUNK_SIZE } from "@/config/constants";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -59,7 +58,7 @@ export class Spotify {
 
     try {
       // Fetch from Spotify
-      const endpoint = `https://api.spotify.com/v1/search?q=${encodeURIComponent(rawQuery)}&type=album&limit=35`;
+      const endpoint = `https://api.spotify.com/v1/search?q=${encodeURIComponent(rawQuery)}&type=album&limit=10`;
       const accessToken = await this.getAccessToken();
       const response = await fetch(endpoint, {
         method: "GET",
@@ -143,15 +142,10 @@ export class Spotify {
 
     try {
       const accessToken = await this.getAccessToken();
-      const chunks: string[][] = [];
-      for (let i = 0; i < ids.length; i += SPOTIFY_CHUNK_SIZE) {
-        chunks.push(ids.slice(i, i + SPOTIFY_CHUNK_SIZE));
-      }
-
-      const results: SpotifyArtist[] = [];
-
-      for (const chunk of chunks) {
-        const endpoint = `https://api.spotify.com/v1/artists?ids=${encodeURIComponent(chunk.join(","))}`;
+      
+      // Fetch each artist individually in parallel
+      const artistPromises = ids.map(async (id) => {
+        const endpoint = `https://api.spotify.com/v1/artists/${id}`;
         const response = await fetch(endpoint, {
           method: "GET",
           headers: {
@@ -160,15 +154,13 @@ export class Spotify {
           },
         });
 
-        if (!response.ok) throw new AppError("Failed to fetch artists from Spotify", 500);
+        if (!response.ok) return null;
+        return await response.json();
+      });
 
-        const data = await response.json();
-        if (Array.isArray(data.artists)) {
-          results.push(...data.artists);
-        }
-      }
-
-      return results;
+      const results = await Promise.all(artistPromises);
+      // Filter out any failed requests
+      return results.filter((artist): artist is SpotifyArtist => artist !== null);
     } catch (err) {
       if (err instanceof AppError) throw err;
       throw new AppError("Failed to fetch artist data from Spotify.", 500);

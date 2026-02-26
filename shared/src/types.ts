@@ -29,8 +29,6 @@ export interface SpotifyAlbum {
   album_type: string;
   /** List of artists associated with the album. */
   artists: SimpleSpotifyArtist[];
-  /** List of country codes where the album is available. */
-  available_markets: string[];
   /** External URLs for the album (e.g., Spotify link). */
   external_urls: { spotify: string };
   /** API endpoint for the album. */
@@ -113,8 +111,6 @@ export interface SpotifyTrack {
     /** Spotify URI for the artist. */
     uri: string;
   }[];
-  /** List of country codes where the track is available. */
-  available_markets: string[];
   /** The disc number the track is on (1 for single-disc albums). */
   disc_number: number;
   /** Duration of the track in milliseconds. */
@@ -147,13 +143,6 @@ export interface SpotifyTrack {
 export interface SpotifyArtist {
   /** External URLs for the artist (e.g., Spotify link). */
   external_urls: { spotify: string };
-  /** Artist's follower details. */
-  followers: {
-    /** API endpoint for retrieving followers (always `null`). */
-    href: string | null;
-    /** Total number of followers. */
-    total: number;
-  };
   /** List of genres associated with the artist. */
   genres: string[];
   /** API endpoint for the artist. */
@@ -164,8 +153,6 @@ export interface SpotifyArtist {
   images: SpotifyImage[];
   /** Name of the artist. */
   name: string;
-  /** Popularity score (0-100, based on Spotify metrics). */
-  popularity: number;
   /** Type of entity (always "artist"). */
   type: string;
   /** Spotify URI for the artist. */
