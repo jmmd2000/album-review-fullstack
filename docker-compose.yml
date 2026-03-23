@@ -1,5 +1,6 @@
-# Production Docker Compose configuration
-# docker-compose -f docker-compose.yml up --build -d
+# Production compose (traefik + GHCR)
+name: ${APP_NAME}
+
 services:
   db:
     image: postgres:15
@@ -17,17 +18,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}
     restart: always
-    ports:
-      - "4000:4000"
     environment:
-      DATABASE_URL: ${DATABASE_URL_PROD}
+      DATABASE_URL: ${DATABASE_URL}
       PORT: 4000
-      # Spotify credentials
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
@@ -40,24 +37,34 @@ services:
         condition: service_healthy
     networks:
       - app_network
+      - web_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_proxy"
+      - "traefik.http.routers.${APP_NAME}-backend.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${APP_NAME}-backend.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-backend.tls.certresolver=myresolver"
+
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
+    image: ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG}
     restart: always
-    ports:
-      - "8080:80"
-    environment:
-      VITE_API_URL: ${VITE_API_URL}
     depends_on:
       - backend
     networks:
       - app_network
+      - web_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_proxy"
+      - "traefik.http.routers.${APP_NAME}-frontend.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.${APP_NAME}-frontend.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-frontend.tls.certresolver=myresolver"
 
 networks:
   app_network:
+  web_proxy:
+    external: true
+
 volumes:
   pgdata:
     driver: local

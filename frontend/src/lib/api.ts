@@ -1,5 +1,3 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -22,12 +20,12 @@ async function handleResponse<T = unknown>(res: Response): Promise<T> {
 
 export const api = {
   get: <T = unknown>(path: string, options?: RequestInit): Promise<T> =>
-    fetch(`${API_BASE_URL}${path}`, {
+    fetch(path, {
       credentials: "include",
       ...options,
     }).then(res => handleResponse<T>(res)),
   post: <T = unknown>(path: string, data?: unknown, options?: RequestInit): Promise<T> =>
-    fetch(`${API_BASE_URL}${path}`, {
+    fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -35,7 +33,7 @@ export const api = {
       ...options,
     }).then(res => handleResponse<T>(res)),
   put: <T = unknown>(path: string, data?: unknown, options?: RequestInit): Promise<T> =>
-    fetch(`${API_BASE_URL}${path}`, {
+    fetch(path, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -43,7 +41,7 @@ export const api = {
       ...options,
     }).then(res => handleResponse<T>(res)),
   delete: <T = unknown>(path: string, options?: RequestInit): Promise<T> =>
-    fetch(`${API_BASE_URL}${path}`, {
+    fetch(path, {
       method: "DELETE",
       credentials: "include",
       ...options,

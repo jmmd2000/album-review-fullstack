@@ -14,7 +14,10 @@ import { ProgressState, useProgressState } from "@/hooks/useProgressState";
 import { timeAgo } from "@shared/helpers/formatDate";
 import { api } from "@/lib/api";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL!;
+const SOCKET_URL =
+  import.meta.env.MODE === "development"
+    ? import.meta.env.VITE_API_URL!
+    : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api`;
 
 async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
   return api.get("/api/settings/last-runs");
@@ -60,7 +63,6 @@ function RouteComponent() {
       autoConnect: true,
       timeout: 20000,
     });
-
 
     socket.on("artist:images:progress", data => {
       imageDispatch({ type: "PROGRESS", payload: data });

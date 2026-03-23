@@ -1,69 +1,128 @@
 pipeline {
   agent any
 
+  parameters {
+    choice(name: 'DEPLOY_ENV', choices: ['staging', 'production'], description: 'Where to deploy?')
+    choice(name: 'ACTION', choices: ['Build and Deploy', 'Deploy Only'], description: 'Full rebuild and deploy? Or just deploy existing images? (i.e. deploying to production once checked on staging)')
+    booleanParam(name: 'CONFIRM_TESTED', defaultValue: false, description: 'I have definitely run tests locally!!')
+    booleanParam(name: 'TAKE_BACKUP', defaultValue: true, description: 'Backup before deploying (prod only)')
+    booleanParam(name: 'RUN_MIGRATIONS', defaultValue: false, description: 'Run DB migrations?')
+    string(name: 'OVERRIDE_TAG', defaultValue: '', description: 'Manually specify a tag (empty = current commit hash)')
+  }
+
+  environment {
+    VPS_HOST = "159.195.47.245"
+    VPS_USER = "james"
+    GITHUB_USER = "jmmd2000"
+    IMAGE_TAG = "${params.OVERRIDE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+    APP_NAME = "album-reviews"
+  }
+
   stages {
-    stage('Checkout') {
+    stage('Safety Check') {
+      when { expression { params.ACTION == 'Build and Deploy' } }
       steps {
-        // Pull down the Jenkinsfile and code from SCM
-        checkout scm
-      }
-    }
-
-    stage('Stop Containers') {
-      steps {
-        sshagent(credentials: ['vps-ssh']) {
-          sh '''
-ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
-set -e
-cd $APP_DIR
-echo '⏬ Stopping containers'
-docker-compose down || echo 'No containers to stop'
-ENDSSH
-'''
+        script {
+          if (!params.CONFIRM_TESTED) {
+            error "GO BACK AND TEST FIRST!"
+          }
+          echo "I definitely tested..."
         }
       }
     }
 
-    stage('Pull Latest Code') {
+    stage('Build & Push Images') {
+      when { expression { params.ACTION == 'Build and Deploy' } }
       steps {
-        sshagent(credentials: ['vps-ssh']) {
-          sh '''
-ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
-cd $APP_DIR
-echo '⬇️ Pulling latest code'
-git pull --ff-only
-ENDSSH
-'''
+        script {
+          withCredentials([usernamePassword(credentialsId: 'github-ghcr', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]) {
+            sh "echo ${GH_PAT} | docker login ghcr.io -u ${GH_USER} --password-stdin"
+            
+            parallel failFast: true,
+              "Backend Build": {
+                sh "docker build -f backend/Dockerfile -t ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG} ."
+              },
+              "Frontend Build": {
+                sh "docker build -f frontend/Dockerfile -t ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG} ."
+              }
+
+            parallel(
+              "Backend Push": {
+                sh "docker push ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}"
+              },
+              "Frontend Push": {
+                sh "docker push ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG}"
+              }
+            )
+          }
         }
       }
     }
 
-    stage('Rebuild & Start Containers') {
+    stage('Deploy to VPS') {
       steps {
-        sshagent(credentials: ['vps-ssh']) {
-          sh '''
-ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
-cd $APP_DIR
-echo '🔄 Rebuilding and starting containers'
-docker-compose -f docker-compose.yml up --build -d
+        script {
+          def targetDir = params.DEPLOY_ENV == 'production' ? "/home/james/album-review/prod" : "/home/james/album-review/staging"
+          def envCredId = params.DEPLOY_ENV == 'production' ? "album-env-prod" : "album-env-staging"
+          def domain = params.DEPLOY_ENV == 'production' ? "jamesreviewsmusic.com" : "staging.jamesreviewsmusic.com"
+          def appNameEnv = "${APP_NAME}-${params.DEPLOY_ENV}"
+
+          echo "🚚 Deploying version ${IMAGE_TAG} to ${params.DEPLOY_ENV}..."
+
+          sshagent(['vps-ssh']) {
+            // Clean the directory
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'rm -rf ${targetDir} && mkdir -p ${targetDir}'"
+
+            sh "scp docker-compose.yml ${VPS_USER}@${VPS_HOST}:${targetDir}/docker-compose.yml"
+            sh "scp backup.sh ${VPS_USER}@${VPS_HOST}:${targetDir}/backup.sh"
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod +x ${targetDir}/backup.sh'"
+
+            withCredentials([file(credentialsId: envCredId, variable: 'ENV_FILE')]) {
+              sh "scp ${ENV_FILE} ${VPS_USER}@${VPS_HOST}:${targetDir}/.env"
+            }
+
+            // Jenkins credential files are scp'd as read-only, make writable so we can append to it
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod 600 ${targetDir}/.env'"
+
+            if (params.TAKE_BACKUP && params.DEPLOY_ENV == 'production') {
+              echo "Taking backup of prod before deploying..."
+              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && ./backup.sh || echo \"Backup failed but proceeding...\"'"
+            }
+
+            // Command VPS to pull and restart
+            sh """
+ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << "ENDSSH"
+cd ${targetDir}
+
+# Add dynamic variables to the .env file
+echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+echo "GITHUB_USER=${GITHUB_USER}" >> .env
+echo "APP_NAME=${appNameEnv}" >> .env
+echo "DOMAIN=${domain}" >> .env
+
+docker compose pull
+docker compose up -d --remove-orphans
 ENDSSH
-'''
+"""
+
+          }
         }
       }
     }
 
-    stage('Run DB Migrations') {
+    stage('DB Migrations') {
+      when { expression { params.RUN_MIGRATIONS == true } }
       steps {
-        withCredentials([string(credentialsId: 'db-url', variable: 'DB_URL')]) {
-          sshagent(credentials: ['vps-ssh']) {
-            sh '''
-ssh -o StrictHostKeyChecking=no $VPS_HOST << ENDSSH
-cd $APP_DIR
-echo 'Running DB migrations'
-docker exec -i album-review-fullstack_db_1 psql "$DB_URL" < backend/migrations/20260116_multi_artist.sql
-docker exec -i album-review-fullstack_db_1 psql "$DB_URL" < backend/migrations/20260116_backfill_featured_track_artists.sql
+        script {
+          def targetDir = params.DEPLOY_ENV == 'production' ? "/home/james/album-review/prod" : "/home/james/album-review/staging"
+          echo "Running migrations..."
+          sshagent(['vps-ssh']) {
+            sh """
+ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << 'ENDSSH'
+cd ${targetDir}
+docker compose exec -T backend ./node_modules/.bin/drizzle-kit push --config /app/dist/backend/drizzle.config.js
 ENDSSH
-'''
+"""
           }
         }
       }
@@ -71,8 +130,11 @@ ENDSSH
   }
 
   post {
+    success {
+      echo "Successfully deployed ${IMAGE_TAG} to ${params.DEPLOY_ENV}!"
+    }
     failure {
-      echo '⚠️ Deployment failed - see console output for errors'
+      echo "Deployment failed - see console output."
     }
   }
 }

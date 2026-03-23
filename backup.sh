@@ -9,29 +9,17 @@ else
 fi
 
 # Backup directory on the host
-BACKUP_DIR="/root/albums/backups"
-
-# Debugging: Print where the backups are being saved
-echo "Creating backup directory: $BACKUP_DIR"
+BACKUP_DIR="${HOME}/backups/${APP_NAME}"
 
 # Ensure the backup directory exists
-mkdir -p $BACKUP_DIR
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to create backup directory at $BACKUP_DIR"
-    exit 1
-fi
-
-# Debugging: Check if directory exists after creation
-if [ -d "$BACKUP_DIR" ]; then
-    echo "Backup directory exists: $BACKUP_DIR"
-else
-    echo "Error: Backup directory does not exist!"
-    exit 1
-fi
+mkdir -p "$BACKUP_DIR"
 
 # Run pg_dump and save the backup with a timestamp
-echo "Starting database backup..."
-docker exec album-review-fullstack_db_1 pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} > $BACKUP_DIR/album-reviews-$(date +%Y%m%d_%H%M%S).sql
+# APP_NAME is loaded from .env and set by jenkinsfile (e.g album-reviews-staging or album-reviews-production)
+DB_CONTAINER="${APP_NAME}-db-1"
+
+echo "Starting database backup for ${DB_CONTAINER}..."
+docker exec "$DB_CONTAINER" pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" > "$BACKUP_DIR/backup-$(date +%Y%m%d_%H%M%S).sql"
 
 # Check if backup file was created
 if [ $? -eq 0 ]; then

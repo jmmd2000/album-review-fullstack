@@ -5,9 +5,6 @@ RUN corepack enable
 
 WORKDIR /app
 
-ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL}
-
 # Copy workspace and package files
 COPY pnpm-workspace.yaml .
 COPY package.json pnpm-lock.yaml ./
