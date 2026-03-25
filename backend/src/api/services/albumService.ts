@@ -490,10 +490,11 @@ export class AlbumService {
     finalScore: number
   ) {
     const infoMap = new Map(albumArtists.map(a => [a.spotifyID, a]));
+    const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(artistIDs);
+    const existingIDs = new Set(existingArtists.map(a => a.spotifyID));
 
     for (const artistID of artistIDs) {
-      let artist = await ArtistModel.getArtistBySpotifyID(artistID);
-      if (!artist) {
+      if (!existingIDs.has(artistID)) {
         const info = infoMap.get(artistID);
         if (!info) continue;
 
@@ -506,7 +507,7 @@ export class AlbumService {
 
         const affectsScore = scoreArtistIDs.includes(artistID);
         const score = affectsScore ? finalScore : 0;
-        artist = await ArtistModel.createArtist({
+        await ArtistModel.createArtist({
           name: info.name,
           spotifyID: artistID,
           imageURLs: info.imageURLs,
@@ -535,11 +536,14 @@ export class AlbumService {
 
     let updated = false;
 
-    for (const artistID of uniqueArtistIDs) {
-      const artist = await ArtistModel.getArtistBySpotifyID(artistID);
-      if (!artist) continue;
+    const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(uniqueArtistIDs);
+    const existingArtistIDs = new Set(existingArtists.map(a => a.spotifyID));
+    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(uniqueArtistIDs);
 
-      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(artistID);
+    for (const artistID of uniqueArtistIDs) {
+      if (!existingArtistIDs.has(artistID)) continue;
+
+      const albumLinks = allAlbumLinks.get(artistID) ?? [];
       const all = albumLinks.map(link => link.album) as ReviewedAlbum[];
 
       if (all.length === 0) {

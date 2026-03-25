@@ -42,10 +42,9 @@ export class GenreService {
   static async getRelatedGenres(slugs: string[], limit = 5): Promise<Genre[]> {
     const allResults: RelatedGenre[] = [];
 
-    for (const slug of slugs) {
-      const genre = await GenreModel.findBySlug(slug);
-      if (!genre) continue;
+    const matchedGenres = await GenreModel.findBySlugs(slugs);
 
+    for (const genre of matchedGenres) {
       const relatedRows = await GenreModel.getRelatedGenresRaw(genre.id);
 
       const combined = relatedRows.map(item => ({
@@ -91,8 +90,10 @@ export class GenreService {
   }
 
   static async deleteIfUnused(genreIDs: number[]) {
+    const usageCounts = await GenreModel.getAlbumCountsByGenreIDs(genreIDs);
+
     for (const genreID of genreIDs) {
-      const usageCount = await GenreModel.getAlbumCountByGenreID(genreID);
+      const usageCount = usageCounts.get(genreID) ?? 0;
 
       if (usageCount === 0) {
         await GenreModel.deleteRelatedGenresByID(genreID);

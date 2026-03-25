@@ -12,7 +12,7 @@ export class GenreModel {
     return db
       .select({ count: count() })
       .from(genres)
-      .then((r) => r[0].count);
+      .then(r => r[0].count);
   }
 
   static async findBySlug(slug: string) {
@@ -20,7 +20,12 @@ export class GenreModel {
       .select()
       .from(genres)
       .where(eq(genres.slug, slug))
-      .then((r) => r[0]);
+      .then(r => r[0]);
+  }
+
+  static async findBySlugs(slugs: string[]) {
+    if (slugs.length === 0) return [];
+    return db.select().from(genres).where(inArray(genres.slug, slugs));
   }
 
   static async createGenre(values: typeof genres.$inferInsert) {
@@ -28,42 +33,65 @@ export class GenreModel {
       .insert(genres)
       .values(values)
       .returning()
-      .then((r) => r[0]);
+      .then(r => r[0]);
   }
 
   static async getGenreIDsForAlbum(albumSpotifyID: string): Promise<number[]> {
-    const rows = await db.select({ genreID: albumGenres.genreID }).from(albumGenres).where(eq(albumGenres.albumSpotifyID, albumSpotifyID));
-    return rows.map((r) => r.genreID);
+    const rows = await db
+      .select({ genreID: albumGenres.genreID })
+      .from(albumGenres)
+      .where(eq(albumGenres.albumSpotifyID, albumSpotifyID));
+    return rows.map(r => r.genreID);
   }
 
   static async getGenresForAlbumsRaw(albumSpotifyIDs: string[]) {
     if (albumSpotifyIDs.length === 0) return [];
-    return db.select().from(albumGenres).innerJoin(genres, eq(genres.id, albumGenres.genreID)).where(inArray(albumGenres.albumSpotifyID, albumSpotifyIDs));
+    return db
+      .select()
+      .from(albumGenres)
+      .innerJoin(genres, eq(genres.id, albumGenres.genreID))
+      .where(inArray(albumGenres.albumSpotifyID, albumSpotifyIDs));
   }
 
   static async linkGenresToAlbum(albumSpotifyID: string, genreIDs: number[]) {
     if (genreIDs.length === 0) return;
     await db
       .insert(albumGenres)
-      .values(genreIDs.map((gid) => ({ albumSpotifyID, genreID: gid })))
+      .values(genreIDs.map(gid => ({ albumSpotifyID, genreID: gid })))
       .onConflictDoNothing({ target: [albumGenres.albumSpotifyID, albumGenres.genreID] });
   }
 
   static async unlinkGenresFromAlbum(albumSpotifyID: string, genreIDs: number[]) {
     if (genreIDs.length === 0) return;
-    await db.delete(albumGenres).where(and(eq(albumGenres.albumSpotifyID, albumSpotifyID), inArray(albumGenres.genreID, genreIDs)));
+    await db
+      .delete(albumGenres)
+      .where(
+        and(
+          eq(albumGenres.albumSpotifyID, albumSpotifyID),
+          inArray(albumGenres.genreID, genreIDs)
+        )
+      );
   }
 
   static async getRelatedGenresRaw(genreID: number) {
-    const forward = await db.select().from(relatedGenres).innerJoin(genres, eq(genres.id, relatedGenres.relatedGenreID)).where(eq(relatedGenres.genreID, genreID));
-    const reverse = await db.select().from(relatedGenres).innerJoin(genres, eq(genres.id, relatedGenres.genreID)).where(eq(relatedGenres.relatedGenreID, genreID));
+    const forward = await db
+      .select()
+      .from(relatedGenres)
+      .innerJoin(genres, eq(genres.id, relatedGenres.relatedGenreID))
+      .where(eq(relatedGenres.genreID, genreID));
+    const reverse = await db
+      .select()
+      .from(relatedGenres)
+      .innerJoin(genres, eq(genres.id, relatedGenres.genreID))
+      .where(eq(relatedGenres.relatedGenreID, genreID));
     return [...forward, ...reverse];
   }
 
   static async incrementRelatedStrength(genreIDs: number[]) {
     for (let i = 0; i < genreIDs.length; i++) {
       for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
+        const [g1, g2] =
+          genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
 
         await db
           .insert(relatedGenres)
@@ -82,7 +110,8 @@ export class GenreModel {
   static async decrementRelatedStrength(genreIDs: number[]) {
     for (let i = 0; i < genreIDs.length; i++) {
       for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
+        const [g1, g2] =
+          genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
 
         await db
           .update(relatedGenres)
@@ -111,8 +140,26 @@ export class GenreModel {
     return result[0].count;
   }
 
+  static async getAlbumCountsByGenreIDs(genreIDs: number[]) {
+    if (genreIDs.length === 0) return new Map<number, number>();
+    const rows = await db
+      .select({ genreID: albumGenres.genreID, count: count() })
+      .from(albumGenres)
+      .where(inArray(albumGenres.genreID, genreIDs))
+      .groupBy(albumGenres.genreID);
+    const map = new Map<number, number>();
+    for (const row of rows) {
+      map.set(row.genreID, row.count);
+    }
+    return map;
+  }
+
   static async deleteRelatedGenresByID(genreID: number) {
-    await db.delete(relatedGenres).where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
+    await db
+      .delete(relatedGenres)
+      .where(
+        or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID))
+      );
   }
 
   static async deleteGenreByID(genreID: number) {
@@ -125,6 +172,9 @@ export class GenreModel {
 
   static async getAlbumsBySpotifyIDs(spotifyIDs: string[]): Promise<ReviewedAlbum[]> {
     if (spotifyIDs.length === 0) return [];
-    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<ReviewedAlbum[]>;
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<ReviewedAlbum[]>;
   }
 }

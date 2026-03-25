@@ -185,6 +185,35 @@ export class AlbumModel {
       .where(eq(albumArtists.artistSpotifyID, spotifyID));
   }
 
+  static async getAlbumsByArtistsWithAffects(artistSpotifyIDs: string[]) {
+    if (artistSpotifyIDs.length === 0)
+      return new Map<
+        string,
+        { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]
+      >();
+
+    const rows = await db
+      .select({
+        album: reviewedAlbums,
+        affectsScore: albumArtists.affectsScore,
+        artistSpotifyID: albumArtists.artistSpotifyID,
+      })
+      .from(reviewedAlbums)
+      .innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
+      .where(inArray(albumArtists.artistSpotifyID, artistSpotifyIDs));
+
+    const map = new Map<
+      string,
+      { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]
+    >();
+    for (const row of rows) {
+      const existing = map.get(row.artistSpotifyID) ?? [];
+      existing.push({ album: row.album, affectsScore: row.affectsScore });
+      map.set(row.artistSpotifyID, existing);
+    }
+    return map;
+  }
+
   static async getFeaturedAlbumIDsByArtist(artistID: string) {
     const rows = await db
       .select({ albumSpotifyID: reviewedTracks.albumSpotifyID })

@@ -69,8 +69,12 @@ export class ArtistService {
     const hasNumericChange = (current: number, next: number) =>
       Math.abs((current ?? 0) - next) > 0.0001;
 
+    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(
+      artists.map(a => a.spotifyID)
+    );
+
     for (const artist of artists) {
-      const albumLinks = await AlbumModel.getAlbumsByArtistWithAffects(artist.spotifyID);
+      const albumLinks = allAlbumLinks.get(artist.spotifyID) ?? [];
       const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
       const reviewCount = albums.length;
       const contributing = albumLinks
@@ -518,7 +522,7 @@ export class ArtistService {
         const newHeaderImage = headerResults[id];
 
         if (newHeaderImage) {
-          const current = (await ArtistModel.getArtistBySpotifyID(id))?.headerImage;
+          const current = artist.headerImage;
 
           // Normalize URLs for comparison
           const normalizedCurrent = current ? normalizeSpotifyImageUrl(current) : null;
@@ -630,8 +634,7 @@ export class ArtistService {
           : undefined;
 
       // Get only the URL strings, sorted
-      const dbRec = await ArtistModel.getArtistBySpotifyID(id);
-      const currentUrls = (dbRec?.imageURLs || []).map(img => img.url).sort();
+      const currentUrls = (imageURLs || []).map(img => img.url).sort();
       const fetchedUrls = (artistData.images as SpotifyImage[]).map(img => img.url).sort();
 
       // Compare lengths and each URL
