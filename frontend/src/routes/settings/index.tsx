@@ -17,7 +17,7 @@ import { api } from "@/lib/api";
 const SOCKET_URL =
   import.meta.env.MODE === "development"
     ? import.meta.env.VITE_API_URL!
-    : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api`;
+    : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
 
 async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
   return api.get("/api/settings/last-runs");
