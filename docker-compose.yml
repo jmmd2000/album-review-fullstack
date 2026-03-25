@@ -44,6 +44,9 @@ services:
       - "traefik.http.routers.${APP_NAME}-backend.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/api`)"
       - "traefik.http.routers.${APP_NAME}-backend.entrypoints=websecure"
       - "traefik.http.routers.${APP_NAME}-backend.tls.certresolver=myresolver"
+      - "traefik.http.routers.${APP_NAME}-backend-ws.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.${APP_NAME}-backend-ws.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-backend-ws.tls.certresolver=myresolver"
 
   frontend:
     image: ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG}

@@ -84,6 +84,17 @@ pipeline {
             // Jenkins credential files are scp'd as read-only, make writable so we can append to it
             sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod 600 ${targetDir}/.env'"
 
+            // Add dynamic variables to the .env file
+            sh """
+ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << "ENDSSH"
+cd ${targetDir}
+echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
+echo "GITHUB_USER=${GITHUB_USER}" >> .env
+echo "APP_NAME=${appNameEnv}" >> .env
+echo "DOMAIN=${domain}" >> .env
+ENDSSH
+"""
+
             if (params.TAKE_BACKUP && params.DEPLOY_ENV == 'production') {
               echo "Taking backup of prod before deploying..."
               sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && ./backup.sh || echo \"Backup failed but proceeding...\"'"
@@ -93,13 +104,6 @@ pipeline {
             sh """
 ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << "ENDSSH"
 cd ${targetDir}
-
-# Add dynamic variables to the .env file
-echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
-echo "GITHUB_USER=${GITHUB_USER}" >> .env
-echo "APP_NAME=${appNameEnv}" >> .env
-echo "DOMAIN=${domain}" >> .env
-
 docker compose pull
 docker compose up -d --remove-orphans
 ENDSSH
