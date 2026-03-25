@@ -109,6 +109,12 @@ docker compose up -d --remove-orphans
 ENDSSH
 """
 
+            if (params.DEPLOY_ENV == 'staging') {
+              echo "Restoring latest prod backup into staging DB..."
+              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;\"'"
+              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && cat \$LATEST | docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB'"
+            }
+
           }
         }
       }
