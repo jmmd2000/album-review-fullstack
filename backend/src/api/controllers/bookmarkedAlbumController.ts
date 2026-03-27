@@ -4,10 +4,10 @@ import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
 
-export const bookmarkAlbum = async (req: Request, res: Response) => {
+export const bookmarkAlbum = asyncHandler(async (req: Request, res: Response) => {
   const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(req.body);
-  res.status(200).json(bookmarkedAlbum);
-};
+  res.status(201).json(bookmarkedAlbum);
+});
 
 export const removeBookmarkedAlbum = asyncHandler(async (req: Request, res: Response) => {
   await BookmarkedAlbumService.removeBookmarkedAlbum(req.params.albumID as string);

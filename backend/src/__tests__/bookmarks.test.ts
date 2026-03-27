@@ -39,7 +39,7 @@ afterAll(async () => {
 
 test("bookmark album and fetch", async () => {
   const add = await request(app).post("/api/bookmarks/1/add").set("Cookie", authCookie).send(mockAlbum);
-  expect(add.status).toBe(200);
+  expect(add.status).toBe(201);
 
   const fetched = await request(app).get("/api/bookmarks/1").set("Cookie", authCookie);
   expect(fetched.status).toBe(200);
