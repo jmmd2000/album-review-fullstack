@@ -4,8 +4,28 @@ import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
 
+const spotifyImageSchema = z.object({
+  url: z.string(),
+  height: z.number(),
+  width: z.number(),
+});
+
+const bookmarkAlbumSchema = z.object({
+  spotifyID: z.string().min(1),
+  name: z.string().min(1),
+  artistName: z.string().min(1),
+  artistSpotifyID: z.string().min(1),
+  releaseYear: z.number().int(),
+  imageURLs: z.array(spotifyImageSchema),
+  finalScore: z.number().nullable(),
+  affectsArtistScore: z.boolean(),
+});
+
 export const bookmarkAlbum = asyncHandler(async (req: Request, res: Response) => {
-  const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(req.body);
+  const parsed = bookmarkAlbumSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError(parsed.error.message, 400);
+
+  const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(parsed.data);
   res.status(201).json(bookmarkedAlbum);
 });
 

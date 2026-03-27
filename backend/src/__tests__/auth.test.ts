@@ -35,7 +35,7 @@ describe("Auth (JWT + bcrypt)", () => {
 
   test("POST /api/auth/login fails with empty password", async () => {
     const res = await request(app).post("/api/auth/login").send({ password: "" });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(400);
   });
 
   test("GET /api/auth/status returns isAdmin: true with valid token", async () => {

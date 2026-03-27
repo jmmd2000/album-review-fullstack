@@ -572,6 +572,7 @@ export const mockReviewData = {
   reviewContent: "Amazing album with deep emotions.",
   colors: [{ hex: "#f2e0d2" }, { hex: "#8c6d4f" }],
   genres: ["pop", "jazz", "hip-hop"],
+  affectsArtistScore: true,
 };
 
 export const mockUpdateData = {

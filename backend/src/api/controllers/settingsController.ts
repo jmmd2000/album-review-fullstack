@@ -23,18 +23,33 @@ export const getLastRun = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ lastRun });
 });
 
+const settingKeySchema = z.object({
+  key: z.string().min(1),
+});
+
+const setSettingSchema = z.object({
+  value: z.string(),
+});
+
 export const getSetting = asyncHandler(async (req: Request, res: Response) => {
-  const { key } = req.params as { key: string };
-  const value = await SettingsService.get(key);
-  res.status(200).json({ key, value });
+  const parsed = settingKeySchema.safeParse(req.params);
+  if (!parsed.success) throw new AppError("Setting key is required", 400);
+
+  const value = await SettingsService.get(parsed.data.key);
+  res.status(200).json({ key: parsed.data.key, value });
 });
 
 export const setSetting = asyncHandler(async (req: Request, res: Response) => {
-  const { key } = req.params as { key: string };
-  const { value } = req.body;
+  const keyParsed = settingKeySchema.safeParse(req.params);
+  if (!keyParsed.success) throw new AppError("Setting key is required", 400);
 
-  await SettingsService.set(key, value);
-  res.status(200).json({ key, value, message: "Setting updated successfully" });
+  const bodyParsed = setSettingSchema.safeParse(req.body);
+  if (!bodyParsed.success) throw new AppError("Setting value is required", 400);
+
+  await SettingsService.set(keyParsed.data.key, bodyParsed.data.value);
+  res
+    .status(200)
+    .json({ key: keyParsed.data.key, value: bodyParsed.data.value, message: "Setting updated successfully" });
 });
 
 export const recalculateArtistScores = asyncHandler(async (_req: Request, res: Response) => {

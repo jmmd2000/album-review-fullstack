@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 import { AuthService } from "@/api/services/authService";
 import { asyncHandler } from "../middleware/asyncHandler";
+import z from "zod";
+import { AppError } from "../middleware/errorHandler";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -9,8 +11,15 @@ const COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
+const loginSchema = z.object({
+  password: z.string().min(1),
+});
+
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const token = await AuthService.authenticate(req.body.password);
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError("Password is required", 400);
+
+  const token = await AuthService.authenticate(parsed.data.password);
   res.cookie("token", token, COOKIE_OPTIONS);
   res.status(204).end();
 });
