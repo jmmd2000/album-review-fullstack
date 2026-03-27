@@ -52,7 +52,7 @@ export const calculateArtistScore = (albums: ReviewedAlbum[]) => {
           reason: "Low quality album",
           value: -BAD_ALBUM_BONUS,
         });
-      } else if (album.finalScore > 45 && album.finalScore < 55) {
+      } else if (album.finalScore >= 45 && album.finalScore <= 55) {
         bonusReasons.push({
           album: minimalAlbum,
           reason: "Mid quality album",

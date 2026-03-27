@@ -36,7 +36,7 @@ export const calculatePeakScore = (albums: ReviewedAlbum[]): number => {
   }
 
   let totalScore = roundedAverage + bonusPoints;
-  if (totalScore > 100) totalScore = 100;
+  if (totalScore > MAX_SCORE) totalScore = MAX_SCORE;
 
   return totalScore;
 };
