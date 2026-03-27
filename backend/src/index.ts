@@ -16,6 +16,7 @@ import statsRoutes from "@/api/routes/statsRoutes";
 import settingsRoutes from "@/api/routes/settingsRoutes";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
+import testRoutes from "@/api/routes/testRoutes";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
@@ -54,6 +55,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/settings", settingsRoutes);
+
+// Dev/test only routes
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/test", testRoutes);
+}
 
 app.use(errorHandler);
 

@@ -9,6 +9,11 @@ describe("Create Album Review Flow", () => {
   const searchTerm = "clairo";
   const reviewText = "great album, I enjoyed it";
 
+  before(() => {
+    // Reset test data before running the test to ensure clean state
+    cy.request("DELETE", "http://localhost:4000/api/test/reset");
+  });
+
   it("complete album review creation flow", () => {
     // Step 1: Login as admin
     cy.visit("/");
