@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   DisplayArtist,
   GetPaginatedArtistsOptions,
@@ -359,17 +358,19 @@ export class ArtistService {
     const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(featuredAlbumIDs)).sort(sortByDateDesc);
 
     const albumIDs = [...new Set([...sortedAlbums, ...featuredAlbums].map(a => a.spotifyID))];
-    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
-    for (const album of sortedAlbums) {
-      (album as any).artistSpotifyIDs = artistMap.get(album.spotifyID) ?? [];
-    }
-    for (const album of featuredAlbums) {
-      (album as any).artistSpotifyIDs = artistMap.get(album.spotifyID) ?? [];
-    }
+    const artistIDMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
+    const albumsWithArtists = sortedAlbums.map(album => ({
+      ...album,
+      artistSpotifyIDs: artistIDMap.get(album.spotifyID) ?? [],
+    }));
+    const featuredWithArtists = featuredAlbums.map(album => ({
+      ...album,
+      artistSpotifyIDs: artistIDMap.get(album.spotifyID) ?? [],
+    }));
 
     const tracks = await TrackModel.getTracksByArtist(artistID);
     const albumImageMap = new Map(
-      [...sortedAlbums, ...featuredAlbums].map(album => [album.spotifyID, album.imageURLs])
+      [...albumsWithArtists, ...featuredWithArtists].map(album => [album.spotifyID, album.imageURLs])
     );
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
@@ -384,8 +385,8 @@ export class ArtistService {
     }));
     return {
       artist,
-      albums: sortedAlbums,
-      featuredAlbums,
+      albums: albumsWithArtists,
+      featuredAlbums: featuredWithArtists,
       tracks: displayTracks,
     };
   }
