@@ -1,4 +1,4 @@
-.PHONY:  dev dev-frontend dev-backend test lint clean help
+.PHONY: dev dev-frontend dev-backend test test-frontend test-backend lint format help
 
 dev:
 	@echo "Starting frontend + backend..."
@@ -24,11 +24,19 @@ test-frontend:
 test-backend:
 	cd backend && pnpm test
 
+lint:
+	pnpm lint
+
+format:
+	pnpm format
+
 help:
 	@echo "Available commands:"
-	@echo "  make dev        	- Start frontend + backend dev servers"
+	@echo "  make dev           - Start frontend + backend dev servers"
 	@echo "  make dev-frontend  - Start the frontend dev server"
 	@echo "  make dev-backend   - Start the backend dev server"
-	@echo "  make test       	- Run all tests"
-	@echo "  make test-web   	- Run frontend tests"
-	@echo "  make test-api   	- Run backend tests"
+	@echo "  make test          - Run all tests"
+	@echo "  make test-frontend - Run frontend tests"
+	@echo "  make test-backend  - Run backend tests"
+	@echo "  make lint          - Run ESLint on all packages"
+	@echo "  make format        - Fix ESLint issues"
