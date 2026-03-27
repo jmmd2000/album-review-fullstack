@@ -103,8 +103,7 @@ const CustomTooltip = ({ active, payload, label, resource }: CustomTooltipProps)
         </h3>
         <div className="space-y-1">
           <p className="text-neutral-100">
-            <span className="font-medium text-white">{resource.charAt(0).toUpperCase() + resource.slice(1)}:</span>{" "}
-            {data.count.toLocaleString()}
+            <span className="font-medium text-white">{resource.charAt(0).toUpperCase() + resource.slice(1)}:</span> {data.count.toLocaleString()}
           </p>
         </div>
       </div>
@@ -140,17 +139,7 @@ const CustomCursor = ({ x, y, width, height, payload }: CustomCursorProps) => {
       </defs>
 
       {/* Background rectangle */}
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={`url(#cursor-gradient-${rating})`}
-        stroke={tier.backgroundColorHex}
-        strokeWidth={2}
-        strokeOpacity={0.6}
-        rx={4}
-      />
+      <rect x={x} y={y} width={width} height={height} fill={`url(#cursor-gradient-${rating})`} stroke={tier.backgroundColorHex} strokeWidth={2} strokeOpacity={0.6} rx={4} />
 
       {/* Top border highlight */}
       <rect x={x} y={y} width={width} height={3} fill={tier.backgroundColorHex} opacity={0.8} rx={4} />

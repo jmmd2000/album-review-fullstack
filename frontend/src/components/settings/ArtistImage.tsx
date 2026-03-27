@@ -9,11 +9,7 @@ interface ArtistImageProps {
 
 const ArtistImage = ({ imageUrl, artistName, size = "w-6 h-6" }: ArtistImageProps) => {
   if (!imageUrl) {
-    return (
-      <div className={`${size} rounded-full bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}>
-        {artistName.charAt(0).toUpperCase()}
-      </div>
-    );
+    return <div className={`${size} rounded-full bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}>{artistName.charAt(0).toUpperCase()}</div>;
   }
 
   return (
@@ -29,11 +25,7 @@ const ArtistImage = ({ imageUrl, artistName, size = "w-6 h-6" }: ArtistImageProp
           if (fallback) fallback.style.display = "flex";
         }}
       />
-      <div
-        className={`${size} rounded-full bg-neutral-700 items-center justify-center text-xs text-neutral-400 absolute inset-0 hidden`}
-      >
-        {artistName.charAt(0).toUpperCase()}
-      </div>
+      <div className={`${size} rounded-full bg-neutral-700 items-center justify-center text-xs text-neutral-400 absolute inset-0 hidden`}>{artistName.charAt(0).toUpperCase()}</div>
     </div>
   );
 };

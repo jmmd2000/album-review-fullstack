@@ -18,17 +18,13 @@ const zeroBonuses: ReviewBonuses = {
 
 describe("ScoreBreakdown", () => {
   it("renders nothing when closed", async () => {
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={70} isOpen={false} onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={70} isOpen={false} onClose={() => {}} />);
 
     expect(screen.queryByText("Score Breakdown")).not.toBeInTheDocument();
   });
 
   it("shows base score and final score when open", async () => {
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={72} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={72} isOpen onClose={() => {}} />);
 
     expect(screen.getByText("Score Breakdown")).toBeInTheDocument();
     expect(screen.getByText("70")).toBeInTheDocument();
@@ -43,9 +39,7 @@ describe("ScoreBreakdown", () => {
       totalBonus: 2.5,
     };
 
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={73} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={73} isOpen onClose={() => {}} />);
 
     expect(screen.getByText("BONUSES")).toBeInTheDocument();
     expect(screen.getByText("Quality Tracks")).toBeInTheDocument();
@@ -62,9 +56,7 @@ describe("ScoreBreakdown", () => {
       totalBonus: -3.5,
     };
 
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={67} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={67} isOpen onClose={() => {}} />);
 
     expect(screen.getByText("PENALTIES")).toBeInTheDocument();
     expect(screen.getByText("Terrible Tracks")).toBeInTheDocument();
@@ -74,9 +66,7 @@ describe("ScoreBreakdown", () => {
   });
 
   it("hides bonus/penalty headings when all values are zero", async () => {
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={70} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={zeroBonuses} finalScore={70} isOpen onClose={() => {}} />);
 
     expect(screen.queryByText("BONUSES")).not.toBeInTheDocument();
     expect(screen.queryByText("PENALTIES")).not.toBeInTheDocument();
@@ -90,18 +80,14 @@ describe("ScoreBreakdown", () => {
       totalBonus: 1.0,
     };
 
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={71} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={bonuses} finalScore={71} isOpen onClose={() => {}} />);
 
     expect(screen.getByText("Total Adjustment:")).toBeInTheDocument();
     expect(screen.getByText("+1.0")).toBeInTheDocument();
   });
 
   it("handles null bonuses", async () => {
-    await renderWithProviders(
-      <ScoreBreakdown baseScore={70} bonuses={null} finalScore={70} isOpen onClose={() => {}} />
-    );
+    await renderWithProviders(<ScoreBreakdown baseScore={70} bonuses={null} finalScore={70} isOpen onClose={() => {}} />);
 
     expect(screen.getByText("Score Breakdown")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument(); // total adjustment shows "0"

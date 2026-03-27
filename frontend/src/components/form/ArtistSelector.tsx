@@ -37,9 +37,7 @@ const ArtistSelector = ({ albumArtists, watchedArtists, watchedScoreArtists, set
                   const current = watchedArtists ?? [];
                   const scoreCurrent = watchedScoreArtists ?? [];
                   if (isChecked && current.length <= 1) return;
-                  const updated = isChecked
-                    ? current.filter(id => id !== artist.spotifyID)
-                    : [...current, artist.spotifyID];
+                  const updated = isChecked ? current.filter(id => id !== artist.spotifyID) : [...current, artist.spotifyID];
                   setValue("selectedArtistIDs", updated, { shouldDirty: true });
                   if (isChecked) {
                     setValue(
@@ -48,11 +46,7 @@ const ArtistSelector = ({ albumArtists, watchedArtists, watchedScoreArtists, set
                       { shouldDirty: true }
                     );
                   } else {
-                    setValue(
-                      "scoreArtistIDs",
-                      scoreCurrent.includes(artist.spotifyID) ? scoreCurrent : [...scoreCurrent, artist.spotifyID],
-                      { shouldDirty: true }
-                    );
+                    setValue("scoreArtistIDs", scoreCurrent.includes(artist.spotifyID) ? scoreCurrent : [...scoreCurrent, artist.spotifyID], { shouldDirty: true });
                   }
                 }}
                 className="w-4 h-4 appearance-none bg-zinc-800 border-2 border-zinc-600 rounded cursor-pointer
@@ -62,9 +56,7 @@ const ArtistSelector = ({ albumArtists, watchedArtists, watchedScoreArtists, set
               {imageURL ? (
                 <img src={imageURL} alt={artist.name} className="h-12 w-12 rounded-lg object-cover" />
               ) : (
-                <div className="h-12 w-12 rounded-lg bg-neutral-700 flex items-center justify-center text-sm text-neutral-200">
-                  {artist.name.charAt(0).toUpperCase()}
-                </div>
+                <div className="h-12 w-12 rounded-lg bg-neutral-700 flex items-center justify-center text-sm text-neutral-200">{artist.name.charAt(0).toUpperCase()}</div>
               )}
               <div className="flex flex-col">
                 <span className="text-zinc-200 text-sm">{artist.name}</span>
@@ -76,9 +68,7 @@ const ArtistSelector = ({ albumArtists, watchedArtists, watchedScoreArtists, set
                       disabled={!isChecked}
                       onChange={() => {
                         const scoreCurrent = watchedScoreArtists ?? [];
-                        const updatedScore = affectsScore
-                          ? scoreCurrent.filter(id => id !== artist.spotifyID)
-                          : [...scoreCurrent, artist.spotifyID];
+                        const updatedScore = affectsScore ? scoreCurrent.filter(id => id !== artist.spotifyID) : [...scoreCurrent, artist.spotifyID];
                         setValue("scoreArtistIDs", updatedScore, { shouldDirty: true });
                       }}
                       className="w-3 h-3 appearance-none bg-zinc-800 border border-zinc-600 rounded cursor-pointer

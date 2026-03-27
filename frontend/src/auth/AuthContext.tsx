@@ -29,9 +29,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (password: string) => loginMutation.mutateAsync(password);
   const logout = () => logoutMutation.mutateAsync();
 
-  return (
-    <AuthContext.Provider value={{ isAdmin: data?.isAdmin ?? false, isPending, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ isAdmin: data?.isAdmin ?? false, isPending, login, logout }}>{children}</AuthContext.Provider>;
 }

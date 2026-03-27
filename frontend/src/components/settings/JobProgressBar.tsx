@@ -18,15 +18,7 @@ interface JobProgressBarProps {
   accentColour: string;
 }
 
-const JobProgressBar = ({
-  index,
-  total,
-  phase,
-  artistName,
-  artistImage,
-  isComplete,
-  accentColour,
-}: JobProgressBarProps) => {
+const JobProgressBar = ({ index, total, phase, artistName, artistImage, isComplete, accentColour }: JobProgressBarProps) => {
   const percentage = total > 0 ? (index / total) * 100 : 0;
   const phaseLabel = phase === "fetching" ? "Fetching" : "Processing";
 
@@ -53,13 +45,7 @@ const JobProgressBar = ({
 
       {/* Current artist */}
       {!isComplete && artistName && (
-        <motion.div
-          className="flex items-center gap-2 min-h-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          key={artistName}
-        >
+        <motion.div className="flex items-center gap-2 min-h-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} key={artistName}>
           <ArtistImage imageUrl={artistImage} artistName={artistName} size="w-5 h-5" />
           <span className="text-xs text-neutral-300 truncate flex-1">
             <span className="text-neutral-500">{phaseLabel}</span> <span className="font-medium">{artistName}</span>

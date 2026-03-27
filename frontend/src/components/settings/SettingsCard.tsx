@@ -73,41 +73,20 @@ const itemVariants = {
   },
 };
 
-const SettingsCard = ({
-  title,
-  description,
-  buttonText,
-  icon,
-  accentBar,
-  accentBgLight,
-  accentText,
-  accentFill,
-  lastRun,
-  job,
-  onTrigger,
-  onDismiss,
-  isPending,
-  children,
-}: SettingsCardProps) => {
+const SettingsCard = ({ title, description, buttonText, icon, accentBar, accentBgLight, accentText, accentFill, lastRun, job, onTrigger, onDismiss, isPending, children }: SettingsCardProps) => {
   const phase = job?.phase ?? "idle";
   const isRunning = phase === "running" || isPending;
   const isComplete = phase === "complete";
 
   return (
-    <motion.div
-      className="relative overflow-hidden rounded-xl border border-neutral-800 bg-linear-to-br from-neutral-900 to-neutral-800 flex flex-col"
-      variants={itemVariants}
-      whileHover="hover"
-    >
+    <motion.div className="relative overflow-hidden rounded-xl border border-neutral-800 bg-linear-to-br from-neutral-900 to-neutral-800 flex flex-col" variants={itemVariants} whileHover="hover">
       {/* Accent bar */}
       <div className={`h-1 w-full ${accentBar}`} />
 
       <div className="p-6 flex-1 flex flex-col">
         {/* Header row */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`flex items-center justify-center w-12 h-12 rounded-full ${accentBgLight} ${accentText}`}>
-            {icon}
-          </div>
+          <div className={`flex items-center justify-center w-12 h-12 rounded-full ${accentBgLight} ${accentText}`}>{icon}</div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-medium">{title}</h2>
           </div>
@@ -117,13 +96,7 @@ const SettingsCard = ({
         <div className="flex-1 flex flex-col gap-3">
           <AnimatePresence mode="wait">
             {isRunning && job ? (
-              <motion.div
-                key="running"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="running" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
                 <JobProgressBar
                   index={job.index}
                   total={job.total}
@@ -135,21 +108,9 @@ const SettingsCard = ({
                 />
               </motion.div>
             ) : isComplete && job && !job.dismissed ? (
-              <motion.div
-                key="complete"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="complete" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
                 {/* Filled green bar */}
-                <JobProgressBar
-                  index={job.total}
-                  total={job.total}
-                  phase="processing"
-                  isComplete={true}
-                  accentColour={accentFill}
-                />
+                <JobProgressBar index={job.total} total={job.total} phase="processing" isComplete={true} accentColour={accentFill} />
                 <div className="mt-2">
                   <JobSummary
                     changedEntries={job.results.changed}
@@ -162,13 +123,7 @@ const SettingsCard = ({
                 </div>
               </motion.div>
             ) : (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
                 <p className="text-sm text-neutral-400">{description}</p>
               </motion.div>
             )}
@@ -178,9 +133,7 @@ const SettingsCard = ({
           {children}
 
           {/* Last run timestamp */}
-          <span className="text-xs text-neutral-500 mt-auto">
-            Last updated: {isRunning ? "In progress" : isComplete && !job?.dismissed ? "Just now" : lastRun}
-          </span>
+          <span className="text-xs text-neutral-500 mt-auto">Last updated: {isRunning ? "In progress" : isComplete && !job?.dismissed ? "Just now" : lastRun}</span>
         </div>
 
         {/* Trigger button */}
@@ -196,29 +149,14 @@ const SettingsCard = ({
           >
             <AnimatePresence mode="wait">
               {isRunning ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1.5"
-                >
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                  >
+                <motion.div key="loading" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="flex items-center gap-1.5">
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}>
                     <Loader2 className="w-4 h-4" />
                   </motion.div>
                   Processing...
                 </motion.div>
               ) : (
-                <motion.div
-                  key="idle"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1"
-                >
+                <motion.div key="idle" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="flex items-center gap-1">
                   {buttonText}
                   <ChevronRight className="w-4 h-4" />
                 </motion.div>

@@ -56,13 +56,9 @@ describe("ColourPicker", () => {
   it("removes color when remove button clicked", async () => {
     const mockSetColors = vi.fn();
     const colors = [{ hex: "#ff0000" }, { hex: "#00ff00" }, { hex: "#0000ff" }];
-    const { container } = await renderWithProviders(
-      <ColourPicker selectedColors={colors} setSelectedColors={mockSetColors} />
-    );
+    const { container } = await renderWithProviders(<ColourPicker selectedColors={colors} setSelectedColors={mockSetColors} />);
     // Find all buttons containing ✕ character
-    const removeButtons = Array.from(container.querySelectorAll("button")).filter(button =>
-      button.textContent?.includes("✕")
-    );
+    const removeButtons = Array.from(container.querySelectorAll("button")).filter(button => button.textContent?.includes("✕"));
     if (removeButtons.length > 1) {
       fireEvent.click(removeButtons[1]);
       expect(mockSetColors).toHaveBeenCalledWith([{ hex: "#ff0000" }, { hex: "#0000ff" }]);

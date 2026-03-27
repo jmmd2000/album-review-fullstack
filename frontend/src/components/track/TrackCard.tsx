@@ -20,9 +20,7 @@ interface TrackCardProps {
  * This component is used to display track details for both rated tracks and tracks that are being rated inside `AlbumReviewForm`
  */
 const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
-  const { label, gradientStartOKLCH, textColor } = getRatingStyles(
-    track.rating !== undefined ? track.rating * 10 : undefined
-  );
+  const { label, gradientStartOKLCH, textColor } = getRatingStyles(track.rating !== undefined ? track.rating * 10 : undefined);
 
   const hasRating = track.rating !== undefined;
   const hasFeatures = track.features && track.features.length > 0;
@@ -48,12 +46,7 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
         <div className="px-4 text-center text-md text-zinc-400">{trackNumber}</div>
       ) : albumImage ? (
         <div className="px-4 shrink-0">
-          <img
-            src={albumImage.url}
-            alt={track.name}
-            className="w-10 h-10 rounded-lg"
-            style={{ viewTransitionName: `track-image-${track.spotifyID}` }}
-          />
+          <img src={albumImage.url} alt={track.name} className="w-10 h-10 rounded-lg" style={{ viewTransitionName: `track-image-${track.spotifyID}` }} />
         </div>
       ) : (
         <div className="px-4" />
@@ -62,12 +55,7 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
       {/* Only show album image here if we're also showing track number */}
       {trackNumber && albumImage && (
         <div className="ml-2 mr-3 shrink-0">
-          <img
-            src={albumImage.url}
-            alt={track.name}
-            className="w-10 h-10 rounded-lg"
-            style={{ viewTransitionName: `track-image-${track.spotifyID}` }}
-          />
+          <img src={albumImage.url} alt={track.name} className="w-10 h-10 rounded-lg" style={{ viewTransitionName: `track-image-${track.spotifyID}` }} />
         </div>
       )}
 
@@ -94,13 +82,7 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
 
       {/* Rating or form input */}
       <div className="shrink-0 w-32 -mr-3 sm:mr-2">
-        {hasRating && !children ? (
-          <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>
-            {label}
-          </p>
-        ) : children ? (
-          <div>{children}</div>
-        ) : null}
+        {hasRating && !children ? <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>{label}</p> : children ? <div>{children}</div> : null}
       </div>
     </motion.div>
   );

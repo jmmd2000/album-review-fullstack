@@ -1,14 +1,7 @@
 import "dotenv/config";
 import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
-import {
-  albumGenres,
-  albumArtists,
-  genres as genresTable,
-  reviewedAlbums,
-  reviewedTracks,
-  trackArtists,
-} from "@/db/schema";
+import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
 import { db } from "@/index";
 import { PAGE_SIZE } from "@/config/constants";
 
@@ -49,15 +42,7 @@ export class AlbumModel {
     return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, ids));
   }
 
-  static async getPaginatedAlbums({
-    page = 1,
-    orderBy = "createdAt",
-    order = "desc",
-    search = "",
-    genres,
-    secondaryOrderBy,
-    secondaryOrder,
-  }: GetPaginatedAlbumsOptions) {
+  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "", genres, secondaryOrderBy, secondaryOrder }: GetPaginatedAlbumsOptions) {
     const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
     const _sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
@@ -92,28 +77,17 @@ export class AlbumModel {
     if (orderBy === "releaseYear") {
       // When sorting by year, always use a secondary sort (default to finalScore if not provided)
       const validSecondaryOrderBy = ["finalScore", "name", "createdAt"] as const;
-      const secondaryField = validSecondaryOrderBy.includes(secondaryOrderBy || "finalScore")
-        ? secondaryOrderBy || "finalScore"
-        : "finalScore";
+      const secondaryField = validSecondaryOrderBy.includes(secondaryOrderBy || "finalScore") ? secondaryOrderBy || "finalScore" : "finalScore";
       const secondaryDirection = validOrder.includes(secondaryOrder || "desc") ? secondaryOrder || "desc" : "desc";
 
       if (order === "asc") {
-        baseOrder = [
-          asc(reviewedAlbums[orderBy]),
-          secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField]),
-        ];
+        baseOrder = [asc(reviewedAlbums[orderBy]), secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField])];
       } else {
-        baseOrder = [
-          desc(reviewedAlbums[orderBy]),
-          secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField]),
-        ];
+        baseOrder = [desc(reviewedAlbums[orderBy]), secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField])];
       }
     } else {
       // Default sorting behavior
-      baseOrder =
-        order === "asc"
-          ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)]
-          : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
+      baseOrder = order === "asc" ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
     }
 
     const albums: DisplayAlbum[] = await q
@@ -144,11 +118,7 @@ export class AlbumModel {
   }
 
   static async getAlbumsByArtist(spotifyID: string) {
-    const rows = await db
-      .select()
-      .from(reviewedAlbums)
-      .innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
-      .where(eq(albumArtists.artistSpotifyID, spotifyID));
+    const rows = await db.select().from(reviewedAlbums).innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID)).where(eq(albumArtists.artistSpotifyID, spotifyID));
     return rows.map(r => r.reviewed_albums);
   }
 
@@ -165,8 +135,7 @@ export class AlbumModel {
   }
 
   static async getAlbumsByArtistsWithAffects(artistSpotifyIDs: string[]) {
-    if (artistSpotifyIDs.length === 0)
-      return new Map<string, { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]>();
+    if (artistSpotifyIDs.length === 0) return new Map<string, { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]>();
 
     const rows = await db
       .select({
@@ -192,10 +161,7 @@ export class AlbumModel {
       .select({ albumSpotifyID: reviewedTracks.albumSpotifyID })
       .from(reviewedTracks)
       .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
-      .leftJoin(
-        albumArtists,
-        and(eq(albumArtists.albumSpotifyID, reviewedTracks.albumSpotifyID), eq(albumArtists.artistSpotifyID, artistID))
-      )
+      .leftJoin(albumArtists, and(eq(albumArtists.albumSpotifyID, reviewedTracks.albumSpotifyID), eq(albumArtists.artistSpotifyID, artistID)))
       .where(and(eq(trackArtists.artistSpotifyID, artistID), isNull(albumArtists.artistSpotifyID)))
       .groupBy(reviewedTracks.albumSpotifyID);
 
@@ -203,10 +169,7 @@ export class AlbumModel {
   }
 
   static async getAlbumArtistIDs(albumSpotifyID: string): Promise<string[]> {
-    const rows = await db
-      .select({ artistSpotifyID: albumArtists.artistSpotifyID })
-      .from(albumArtists)
-      .where(eq(albumArtists.albumSpotifyID, albumSpotifyID));
+    const rows = await db.select({ artistSpotifyID: albumArtists.artistSpotifyID }).from(albumArtists).where(eq(albumArtists.albumSpotifyID, albumSpotifyID));
     return rows.map(r => r.artistSpotifyID);
   }
 
@@ -239,10 +202,7 @@ export class AlbumModel {
     return map;
   }
 
-  static async upsertAlbumArtists(
-    albumSpotifyID: string,
-    entries: { artistSpotifyID: string; affectsScore: boolean }[]
-  ) {
+  static async upsertAlbumArtists(albumSpotifyID: string, entries: { artistSpotifyID: string; affectsScore: boolean }[]) {
     if (entries.length === 0) return;
     return db
       .insert(albumArtists)
@@ -261,9 +221,7 @@ export class AlbumModel {
 
   static async unlinkArtistsFromAlbum(albumSpotifyID: string, artistIDs: string[]) {
     if (artistIDs.length === 0) return;
-    return db
-      .delete(albumArtists)
-      .where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
+    return db.delete(albumArtists).where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
   }
 
   static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {

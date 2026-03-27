@@ -6,11 +6,7 @@ import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {
-    return db
-      .select()
-      .from(reviewedTracks)
-      .where(eq(reviewedTracks.albumSpotifyID, albumID))
-      .orderBy(asc(reviewedTracks.createdAt));
+    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.createdAt));
   }
 
   static async deleteTracksByAlbumID(albumID: string) {
@@ -26,17 +22,11 @@ export class TrackModel {
   }
 
   static async updateTrackRating(spotifyID: string, rating: number) {
-    return db
-      .update(reviewedTracks)
-      .set({ rating, updatedAt: new Date() })
-      .where(eq(reviewedTracks.spotifyID, spotifyID));
+    return db.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
   static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[]) {
-    return db
-      .update(reviewedTracks)
-      .set({ features, updatedAt: new Date() })
-      .where(eq(reviewedTracks.spotifyID, spotifyID));
+    return db.update(reviewedTracks).set({ features, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
   static async getTrackCount() {
@@ -47,11 +37,7 @@ export class TrackModel {
   }
 
   static async getTracksByArtist(artistID: string) {
-    const rows = await db
-      .select()
-      .from(reviewedTracks)
-      .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
-      .where(eq(trackArtists.artistSpotifyID, artistID));
+    const rows = await db.select().from(reviewedTracks).innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)).where(eq(trackArtists.artistSpotifyID, artistID));
     return rows.map(r => r.reviewed_tracks);
   }
 

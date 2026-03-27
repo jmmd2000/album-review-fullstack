@@ -51,10 +51,7 @@ const AlbumRow = ({ albums }: AlbumRowProps) => {
   return (
     <div className="relative mx-4 my-8">
       {canScrollLeft && (
-        <button
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10"
-          onClick={scrollLeft}
-        >
+        <button className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollLeft}>
           {"<"}
         </button>
       )}
@@ -67,10 +64,7 @@ const AlbumRow = ({ albums }: AlbumRowProps) => {
         ))}
       </div>
       {canScrollRight && (
-        <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10"
-          onClick={scrollRight}
-        >
+        <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollRight}>
           {">"}
         </button>
       )}

@@ -68,36 +68,16 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
   return (
     <div className="w-full my-6">
       <div className="flex gap-2 mb-2">
-        <button
-          type="button"
-          onClick={() => applyFormatting("bold")}
-          className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white"
-          title="Bold"
-        >
+        <button type="button" onClick={() => applyFormatting("bold")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Bold">
           <strong>B</strong>
         </button>
-        <button
-          type="button"
-          onClick={() => applyFormatting("italic")}
-          className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white"
-          title="Italic"
-        >
+        <button type="button" onClick={() => applyFormatting("italic")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Italic">
           <em>I</em>
         </button>
-        <button
-          type="button"
-          onClick={() => applyFormatting("underline")}
-          className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white"
-          title="Underline"
-        >
+        <button type="button" onClick={() => applyFormatting("underline")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Underline">
           <u>U</u>
         </button>
-        <button
-          type="button"
-          onClick={() => applyFormatting("color")}
-          className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white"
-          title="Red Text"
-        >
+        <button type="button" onClick={() => applyFormatting("color")} className="p-1 px-3 bg-neutral-700 hover:bg-neutral-600 rounded text-white" title="Red Text">
           <span className="text-[#fb2c36]">A</span>
         </button>
       </div>

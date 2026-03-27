@@ -1,12 +1,4 @@
-import type {
-  DisplayTrack,
-  ExtractedColor,
-  Genre,
-  ReviewBonuses,
-  ReviewedAlbum,
-  ReviewedTrack,
-  SpotifyAlbum,
-} from "@shared/types";
+import type { DisplayTrack, ExtractedColor, Genre, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import TrackList from "@components/track/TrackList";
@@ -192,8 +184,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isError,
     isSuccess,
   } = useMutation({
-    mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) =>
-      submitReview(formData, album),
+    mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) => submitReview(formData, album),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
   });
 
@@ -242,11 +233,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
         )}
       </div>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8"
-        data-testid="album-review-form"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8 items-center justify-evenly w-[90%] md:w-[80ch] mx-auto my-8" data-testid="album-review-form">
         {/* AAS toggle for solo albums */}
         {albumArtists.length <= 1 && (
           <div className="flex items-center gap-3">
@@ -265,44 +252,16 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
           </div>
         )}
 
-        <ArtistSelector
-          albumArtists={albumArtists}
-          watchedArtists={watchedArtists}
-          watchedScoreArtists={watchedScoreArtists}
-          setValue={setValue}
-        />
+        <ArtistSelector albumArtists={albumArtists} watchedArtists={watchedArtists} watchedScoreArtists={watchedScoreArtists} setValue={setValue} />
 
         <ColourPicker selectedColors={selectedColors} setSelectedColors={setSelectedColors} />
 
         {/* Genres Input Field */}
-        <GenreSelector
-          genreFields={genreFields}
-          register={register}
-          removeGenre={removeGenre}
-          addGenre={addGenre}
-          setValue={setValue}
-          genres={genres}
-        />
+        <GenreSelector genreFields={genreFields} register={register} removeGenre={removeGenre} addGenre={addGenre} setValue={setValue} genres={genres} />
 
         <BestWorstSong
-          bestInput={
-            <input
-              type="text"
-              {...register("bestSong")}
-              className="w-full p-2 rounded"
-              placeholder="Best song..."
-              autoComplete="off"
-            />
-          }
-          worstInput={
-            <input
-              type="text"
-              {...register("worstSong")}
-              className="w-full p-2 rounded"
-              placeholder="Worst song..."
-              autoComplete="off"
-            />
-          }
+          bestInput={<input type="text" {...register("bestSong")} className="w-full p-2 rounded" placeholder="Best song..." autoComplete="off" />}
+          worstInput={<input type="text" {...register("worstSong")} className="w-full p-2 rounded" placeholder="Worst song..." autoComplete="off" />}
         />
         <ReviewContentInput registration={register("reviewContent")} value={getValues("reviewContent")} />
 

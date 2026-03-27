@@ -138,8 +138,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
   });
 
   for (const reviewedAlbum of reviewedAlbums) {
-    if (logging)
-      console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
+    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
     try {
       const response = await fetch(`http://localhost:4000/api/albums/create`, {
         method: "POST",

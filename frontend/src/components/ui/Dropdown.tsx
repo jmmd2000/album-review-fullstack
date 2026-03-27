@@ -15,15 +15,7 @@ export interface DropdownProps {
   multiple?: boolean;
 }
 
-export const Dropdown = ({
-  items,
-  default: defaultItem,
-  isOpen,
-  setIsOpen,
-  onSelect,
-  dropdownRef,
-  multiple = false,
-}: DropdownProps) => {
+export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSelect, dropdownRef, multiple = false }: DropdownProps) => {
   // Initialize selectedItems with default if provided
   const [selectedItems, setSelectedItems] = useState<
     {

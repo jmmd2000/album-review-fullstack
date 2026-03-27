@@ -34,13 +34,7 @@ interface CardGridControlsProps {
 import { useRef, useState } from "react";
 import { Dropdown } from "./Dropdown";
 
-const CardGridControls = ({
-  pagination,
-  search,
-  sortSettings,
-  secondarySortSettings,
-  genreSettings,
-}: CardGridControlsProps) => {
+const CardGridControls = ({ pagination, search, sortSettings, secondarySortSettings, genreSettings }: CardGridControlsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLUListElement>(null);
@@ -83,39 +77,18 @@ const CardGridControls = ({
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
               {sortSettings && <SortDropdown {...sortSettings} />}
               {secondarySortSettings && <SortDropdown {...secondarySortSettings} />}
-              {genreSettings && (
-                <Dropdown
-                  items={genreSettings!.items}
-                  dropdownRef={dropdownRef}
-                  isOpen={dropdownOpen}
-                  setIsOpen={setDropdownOpen}
-                  onSelect={onSelect}
-                  multiple
-                />
-              )}
+              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} multiple />}
             </div>
           </div>
         )}
 
         {pagination && (
           <div className="flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
-            <Button
-              label={<ChevronLeft />}
-              onClick={pagination.prev.action}
-              disabled={pagination.prev.disabled}
-              size="icon"
-              data-testid="pagination-prev"
-            />
+            <Button label={<ChevronLeft />} onClick={pagination.prev.action} disabled={pagination.prev.disabled} size="icon" data-testid="pagination-prev" />
             <div className="border border-transparent bg-neutral-800 transition-colors text-neutral-200 text-sm font-medium py-2 px-4 rounded text-center h-11 flex items-center">
               {pagination.page.pageNumber} / {pagination.page.totalPages}
             </div>
-            <Button
-              label={<ChevronRight />}
-              onClick={pagination.next.action}
-              disabled={pagination.next.disabled}
-              size="icon"
-              data-testid="pagination-next"
-            />
+            <Button label={<ChevronRight />} onClick={pagination.next.action} disabled={pagination.next.disabled} size="icon" data-testid="pagination-next" />
           </div>
         )}
       </div>

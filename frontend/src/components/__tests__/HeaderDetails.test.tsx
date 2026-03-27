@@ -12,9 +12,7 @@ describe("HeaderDetails", () => {
   });
 
   it("renders the image when imageURL is provided", async () => {
-    await renderWithProviders(
-      <HeaderDetails name="Test" imageURL="https://i.scdn.co/image/ab676161000051744a21b4760d2ecb7b0dcdc8da" />
-    );
+    await renderWithProviders(<HeaderDetails name="Test" imageURL="https://i.scdn.co/image/ab676161000051744a21b4760d2ecb7b0dcdc8da" />);
 
     const img = screen.getByAltText("Test");
     expect(img).toBeInTheDocument();

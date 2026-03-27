@@ -15,22 +15,7 @@ interface HeaderDetailsProps {
 
 const HeaderDetails = ({ name, imageURL, largeImageURL, viewTransitionName, nameBackground }: HeaderDetailsProps) => {
   const containerStyles = cva(
-    [
-      "text-gray-100",
-      "max-w-[80%]",
-      "mx-auto",
-      "flex",
-      "flex-col",
-      "lg:flex-row",
-      "mt-24",
-      "md:mt-0",
-      "md:h-full",
-      "items-center",
-      "gap-8",
-      "3xl:gap-12",
-      "justify-center",
-      "3xl:pb-28",
-    ],
+    ["text-gray-100", "max-w-[80%]", "mx-auto", "flex", "flex-col", "lg:flex-row", "mt-24", "md:mt-0", "md:h-full", "items-center", "gap-8", "3xl:gap-12", "justify-center", "3xl:pb-28"],
     {
       variants: {
         nameBackground: {
@@ -41,16 +26,13 @@ const HeaderDetails = ({ name, imageURL, largeImageURL, viewTransitionName, name
     }
   );
 
-  const nameStyles = cva(
-    ["text-5xl", "lg:text-6xl", "3xl:text-7xl", "flex-col", "font-bold", "drop-shadow-lg", "text-center", "lg:w-max"],
-    {
-      variants: {
-        nameBackground: {
-          true: "bg-black/20 backdrop-blur-sm px-5 py-3 rounded-lg border-t-1 border-r-1 border-b-2 border-l-2 border-neutral-900/20",
-        },
+  const nameStyles = cva(["text-5xl", "lg:text-6xl", "3xl:text-7xl", "flex-col", "font-bold", "drop-shadow-lg", "text-center", "lg:w-max"], {
+    variants: {
+      nameBackground: {
+        true: "bg-black/20 backdrop-blur-sm px-5 py-3 rounded-lg border-t-1 border-r-1 border-b-2 border-l-2 border-neutral-900/20",
       },
-    }
-  );
+    },
+  });
 
   return (
     <div className={containerStyles({ nameBackground })}>

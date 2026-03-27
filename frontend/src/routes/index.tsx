@@ -64,13 +64,9 @@ function IntroductoryText() {
       </h1>
       <div className="w-20 h-1 bg-linear-to-r from-red-500 to-transparent mb-8"></div>
 
-      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        This is my album review blog, where I share my thoughts on a variety of albums and artists.
-      </p>
+      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">This is my album review blog, where I share my thoughts on a variety of albums and artists.</p>
 
-      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        Whether it's a classic I missed or something brand new, every album I listen to ends up here.
-      </p>
+      <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">Whether it's a classic I missed or something brand new, every album I listen to ends up here.</p>
 
       <p className="mb-8 text-base sm:text-lg md:text-xl font-light text-gray-100">Thanks for visiting!</p>
 
@@ -101,9 +97,7 @@ const HomeStats = ({ numArtists, numAlbums, numTracks }: HomeStatsProps) => {
             <StatBox
               label="Albums"
               value={animatedAlbums}
-              icon={
-                <Disc className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-blue-500 group-hover:rotate-180 transition-transform duration-700" />
-              }
+              icon={<Disc className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-blue-500 group-hover:rotate-180 transition-transform duration-700" />}
             />
           ) : (
             <NoDataFound message="Couldn't get data." />
@@ -117,9 +111,7 @@ const HomeStats = ({ numArtists, numAlbums, numTracks }: HomeStatsProps) => {
             <StatBox
               label="Artists"
               value={animatedArtists}
-              icon={
-                <Users className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-green-500 group-hover:scale-110 transition-transform duration-300" />
-              }
+              icon={<Users className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-green-500 group-hover:scale-110 transition-transform duration-300" />}
             />
           ) : (
             <NoDataFound message="Couldn't get data." />
@@ -130,13 +122,7 @@ const HomeStats = ({ numArtists, numAlbums, numTracks }: HomeStatsProps) => {
       <BentoCard className="group hover:scale-105 transition-transform duration-300 border border-white/10 bg-neutral-900/60 md:bg-white/5 backdrop-blur-md md:backdrop-blur-sm">
         <div className="px-3 py-4 sm:px-6 sm:py-6">
           {animatedTracks ? (
-            <StatBox
-              label="Tracks"
-              value={animatedTracks}
-              icon={
-                <Music className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-orange-500 group-hover:animate-pulse" />
-              }
-            />
+            <StatBox label="Tracks" value={animatedTracks} icon={<Music className="w-5 h-5 sm:w-7 sm:h-7 lg:w-8 lg:h-8 opacity-90 text-orange-500 group-hover:animate-pulse" />} />
           ) : (
             <NoDataFound message="Couldn't get data." />
           )}
@@ -154,14 +140,10 @@ const GradientOverlay = ({ children }: GradientOverlayProps) => {
   return (
     <>
       {/* Desktop gradient left to right */}
-      <div className="fixed inset-x-0 bottom-0 top-17.5 md:top-20 z-10 hidden md:block bg-linear-to-r from-neutral-950 via-neutral-950/90 to-transparent">
-        {children}
-      </div>
+      <div className="fixed inset-x-0 bottom-0 top-17.5 md:top-20 z-10 hidden md:block bg-linear-to-r from-neutral-950 via-neutral-950/90 to-transparent">{children}</div>
 
       {/* Mobile gradient top to bottom */}
-      <div className="fixed inset-x-0 bottom-0 top-17.5 z-10 md:hidden bg-linear-to-b from-neutral-950 via-neutral-950/70 to-neutral-950/30">
-        {children}
-      </div>
+      <div className="fixed inset-x-0 bottom-0 top-17.5 z-10 md:hidden bg-linear-to-b from-neutral-950 via-neutral-950/70 to-neutral-950/30">{children}</div>
     </>
   );
 };

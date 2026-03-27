@@ -23,16 +23,9 @@ export interface SortDropdownProps {
  * This component creates a dropdown for sorting options.
  * It allows the user to select a sorting option and toggle between ascending and descending order.
  */
-export default function SortDropdown({
-  options,
-  onSortChange,
-  defaultValue = "createdAt",
-  defaultDirection = "desc",
-}: SortDropdownProps) {
+export default function SortDropdown({ options, onSortChange, defaultValue = "createdAt", defaultDirection = "desc" }: SortDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<SortOption | null>(
-    defaultValue ? options.find(option => option.value === defaultValue) || null : null
-  );
+  const [selectedOption, setSelectedOption] = useState<SortOption | null>(defaultValue ? options.find(option => option.value === defaultValue) || null : null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultDirection);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -133,19 +126,12 @@ export default function SortDropdown({
                   exit={{ opacity: 0, y: sortDirection === "asc" ? -10 : 10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {sortDirection === "asc" ? (
-                    <ArrowUp className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <ArrowDown className="w-4 h-4 text-red-500" />
-                  )}
+                  {sortDirection === "asc" ? <ArrowUp className="w-4 h-4 text-red-500" /> : <ArrowDown className="w-4 h-4 text-red-500" />}
                 </motion.div>
               </AnimatePresence>
             </motion.button>
           )}
-          <motion.div
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
-          >
+          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3, type: "spring", stiffness: 200 }}>
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </motion.div>
         </div>
@@ -153,13 +139,7 @@ export default function SortDropdown({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            className="absolute z-10 w-full mt-1 bg-neutral-900 rounded-md shadow-lg overflow-hidden"
-            variants={dropdownVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
+          <motion.div className="absolute z-10 w-full mt-1 bg-neutral-900 rounded-md shadow-lg overflow-hidden" variants={dropdownVariants} initial="hidden" animate="visible" exit="exit">
             <ul className="border rounded-md border-neutral-800">
               {options.map((option, index) => (
                 <motion.li

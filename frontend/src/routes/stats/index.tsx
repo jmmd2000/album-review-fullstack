@@ -41,9 +41,7 @@ async function fetchGenreStats(slug: string): Promise<{
   return api.get(`/api/stats/genres?${queryParams.toString()}`);
 }
 
-async function fetchRatingDistribution(
-  resource: "albums" | "tracks" | "artists"
-): Promise<{ rating: string; count: number }[]> {
+async function fetchRatingDistribution(resource: "albums" | "tracks" | "artists"): Promise<{ rating: string; count: number }[]> {
   const queryParams = new URLSearchParams();
   if (resource) queryParams.set("resource", resource);
   return api.get(`/api/stats/distribution?${queryParams.toString()}`);
@@ -152,44 +150,28 @@ function RouteComponent() {
       {/* Row 1: Stat boxes across full width */}
       <BentoCard className="3xl:col-start-1 3xl:col-span-2 3xl:row-start-1">
         {counts?.albumCount ? (
-          <StatBox
-            label="Albums"
-            value={counts.albumCount}
-            icon={<Disc className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-blue-500" />}
-          />
+          <StatBox label="Albums" value={counts.albumCount} icon={<Disc className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-blue-500" />} />
         ) : (
           <NoDataFound message="Couldn't get data." />
         )}
       </BentoCard>
       <BentoCard className="3xl:col-start-3 3xl:col-span-2 3xl:row-start-1">
         {counts?.artistCount ? (
-          <StatBox
-            label="Artists"
-            value={counts.artistCount}
-            icon={<Users className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-green-500" />}
-          />
+          <StatBox label="Artists" value={counts.artistCount} icon={<Users className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-green-500" />} />
         ) : (
           <NoDataFound message="Couldn't get data." />
         )}
       </BentoCard>
       <BentoCard className="col-start-1 row-start-2 lg:col-start-3 lg:row-start-1 3xl:col-start-5 3xl:col-span-2 3xl:row-start-1">
         {counts?.trackCount ? (
-          <StatBox
-            label="Tracks"
-            value={counts.trackCount}
-            icon={<Music className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-orange-500" />}
-          />
+          <StatBox label="Tracks" value={counts.trackCount} icon={<Music className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-orange-500" />} />
         ) : (
           <NoDataFound message="Couldn't get data." />
         )}
       </BentoCard>
       <BentoCard className="col-start-2 row-start-2 lg:col-start-4 lg:row-start-1 3xl:col-start-7 3xl:col-span-2 3xl:row-start-1">
         {counts?.genreCount ? (
-          <StatBox
-            label="Genres"
-            value={counts.genreCount}
-            icon={<Headphones className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-purple-500" />}
-          />
+          <StatBox label="Genres" value={counts.genreCount} icon={<Headphones className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-purple-500" />} />
         ) : (
           <NoDataFound message="Couldn't get data." />
         )}
@@ -198,9 +180,7 @@ function RouteComponent() {
         <div className="flex justify-evenly items-center h-full">
           {favourites?.favouriteGenre ? (
             <div className="flex flex-col gap-2">
-              <p className="text-sm 3xl:text-base text-green-400 my-1 text-center bg-green-400/40 rounded-lg border-green-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">
-                Favourite Genre
-              </p>
+              <p className="text-sm 3xl:text-base text-green-400 my-1 text-center bg-green-400/40 rounded-lg border-green-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">Favourite Genre</p>
               <GenrePills genres={[favourites?.favouriteGenre]} />
             </div>
           ) : (
@@ -208,9 +188,7 @@ function RouteComponent() {
           )}
           {favourites?.leastFavouriteGenre ? (
             <div className="flex flex-col gap-2">
-              <p className="text-sm 3xl:text-base text-red-400 my-1 text-center bg-red-400/40 rounded-lg border-red-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">
-                Least Favourite Genre
-              </p>
+              <p className="text-sm 3xl:text-base text-red-400 my-1 text-center bg-red-400/40 rounded-lg border-red-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">Least Favourite Genre</p>
               <GenrePills genres={[favourites?.leastFavouriteGenre]} />
             </div>
           ) : (
@@ -256,11 +234,7 @@ function RouteComponent() {
         {distribution ? (
           <div>
             <div className="flex flex-row justify-start items-center px-4 3xl:px-6 gap-2 3xl:gap-3">
-              <select
-                className="bg-neutral-800 text-white font-semibold border border-gray-600 rounded 3xl:text-lg 3xl:px-2 3xl:py-1"
-                value={selectedResource}
-                onChange={onSelectResource}
-              >
+              <select className="bg-neutral-800 text-white font-semibold border border-gray-600 rounded 3xl:text-lg 3xl:px-2 3xl:py-1" value={selectedResource} onChange={onSelectResource}>
                 <option value="albums">Album</option>
                 <option value="tracks">Track</option>
                 <option value="artists">Artist</option>
@@ -303,9 +277,7 @@ function RouteComponent() {
                 </div>
 
                 <div>
-                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">
-                    {genre.averageScore?.toFixed(0)}
-                  </p>
+                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">{genre.averageScore?.toFixed(0)}</p>
                   <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">Average score</p>
                 </div>
               </div>

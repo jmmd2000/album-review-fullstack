@@ -18,10 +18,7 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   });
 
   // review‐score query
-  const { data: scoreArray = [], isLoading: isLoadingScores } = useQuery<
-    Array<{ spotifyID: string; reviewScore: number }>,
-    Error
-  >({
+  const { data: scoreArray = [], isLoading: isLoadingScores } = useQuery<Array<{ spotifyID: string; reviewScore: number }>, Error>({
     queryKey: ["albums", "status", ids],
     queryFn: async () => {
       return api.get<Array<{ spotifyID: string; reviewScore: number }>>(`/api/albums/status?${qs}`);

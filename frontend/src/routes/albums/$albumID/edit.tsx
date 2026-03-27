@@ -65,11 +65,7 @@ function RouteComponent() {
     <>
       <RequireAdmin>
         <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails
-            name={data.album.name}
-            imageURL={data.album.imageURLs[1].url}
-            largeImageURL={data.album.imageURLs[0]?.url}
-          />
+          <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} largeImageURL={data.album.imageURLs[0]?.url} />
           <AlbumDetails
             album={data.album}
             trackCount={data.tracks.length}
@@ -81,13 +77,7 @@ function RouteComponent() {
           />
         </BlurryHeader>
 
-        <AlbumReviewForm
-          album={data.album}
-          tracks={data.tracks}
-          setSelectedColors={setSelectedColors}
-          selectedColors={selectedColors}
-          genres={data.allGenres}
-        />
+        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.allGenres} />
       </RequireAdmin>
     </>
   );

@@ -2,10 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
 
-const SOCKET_URL =
-  import.meta.env.MODE === "development"
-    ? import.meta.env.VITE_API_URL!
-    : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+const SOCKET_URL = import.meta.env.MODE === "development" ? import.meta.env.VITE_API_URL! : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
 
 /**
  * Returns a Socket.IO instance that connects once and disconnects on unmount

@@ -1,11 +1,4 @@
-import type {
-  DisplayArtist,
-  GetPaginatedArtistsOptions,
-  DisplayTrack,
-  SpotifyImage,
-  ReviewedAlbum,
-  ReviewedArtist,
-} from "@shared/types";
+import type { DisplayArtist, GetPaginatedArtistsOptions, DisplayTrack, SpotifyImage, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -104,8 +97,7 @@ export class ArtistService {
         continue;
       }
 
-      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } =
-        calculateArtistScore(contributing);
+      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
 
       const updates = {
         averageScore: newAverageScore,
@@ -369,9 +361,7 @@ export class ArtistService {
     }));
 
     const tracks = await TrackModel.getTracksByArtist(artistID);
-    const albumImageMap = new Map(
-      [...albumsWithArtists, ...featuredWithArtists].map(album => [album.spotifyID, album.imageURLs])
-    );
+    const albumImageMap = new Map([...albumsWithArtists, ...featuredWithArtists].map(album => [album.spotifyID, album.imageURLs]));
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
       spotifyID: track.spotifyID,
@@ -411,11 +401,7 @@ export class ArtistService {
     const BATCH_SIZE = 6; // Process this many at a time
     const io = getSocket();
 
-    const dbArtists = all
-      ? await ArtistModel.getAllArtists()
-      : spotifyID
-        ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
-        : [];
+    const dbArtists = all ? await ArtistModel.getAllArtists() : spotifyID ? [await ArtistModel.getArtistBySpotifyID(spotifyID)] : [];
 
     if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
 
@@ -543,11 +529,7 @@ export class ArtistService {
   static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
     const io = getSocket();
     // Fetch the artist list
-    const dbArtists = all
-      ? await ArtistModel.getAllArtists()
-      : spotifyID
-        ? [await ArtistModel.getArtistBySpotifyID(spotifyID)]
-        : [];
+    const dbArtists = all ? await ArtistModel.getAllArtists() : spotifyID ? [await ArtistModel.getArtistBySpotifyID(spotifyID)] : [];
     if (!all && !spotifyID) {
       throw new Error("Must specify either all=true or a spotifyID");
     }
@@ -578,8 +560,7 @@ export class ArtistService {
       const artistData = await fetchArtistFromSpotify(id, `https://api.spotify.com/v1/artists/${id}`);
       if (!artistData) continue;
 
-      const newArtistImage =
-        artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;
+      const newArtistImage = artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;
 
       // Get only the URL strings, sorted
       const currentUrls = (imageURLs || []).map(img => img.url).sort();

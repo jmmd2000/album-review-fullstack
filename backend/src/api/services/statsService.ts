@@ -39,9 +39,7 @@ export class StatsService {
       spotifyID: artist.spotifyID,
       imageURLs: artist.imageURLs,
     }));
-    const filteredSortedArtists = displayArtists
-      .filter(a => (a.totalScore ?? 0) !== 0)
-      .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0));
+    const filteredSortedArtists = displayArtists.filter(a => (a.totalScore ?? 0) !== 0).sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0));
     const favouriteArtist = filteredSortedArtists[0] ?? null;
     const leastFavouriteArtist = filteredSortedArtists[filteredSortedArtists.length - 1] ?? null;
 
@@ -88,10 +86,7 @@ export class StatsService {
     const relatedGenres = await GenreService.getRelatedGenres([slug]);
     const albumsWithGenre = await GenreService.getAlbumsByGenre(slug);
     const reviewedAlbumCount = albumsWithGenre.length;
-    let averageScore =
-      reviewedAlbumCount > 0
-        ? albumsWithGenre.reduce((sum, album) => sum + (album.finalScore ?? 0), 0) / reviewedAlbumCount
-        : 0;
+    let averageScore = reviewedAlbumCount > 0 ? albumsWithGenre.reduce((sum, album) => sum + (album.finalScore ?? 0), 0) / reviewedAlbumCount : 0;
     // Round to 2 decimal places
     averageScore = Math.round(averageScore * 100) / 100;
 
@@ -114,9 +109,7 @@ export class StatsService {
     };
   }
 
-  static async getRatingDistribution(
-    resource: "albums" | "tracks" | "artists"
-  ): Promise<{ rating: string; count: number }[]> {
+  static async getRatingDistribution(resource: "albums" | "tracks" | "artists"): Promise<{ rating: string; count: number }[]> {
     const albums = await AlbumModel.getAllAlbums();
     const distribution: { [key: string]: number } = {};
 
@@ -180,12 +173,7 @@ export class StatsService {
     genreCount: number;
     trackCount: number;
   }> {
-    const [albumCount, artistCount, genreCount, trackCount] = await Promise.all([
-      AlbumModel.getAlbumCount(),
-      ArtistModel.getArtistCount(),
-      GenreModel.getGenreCount(),
-      TrackModel.getTrackCount(),
-    ]);
+    const [albumCount, artistCount, genreCount, trackCount] = await Promise.all([AlbumModel.getAlbumCount(), ArtistModel.getArtistCount(), GenreModel.getGenreCount(), TrackModel.getTrackCount()]);
 
     return {
       albumCount,

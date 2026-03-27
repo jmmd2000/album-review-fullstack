@@ -47,9 +47,7 @@ export const setSetting = asyncHandler(async (req: Request, res: Response) => {
   if (!bodyParsed.success) throw new AppError("Setting value is required", 400);
 
   await SettingsService.set(keyParsed.data.key, bodyParsed.data.value);
-  res
-    .status(200)
-    .json({ key: keyParsed.data.key, value: bodyParsed.data.value, message: "Setting updated successfully" });
+  res.status(200).json({ key: keyParsed.data.key, value: bodyParsed.data.value, message: "Setting updated successfully" });
 });
 
 export const recalculateArtistScores = asyncHandler(async (_req: Request, res: Response) => {

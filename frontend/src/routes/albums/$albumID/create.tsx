@@ -119,17 +119,10 @@ function RouteComponent() {
       <RequireAdmin>
         <BlurryHeader _colors={selectedColors}>
           <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
-          {data.artists && data.artists.length > 0 && (
-            <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artists={data.artists} />
-          )}
+          {data.artists && data.artists.length > 0 && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artists={data.artists} />}
         </BlurryHeader>
 
-        <AlbumReviewForm
-          album={data.album}
-          setSelectedColors={setSelectedColors}
-          selectedColors={selectedColors}
-          genres={data.genres}
-        />
+        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
       </RequireAdmin>
     </>
   );

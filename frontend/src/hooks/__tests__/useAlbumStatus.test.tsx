@@ -50,9 +50,7 @@ describe("useAlbumStatus", () => {
     vi.clearAllMocks();
   });
 
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
   it("merges bookmark and score data into albums", async () => {
     vi.mocked(api.get)

@@ -234,18 +234,9 @@ const AdminDropdown = () => {
             ) : (
               <>
                 {links.map(link => (
-                  <AdminLinkItem
-                    key={link.label}
-                    icon={link.icon}
-                    label={link.label}
-                    to={link.to}
-                    onClick={link.onClick}
-                  />
+                  <AdminLinkItem key={link.label} icon={link.icon} label={link.label} to={link.to} onClick={link.onClick} />
                 ))}
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
-                >
+                <button onClick={handleLogout} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
                   <LogOut className="w-4 h-4" />
                   Logout
                 </button>
@@ -282,9 +273,7 @@ const AdminDropdown = () => {
             />
             <p className="text-xs text-neutral-400 mt-1">Leave empty to remove the header image</p>
             <p className="text-xs text-neutral-500 mt-2 font-mono bg-neutral-900/50 p-2 rounded border border-neutral-800">
-              <span className="select-all">
-                document.querySelector('div[data-testid="background-image"]').style.backgroundImage.slice(5, -2)
-              </span>
+              <span className="select-all">document.querySelector('div[data-testid="background-image"]').style.backgroundImage.slice(5, -2)</span>
             </p>
           </div>
           <div className="flex gap-2 justify-end">
@@ -311,10 +300,7 @@ const AdminDropdown = () => {
       <Dialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Album">
         <p className="text-neutral-300 mb-4">Are you sure you want to delete this album? This cannot be undone.</p>
         <div className="flex gap-2 justify-end">
-          <button
-            onClick={() => setShowDeleteConfirm(false)}
-            className="rounded bg-neutral-700 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-600 transition-colors cursor-pointer"
-          >
+          <button onClick={() => setShowDeleteConfirm(false)} className="rounded bg-neutral-700 px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-600 transition-colors cursor-pointer">
             Cancel
           </button>
           <button
@@ -339,18 +325,12 @@ export default AdminDropdown;
  */
 const AdminLinkItem = ({ icon, label, to, onClick }: LinkItem) =>
   onClick ? (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
-    >
+    <button onClick={onClick} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
       {icon}
       {label}
     </button>
   ) : (
-    <Link
-      to={to}
-      className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition"
-    >
+    <Link to={to} className="flex w-full items-center gap-2 px-4 py-3 text-sm text-neutral-200 hover:bg-neutral-800 hover:text-red-500 hover:font-semibold transition">
       {icon}
       {label}
     </Link>

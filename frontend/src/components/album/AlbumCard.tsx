@@ -34,14 +34,7 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
   const largeImageURL = album.imageURLs[0]?.url;
 
   return (
-    <Link
-      params={{ albumID: album.spotifyID }}
-      to={toURL}
-      resetScroll
-      viewTransition
-      className="block"
-      data-testid="album-card"
-    >
+    <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll viewTransition className="block" data-testid="album-card">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

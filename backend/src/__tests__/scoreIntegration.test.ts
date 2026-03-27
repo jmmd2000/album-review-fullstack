@@ -205,9 +205,7 @@ describe("Score Integration Tests", () => {
     await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album4Data);
 
     // Check that scores are different
-    const result = await query("SELECT * FROM reviewed_artists WHERE spotify_id = $1", [
-      album1Data.album.artists[0].id,
-    ]);
+    const result = await query("SELECT * FROM reviewed_artists WHERE spotify_id = $1", [album1Data.album.artists[0].id]);
     const artist = result.rows[0];
 
     expect(artist.total_score).toBeGreaterThan(0);

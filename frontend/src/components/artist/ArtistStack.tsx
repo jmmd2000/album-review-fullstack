@@ -24,26 +24,11 @@ const ArtistStack = ({ artists, linkable = false, size = 48, maxVisible = 4 }: A
           const imageURL = artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
           const wrapperClass = `rounded-lg border border-neutral-800/15 bg-neutral-800/70 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-md ${index === 0 ? "" : "-ml-2"}`;
           return linkable ? (
-            <Link
-              key={artist.spotifyID}
-              params={{ artistID: artist.spotifyID }}
-              to="/artists/$artistID"
-              viewTransition
-              className={wrapperClass}
-              style={{ width: size, height: size }}
-            >
+            <Link key={artist.spotifyID} params={{ artistID: artist.spotifyID }} to="/artists/$artistID" viewTransition className={wrapperClass} style={{ width: size, height: size }}>
               {imageURL ? (
-                <img
-                  src={imageURL}
-                  alt={artist.name}
-                  className="h-full w-full rounded-lg object-cover"
-                  style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-                />
+                <img src={imageURL} alt={artist.name} className="h-full w-full rounded-lg object-cover" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }} />
               ) : (
-                <div
-                  className="h-full w-full rounded-lg flex items-center justify-center text-xs text-neutral-200"
-                  style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-                >
+                <div className="h-full w-full rounded-lg flex items-center justify-center text-xs text-neutral-200" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}>
                   {artist.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -51,17 +36,9 @@ const ArtistStack = ({ artists, linkable = false, size = 48, maxVisible = 4 }: A
           ) : (
             <div key={artist.spotifyID} className={wrapperClass} style={{ width: size, height: size }}>
               {imageURL ? (
-                <img
-                  src={imageURL}
-                  alt={artist.name}
-                  className="h-full w-full rounded-lg object-cover"
-                  style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-                />
+                <img src={imageURL} alt={artist.name} className="h-full w-full rounded-lg object-cover" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }} />
               ) : (
-                <div
-                  className="h-full w-full rounded-lg flex items-center justify-center text-xs text-neutral-200"
-                  style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-                >
+                <div className="h-full w-full rounded-lg flex items-center justify-center text-xs text-neutral-200" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}>
                   {artist.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -69,10 +46,7 @@ const ArtistStack = ({ artists, linkable = false, size = 48, maxVisible = 4 }: A
           );
         })}
         {overflow > 0 && (
-          <div
-            className="-ml-2 rounded-lg border border-neutral-700/15 bg-neutral-800 text-xs text-neutral-200 flex items-center justify-center"
-            style={{ width: size, height: size }}
-          >
+          <div className="-ml-2 rounded-lg border border-neutral-700/15 bg-neutral-800 text-xs text-neutral-200 flex items-center justify-center" style={{ width: size, height: size }}>
             +{overflow}
           </div>
         )}
@@ -82,12 +56,7 @@ const ArtistStack = ({ artists, linkable = false, size = 48, maxVisible = 4 }: A
           const suffix = index < artists.length - 1 ? ", " : "";
           return linkable ? (
             <span key={artist.spotifyID}>
-              <Link
-                params={{ artistID: artist.spotifyID }}
-                to="/artists/$artistID"
-                className="hover:underline"
-                viewTransition
-              >
+              <Link params={{ artistID: artist.spotifyID }} to="/artists/$artistID" className="hover:underline" viewTransition>
                 {artist.name}
               </Link>
               {suffix}

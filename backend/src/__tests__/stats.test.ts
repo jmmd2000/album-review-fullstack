@@ -23,14 +23,7 @@ async function createArtist(id: string, name: string, score: number) {
   });
 }
 
-async function createAlbum(
-  id: string,
-  name: string,
-  score: number,
-  artistId: string,
-  artistName: string,
-  genreNames: string[]
-) {
+async function createAlbum(id: string, name: string, score: number, artistId: string, artistName: string, genreNames: string[]) {
   return AlbumModel.createAlbum({
     spotifyID: id,
     name,

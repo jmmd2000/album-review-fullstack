@@ -33,12 +33,7 @@ export const ColourPicker = ({ selectedColors, setSelectedColors }: ColourPicker
       <div className="flex flex-wrap items-center justify-center gap-3">
         {selectedColors.map((color, index) => (
           <div className="relative group z-10" key={index}>
-            <div
-              className={
-                "w-12 h-12 rounded-full border-2 border-neutral-700 overflow-hidden shadow-lg transition-transform hover:scale-105"
-              }
-              style={{ backgroundColor: color.hex }}
-            >
+            <div className={"w-12 h-12 rounded-full border-2 border-neutral-700 overflow-hidden shadow-lg transition-transform hover:scale-105"} style={{ backgroundColor: color.hex }}>
               <input
                 type="color"
                 value={color.hex}

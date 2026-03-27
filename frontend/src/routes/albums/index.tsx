@@ -43,11 +43,7 @@ export const Route = createFileRoute("/albums/")({
     secondaryOrderBy: search.secondaryOrderBy,
     secondaryOrder: search.secondaryOrder,
   }),
-  loader: async ({
-    deps: { page, search, orderBy, order, secondaryOrderBy, secondaryOrder },
-  }: {
-    deps: GetPaginatedAlbumsOptions;
-  }) => {
+  loader: async ({ deps: { page, search, orderBy, order, secondaryOrderBy, secondaryOrder } }: { deps: GetPaginatedAlbumsOptions }) => {
     return queryClient.ensureQueryData(
       albumQueryOptions({
         page,
@@ -156,13 +152,7 @@ function RouteComponent() {
   const genres = data?.relatedGenres && data.relatedGenres.length > 0 ? data.relatedGenres : data?.genres || [];
 
   // Get genre slugs from URL (as string or array)
-  const genreSlugs = options.genres
-    ? Array.isArray(options.genres)
-      ? options.genres
-      : typeof options.genres === "string"
-        ? (options.genres as string).split(",")
-        : []
-    : [];
+  const genreSlugs = options.genres ? (Array.isArray(options.genres) ? options.genres : typeof options.genres === "string" ? (options.genres as string).split(",") : []) : [];
 
   // Find corresponding genres in data.genres
   const selectedGenres = data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
@@ -199,12 +189,7 @@ function RouteComponent() {
 
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
-    <motion.div
-      key={options.page}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <CardGrid
         cards={data.albums.map(album => (
           <AlbumCard key={album.spotifyID} album={album} />

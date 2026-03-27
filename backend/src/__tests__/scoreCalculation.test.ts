@@ -92,11 +92,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should cap score at 100", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(95, 2020, true),
-        createMockAlbum(95, 2021, true),
-        createMockAlbum(95, 2022, true),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(95, 2020, true), createMockAlbum(95, 2021, true), createMockAlbum(95, 2022, true)];
 
       const peakScore = calculatePeakScore(albums);
 
@@ -212,11 +208,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should handle identical scores for artist with exactly 3 albums", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(82, 2020, true),
-        createMockAlbum(78, 2021, true),
-        createMockAlbum(76, 2022, true),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(82, 2020, true), createMockAlbum(78, 2021, true), createMockAlbum(76, 2022, true)];
 
       const result = calculateArtistScore(albums);
 

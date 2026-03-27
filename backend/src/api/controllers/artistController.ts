@@ -11,9 +11,7 @@ export const getAllArtists = asyncHandler(async (_req: Request, res: Response) =
 
 const getPaginatedArtistsSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
-  orderBy: z
-    .enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"])
-    .optional(),
+  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
   search: z.string().optional(),
   scoreType: z.enum(["overall", "peak", "latest"]).optional(),

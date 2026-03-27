@@ -62,8 +62,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
     },
   });
 
-  const showInfoButton =
-    options?.textBelow && (scoreBreakdown || tooltipContent) && !isUnrated && !options?.hideUnratedDialog;
+  const showInfoButton = options?.textBelow && (scoreBreakdown || tooltipContent) && !isUnrated && !options?.hideUnratedDialog;
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
@@ -93,14 +92,10 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
               <p className="text-zinc-200 mb-2">This artist is unrated. None of their reviews provide them a score.</p>
               <p className="text-zinc-200">There are two potential reasons for this:</p>
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
-                <li className="text-zinc-400">
-                  I don't plan to review their entire discography, and I feel like basing their score on a fraction of
-                  their work isn't accurate.
-                </li>
+                <li className="text-zinc-400">I don't plan to review their entire discography, and I feel like basing their score on a fraction of their work isn't accurate.</li>
                 <li className="text-zinc-400 mt-1">
-                  I <em>do</em> plan to review their entire discography, but I either haven't gotten around to it yet,
-                  they only have one album, or their other releases are non-albums (mixtapes, EPs etc.) which I don't
-                  count towards their score.
+                  I <em>do</em> plan to review their entire discography, but I either haven't gotten around to it yet, they only have one album, or their other releases are non-albums (mixtapes, EPs
+                  etc.) which I don't count towards their score.
                 </li>
               </ol>
             </Dialog>
@@ -109,12 +104,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
       </div>
 
       {options?.textBelow && (
-        <motion.div
-          className="flex items-center gap-1"
-          initial={{ y: -5, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div className="flex items-center gap-1" initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
           {rating > 0 && <p className="uppercase text-center font-medium text-xl">{label}</p>}
 
           {showInfoButton && (
@@ -134,11 +124,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
 
       {scoreBreakdown && !scoreBreakdown.affectsArtistScore && (
         <div className="group absolute top-1 -right-5">
-          <motion.div
-            className="ml-1 text-gray-600 hover:text-gray-700 transition-colors"
-            whileHover={{ scale: 1.2, rotate: 10 }}
-            whileTap={{ scale: 0.9 }}
-          >
+          <motion.div className="ml-1 text-gray-600 hover:text-gray-700 transition-colors" whileHover={{ scale: 1.2, rotate: 10 }} whileTap={{ scale: 0.9 }}>
             <StarOff className="w-4 h-4 text-yellow-900" aria-label="Does not affect artist score" />
           </motion.div>
           <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-linear-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
@@ -147,15 +133,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
         </div>
       )}
 
-      {scoreBreakdown && (
-        <ScoreBreakdown
-          baseScore={scoreBreakdown.baseScore}
-          bonuses={scoreBreakdown.bonuses}
-          finalScore={rating}
-          isOpen={showBreakdown}
-          onClose={() => setShowBreakdown(false)}
-        />
-      )}
+      {scoreBreakdown && <ScoreBreakdown baseScore={scoreBreakdown.baseScore} bonuses={scoreBreakdown.bonuses} finalScore={rating} isOpen={showBreakdown} onClose={() => setShowBreakdown(false)} />}
 
       {tooltipContent && !isUnrated && (
         <Dialog isOpen={isDialogOpen} onClose={() => setDialogOpen(false)} title={tooltipContent.title}>

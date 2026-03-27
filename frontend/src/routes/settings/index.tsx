@@ -38,17 +38,7 @@ type RecalcResult = {
     spotifyID: string;
     name: string;
     changes: {
-      field:
-        | "totalScore"
-        | "peakScore"
-        | "latestScore"
-        | "averageScore"
-        | "bonusPoints"
-        | "reviewCount"
-        | "unrated"
-        | "leaderboardPosition"
-        | "peakLeaderboardPosition"
-        | "latestLeaderboardPosition";
+      field: "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition";
       before: number | null;
       after: number | null;
     }[];
@@ -96,12 +86,7 @@ function RouteComponent() {
   const formatVal = (val: number | null, field: RecalcResult["changedArtists"][number]["changes"][number]["field"]) => {
     if (val === null || val === undefined) return "\u2014";
     if (field === "unrated") return val ? "Yes" : "No";
-    if (
-      field === "leaderboardPosition" ||
-      field === "peakLeaderboardPosition" ||
-      field === "latestLeaderboardPosition" ||
-      field === "reviewCount"
-    ) {
+    if (field === "leaderboardPosition" || field === "peakLeaderboardPosition" || field === "latestLeaderboardPosition" || field === "reviewCount") {
       return val;
     }
     return Number(val).toFixed(2);
@@ -110,16 +95,9 @@ function RouteComponent() {
   return (
     <RequireAdmin>
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent mb-6">
-          Settings
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent mb-6">Settings</h1>
 
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" variants={containerVariants} initial="hidden" animate="visible">
           {/* Update Artist Images */}
           <SettingsCard
             title="Update Artist Images"
@@ -185,24 +163,17 @@ function RouteComponent() {
                       <div className="grid grid-cols-2 gap-2">
                         {artist.changes.map(change => (
                           <div key={change.field}>
-                            <span className="text-neutral-500">{labelMap[change.field]}:</span>{" "}
-                            {formatVal(change.before, change.field)} → {formatVal(change.after, change.field)}
+                            <span className="text-neutral-500">{labelMap[change.field]}:</span> {formatVal(change.before, change.field)} → {formatVal(change.after, change.field)}
                           </div>
                         ))}
                       </div>
                     </div>
                   ))}
-                  {recalcScoresMut.data.changedArtists.length > 8 && (
-                    <div className="text-neutral-500">+ {recalcScoresMut.data.changedArtists.length - 8} more...</div>
-                  )}
+                  {recalcScoresMut.data.changedArtists.length > 8 && <div className="text-neutral-500">+ {recalcScoresMut.data.changedArtists.length - 8} more...</div>}
                 </div>
               </div>
             )}
-            {recalcScoresMut.isError && (
-              <div className="text-xs text-red-400">
-                {recalcScoresMut.error?.message ?? "Failed to recalculate scores."}
-              </div>
-            )}
+            {recalcScoresMut.isError && <div className="text-xs text-red-400">{recalcScoresMut.error?.message ?? "Failed to recalculate scores."}</div>}
           </SettingsCard>
         </motion.div>
       </div>

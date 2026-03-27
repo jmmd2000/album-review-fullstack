@@ -15,10 +15,7 @@ export class BookmarkedAlbumModel {
   }
 
   static async getBookmarkedByIds(ids: string[]): Promise<string[]> {
-    const rows = await db
-      .select({ spotifyID: bookmarkedAlbums.spotifyID })
-      .from(bookmarkedAlbums)
-      .where(inArray(bookmarkedAlbums.spotifyID, ids));
+    const rows = await db.select({ spotifyID: bookmarkedAlbums.spotifyID }).from(bookmarkedAlbums).where(inArray(bookmarkedAlbums.spotifyID, ids));
     return rows.map(r => r.spotifyID);
   }
 
@@ -38,12 +35,7 @@ export class BookmarkedAlbumModel {
     return db.select().from(bookmarkedAlbums);
   }
 
-  static async getPaginatedAlbums({
-    page = 1,
-    orderBy = "createdAt",
-    order = "desc",
-    search = "",
-  }: GetPaginatedBookmarkedAlbumsOptions) {
+  static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "" }: GetPaginatedBookmarkedAlbumsOptions) {
     const validOrderBy = ["artistName", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "createdAt";
@@ -57,11 +49,7 @@ export class BookmarkedAlbumModel {
       .offset(OFFSET)
       .orderBy(sortDirection === "asc" ? asc(bookmarkedAlbums[sortField]) : desc(bookmarkedAlbums[sortField]));
 
-    return search.trim()
-      ? await baseQuery.where(
-          or(ilike(bookmarkedAlbums.name, `%${search}%`), ilike(bookmarkedAlbums.artistName, `%${search}%`))
-        )
-      : await baseQuery;
+    return search.trim() ? await baseQuery.where(or(ilike(bookmarkedAlbums.name, `%${search}%`), ilike(bookmarkedAlbums.artistName, `%${search}%`))) : await baseQuery;
   }
 
   static async getBookmarkedAlbumCount() {

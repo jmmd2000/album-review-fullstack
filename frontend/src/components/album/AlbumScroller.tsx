@@ -36,13 +36,7 @@ const AlbumScroller = ({ albums }: AlbumScrollerProps) => {
           }}
         >
           {randomizedAlbums.map((album, i) => (
-            <img
-              key={`${album.spotifyID}-${i}`}
-              src={album.imageURLs[0]?.url}
-              alt={album.name}
-              className="w-full h-auto aspect-square object-cover rounded shadow-lg"
-              loading="lazy"
-            />
+            <img key={`${album.spotifyID}-${i}`} src={album.imageURLs[0]?.url} alt={album.name} className="w-full h-auto aspect-square object-cover rounded shadow-lg" loading="lazy" />
           ))}
         </div>
       </div>

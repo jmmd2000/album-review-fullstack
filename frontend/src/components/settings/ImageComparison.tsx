@@ -11,13 +11,7 @@ interface ImageComparisonProps {
   type?: "profile" | "header";
 }
 
-const ImageComparison = ({
-  beforeImage,
-  afterImage,
-  artistName,
-  size = "w-8 h-8",
-  type = "profile",
-}: ImageComparisonProps) => {
+const ImageComparison = ({ beforeImage, afterImage, artistName, size = "w-8 h-8", type = "profile" }: ImageComparisonProps) => {
   const isHeader = type === "header";
 
   return (
@@ -46,13 +40,7 @@ interface ImageComponentProps {
 
 const ImageComponent = ({ url, isHeader, artistName, size = "w-8 h-8" }: ImageComponentProps) => {
   if (!url) {
-    return (
-      <div
-        className={`${size} ${isHeader ? "rounded" : "rounded-full"} bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}
-      >
-        {artistName.charAt(0).toUpperCase()}
-      </div>
-    );
+    return <div className={`${size} ${isHeader ? "rounded" : "rounded-full"} bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}>{artistName.charAt(0).toUpperCase()}</div>;
   }
 
   return (
@@ -68,9 +56,7 @@ const ImageComponent = ({ url, isHeader, artistName, size = "w-8 h-8" }: ImageCo
           if (fallback) fallback.style.display = "flex";
         }}
       />
-      <div
-        className={`${size} ${isHeader ? "rounded" : "rounded-full"} bg-neutral-700 items-center justify-center text-xs text-neutral-400 absolute inset-0 hidden`}
-      >
+      <div className={`${size} ${isHeader ? "rounded" : "rounded-full"} bg-neutral-700 items-center justify-center text-xs text-neutral-400 absolute inset-0 hidden`}>
         {artistName.charAt(0).toUpperCase()}
       </div>
     </div>

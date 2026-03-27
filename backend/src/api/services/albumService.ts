@@ -1,16 +1,5 @@
 import "dotenv/config";
-import type {
-  DisplayAlbum,
-  ExtractedColor,
-  DisplayTrack,
-  GetPaginatedAlbumsOptions,
-  ReviewedAlbum,
-  ReviewedArtist,
-  SpotifyAlbum,
-  PaginatedAlbumsResult,
-  Genre,
-  AlbumArtist,
-} from "@shared/types";
+import type { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, SpotifyAlbum, PaginatedAlbumsResult, Genre, AlbumArtist } from "@shared/types";
 import type { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -34,8 +23,7 @@ function isSpotifyAlbum(a: any): a is SpotifyAlbum {
 
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {
-    if (!isSpotifyAlbum(data.album))
-      throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
+    if (!isSpotifyAlbum(data.album)) throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
 
     const spotifyAlbum = data.album;
     if (await AlbumModel.findBySpotifyID(spotifyAlbum.id)) {
@@ -51,11 +39,7 @@ export class AlbumService {
     }
     const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(data.selectedArtistIDs, albumArtists);
     // Allow per-artist scoring for collabs, but keep the solo toggle behavior
-    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
-      data.scoreArtistIDs,
-      selectedArtistIDs,
-      albumArtists.length === 1 ? data.affectsArtistScore : undefined
-    );
+    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(data.scoreArtistIDs, selectedArtistIDs, albumArtists.length === 1 ? data.affectsArtistScore : undefined);
     const primaryArtist = albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ?? albumArtists[0];
 
     // Ensure all selected artists exist before linking tracks/albums
@@ -112,9 +96,7 @@ export class AlbumService {
     );
 
     // create track entries
-    const trackArtistIDs = Array.from(
-      new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id)))
-    );
+    const trackArtistIDs = Array.from(new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id))));
     const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
     const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
     selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
@@ -216,9 +198,7 @@ export class AlbumService {
 
     // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
 
-    const relevantGenres = opts.genres?.length
-      ? await GenreService.getGenresForAlbums(albums.map(a => a.spotifyID))
-      : [];
+    const relevantGenres = opts.genres?.length ? await GenreService.getGenresForAlbums(albums.map(a => a.spotifyID)) : [];
 
     const genres: Genre[] = await GenreModel.getAllGenres();
     genres.sort((a, b) => a.name.localeCompare(b.name));
@@ -282,11 +262,7 @@ export class AlbumService {
     }
     const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(data.selectedArtistIDs, albumArtists);
     // Preserve "no score" state if all score toggles are off
-    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
-      data.scoreArtistIDs,
-      selectedArtistIDs,
-      albumArtists.length === 1 ? data.affectsArtistScore : undefined
-    );
+    const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(data.scoreArtistIDs, selectedArtistIDs, albumArtists.length === 1 ? data.affectsArtistScore : undefined);
     const primaryArtist = albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ??
       albumArtists[0] ?? {
         spotifyID: existingAlbum.artistSpotifyID,
@@ -326,9 +302,7 @@ export class AlbumService {
     );
     await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs);
 
-    const trackArtistIDs = Array.from(
-      new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)]))
-    );
+    const trackArtistIDs = Array.from(new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)])));
     const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
     const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
     selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
@@ -358,9 +332,7 @@ export class AlbumService {
       if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
         await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features);
       }
-      const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id =>
-        existingArtistIDs.has(id)
-      );
+      const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id => existingArtistIDs.has(id));
       await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID);
       await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs);
     }
@@ -393,18 +365,13 @@ export class AlbumService {
     if (albumArtists.length === 0) {
       return selectedArtistIDs ?? [];
     }
-    const candidateIDs =
-      selectedArtistIDs && selectedArtistIDs.length > 0 ? selectedArtistIDs : albumArtists.map(a => a.spotifyID);
+    const candidateIDs = selectedArtistIDs && selectedArtistIDs.length > 0 ? selectedArtistIDs : albumArtists.map(a => a.spotifyID);
     const allowed = new Set(albumArtists.map(a => a.spotifyID));
     const filtered = candidateIDs.filter(id => allowed.has(id));
     return filtered.length > 0 ? filtered : [albumArtists[0].spotifyID];
   }
 
-  private static resolveScoreArtistIDs(
-    scoreArtistIDs: string[] | undefined,
-    selectedArtistIDs: string[],
-    soloAffectsScore: boolean | undefined
-  ) {
+  private static resolveScoreArtistIDs(scoreArtistIDs: string[] | undefined, selectedArtistIDs: string[], soloAffectsScore: boolean | undefined) {
     // Solo albums keep the global toggle behavior
     if (soloAffectsScore !== undefined) {
       return soloAffectsScore ? selectedArtistIDs : [];
@@ -430,12 +397,7 @@ export class AlbumService {
     return [];
   }
 
-  private static async ensureArtists(
-    artistIDs: string[],
-    albumArtists: AlbumArtist[],
-    scoreArtistIDs: string[],
-    finalScore: number
-  ) {
+  private static async ensureArtists(artistIDs: string[], albumArtists: AlbumArtist[], scoreArtistIDs: string[], finalScore: number) {
     const infoMap = new Map(albumArtists.map(a => [a.spotifyID, a]));
     const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(artistIDs);
     const existingIDs = new Set(existingArtists.map(a => a.spotifyID));
@@ -519,8 +481,7 @@ export class AlbumService {
         continue;
       }
 
-      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } =
-        calculateArtistScore(contributing);
+      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
 
       await ArtistModel.updateArtist(artistID, {
         averageScore: newAverageScore,

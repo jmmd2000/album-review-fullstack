@@ -75,12 +75,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
           left: Math.max(0, Math.min(100, baseLeft + randomOffsetX)),
           top: Math.max(0, Math.min(100, baseTop + randomOffsetY)),
           color: colors[i].hex,
-          blur:
-            tier === "mobile"
-              ? Math.floor(Math.random() * 40) + 30
-              : tier === "ultrawide"
-                ? Math.floor(Math.random() * 80) + 50
-                : Math.floor(Math.random() * 60) + 40,
+          blur: tier === "mobile" ? Math.floor(Math.random() * 40) + 30 : tier === "ultrawide" ? Math.floor(Math.random() * 80) + 50 : Math.floor(Math.random() * 60) + 40,
           opacity: Math.random() * 0.5 + 0.5,
           animationClass: `animate-lava${j % 3}`,
         });

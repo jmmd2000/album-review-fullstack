@@ -33,20 +33,12 @@ export const getImageColors = async (imageUrl: string): Promise<ExtractedColor[]
       if (alpha <= COLOR_EXTRACTION.alphaThreshold) return false;
 
       // Remove near-black colors
-      if (
-        red < COLOR_EXTRACTION.nearBlackThreshold &&
-        green < COLOR_EXTRACTION.nearBlackThreshold &&
-        blue < COLOR_EXTRACTION.nearBlackThreshold
-      ) {
+      if (red < COLOR_EXTRACTION.nearBlackThreshold && green < COLOR_EXTRACTION.nearBlackThreshold && blue < COLOR_EXTRACTION.nearBlackThreshold) {
         return false;
       }
 
       // Remove near-white colors
-      if (
-        red > COLOR_EXTRACTION.nearWhiteThreshold &&
-        green > COLOR_EXTRACTION.nearWhiteThreshold &&
-        blue > COLOR_EXTRACTION.nearWhiteThreshold
-      ) {
+      if (red > COLOR_EXTRACTION.nearWhiteThreshold && green > COLOR_EXTRACTION.nearWhiteThreshold && blue > COLOR_EXTRACTION.nearWhiteThreshold) {
         return false;
       }
 

@@ -88,10 +88,7 @@ test("PUT /api/albums/:albumID/edit - should update album review", async () => {
   const created = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
   mockUpdateData.album = created.body.album;
 
-  const updateRes = await request(app)
-    .put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit")
-    .set("Cookie", authCookie)
-    .send(mockUpdateData);
+  const updateRes = await request(app).put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").set("Cookie", authCookie).send(mockUpdateData);
 
   expect(updateRes.status).toBe(200);
 
@@ -126,10 +123,7 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
 
   expect(response.status).toBe(201);
 
-  const links = await query(
-    "SELECT artist_spotify_id, affects_score FROM album_artists WHERE album_spotify_id = $1 ORDER BY artist_spotify_id",
-    ["collab_album_1"]
-  );
+  const links = await query("SELECT artist_spotify_id, affects_score FROM album_artists WHERE album_spotify_id = $1 ORDER BY artist_spotify_id", ["collab_album_1"]);
 
   expect(links.rowCount).toBe(2);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -10,22 +10,8 @@ export class ArtistModel {
     return db.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
   }
 
-  static async getPaginatedArtists({
-    page = 1,
-    orderBy = "totalScore",
-    order = "desc",
-    search = "",
-    scoreType = "overall",
-  }: GetPaginatedArtistsOptions) {
-    const validOrderBy = [
-      "totalScore",
-      "peakScore",
-      "latestScore",
-      "reviewCount",
-      "name",
-      "createdAt",
-      "leaderboardPosition",
-    ] as const;
+  static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "", scoreType = "overall" }: GetPaginatedArtistsOptions) {
+    const validOrderBy = ["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
@@ -47,9 +33,7 @@ export class ArtistModel {
       .from(reviewedArtists)
       .limit(PAGE_SIZE + 1)
       .offset(OFFSET)
-      .orderBy(
-        sortDirection === "asc" ? asc(reviewedArtists[actualSortField]) : desc(reviewedArtists[actualSortField])
-      );
+      .orderBy(sortDirection === "asc" ? asc(reviewedArtists[actualSortField]) : desc(reviewedArtists[actualSortField]));
 
     return search.trim() ? await baseQuery.where(ilike(reviewedArtists.name, `%${search}%`)) : await baseQuery;
   }

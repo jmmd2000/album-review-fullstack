@@ -9,9 +9,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
-async function fetchPaginatedBookmarkedAlbums(
-  options: GetPaginatedBookmarkedAlbumsOptions
-): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
+async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
@@ -111,12 +109,7 @@ function RouteComponent() {
   if (!data || !data.albums) return <div>Loading...</div>;
   return (
     <RequireAdmin>
-      <motion.div
-        key={options.page}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+      <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <CardGrid
           cards={data.albums.map(album => (
             <AlbumCard key={album.spotifyID} album={album} bookmarked />

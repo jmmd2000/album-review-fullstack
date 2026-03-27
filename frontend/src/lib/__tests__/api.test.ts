@@ -18,10 +18,7 @@ describe("api.get", () => {
 
     await api.get("/api/albums");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/albums"),
-      expect.objectContaining({ credentials: "include" })
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/api/albums"), expect.objectContaining({ credentials: "include" }));
   });
 
   it("returns parsed JSON on success", async () => {
@@ -78,10 +75,7 @@ describe("api.post", () => {
 
     await api.post("/api/logout");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/logout"),
-      expect.objectContaining({ body: undefined })
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/api/logout"), expect.objectContaining({ body: undefined }));
   });
 });
 

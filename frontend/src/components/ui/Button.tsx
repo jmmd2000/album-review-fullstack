@@ -153,14 +153,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
     switch (displayState) {
       case "loading":
         return (
-          <motion.div
-            key="loader"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="flex items-center justify-center"
-          >
+          <motion.div key="loader" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{
@@ -175,14 +168,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
         );
       case "success":
         return (
-          <motion.div
-            key="success"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="flex items-center justify-center"
-          >
+          <motion.div key="success" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
             <CheckCircle className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
           </motion.div>
         );
@@ -209,14 +195,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
         );
       case "idle":
         return (
-          <motion.div
-            key="label"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="flex items-center justify-center"
-          >
+          <motion.div key="label" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
             {typeof label === "string" ? <span>{label}</span> : label}
           </motion.div>
         );
@@ -235,13 +214,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
       type={type}
     >
       {/* Animated background */}
-      <motion.div
-        className="absolute inset-0 rounded"
-        initial="idle"
-        animate={displayState}
-        variants={backgroundVariants}
-        transition={{ duration: 0.3 }}
-      />
+      <motion.div className="absolute inset-0 rounded" initial="idle" animate={displayState} variants={backgroundVariants} transition={{ duration: 0.3 }} />
 
       {/* Content container with size-appropriate dimensions */}
       <div className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}>

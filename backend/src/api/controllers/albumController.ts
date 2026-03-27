@@ -40,10 +40,7 @@ export const createAlbumReview = asyncHandler(async (req: Request, res: Response
 });
 
 export const getAlbumByID = asyncHandler(async (req: Request, res: Response) => {
-  const reviewedAlbumData = await AlbumService.getAlbumByID(
-    req.params.albumID as string,
-    req.query.includeGenres !== "false"
-  );
+  const reviewedAlbumData = await AlbumService.getAlbumByID(req.params.albumID as string, req.query.includeGenres !== "false");
   res.status(200).json(reviewedAlbumData);
 });
 
@@ -105,10 +102,7 @@ export const updateAlbumReview = asyncHandler(async (req: Request, res: Response
   const parsed = reviewDataSchema.safeParse(req.body);
   if (!parsed.success) throw new AppError(parsed.error.message, 400);
 
-  const updatedAlbum = await AlbumService.updateAlbumReview(
-    req.body as ReceivedReviewData,
-    req.params.albumID as string
-  );
+  const updatedAlbum = await AlbumService.updateAlbumReview(req.body as ReceivedReviewData, req.params.albumID as string);
   res.status(200).json(updatedAlbum);
 });
 

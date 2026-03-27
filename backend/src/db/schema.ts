@@ -1,18 +1,6 @@
 import type { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
-import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  real,
-  serial,
-  text,
-  timestamp,
-  uniqueIndex,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -53,10 +41,7 @@ export const reviewedAlbums = pgTable(
     affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),
-    albumArtists: jsonb("album_artists")
-      .$type<{ spotifyID: string; name: string; imageURLs: { url: string; height: number; width: number }[] }[]>()
-      .notNull()
-      .default([]),
+    albumArtists: jsonb("album_artists").$type<{ spotifyID: string; name: string; imageURLs: { url: string; height: number; width: number }[] }[]>().notNull().default([]),
   },
   table => [index("artist_spotify_id_album_idx").on(table.artistSpotifyID)]
 );

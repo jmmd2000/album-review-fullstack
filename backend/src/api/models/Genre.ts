@@ -37,20 +37,13 @@ export class GenreModel {
   }
 
   static async getGenreIDsForAlbum(albumSpotifyID: string): Promise<number[]> {
-    const rows = await db
-      .select({ genreID: albumGenres.genreID })
-      .from(albumGenres)
-      .where(eq(albumGenres.albumSpotifyID, albumSpotifyID));
+    const rows = await db.select({ genreID: albumGenres.genreID }).from(albumGenres).where(eq(albumGenres.albumSpotifyID, albumSpotifyID));
     return rows.map(r => r.genreID);
   }
 
   static async getGenresForAlbumsRaw(albumSpotifyIDs: string[]) {
     if (albumSpotifyIDs.length === 0) return [];
-    return db
-      .select()
-      .from(albumGenres)
-      .innerJoin(genres, eq(genres.id, albumGenres.genreID))
-      .where(inArray(albumGenres.albumSpotifyID, albumSpotifyIDs));
+    return db.select().from(albumGenres).innerJoin(genres, eq(genres.id, albumGenres.genreID)).where(inArray(albumGenres.albumSpotifyID, albumSpotifyIDs));
   }
 
   static async linkGenresToAlbum(albumSpotifyID: string, genreIDs: number[]) {
@@ -63,22 +56,12 @@ export class GenreModel {
 
   static async unlinkGenresFromAlbum(albumSpotifyID: string, genreIDs: number[]) {
     if (genreIDs.length === 0) return;
-    await db
-      .delete(albumGenres)
-      .where(and(eq(albumGenres.albumSpotifyID, albumSpotifyID), inArray(albumGenres.genreID, genreIDs)));
+    await db.delete(albumGenres).where(and(eq(albumGenres.albumSpotifyID, albumSpotifyID), inArray(albumGenres.genreID, genreIDs)));
   }
 
   static async getRelatedGenresRaw(genreID: number) {
-    const forward = await db
-      .select()
-      .from(relatedGenres)
-      .innerJoin(genres, eq(genres.id, relatedGenres.relatedGenreID))
-      .where(eq(relatedGenres.genreID, genreID));
-    const reverse = await db
-      .select()
-      .from(relatedGenres)
-      .innerJoin(genres, eq(genres.id, relatedGenres.genreID))
-      .where(eq(relatedGenres.relatedGenreID, genreID));
+    const forward = await db.select().from(relatedGenres).innerJoin(genres, eq(genres.id, relatedGenres.relatedGenreID)).where(eq(relatedGenres.genreID, genreID));
+    const reverse = await db.select().from(relatedGenres).innerJoin(genres, eq(genres.id, relatedGenres.genreID)).where(eq(relatedGenres.relatedGenreID, genreID));
     return [...forward, ...reverse];
   }
 
@@ -132,11 +115,7 @@ export class GenreModel {
 
   static async getAlbumCountsByGenreIDs(genreIDs: number[]) {
     if (genreIDs.length === 0) return new Map<number, number>();
-    const rows = await db
-      .select({ genreID: albumGenres.genreID, count: count() })
-      .from(albumGenres)
-      .where(inArray(albumGenres.genreID, genreIDs))
-      .groupBy(albumGenres.genreID);
+    const rows = await db.select({ genreID: albumGenres.genreID, count: count() }).from(albumGenres).where(inArray(albumGenres.genreID, genreIDs)).groupBy(albumGenres.genreID);
     const map = new Map<number, number>();
     for (const row of rows) {
       map.set(row.genreID, row.count);
@@ -145,9 +124,7 @@ export class GenreModel {
   }
 
   static async deleteRelatedGenresByID(genreID: number) {
-    await db
-      .delete(relatedGenres)
-      .where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
+    await db.delete(relatedGenres).where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
   }
 
   static async deleteGenreByID(genreID: number) {
@@ -160,8 +137,6 @@ export class GenreModel {
 
   static async getAlbumsBySpotifyIDs(spotifyIDs: string[]): Promise<ReviewedAlbum[]> {
     if (spotifyIDs.length === 0) return [];
-    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<
-      ReviewedAlbum[]
-    >;
+    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<ReviewedAlbum[]>;
   }
 }

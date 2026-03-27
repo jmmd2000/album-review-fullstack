@@ -50,11 +50,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
         {genreFields.map((field, idx) => {
           const isLast = idx === genreFields.length - 1;
           return (
-            <div
-              key={field.id}
-              className="relative group bg-neutral-700/50 rounded-full pl-3 pr-8 py-1.5 text-sm"
-              ref={isLast ? dropdownRef : undefined}
-            >
+            <div key={field.id} className="relative group bg-neutral-700/50 rounded-full pl-3 pr-8 py-1.5 text-sm" ref={isLast ? dropdownRef : undefined}>
               <input
                 {...register(`genres.${idx}.name`)}
                 defaultValue={field.name}
@@ -72,11 +68,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                   if (isLast) setIsDropdownOpen(true);
                 }}
               />
-              <button
-                type="button"
-                onClick={() => removeGenre(idx)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-red-400"
-              >
+              <button type="button" onClick={() => removeGenre(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-red-400">
                 <X className="w-4 h-4" />
               </button>
               {isLast && (
@@ -92,11 +84,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
                       <div className="max-h-48 overflow-y-auto">
                         {filtered.length > 0 ? (
                           filtered.map(g => (
-                            <div
-                              key={g.slug}
-                              className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm"
-                              onClick={() => handleSelect(g.name)}
-                            >
+                            <div key={g.slug} className="px-3 py-2 hover:bg-neutral-700 cursor-pointer text-zinc-200 text-sm" onClick={() => handleSelect(g.name)}>
                               {g.name}
                             </div>
                           ))
@@ -111,11 +99,7 @@ const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue,
             </div>
           );
         })}
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="bg-neutral-700/30 hover:bg-neutral-700/50 text-neutral-400 hover:text-neutral-200 rounded-full px-3 py-1.5 text-sm flex items-center"
-        >
+        <button type="button" onClick={handleAdd} className="bg-neutral-700/30 hover:bg-neutral-700/50 text-neutral-400 hover:text-neutral-200 rounded-full px-3 py-1.5 text-sm flex items-center">
           <span className="mr-1">+</span> Add Genre
         </button>
       </div>

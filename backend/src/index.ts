@@ -23,14 +23,7 @@ export const db = drizzle(process.env.DATABASE_URL!);
 export const app = express();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:8080",
-    "https://jamesreviewsmusic.com",
-    "http://jamesreviewsmusic.com",
-    "https://www.jamesreviewsmusic.com",
-    "http://www.jamesreviewsmusic.com",
-  ],
+  origin: ["http://localhost:5173", "http://localhost:8080", "https://jamesreviewsmusic.com", "http://jamesreviewsmusic.com", "https://www.jamesreviewsmusic.com", "http://www.jamesreviewsmusic.com"],
   credentials: true,
 };
 

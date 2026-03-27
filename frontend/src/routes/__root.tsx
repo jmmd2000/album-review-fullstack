@@ -47,11 +47,7 @@ const Navbar = () => {
       {/* Mobile Header */}
       <header className="flex sm:hidden items-center justify-between bg-neutral-900 text-white px-5 py-5 z-9999 relative">
         <img src="/favicon.ico" alt="logo" className="h-10" />
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-md focus:outline-none"
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-        >
+        <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-md focus:outline-none" aria-label={isOpen ? "Close menu" : "Open menu"}>
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
@@ -100,11 +96,7 @@ interface NavLinkProps {
   onClick?: () => void;
 }
 const NavLink = ({ to, name, onClick }: NavLinkProps) => (
-  <Link
-    to={to}
-    onClick={onClick}
-    className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2 text-lg md:text-2xl 3xl:text-3xl"
-  >
+  <Link to={to} onClick={onClick} className="[&.active]:text-red-500 font-bold uppercase tracking-wider m-2 text-lg md:text-2xl 3xl:text-3xl">
     {name}
   </Link>
 );

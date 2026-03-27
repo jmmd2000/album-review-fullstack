@@ -73,12 +73,7 @@ function RouteComponent() {
   return (
     <>
       <BlurryHeader _colors={album.colors}>
-        <HeaderDetails
-          name={album.name}
-          imageURL={album.imageURLs[1].url}
-          largeImageURL={album.imageURLs[0]?.url}
-          viewTransitionName={`album-image-${album.spotifyID}`}
-        />
+        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} largeImageURL={album.imageURLs[0]?.url} viewTransitionName={`album-image-${album.spotifyID}`} />
         <AlbumDetails
           album={album}
           trackCount={tracks.length}

@@ -87,13 +87,7 @@ function RouteComponent() {
     `,
         }}
       >
-        <HeaderDetails
-          name={artist.name}
-          imageURL={artistImageURL}
-          largeImageURL={artistLargeImageURL}
-          viewTransitionName={`artist-image-${artist.spotifyID}`}
-          nameBackground
-        />
+        <HeaderDetails name={artist.name} imageURL={artistImageURL} largeImageURL={artistLargeImageURL} viewTransitionName={`artist-image-${artist.spotifyID}`} nameBackground />
         <div className="w-full mt-4 md:mt-0 px-4 md:w-[90%] lg:w-[70%] mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-evenly gap-3 py-2">
             <div className="flex flex-wrap items-center justify-center gap-2 text-sm sm:text-base">
@@ -138,15 +132,12 @@ function RouteComponent() {
                 options={{ textBelow: true }}
                 tooltipContent={{
                   title: "Overall Score",
-                  description:
-                    "Average of all contributing albums plus quality bonuses and penalties. This is the artist's primary score used for ranking.",
+                  description: "Average of all contributing albums plus quality bonuses and penalties. This is the artist's primary score used for ranking.",
                 }}
               />
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Overall</span>
-                {artist.leaderboardPosition && (
-                  <span className="text-xs text-gray-500">Rank #{artist.leaderboardPosition}</span>
-                )}
+                {artist.leaderboardPosition && <span className="text-xs text-gray-500">Rank #{artist.leaderboardPosition}</span>}
               </div>
             </div>
 
@@ -157,15 +148,12 @@ function RouteComponent() {
                 options={{ textBelow: true }}
                 tooltipContent={{
                   title: "Peak Score",
-                  description:
-                    "Average of the artist's top 3 highest-rated albums plus bonuses. Shows the artist's potential at their best.",
+                  description: "Average of the artist's top 3 highest-rated albums plus bonuses. Shows the artist's potential at their best.",
                 }}
               />
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Peak</span>
-                {artist.peakLeaderboardPosition && (
-                  <span className="text-xs text-gray-500">Rank #{artist.peakLeaderboardPosition}</span>
-                )}
+                {artist.peakLeaderboardPosition && <span className="text-xs text-gray-500">Rank #{artist.peakLeaderboardPosition}</span>}
               </div>
             </div>
 
@@ -176,15 +164,12 @@ function RouteComponent() {
                 options={{ textBelow: true }}
                 tooltipContent={{
                   title: "Latest Score",
-                  description:
-                    "Average of the artist's latest 3 albums (by release year) plus bonuses. Shows the artist's current form and recent quality.",
+                  description: "Average of the artist's latest 3 albums (by release year) plus bonuses. Shows the artist's current form and recent quality.",
                 }}
               />
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Latest</span>
-                {artist.latestLeaderboardPosition && (
-                  <span className="text-xs text-gray-500">Rank #{artist.latestLeaderboardPosition}</span>
-                )}
+                {artist.latestLeaderboardPosition && <span className="text-xs text-gray-500">Rank #{artist.latestLeaderboardPosition}</span>}
               </div>
             </div>
           </>

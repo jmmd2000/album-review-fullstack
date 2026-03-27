@@ -65,10 +65,7 @@ async function closeBrowser(): Promise<void> {
 }
 
 // Single artist fetch (for backward compat)
-export async function fetchArtistHeaderFromSpotify(
-  spotifyArtistID: string,
-  fake: boolean = false
-): Promise<string | null> {
+export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake: boolean = false): Promise<string | null> {
   const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
   return results[spotifyArtistID] || null;
 }
@@ -157,13 +154,7 @@ export async function fetchArtistHeadersFromSpotify(
         let bannerUrl: string | null = null;
 
         // Try multiple selectors in order of preference
-        const selectors = [
-          'div[data-testid="background-image"]',
-          '[data-testid="background-image"]',
-          ".background-image",
-          '[style*="background-image"]',
-          'div[style*="background"]',
-        ];
+        const selectors = ['div[data-testid="background-image"]', '[data-testid="background-image"]', ".background-image", '[style*="background-image"]', 'div[style*="background"]'];
 
         for (const selector of selectors) {
           try {
