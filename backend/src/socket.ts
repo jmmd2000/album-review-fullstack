@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import { CORS_ORIGINS } from "@/config/cors";
 
 let io: Server;
 
@@ -12,14 +13,7 @@ export function initSocket(server: import("http").Server) {
   io = new Server(server, {
     path: "/ws",
     cors: {
-      origin: [
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "https://jamesreviewsmusic.com",
-        "http://jamesreviewsmusic.com",
-        "https://www.jamesreviewsmusic.com",
-        "http://www.jamesreviewsmusic.com",
-      ],
+      origin: CORS_ORIGINS,
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "Cookie"],

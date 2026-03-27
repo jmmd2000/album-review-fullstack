@@ -21,6 +21,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import http from "http";
+import { CORS_ORIGINS } from "@/config/cors";
 import spotifyRoutes from "@/api/routes/spotifyRoutes";
 import albumRoutes from "@/api/routes/albumRoutes";
 import trackRoutes from "@/api/routes/trackRoutes";
@@ -38,7 +39,7 @@ export const db = drizzle(env.DATABASE_URL);
 export const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:8080", "https://jamesreviewsmusic.com", "http://jamesreviewsmusic.com", "https://www.jamesreviewsmusic.com", "http://www.jamesreviewsmusic.com"],
+  origin: CORS_ORIGINS,
   credentials: true,
 };
 
