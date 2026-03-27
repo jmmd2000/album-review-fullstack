@@ -19,7 +19,7 @@ export interface ArtistLeaderboardData {
  * alphabetically if scores are equal, with position numbers assigned.
  */
 export function calculateLeaderboardPositions(artists: ArtistLeaderboardData[]): ArtistLeaderboardData[] {
-  const sortedArtists = artists.sort((a, b) => {
+  const sortedArtists = [...artists].sort((a, b) => {
     if (b.score !== a.score) {
       // sort by score in descending order
       return b.score - a.score;
