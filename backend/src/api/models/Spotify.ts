@@ -3,6 +3,7 @@ import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
 import { AppError } from "../middleware/errorHandler";
+import { env } from "@/index";
 
 export class Spotify {
   private static accessToken: string | null = null;
@@ -19,7 +20,7 @@ export class Spotify {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: "Basic " + btoa(process.env.SPOTIFY_CLIENT_ID + ":" + process.env.SPOTIFY_CLIENT_SECRET),
+        Authorization: "Basic " + btoa(env.SPOTIFY_CLIENT_ID + ":" + env.SPOTIFY_CLIENT_SECRET),
       },
       body: "grant_type=client_credentials",
     };
