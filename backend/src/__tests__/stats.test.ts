@@ -1,11 +1,4 @@
-import {
-  beforeAll,
-  afterAll,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-} from "@jest/globals";
+import { afterAll, beforeEach, afterEach, test, expect } from "@jest/globals";
 import { query, closeDatabase } from "../../db";
 import { resetTables } from "./testUtils";
 import { StatsService } from "@/api/services/statsService";
@@ -68,12 +61,7 @@ async function createAlbum(
   });
 }
 
-async function createTrack(
-  id: string,
-  albumId: string,
-  artistId: string,
-  artistName: string
-) {
+async function createTrack(id: string, albumId: string, artistId: string, artistName: string) {
   return TrackModel.createTrack({
     spotifyID: id,
     albumSpotifyID: albumId,
@@ -104,30 +92,9 @@ async function setupData() {
   const a2 = await createArtist("artist2", "Artist 2", 45);
   const a3 = await createArtist("artist3", "Artist 3", 60);
 
-  const alb1 = await createAlbum(
-    "album1",
-    "Album 1",
-    95,
-    a1.spotifyID,
-    a1.name,
-    [g1.slug, g2.slug]
-  );
-  const alb2 = await createAlbum(
-    "album2",
-    "Album 2",
-    45,
-    a2.spotifyID,
-    a2.name,
-    [g2.slug, g3.slug]
-  );
-  const alb3 = await createAlbum(
-    "album3",
-    "Album 3",
-    60,
-    a3.spotifyID,
-    a3.name,
-    [g1.slug, g3.slug]
-  );
+  const alb1 = await createAlbum("album1", "Album 1", 95, a1.spotifyID, a1.name, [g1.slug, g2.slug]);
+  const alb2 = await createAlbum("album2", "Album 2", 45, a2.spotifyID, a2.name, [g2.slug, g3.slug]);
+  const alb3 = await createAlbum("album3", "Album 3", 60, a3.spotifyID, a3.name, [g1.slug, g3.slug]);
 
   await GenreModel.linkGenresToAlbum(alb1.spotifyID, [g1.id, g2.id]);
   await GenreModel.linkGenresToAlbum(alb2.spotifyID, [g2.id, g3.id]);

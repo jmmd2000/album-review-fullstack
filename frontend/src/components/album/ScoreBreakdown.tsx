@@ -1,4 +1,4 @@
-import { ReviewBonuses } from "@shared/types";
+import type { ReviewBonuses } from "@shared/types";
 import { motion } from "framer-motion";
 import { Info } from "lucide-react";
 import Button from "@components/ui/Button";
@@ -12,8 +12,7 @@ interface ScoreBreakdownProps {
   onClose: () => void;
 }
 
-const formatBonus = (value: number) =>
-  value === 0 ? "0" : value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1);
+const formatBonus = (value: number) => (value === 0 ? "0" : value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1));
 
 const getBonusDescription = (type: keyof ReviewBonuses): string => {
   switch (type) {
@@ -59,25 +58,15 @@ const BreakdownRow = ({
     <div className="text-gray-300 flex items-center group relative">
       {title}
       <Info className="w-4 h-4 text-gray-400 ml-1" />
-      <div className="absolute bottom-full left-0 mb-1 w-52 border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+      <div className="absolute bottom-full left-0 mb-1 w-52 border border-neutral-800 bg-linear-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
         {description}
       </div>
     </div>
-    <div
-      className={`font-medium text-right ${isPositive ? "text-green-600" : "text-red-500"}`}
-    >
-      {bonus}
-    </div>
+    <div className={`font-medium text-right ${isPositive ? "text-green-600" : "text-red-500"}`}>{bonus}</div>
   </motion.div>
 );
 
-const ScoreBreakdown = ({
-  baseScore,
-  bonuses,
-  finalScore,
-  isOpen,
-  onClose,
-}: ScoreBreakdownProps) => (
+const ScoreBreakdown = ({ baseScore, bonuses, finalScore, isOpen, onClose }: ScoreBreakdownProps) => (
   <Dialog isOpen={isOpen} onClose={onClose} title="Score Breakdown">
     <div className="bg-transparent backdrop-blur-xl p-4 rounded-md">
       {/* Base score */}
@@ -91,9 +80,7 @@ const ScoreBreakdown = ({
         (bonuses.qualityBonus > 0 ||
           bonuses.perfectBonus > 0 ||
           bonuses.consistencyBonus > 0 ||
-          bonuses.noWeakBonus > 0) && (
-          <div className="text-sm font-medium text-green-500 mb-2">BONUSES</div>
-        )}
+          bonuses.noWeakBonus > 0) && <div className="text-sm font-medium text-green-500 mb-2">BONUSES</div>}
       {bonuses && bonuses.qualityBonus > 0 && (
         <BreakdownRow
           title="Quality Tracks"
@@ -132,12 +119,9 @@ const ScoreBreakdown = ({
       )}
 
       {/* PENALTIES */}
-      {bonuses &&
-        (bonuses.terriblePenalty < 0 ||
-          bonuses.poorQualityPenalty < 0 ||
-          bonuses.noStrongPenalty < 0) && (
-          <div className="text-sm font-medium text-red-500 mt-4 mb-2">PENALTIES</div>
-        )}
+      {bonuses && (bonuses.terriblePenalty < 0 || bonuses.poorQualityPenalty < 0 || bonuses.noStrongPenalty < 0) && (
+        <div className="text-sm font-medium text-red-500 mt-4 mb-2">PENALTIES</div>
+      )}
       {bonuses && bonuses.terriblePenalty < 0 && (
         <BreakdownRow
           title="Terrible Tracks"

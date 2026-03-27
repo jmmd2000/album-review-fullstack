@@ -1,17 +1,15 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
+import type { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
 import { motion } from "framer-motion";
-import { SortDropdownProps } from "@/components/ui/SortDropdown";
-import { DropdownControlsProps } from "@/components/ui/CardGridControls";
+import type { SortDropdownProps } from "@/components/ui/SortDropdown";
+import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 import { api } from "@/lib/api";
 
-async function fetchPaginatedAlbums(
-  options: GetPaginatedAlbumsOptions
-): Promise<PaginatedAlbumsResult> {
+async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
   const queryParams = new URLSearchParams();
 
   if (options.page) queryParams.set("page", String(options.page));
@@ -125,8 +123,7 @@ function RouteComponent() {
           orderBy: value,
           order: direction,
           // Set default secondary sort when year is selected, clear when not
-          secondaryOrderBy:
-            value === "releaseYear" ? prev.secondaryOrderBy || "finalScore" : undefined,
+          secondaryOrderBy: value === "releaseYear" ? prev.secondaryOrderBy || "finalScore" : undefined,
           secondaryOrder: value === "releaseYear" ? prev.secondaryOrder || "desc" : undefined,
         }),
       });
@@ -156,10 +153,7 @@ function RouteComponent() {
         }
       : undefined;
 
-  const genres =
-    data?.relatedGenres && data.relatedGenres.length > 0
-      ? data.relatedGenres
-      : data?.genres || [];
+  const genres = data?.relatedGenres && data.relatedGenres.length > 0 ? data.relatedGenres : data?.genres || [];
 
   // Get genre slugs from URL (as string or array)
   const genreSlugs = options.genres

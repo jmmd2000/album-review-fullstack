@@ -1,4 +1,4 @@
-import { MinimalAlbum, Reason, ReviewedAlbum, SpotifyImage } from "@shared/types";
+import type { MinimalAlbum, Reason, ReviewedAlbum } from "@shared/types";
 import { calculatePeakScore, calculateLatestScore } from "./calculatePeakAndLatestScores";
 import { BAD_ALBUM_BONUS, GOOD_ALBUM_BONUS, MAX_SCORE } from "@/config/constants";
 

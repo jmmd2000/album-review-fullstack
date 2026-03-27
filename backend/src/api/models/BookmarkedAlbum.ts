@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
-import { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { bookmarkedAlbums } from "@/db/schema";
 import { db } from "@/index";
 import { PAGE_SIZE } from "@/config/constants";
@@ -55,18 +55,11 @@ export class BookmarkedAlbumModel {
       .from(bookmarkedAlbums)
       .limit(PAGE_SIZE + 1)
       .offset(OFFSET)
-      .orderBy(
-        sortDirection === "asc"
-          ? asc(bookmarkedAlbums[sortField])
-          : desc(bookmarkedAlbums[sortField])
-      );
+      .orderBy(sortDirection === "asc" ? asc(bookmarkedAlbums[sortField]) : desc(bookmarkedAlbums[sortField]));
 
     return search.trim()
       ? await baseQuery.where(
-          or(
-            ilike(bookmarkedAlbums.name, `%${search}%`),
-            ilike(bookmarkedAlbums.artistName, `%${search}%`)
-          )
+          or(ilike(bookmarkedAlbums.name, `%${search}%`), ilike(bookmarkedAlbums.artistName, `%${search}%`))
         )
       : await baseQuery;
   }

@@ -58,14 +58,7 @@ const itemVariants = {
 /**
  * This component creates a card grid with controls for pagination and search.
  */
-const CardGrid = ({
-  cards,
-  heading,
-  counter,
-  sortedByYear,
-  cardYears,
-  controls,
-}: CardGridProps) => {
+const CardGrid = ({ cards, heading, counter, sortedByYear, cardYears, controls }: CardGridProps) => {
   const shouldShowControls = controls?.search || controls?.pagination;
 
   const renderCards = () => {

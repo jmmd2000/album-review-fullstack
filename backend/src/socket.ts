@@ -34,7 +34,7 @@ export function initSocket(server: import("http").Server) {
   });
 
   io.on("connection", socket => {
-    socket.on("disconnect", reason => {
+    socket.on("disconnect", _reason => {
       // Handle disconnect
     });
   });
@@ -47,9 +47,7 @@ export function initSocket(server: import("http").Server) {
  */
 export function getSocket(): Server {
   if (!io) {
-    throw new Error(
-      "Socket.IO not initialized. Call initSocket(server) first."
-    );
+    throw new Error("Socket.IO not initialized. Call initSocket(server) first.");
   }
   return io;
 }

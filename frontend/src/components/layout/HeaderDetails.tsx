@@ -13,13 +13,7 @@ interface HeaderDetailsProps {
   nameBackground?: boolean;
 }
 
-const HeaderDetails = ({
-  name,
-  imageURL,
-  largeImageURL,
-  viewTransitionName,
-  nameBackground,
-}: HeaderDetailsProps) => {
+const HeaderDetails = ({ name, imageURL, largeImageURL, viewTransitionName, nameBackground }: HeaderDetailsProps) => {
   const containerStyles = cva(
     [
       "text-gray-100",
@@ -48,16 +42,7 @@ const HeaderDetails = ({
   );
 
   const nameStyles = cva(
-    [
-      "text-5xl",
-      "lg:text-6xl",
-      "3xl:text-7xl",
-      "flex-col",
-      "font-bold",
-      "drop-shadow-lg",
-      "text-center",
-      "lg:w-max",
-    ],
+    ["text-5xl", "lg:text-6xl", "3xl:text-7xl", "flex-col", "font-bold", "drop-shadow-lg", "text-center", "lg:w-max"],
     {
       variants: {
         nameBackground: {

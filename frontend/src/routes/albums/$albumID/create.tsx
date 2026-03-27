@@ -2,7 +2,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
-import { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, AlbumArtist } from "@shared/types";
+import type { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, AlbumArtist } from "@shared/types";
 import ErrorComponent from "@components/ui/ErrorComponent";
 import BlurryHeader from "@components/layout/BlurryHeader";
 import AlbumReviewForm from "@components/form/AlbumReviewForm";
@@ -120,11 +120,7 @@ function RouteComponent() {
         <BlurryHeader _colors={selectedColors}>
           <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
           {data.artists && data.artists.length > 0 && (
-            <AlbumDetails
-              album={data.album}
-              trackCount={data.album.tracks.items.length}
-              artists={data.artists}
-            />
+            <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artists={data.artists} />
           )}
         </BlurryHeader>
 

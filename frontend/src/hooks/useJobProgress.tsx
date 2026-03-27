@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer } from "react";
-import { Progress } from "@shared/types";
-import { Socket } from "socket.io-client";
-import { JobState } from "@/components/settings/SettingsCard";
+import type { Progress } from "@shared/types";
+import type { Socket } from "socket.io-client";
+import type { JobState } from "@/components/settings/SettingsCard";
 
 type JobAction =
   | { type: "START" }

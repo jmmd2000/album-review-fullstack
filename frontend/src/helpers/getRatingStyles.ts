@@ -147,11 +147,11 @@ export const ratingTiers: RatingTier[] = [
 ];
 
 export const getRatingStyles = (rating: number | string | undefined) => {
-  if (rating === undefined) return ratingTiers.find((t) => t.label === "Unrated")!;
+  if (rating === undefined) return ratingTiers.find(t => t.label === "Unrated")!;
 
   // Handle string labels (like "Amazing", "Meh", etc.)
   if (typeof rating === "string") {
-    const tier = ratingTiers.find((t) => t.label.toLowerCase() === rating.toLowerCase());
+    const tier = ratingTiers.find(t => t.label.toLowerCase() === rating.toLowerCase());
     if (!tier) throw new Error(`Unknown rating label: "${rating}"`);
     return tier;
   }

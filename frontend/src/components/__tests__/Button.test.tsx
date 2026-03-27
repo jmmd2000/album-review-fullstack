@@ -27,9 +27,7 @@ describe("Button", () => {
 
   it("does not call onClick when disabled", async () => {
     const handleClick = vi.fn();
-    const { user } = await renderWithProviders(
-      <Button label="Nope" onClick={handleClick} disabled />
-    );
+    const { user } = await renderWithProviders(<Button label="Nope" onClick={handleClick} disabled />);
 
     await user.click(screen.getByRole("button"));
     expect(handleClick).not.toHaveBeenCalled();

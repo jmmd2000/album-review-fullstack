@@ -1,7 +1,8 @@
 import { Route } from "@/routes/__root";
-import { GetPaginatedAlbumsOptions } from "@shared/types";
+import type { GetPaginatedAlbumsOptions } from "@shared/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { RefObject, useEffect, useState, useRef } from "react";
+import type { RefObject } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export interface DropdownProps {
   items: { name: string; value: string }[];
@@ -14,7 +15,15 @@ export interface DropdownProps {
   multiple?: boolean;
 }
 
-export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSelect, dropdownRef, multiple = false }: DropdownProps) => {
+export const Dropdown = ({
+  items,
+  default: defaultItem,
+  isOpen,
+  setIsOpen,
+  onSelect,
+  dropdownRef,
+  multiple = false,
+}: DropdownProps) => {
   // Initialize selectedItems with default if provided
   const [selectedItems, setSelectedItems] = useState<
     {
@@ -33,13 +42,13 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
       const list =
         raw
           ?.split(",")
-          .map((s) => s.trim())
+          .map(s => s.trim())
           .filter(Boolean) ?? [];
-      const pre = items.filter((i) => list.includes(i.value));
+      const pre = items.filter(i => list.includes(i.value));
 
       if (pre.length > 0) {
         setSelectedItems(pre);
-        onSelect(pre.map((i) => i.value));
+        onSelect(pre.map(i => i.value));
       } else if (defaultItem) {
         setSelectedItems([defaultItem]);
         onSelect([defaultItem.value]);
@@ -62,10 +71,10 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
 
   const handleSelect = (item: { name: string; value: string }) => {
     if (multiple) {
-      const exists = selectedItems.some((i) => i.value === item.value);
-      const updated = exists ? selectedItems.filter((i) => i.value !== item.value) : [...selectedItems, item];
+      const exists = selectedItems.some(i => i.value === item.value);
+      const updated = exists ? selectedItems.filter(i => i.value !== item.value) : [...selectedItems, item];
       setSelectedItems(updated);
-      onSelect(updated.map((i) => i.value));
+      onSelect(updated.map(i => i.value));
     } else {
       setSelectedItems([item]);
       onSelect([item.value]);
@@ -92,7 +101,13 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.02 }}
       >
-        {multiple ? (selectedItems.length > 0 ? selectedItems.map((i) => i.name).join(", ") : "Select option(s)") : selectedItems.length > 0 ? selectedItems[0].name : (defaultItem?.name ?? "Select an option")}
+        {multiple
+          ? selectedItems.length > 0
+            ? selectedItems.map(i => i.name).join(", ")
+            : "Select option(s)"
+          : selectedItems.length > 0
+            ? selectedItems[0].name
+            : (defaultItem?.name ?? "Select an option")}
       </motion.div>
 
       {/* dropdown list */}
@@ -104,7 +119,7 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute mt-1 min-w-max bg-neutral-800 text-white border border-neutral-800 rounded-md shadow-lg overflow-x-hidden overflow-y-auto max-h-60 z-[9999]"
+            className="absolute mt-1 min-w-max bg-neutral-800 text-white border border-neutral-800 rounded-md shadow-lg overflow-x-hidden overflow-y-auto max-h-60 z-9999"
           >
             {/* filter input */}
             <li className="px-4 py-2">
@@ -113,15 +128,15 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
                 className="w-full bg-neutral-700 text-white placeholder-gray-400 rounded px-2 py-1 focus:outline-none"
                 placeholder="Search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
+                onChange={e => setSearchTerm(e.target.value)}
+                onClick={e => e.stopPropagation()}
               />
             </li>
             {/* items */}
             {items
-              .filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
               .map((item, idx) => {
-                const isSel = selectedItems.some((i) => i.value === item.value);
+                const isSel = selectedItems.some(i => i.value === item.value);
                 return (
                   <motion.li
                     key={item.value}

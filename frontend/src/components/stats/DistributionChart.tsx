@@ -1,14 +1,5 @@
 import { getRatingStyles } from "@/helpers/getRatingStyles";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useMediaQuery } from "react-responsive";
 
 interface DistributionChartProps {
@@ -27,11 +18,7 @@ const DistributionChart = ({ data, resource = "albums" }: DistributionChartProps
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <BarChart
-        data={data}
-        margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
-        barCategoryGap="10%"
-      >
+      <BarChart data={data} margin={{ top: 10, right: 20, left: 20, bottom: 5 }} barCategoryGap="10%">
         <CartesianGrid strokeDasharray="1 6" />
         <XAxis
           dataKey="rating"
@@ -54,12 +41,7 @@ const DistributionChart = ({ data, resource = "albums" }: DistributionChartProps
                   strokeWidth={1.5}
                   rx={4}
                 />
-                <text
-                  dy="0.35em"
-                  fill={tier.backgroundColorHex}
-                  fontSize={tickFontSize}
-                  textAnchor="middle"
-                >
+                <text dy="0.35em" fill={tier.backgroundColorHex} fontSize={tickFontSize} textAnchor="middle">
                   {label}
                 </text>
               </g>
@@ -72,16 +54,8 @@ const DistributionChart = ({ data, resource = "albums" }: DistributionChartProps
         />
 
         <YAxis tick={{ fill: "#d4d4d8", fontSize: 12 }} width={20} axisLine={false} />
-        <Tooltip
-          content={props => <CustomTooltip {...props} resource={resource} />}
-          cursor={<CustomCursor />}
-        />
-        <Bar
-          dataKey="count"
-          isAnimationActive={true}
-          animationDuration={800}
-          animationEasing="ease-out"
-        >
+        <Tooltip content={props => <CustomTooltip {...props} resource={resource} />} cursor={<CustomCursor />} />
+        <Bar dataKey="count" isAnimationActive={true} animationDuration={800} animationEasing="ease-out">
           {data?.map((entry, index) => {
             const tier = getRatingStyles(entry.rating);
             return (
@@ -124,17 +98,12 @@ const CustomTooltip = ({ active, payload, label, resource }: CustomTooltipProps)
 
     return (
       <div className="rounded-lg px-4 py-3 border border-white/20 shadow-lg text-white backdrop-blur-sm bg-linear-to-b from-neutral-900/80 via-neutral-900/50 to-neutral-900/20">
-        <h3
-          style={{ color: getRatingStyles(label).backgroundColorHex }}
-          className="font-semibold text-white mb-2"
-        >
+        <h3 style={{ color: getRatingStyles(label).backgroundColorHex }} className="font-semibold text-white mb-2">
           {label}
         </h3>
         <div className="space-y-1">
           <p className="text-neutral-100">
-            <span className="font-medium text-white">
-              {resource.charAt(0).toUpperCase() + resource.slice(1)}:
-            </span>{" "}
+            <span className="font-medium text-white">{resource.charAt(0).toUpperCase() + resource.slice(1)}:</span>{" "}
             {data.count.toLocaleString()}
           </p>
         </div>
@@ -184,33 +153,11 @@ const CustomCursor = ({ x, y, width, height, payload }: CustomCursorProps) => {
       />
 
       {/* Top border highlight */}
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={3}
-        fill={tier.backgroundColorHex}
-        opacity={0.8}
-        rx={4}
-      />
+      <rect x={x} y={y} width={width} height={3} fill={tier.backgroundColorHex} opacity={0.8} rx={4} />
 
       {/* Side indicators */}
-      <rect
-        x={x - 2}
-        y={y}
-        width={2}
-        height={height}
-        fill={tier.backgroundColorHex}
-        opacity={0.9}
-      />
-      <rect
-        x={x + width}
-        y={y}
-        width={2}
-        height={height}
-        fill={tier.backgroundColorHex}
-        opacity={0.9}
-      />
+      <rect x={x - 2} y={y} width={2} height={height} fill={tier.backgroundColorHex} opacity={0.9} />
+      <rect x={x + width} y={y} width={2} height={height} fill={tier.backgroundColorHex} opacity={0.9} />
     </g>
   );
 };

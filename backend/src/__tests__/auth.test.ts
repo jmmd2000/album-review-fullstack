@@ -16,9 +16,7 @@ afterAll(async () => {
 
 describe("Auth (JWT + bcrypt)", () => {
   test("POST /api/auth/login succeeds with valid password and sets httpOnly cookie", async () => {
-    const res = await request(app)
-      .post("/api/auth/login")
-      .send({ password: process.env.ADMIN_PASSWORD! });
+    const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
     expect(res.status).toBe(204);
 
     const setCookie = res.get("set-cookie");
@@ -31,9 +29,7 @@ describe("Auth (JWT + bcrypt)", () => {
   });
 
   test("POST /api/auth/login fails with bad password", async () => {
-    const res = await request(app)
-      .post("/api/auth/login")
-      .send({ password: "wrong-password-12345" });
+    const res = await request(app).post("/api/auth/login").send({ password: "wrong-password-12345" });
     expect(res.status).toBe(401);
   });
 
@@ -55,9 +51,7 @@ describe("Auth (JWT + bcrypt)", () => {
   });
 
   test("GET /api/auth/status returns isAdmin: false with tampered cookie", async () => {
-    const res = await request(app)
-      .get("/api/auth/status")
-      .set("Cookie", ["token=fakejwttoken123"]);
+    const res = await request(app).get("/api/auth/status").set("Cookie", ["token=fakejwttoken123"]);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ isAdmin: false });
   });

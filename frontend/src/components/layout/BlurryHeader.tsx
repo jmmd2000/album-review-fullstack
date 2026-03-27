@@ -1,4 +1,4 @@
-import { ExtractedColor } from "@shared/types";
+import type { ExtractedColor } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 
 /**

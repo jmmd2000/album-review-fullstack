@@ -1,6 +1,6 @@
 import { albumGenres, genres, relatedGenres, reviewedAlbums } from "@/db/schema";
 import { db } from "@/index";
-import { AlbumGenre, Genre, RelatedGenre, ReviewedAlbum } from "@shared/types";
+import type { Genre, ReviewedAlbum } from "@shared/types";
 import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 
 export class GenreModel {
@@ -65,12 +65,7 @@ export class GenreModel {
     if (genreIDs.length === 0) return;
     await db
       .delete(albumGenres)
-      .where(
-        and(
-          eq(albumGenres.albumSpotifyID, albumSpotifyID),
-          inArray(albumGenres.genreID, genreIDs)
-        )
-      );
+      .where(and(eq(albumGenres.albumSpotifyID, albumSpotifyID), inArray(albumGenres.genreID, genreIDs)));
   }
 
   static async getRelatedGenresRaw(genreID: number) {
@@ -90,8 +85,7 @@ export class GenreModel {
   static async incrementRelatedStrength(genreIDs: number[]) {
     for (let i = 0; i < genreIDs.length; i++) {
       for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] =
-          genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
+        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
 
         await db
           .insert(relatedGenres)
@@ -110,8 +104,7 @@ export class GenreModel {
   static async decrementRelatedStrength(genreIDs: number[]) {
     for (let i = 0; i < genreIDs.length; i++) {
       for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] =
-          genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
+        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
 
         await db
           .update(relatedGenres)
@@ -133,10 +126,7 @@ export class GenreModel {
   }
 
   static async getAlbumCountByGenreID(genreID: number) {
-    const result = await db
-      .select({ count: count() })
-      .from(albumGenres)
-      .where(eq(albumGenres.genreID, genreID));
+    const result = await db.select({ count: count() }).from(albumGenres).where(eq(albumGenres.genreID, genreID));
     return result[0].count;
   }
 
@@ -157,9 +147,7 @@ export class GenreModel {
   static async deleteRelatedGenresByID(genreID: number) {
     await db
       .delete(relatedGenres)
-      .where(
-        or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID))
-      );
+      .where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
   }
 
   static async deleteGenreByID(genreID: number) {
@@ -172,9 +160,8 @@ export class GenreModel {
 
   static async getAlbumsBySpotifyIDs(spotifyIDs: string[]): Promise<ReviewedAlbum[]> {
     if (spotifyIDs.length === 0) return [];
-    return db
-      .select()
-      .from(reviewedAlbums)
-      .where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<ReviewedAlbum[]>;
+    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<
+      ReviewedAlbum[]
+    >;
   }
 }

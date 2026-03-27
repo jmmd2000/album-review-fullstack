@@ -33,19 +33,9 @@ interface ButtonProps {
 /**
  * This component creates a button with a label and an optional click handler.
  */
-const Button = ({
-  label,
-  onClick,
-  disabled,
-  type,
-  states,
-  stateMessages,
-  size = "default",
-}: ButtonProps) => {
+const Button = ({ label, onClick, disabled, type, states, stateMessages, size = "default" }: ButtonProps) => {
   const { loading, error, success } = states || {};
-  const [displayState, setDisplayState] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
+  const [displayState, setDisplayState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const toastID = React.useId();
 
   // Handle state changes
@@ -73,15 +63,7 @@ const Button = ({
     } else {
       setDisplayState("idle");
     }
-  }, [
-    loading,
-    success,
-    error,
-    stateMessages?.loading,
-    stateMessages?.success,
-    stateMessages?.error,
-    toastID,
-  ]);
+  }, [loading, success, error, stateMessages?.loading, stateMessages?.success, stateMessages?.error, toastID]);
 
   // Animation variants
   const buttonVariants = {
@@ -262,9 +244,7 @@ const Button = ({
       />
 
       {/* Content container with size-appropriate dimensions */}
-      <div
-        className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}
-      >
+      <div className={`relative z-10 flex items-center justify-center text-center ${getContentClasses()}`}>
         <AnimatePresence mode="wait">{getStateIcon()}</AnimatePresence>
       </div>
     </motion.button>

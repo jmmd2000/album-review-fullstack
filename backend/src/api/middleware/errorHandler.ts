@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 /**
  * Global Express error-handling middleware.
@@ -11,12 +11,7 @@ import { NextFunction, Request, Response } from "express";
  * @param res Express response
  * @param next Express next function
  */
-export const errorHandler = (
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) => {
+export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
   const status = err instanceof AppError ? err.status : 500;
   const message = err.message || "An unknown error occurred.";
   res.status(status).json({ message });

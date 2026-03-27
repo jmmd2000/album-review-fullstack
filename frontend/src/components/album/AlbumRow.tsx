@@ -1,4 +1,4 @@
-import { ReviewedAlbum } from "@shared/types";
+import type { ReviewedAlbum } from "@shared/types";
 import AlbumCard from "./AlbumCard";
 import { useRef, useState, useEffect } from "react";
 
@@ -51,20 +51,26 @@ const AlbumRow = ({ albums }: AlbumRowProps) => {
   return (
     <div className="relative mx-4 my-8">
       {canScrollLeft && (
-        <button className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollLeft}>
+        <button
+          className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10"
+          onClick={scrollLeft}
+        >
           {"<"}
         </button>
       )}
 
-      <div ref={rowRef} className="flex gap-4 overflow-x-scroll no-scrollbar scroll-smooth w-full max-w-[1900px] px-8">
-        {albums.map((album) => (
-          <div key={album.spotifyID} className="min-w-[240px]">
+      <div ref={rowRef} className="flex gap-4 overflow-x-scroll no-scrollbar scroll-smooth w-full max-w-475 px-8">
+        {albums.map(album => (
+          <div key={album.spotifyID} className="min-w-60">
             <AlbumCard album={album} />
           </div>
         ))}
       </div>
       {canScrollRight && (
-        <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10" onClick={scrollRight}>
+        <button
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full z-10"
+          onClick={scrollRight}
+        >
           {">"}
         </button>
       )}

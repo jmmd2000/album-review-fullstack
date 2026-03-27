@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  UseFormRegister,
-  UseFieldArrayRemove,
-  UseFieldArrayAppend,
-  UseFormSetValue,
-} from "react-hook-form";
+import type { UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, UseFormSetValue } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { Genre } from "@shared/types";
-import { CreateReviewFormData } from "./AlbumReviewForm";
+import type { Genre } from "@shared/types";
+import type { CreateReviewFormData } from "./AlbumReviewForm";
 
 interface GenreSelectorProps {
   genreFields: Array<{ id: string; name: string }>;
@@ -19,14 +14,7 @@ interface GenreSelectorProps {
   genres: Genre[];
 }
 
-const GenreSelector = ({
-  genreFields,
-  register,
-  removeGenre,
-  addGenre,
-  setValue,
-  genres,
-}: GenreSelectorProps) => {
+const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue, genres }: GenreSelectorProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -113,9 +101,7 @@ const GenreSelector = ({
                             </div>
                           ))
                         ) : (
-                          <div className="px-3 py-2 text-neutral-400 text-sm italic">
-                            No matching genres.
-                          </div>
+                          <div className="px-3 py-2 text-neutral-400 text-sm italic">No matching genres.</div>
                         )}
                       </div>
                     </motion.div>

@@ -16,9 +16,7 @@ describe("Create Album Review Flow", () => {
       timeout: 10000,
     }).should("be.visible");
 
-    cy.get(
-      '[data-testid="admin-dropdown-desktop"] [data-testid="admin-dropdown-button"]'
-    ).click();
+    cy.get('[data-testid="admin-dropdown-desktop"] [data-testid="admin-dropdown-button"]').click();
     cy.wait(500);
 
     cy.env(["adminPassword"]).then(({ adminPassword }) => {
@@ -39,10 +37,7 @@ describe("Create Album Review Flow", () => {
     cy.contains("button", "Search").click();
     cy.wait(2000);
 
-    cy.get('[data-testid="album-card"]', { timeout: 10000 }).should(
-      "have.length.greaterThan",
-      0
-    );
+    cy.get('[data-testid="album-card"]', { timeout: 10000 }).should("have.length.greaterThan", 0);
 
     // Step 4: Click first album to navigate to review form
     cy.get('[data-testid="album-card"]').first().click();

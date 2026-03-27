@@ -1,5 +1,5 @@
-import { UseFormSetValue } from "react-hook-form";
-import { CreateReviewFormData } from "./AlbumReviewForm";
+import type { UseFormSetValue } from "react-hook-form";
+import type { CreateReviewFormData } from "./AlbumReviewForm";
 
 interface AlbumArtist {
   spotifyID: string;
@@ -14,12 +14,7 @@ interface ArtistSelectorProps {
   setValue: UseFormSetValue<CreateReviewFormData>;
 }
 
-const ArtistSelector = ({
-  albumArtists,
-  watchedArtists,
-  watchedScoreArtists,
-  setValue,
-}: ArtistSelectorProps) => {
+const ArtistSelector = ({ albumArtists, watchedArtists, watchedScoreArtists, setValue }: ArtistSelectorProps) => {
   if (albumArtists.length <= 1) return null;
 
   return (
@@ -29,8 +24,7 @@ const ArtistSelector = ({
         {albumArtists.map(artist => {
           const isChecked = watchedArtists?.includes(artist.spotifyID) ?? false;
           const affectsScore = watchedScoreArtists?.includes(artist.spotifyID) ?? false;
-          const imageURL =
-            artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
+          const imageURL = artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
           return (
             <label
               key={artist.spotifyID}
@@ -56,9 +50,7 @@ const ArtistSelector = ({
                   } else {
                     setValue(
                       "scoreArtistIDs",
-                      scoreCurrent.includes(artist.spotifyID)
-                        ? scoreCurrent
-                        : [...scoreCurrent, artist.spotifyID],
+                      scoreCurrent.includes(artist.spotifyID) ? scoreCurrent : [...scoreCurrent, artist.spotifyID],
                       { shouldDirty: true }
                     );
                   }
@@ -68,11 +60,7 @@ const ArtistSelector = ({
                   focus:ring-green-400 focus:ring-2"
               />
               {imageURL ? (
-                <img
-                  src={imageURL}
-                  alt={artist.name}
-                  className="h-12 w-12 rounded-lg object-cover"
-                />
+                <img src={imageURL} alt={artist.name} className="h-12 w-12 rounded-lg object-cover" />
               ) : (
                 <div className="h-12 w-12 rounded-lg bg-neutral-700 flex items-center justify-center text-sm text-neutral-200">
                   {artist.name.charAt(0).toUpperCase()}
@@ -105,9 +93,7 @@ const ArtistSelector = ({
           );
         })}
       </div>
-      <p className="text-xs text-neutral-500 mt-2">
-        At least one artist must be selected.
-      </p>
+      <p className="text-xs text-neutral-500 mt-2">At least one artist must be selected.</p>
     </div>
   );
 };

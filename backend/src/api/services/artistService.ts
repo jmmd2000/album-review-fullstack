@@ -1,7 +1,7 @@
-import {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
   DisplayArtist,
   GetPaginatedArtistsOptions,
-  DisplayAlbum,
   DisplayTrack,
   SpotifyImage,
   ReviewedAlbum,
@@ -14,15 +14,10 @@ import { toSortableDate } from "@shared/helpers/formatDate";
 import { fetchArtistHeadersFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getSocket } from "@/socket";
-import {
-  areImageUrlsSame,
-  normalizeSpotifyImageUrl,
-} from "@/helpers/normaliseSpotifyImageURL";
+import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseSpotifyImageURL";
 import { SettingsService } from "./settingsService";
-import {
-  calculateLeaderboardPositions,
-  ArtistLeaderboardData,
-} from "@/helpers/calculateLeaderboardPositions";
+import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositions";
+import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { AppError } from "../middleware/errorHandler";
 
@@ -66,20 +61,15 @@ export class ArtistService {
       });
     }
 
-    const hasNumericChange = (current: number, next: number) =>
-      Math.abs((current ?? 0) - next) > 0.0001;
+    const hasNumericChange = (current: number, next: number) => Math.abs((current ?? 0) - next) > 0.0001;
 
-    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(
-      artists.map(a => a.spotifyID)
-    );
+    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(artists.map(a => a.spotifyID));
 
     for (const artist of artists) {
       const albumLinks = allAlbumLinks.get(artist.spotifyID) ?? [];
       const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
       const reviewCount = albums.length;
-      const contributing = albumLinks
-        .filter(link => link.affectsScore)
-        .map(link => link.album) as ReviewedAlbum[];
+      const contributing = albumLinks.filter(link => link.affectsScore).map(link => link.album) as ReviewedAlbum[];
 
       if (contributing.length === 0) {
         const updates = {
@@ -115,14 +105,8 @@ export class ArtistService {
         continue;
       }
 
-      const {
-        newAverageScore,
-        newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReasons,
-      } = calculateArtistScore(contributing);
+      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } =
+        calculateArtistScore(contributing);
 
       const updates = {
         averageScore: newAverageScore,
@@ -248,25 +232,13 @@ export class ArtistService {
         addChange("unrated", Number(before.unrated), Number(after.unrated));
       }
       if (before.leaderboardPosition !== after.leaderboardPosition) {
-        addChange(
-          "leaderboardPosition",
-          before.leaderboardPosition,
-          after.leaderboardPosition
-        );
+        addChange("leaderboardPosition", before.leaderboardPosition, after.leaderboardPosition);
       }
       if (before.peakLeaderboardPosition !== after.peakLeaderboardPosition) {
-        addChange(
-          "peakLeaderboardPosition",
-          before.peakLeaderboardPosition,
-          after.peakLeaderboardPosition
-        );
+        addChange("peakLeaderboardPosition", before.peakLeaderboardPosition, after.peakLeaderboardPosition);
       }
       if (before.latestLeaderboardPosition !== after.latestLeaderboardPosition) {
-        addChange(
-          "latestLeaderboardPosition",
-          before.latestLeaderboardPosition,
-          after.latestLeaderboardPosition
-        );
+        addChange("latestLeaderboardPosition", before.latestLeaderboardPosition, after.latestLeaderboardPosition);
       }
 
       if (changes.length > 0) {
@@ -376,10 +348,7 @@ export class ArtistService {
     if (!artist) throw new AppError("Artist not found", 404);
 
     const albums = await AlbumModel.getAlbumsByArtist(artistID);
-    const sortByDateDesc = <T extends { releaseDate: string; releaseYear: number }>(
-      a: T,
-      b: T
-    ) => {
+    const sortByDateDesc = <T extends { releaseDate: string; releaseYear: number }>(a: T, b: T) => {
       const dateA = new Date(toSortableDate(a.releaseDate, a.releaseYear)).getTime();
       const dateB = new Date(toSortableDate(b.releaseDate, b.releaseYear)).getTime();
       return dateB - dateA; // descending
@@ -387,9 +356,7 @@ export class ArtistService {
     const sortedAlbums = albums.sort(sortByDateDesc);
 
     const featuredAlbumIDs = await AlbumModel.getFeaturedAlbumIDsByArtist(artistID);
-    const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(featuredAlbumIDs)).sort(
-      sortByDateDesc
-    );
+    const featuredAlbums = (await AlbumModel.getAlbumsBySpotifyIDs(featuredAlbumIDs)).sort(sortByDateDesc);
 
     const albumIDs = [...new Set([...sortedAlbums, ...featuredAlbums].map(a => a.spotifyID))];
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
@@ -429,10 +396,7 @@ export class ArtistService {
     return ArtistModel.deleteArtist(artistID);
   }
 
-  static async updateSingleArtistHeader(
-    spotifyID: string,
-    headerImage: string | null
-  ): Promise<void> {
+  static async updateSingleArtistHeader(spotifyID: string, headerImage: string | null): Promise<void> {
     const artist = await ArtistModel.getArtistBySpotifyID(spotifyID);
     if (!artist) throw new AppError("Artist not found.", 404);
     await ArtistModel.updateArtist(spotifyID, {
@@ -473,11 +437,7 @@ export class ArtistService {
       const batch = batches[batchIndex];
       const spotifyIDs = batch.map(a => a.spotifyID);
 
-      const onProgress = (
-        completed: number,
-        _totalInBatch: number,
-        currentArtistID?: string
-      ) => {
+      const onProgress = (completed: number, _totalInBatch: number, currentArtistID?: string) => {
         if (currentArtistID) {
           const currentArtist = batch.find(a => a.spotifyID === currentArtistID);
           const artistName = currentArtist?.name || "Unknown Artist";
@@ -494,12 +454,7 @@ export class ArtistService {
         }
       };
 
-      const headerResults = await fetchArtistHeadersFromSpotify(
-        spotifyIDs,
-        BATCH_SIZE,
-        onProgress,
-        FAKE
-      );
+      const headerResults = await fetchArtistHeadersFromSpotify(spotifyIDs, BATCH_SIZE, onProgress, FAKE);
 
       // emit progress, then same/changed/error
       for (let i = 0; i < batch.length; i++) {
@@ -574,9 +529,7 @@ export class ArtistService {
             artistName: FAKE ? `[FAKE] ${name}` : name,
             artistImage,
             headerImage: null,
-            message: FAKE
-              ? "[FAKE] Failed to fetch header image"
-              : "Failed to fetch header image",
+            message: FAKE ? "[FAKE] Failed to fetch header image" : "Failed to fetch header image",
           });
         }
       }
@@ -609,8 +562,7 @@ export class ArtistService {
     for (let i = 0; i < total; i++) {
       const { spotifyID: id, name, imageURLs } = artists[i];
 
-      const currentArtistImage =
-        imageURLs && imageURLs.length > 0 ? imageURLs[0].url : undefined;
+      const currentArtistImage = imageURLs && imageURLs.length > 0 ? imageURLs[0].url : undefined;
 
       io.emit("artist:images:progress", {
         index: i + 1,
@@ -622,16 +574,11 @@ export class ArtistService {
       });
 
       // Fetch new data from Spotify
-      const artistData = await fetchArtistFromSpotify(
-        id,
-        `https://api.spotify.com/v1/artists/${id}`
-      );
+      const artistData = await fetchArtistFromSpotify(id, `https://api.spotify.com/v1/artists/${id}`);
       if (!artistData) continue;
 
       const newArtistImage =
-        artistData.images && artistData.images.length > 0
-          ? (artistData.images as SpotifyImage[])[0].url
-          : undefined;
+        artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;
 
       // Get only the URL strings, sorted
       const currentUrls = (imageURLs || []).map(img => img.url).sort();

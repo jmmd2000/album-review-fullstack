@@ -1,5 +1,5 @@
 import { getAdminCookie } from "@/helpers/getAdminCookie";
-import { SpotifyAlbum } from "@shared/types";
+import type { SpotifyAlbum } from "@shared/types";
 import "dotenv/config";
 
 const ALBUM_IDS = [
@@ -105,7 +105,7 @@ const GENRES = [
 export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
   const cookie = await getAdminCookie();
   if (logging) console.log("Logged in, got cookie...");
-  let albums: SpotifyAlbum[] = [];
+  const albums: SpotifyAlbum[] = [];
   while (spotifyIDs.length > 0) {
     const randomIndex = Math.floor(Math.random() * spotifyIDs.length);
     const id = spotifyIDs.splice(randomIndex, 1)[0];
@@ -116,7 +116,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetched album \x1b[33m${data.name}\x1b[0m`);
   }
 
-  let reviewedAlbums = albums.map((album) => {
+  const reviewedAlbums = albums.map(album => {
     if (logging) console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
     const bestSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
     const worstSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
@@ -128,7 +128,7 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
       genres: randomGenres,
       album,
       affectsArtistScore: Math.random() < 0.95,
-      ratedTracks: album.tracks.items.map((track) => {
+      ratedTracks: album.tracks.items.map(track => {
         return {
           spotifyID: track.id,
           rating: Math.floor(Math.random() * 10) + 1,
@@ -137,8 +137,9 @@ export const seed = async (spotifyIDs: string[], review: { reviewContent: string
     };
   });
 
-  for (let reviewedAlbum of reviewedAlbums) {
-    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
+  for (const reviewedAlbum of reviewedAlbums) {
+    if (logging)
+      console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
     try {
       const response = await fetch(`http://localhost:4000/api/albums/create`, {
         method: "POST",

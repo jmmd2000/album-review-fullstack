@@ -5,7 +5,7 @@ import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { api } from "@/lib/api";
 import { queryClient } from "@/main";
-import { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
+import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
@@ -62,9 +62,7 @@ function RouteComponent() {
 
   const dataIsEmpty = data?.length === 0;
   const albumCards = dataIsEmpty ? recentAlbumsWithStatus : data;
-  const gridHeading = dataIsEmpty
-    ? "Recently viewed albums"
-    : `Search results for "${options.query}"`;
+  const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search results for "${options.query}"`;
 
   const handleSearch = (query: string) => {
     setPageTitle(`Search results for "${query}"`);
@@ -80,11 +78,7 @@ function RouteComponent() {
         {/* Setting the title via <title> rather than in the head option of createFileRoute()
         because it was annoying and finnicky to access the search params to update the title.  */}
         <title>{pageTitle}</title>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           <CardGrid
             cards={(albumCards || []).map(album => (
               <AlbumCard key={album.spotifyID} album={album} bookmarked={album.bookmarked} />

@@ -1,10 +1,10 @@
 import AlbumCard from "@/components/album/AlbumCard";
 import CardGrid from "@/components/ui/CardGrid";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { SortDropdownProps } from "@/components/ui/SortDropdown";
+import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import { api } from "@/lib/api";
 import { queryClient } from "@/main";
-import { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
@@ -41,11 +41,7 @@ export const Route = createFileRoute("/bookmarks/")({
     orderBy: search.orderBy,
     order: search.order,
   }),
-  loader: async ({
-    deps: { page, search, orderBy, order },
-  }: {
-    deps: GetPaginatedBookmarkedAlbumsOptions;
-  }) => {
+  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetPaginatedBookmarkedAlbumsOptions }) => {
     return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,

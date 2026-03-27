@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
 const SOCKET_URL =
   import.meta.env.MODE === "development"

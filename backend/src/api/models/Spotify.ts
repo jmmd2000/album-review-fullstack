@@ -1,11 +1,4 @@
-import {
-  DisplayAlbum,
-  ExtractedColor,
-  SearchAlbumsOptions,
-  SpotifyAlbum,
-  SpotifyArtist,
-  SpotifySearchResponse,
-} from "@shared/types";
+import type { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, SpotifyArtist } from "@shared/types";
 import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
@@ -26,9 +19,7 @@ export class Spotify {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          btoa(process.env.SPOTIFY_CLIENT_ID + ":" + process.env.SPOTIFY_CLIENT_SECRET),
+        Authorization: "Basic " + btoa(process.env.SPOTIFY_CLIENT_ID + ":" + process.env.SPOTIFY_CLIENT_SECRET),
       },
       body: "grant_type=client_credentials",
     };
@@ -86,9 +77,7 @@ export class Spotify {
       // Bulk fetch existing review scores
       const ids = displayAlbums.map(a => a.spotifyID);
       const scoreRows = await AlbumModel.getReviewScoresByIds(ids);
-      const scoreMap = new Map(
-        scoreRows.map(({ spotifyID, reviewScore }) => [spotifyID, reviewScore])
-      );
+      const scoreMap = new Map(scoreRows.map(({ spotifyID, reviewScore }) => [spotifyID, reviewScore]));
 
       // Bulk fetch bookmarked IDs
       const bookmarkedIds = await BookmarkedAlbumModel.getBookmarkedByIds(ids);
@@ -142,9 +131,9 @@ export class Spotify {
 
     try {
       const accessToken = await this.getAccessToken();
-      
+
       // Fetch each artist individually in parallel
-      const artistPromises = ids.map(async (id) => {
+      const artistPromises = ids.map(async id => {
         const endpoint = `https://api.spotify.com/v1/artists/${id}`;
         const response = await fetch(endpoint, {
           method: "GET",

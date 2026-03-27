@@ -1,5 +1,5 @@
-import { ExtractedColor } from "@shared/types";
-import { Dispatch, SetStateAction } from "react";
+import type { ExtractedColor } from "@shared/types";
+import type { Dispatch, SetStateAction } from "react";
 
 interface ColourPickerProps {
   selectedColors: ExtractedColor[];
@@ -26,7 +26,7 @@ export const ColourPicker = ({ selectedColors, setSelectedColors }: ColourPicker
   };
 
   return (
-    <div className="w-full mb-6 p-4 rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40">
+    <div className="w-full mb-6 p-4 rounded-lg bg-linear-to-br from-neutral-800 to-neutral-900/40">
       <label className="block text-zinc-200 font-medium mb-3">
         Album Colors <span className="text-neutral-500">(max 5)</span>
       </label>

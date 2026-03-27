@@ -62,8 +62,7 @@ const JobProgressBar = ({
         >
           <ArtistImage imageUrl={artistImage} artistName={artistName} size="w-5 h-5" />
           <span className="text-xs text-neutral-300 truncate flex-1">
-            <span className="text-neutral-500">{phaseLabel}</span>{" "}
-            <span className="font-medium">{artistName}</span>
+            <span className="text-neutral-500">{phaseLabel}</span> <span className="font-medium">{artistName}</span>
           </span>
           <span className="text-xs text-neutral-500 tabular-nums shrink-0">
             {index}/{total}

@@ -1,4 +1,4 @@
-import { DisplayTrack } from "../types";
+import type { DisplayTrack } from "../types";
 
 /**
  * Enhanced album scoring system that includes both bonuses for high quality
@@ -8,7 +8,7 @@ import { DisplayTrack } from "../types";
  */
 export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   // Remove any tracks with a rating of 0
-  const tempTracks = ratedTracks.filter((track) => track.rating !== 0);
+  const tempTracks = ratedTracks.filter(track => track.rating !== 0);
 
   // Return 0 if no rated tracks
   if (tempTracks.length === 0) {
@@ -30,7 +30,7 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
 
   // Calculate basic score (old method)
   let albumScore = 0;
-  tempTracks.forEach((track) => {
+  tempTracks.forEach(track => {
     albumScore += Number(track.rating!);
   });
   const maxScore = tempTracks.length * 10;
@@ -38,16 +38,16 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   const baseScore = Math.round(percentageScore);
 
   // Get track ratings as numbers for analysis
-  const ratings = tempTracks.map((track) => Number(track.rating!));
+  const ratings = tempTracks.map(track => Number(track.rating!));
 
   // ----- QUALITY BONUSES -----
 
   // 1. Perfect track bonus (0-1.5 points)
-  const perfectTracks = ratings.filter((r) => r >= 10).length;
+  const perfectTracks = ratings.filter(r => r >= 10).length;
   const perfectBonus = Math.min(1.5, perfectTracks * 0.5);
 
   // 2. Quality bonus (0-1.5 points) - count 8s and 9s
-  const qualityTracks = ratings.filter((r) => r >= 8 && r < 10).length;
+  const qualityTracks = ratings.filter(r => r >= 8 && r < 10).length;
   const qualityBonus = Math.min(1.5, (qualityTracks / tempTracks.length) * 3);
 
   // 3. Consistency bonus (0-1 points)
@@ -75,24 +75,24 @@ export const calculateAlbumScore = (ratedTracks: DisplayTrack[]) => {
   }
 
   // 4. No weak tracks bonus (0-1 points)
-  const weakTracks = ratings.filter((r) => r < 5).length;
+  const weakTracks = ratings.filter(r => r < 5).length;
   const noWeakBonus = weakTracks === 0 ? 1 : 0;
 
   // ----- QUALITY PENALTIES -----
 
   // 1. Terrible tracks penalty (0 to -3 points)
   // Each "terrible" track (rating 1) penalizes the album
-  const terribleTracks = ratings.filter((r) => r <= 1).length;
+  const terribleTracks = ratings.filter(r => r <= 1).length;
   const terriblePenalty = Math.max(-3, terribleTracks * -1); // Cap at -3 points
 
   // 2. Poor quality penalty (0 to -2 points)
   // Based on percentage of tracks rated 2-3
-  const poorTracks = ratings.filter((r) => r >= 2 && r <= 3).length;
+  const poorTracks = ratings.filter(r => r >= 2 && r <= 3).length;
   const poorQualityPenalty = Math.max(-2, (poorTracks / tempTracks.length) * -4);
 
   // 3. No strong tracks penalty (0 to -2 points)
   // If there are no tracks rated above 5
-  const strongTracks = ratings.filter((r) => r > 5).length;
+  const strongTracks = ratings.filter(r => r > 5).length;
   const noStrongPenalty = strongTracks === 0 ? -2 : 0;
 
   // 4. Poor consistency penalty (already factored in - no consistency bonus for highly variable albums)

@@ -1,4 +1,4 @@
-import { ExtractedColor } from "@shared/types";
+import type { ExtractedColor } from "@shared/types";
 import { extractColors } from "extract-colors";
 import getPixels from "get-pixels";
 import { COLOR_EXTRACTION } from "@/config/constants";
@@ -33,12 +33,20 @@ export const getImageColors = async (imageUrl: string): Promise<ExtractedColor[]
       if (alpha <= COLOR_EXTRACTION.alphaThreshold) return false;
 
       // Remove near-black colors
-      if (red < COLOR_EXTRACTION.nearBlackThreshold && green < COLOR_EXTRACTION.nearBlackThreshold && blue < COLOR_EXTRACTION.nearBlackThreshold) {
+      if (
+        red < COLOR_EXTRACTION.nearBlackThreshold &&
+        green < COLOR_EXTRACTION.nearBlackThreshold &&
+        blue < COLOR_EXTRACTION.nearBlackThreshold
+      ) {
         return false;
       }
 
       // Remove near-white colors
-      if (red > COLOR_EXTRACTION.nearWhiteThreshold && green > COLOR_EXTRACTION.nearWhiteThreshold && blue > COLOR_EXTRACTION.nearWhiteThreshold) {
+      if (
+        red > COLOR_EXTRACTION.nearWhiteThreshold &&
+        green > COLOR_EXTRACTION.nearWhiteThreshold &&
+        blue > COLOR_EXTRACTION.nearWhiteThreshold
+      ) {
         return false;
       }
 
@@ -64,8 +72,8 @@ export const getImageColors = async (imageUrl: string): Promise<ExtractedColor[]
       const [width, height]: [number, number] = pixels.shape as [number, number];
 
       extractColors({ data, width, height }, options)
-        .then((colors) => {
-          resolve(colors.map((color) => ({ hex: color.hex } as ExtractedColor)));
+        .then(colors => {
+          resolve(colors.map(color => ({ hex: color.hex }) as ExtractedColor));
         })
         .catch(reject);
     });

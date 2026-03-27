@@ -13,12 +13,7 @@ interface ArtistStackProps {
   maxVisible?: number;
 }
 
-const ArtistStack = ({
-  artists,
-  linkable = false,
-  size = 48,
-  maxVisible = 4,
-}: ArtistStackProps) => {
+const ArtistStack = ({ artists, linkable = false, size = 48, maxVisible = 4 }: ArtistStackProps) => {
   const visibleArtists = artists.slice(0, maxVisible);
   const overflow = artists.length - visibleArtists.length;
 
@@ -26,8 +21,7 @@ const ArtistStack = ({
     <div className="flex items-center gap-2 min-w-0">
       <div className="flex items-center">
         {visibleArtists.map((artist, index) => {
-          const imageURL =
-            artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
+          const imageURL = artist.imageURLs?.[2]?.url ?? artist.imageURLs?.[0]?.url ?? "";
           const wrapperClass = `rounded-lg border border-neutral-800/15 bg-neutral-800/70 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-md ${index === 0 ? "" : "-ml-2"}`;
           return linkable ? (
             <Link
@@ -55,11 +49,7 @@ const ArtistStack = ({
               )}
             </Link>
           ) : (
-            <div
-              key={artist.spotifyID}
-              className={wrapperClass}
-              style={{ width: size, height: size }}
-            >
+            <div key={artist.spotifyID} className={wrapperClass} style={{ width: size, height: size }}>
               {imageURL ? (
                 <img
                   src={imageURL}

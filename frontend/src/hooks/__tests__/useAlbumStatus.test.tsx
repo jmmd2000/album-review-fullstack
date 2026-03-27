@@ -2,10 +2,10 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useAlbumStatus } from "../useAlbumStatus";
 import { api } from "@/lib/api";
-import { DisplayAlbum } from "@shared/types";
+import type { DisplayAlbum } from "@shared/types";
 
 vi.mock("@/lib/api", () => ({
   api: {

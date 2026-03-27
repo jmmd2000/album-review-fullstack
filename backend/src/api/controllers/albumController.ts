@@ -1,12 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { AlbumService } from "@/api/services/albumService";
-import {
-  DisplayTrack,
-  ExtractedColor,
-  GetPaginatedAlbumsOptions,
-  ReviewedAlbum,
-  SpotifyAlbum,
-} from "@shared/types";
+import type { DisplayTrack, ExtractedColor, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
@@ -58,15 +52,7 @@ export const getPaginatedAlbums = asyncHandler(async (req: Request, res: Respons
     throw new AppError(parsed.error.message, 400);
   }
 
-  const {
-    page,
-    orderBy,
-    order,
-    search,
-    genres: genresString,
-    secondaryOrderBy,
-    secondaryOrder,
-  } = parsed.data;
+  const { page, orderBy, order, search, genres: genresString, secondaryOrderBy, secondaryOrder } = parsed.data;
 
   let genres: string[] | undefined;
   if (genresString) {
@@ -91,9 +77,7 @@ export const getPaginatedAlbums = asyncHandler(async (req: Request, res: Respons
     secondaryOrder,
   });
 
-  res
-    .status(200)
-    .json({ albums, furtherPages, totalCount, genres: returnedGenres, relatedGenres });
+  res.status(200).json({ albums, furtherPages, totalCount, genres: returnedGenres, relatedGenres });
 });
 
 export const deleteAlbum = asyncHandler(async (req: Request, res: Response) => {

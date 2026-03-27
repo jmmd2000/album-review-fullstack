@@ -18,9 +18,7 @@ export interface ArtistLeaderboardData {
  * @returns A new array of artist objects sorted by score in descending order, and by name
  * alphabetically if scores are equal, with position numbers assigned.
  */
-export function calculateLeaderboardPositions(
-  artists: ArtistLeaderboardData[]
-): ArtistLeaderboardData[] {
+export function calculateLeaderboardPositions(artists: ArtistLeaderboardData[]): ArtistLeaderboardData[] {
   const sortedArtists = artists.sort((a, b) => {
     if (b.score !== a.score) {
       // sort by score in descending order

@@ -1,6 +1,6 @@
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
-import { DisplayAlbum, DisplayArtist, Genre, RelatedGenre } from "@shared/types";
+import type { DisplayAlbum, DisplayArtist, Genre } from "@shared/types";
 import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "./genreService";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
@@ -19,9 +19,7 @@ export class StatsService {
   }> {
     // Fetch fav / least fav album
     const albums = await AlbumModel.getAllAlbums();
-    const filteredSortedAlbums = albums.sort(
-      (a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0)
-    );
+    const filteredSortedAlbums = albums.sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0));
     const favouriteAlbum = filteredSortedAlbums[0] ?? null;
     const leastFavouriteAlbum = filteredSortedAlbums[filteredSortedAlbums.length - 1] ?? null;
 
@@ -45,17 +43,12 @@ export class StatsService {
       .filter(a => (a.totalScore ?? 0) !== 0)
       .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0));
     const favouriteArtist = filteredSortedArtists[0] ?? null;
-    const leastFavouriteArtist =
-      filteredSortedArtists[filteredSortedArtists.length - 1] ?? null;
+    const leastFavouriteArtist = filteredSortedArtists[filteredSortedArtists.length - 1] ?? null;
 
     // Fetch fav / least fav genre
     const genres = await GenreModel.getAllGenres();
     const albumGenres = await AlbumGenreModel.getAllAlbumGenres();
-    const { favouriteGenre, leastFavouriteGenre } = calculateFavouriteGenres(
-      albums,
-      genres,
-      albumGenres
-    );
+    const { favouriteGenre, leastFavouriteGenre } = calculateFavouriteGenres(albums, genres, albumGenres);
 
     return {
       favouriteArtist,
@@ -79,7 +72,7 @@ export class StatsService {
     slug: string | null;
     allGenres: Genre[];
   }> {
-    let allGenres = await GenreModel.getAllGenres();
+    const allGenres = await GenreModel.getAllGenres();
     allGenres.sort((a, b) => a.name.localeCompare(b.name));
     if (!slug) {
       return {
@@ -97,8 +90,7 @@ export class StatsService {
     const reviewedAlbumCount = albumsWithGenre.length;
     let averageScore =
       reviewedAlbumCount > 0
-        ? albumsWithGenre.reduce((sum, album) => sum + (album.finalScore ?? 0), 0) /
-          reviewedAlbumCount
+        ? albumsWithGenre.reduce((sum, album) => sum + (album.finalScore ?? 0), 0) / reviewedAlbumCount
         : 0;
     // Round to 2 decimal places
     averageScore = Math.round(averageScore * 100) / 100;
@@ -137,45 +129,41 @@ export class StatsService {
       case "albums":
         for (const album of albums) {
           if (album.finalScore !== null && album.finalScore !== undefined) {
-            const tier = ratingTiers.find(
-              t => t.range[0] <= album.finalScore && t.range[1] >= album.finalScore
-            );
+            const tier = ratingTiers.find(t => t.range[0] <= album.finalScore && t.range[1] >= album.finalScore);
             if (tier) {
               distribution[tier.label] += 1;
             }
           }
         }
         break;
-      case "tracks":
+      case "tracks": {
         const tracks = await TrackModel.getAllTracks();
         for (const track of tracks) {
           if (track.rating !== null && track.rating !== undefined) {
             // Scale track rating (0-10) to 0-100
             const scaledRating = track.rating * 10;
-            const tier = ratingTiers.find(
-              t => t.range[0] <= scaledRating && t.range[1] >= scaledRating
-            );
+            const tier = ratingTiers.find(t => t.range[0] <= scaledRating && t.range[1] >= scaledRating);
             if (tier) {
               distribution[tier.label] += 1;
             }
           }
         }
         break;
-      case "artists":
+      }
+      case "artists": {
         const artists = await ArtistModel.getAllArtists();
         for (const artist of artists) {
           let score = artist.totalScore ?? 0;
           if (score < 1) score = 0;
           if (!Number.isFinite(score)) continue;
           const roundedScore = Math.ceil(score);
-          const tier = ratingTiers.find(
-            t => t.range[0] <= roundedScore && t.range[1] >= roundedScore
-          );
+          const tier = ratingTiers.find(t => t.range[0] <= roundedScore && t.range[1] >= roundedScore);
           if (tier) {
             distribution[tier.label] += 1;
           }
         }
         break;
+      }
     }
 
     const data = ratingTiers.map(tier => ({

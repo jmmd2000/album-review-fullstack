@@ -1,5 +1,5 @@
 import { queryClient } from "@/main";
-import { DisplayAlbum } from "@shared/types";
+import type { DisplayAlbum } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@components/ui/ErrorComponent";
@@ -48,11 +48,7 @@ function Index() {
         <div className="flex flex-col pt-8 sm:pt-12 md:justify-center md:pt-0 min-h-[calc(100vh-70px)] md:min-h-[calc(100vh-80px)]">
           <div className="flex flex-col gap-10 sm:gap-12 md:gap-16 w-full md:w-3/4 lg:w-2/3 xl:w-1/2 3xl:w-2/5">
             <IntroductoryText />
-            <HomeStats
-              numArtists={data.numArtists}
-              numAlbums={data.numAlbums}
-              numTracks={data.numTracks}
-            />
+            <HomeStats numArtists={data.numArtists} numAlbums={data.numAlbums} numTracks={data.numTracks} />
           </div>
         </div>
       </GradientOverlay>
@@ -69,18 +65,14 @@ function IntroductoryText() {
       <div className="w-20 h-1 bg-linear-to-r from-red-500 to-transparent mb-8"></div>
 
       <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        This is my album review blog, where I share my thoughts on a variety of albums and
-        artists.
+        This is my album review blog, where I share my thoughts on a variety of albums and artists.
       </p>
 
       <p className="mb-6 text-base sm:text-lg md:text-xl font-light text-gray-100 leading-relaxed">
-        Whether it's a classic I missed or something brand new, every album I listen to ends up
-        here.
+        Whether it's a classic I missed or something brand new, every album I listen to ends up here.
       </p>
 
-      <p className="mb-8 text-base sm:text-lg md:text-xl font-light text-gray-100">
-        Thanks for visiting!
-      </p>
+      <p className="mb-8 text-base sm:text-lg md:text-xl font-light text-gray-100">Thanks for visiting!</p>
 
       <div className="flex items-center gap-3">
         <div className="w-12 h-px bg-gray-500"></div>

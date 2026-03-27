@@ -1,4 +1,4 @@
-import { DisplayAlbum, DisplayArtist } from "@shared/types";
+import type { DisplayAlbum, DisplayArtist } from "@shared/types";
 
 export const mockDisplayAlbum: DisplayAlbum = {
   spotifyID: "0JGOiO34nwfUdDrD612dOp",

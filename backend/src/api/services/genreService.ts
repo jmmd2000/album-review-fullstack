@@ -1,6 +1,6 @@
 import { GenreModel } from "@/api/models/Genre";
 import { AppError } from "../middleware/errorHandler";
-import { Genre, RelatedGenre } from "@shared/types";
+import type { Genre, RelatedGenre } from "@shared/types";
 import slugify from "slugify";
 
 export class GenreService {
@@ -82,9 +82,7 @@ export class GenreService {
       relatedGenreIds.add(r.relatedGenreID);
     });
 
-    const filtered = allGenres
-      .filter(g => relatedGenreIds.has(g.id))
-      .filter(g => !slugs.includes(g.slug));
+    const filtered = allGenres.filter(g => relatedGenreIds.has(g.id)).filter(g => !slugs.includes(g.slug));
 
     return filtered;
   }

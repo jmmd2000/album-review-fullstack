@@ -1,6 +1,6 @@
 import ErrorComponent from "@components/ui/ErrorComponent";
 import { queryClient } from "@/main";
-import { DisplayAlbum, DisplayTrack, ReviewedArtist } from "@shared/types";
+import type { DisplayAlbum, DisplayTrack, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import HeaderDetails from "@/components/layout/HeaderDetails";
@@ -145,9 +145,7 @@ function RouteComponent() {
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Overall</span>
                 {artist.leaderboardPosition && (
-                  <span className="text-xs text-gray-500">
-                    Rank #{artist.leaderboardPosition}
-                  </span>
+                  <span className="text-xs text-gray-500">Rank #{artist.leaderboardPosition}</span>
                 )}
               </div>
             </div>
@@ -166,9 +164,7 @@ function RouteComponent() {
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Peak</span>
                 {artist.peakLeaderboardPosition && (
-                  <span className="text-xs text-gray-500">
-                    Rank #{artist.peakLeaderboardPosition}
-                  </span>
+                  <span className="text-xs text-gray-500">Rank #{artist.peakLeaderboardPosition}</span>
                 )}
               </div>
             </div>
@@ -187,9 +183,7 @@ function RouteComponent() {
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm text-gray-400">Latest</span>
                 {artist.latestLeaderboardPosition && (
-                  <span className="text-xs text-gray-500">
-                    Rank #{artist.latestLeaderboardPosition}
-                  </span>
+                  <span className="text-xs text-gray-500">Rank #{artist.latestLeaderboardPosition}</span>
                 )}
               </div>
             </div>

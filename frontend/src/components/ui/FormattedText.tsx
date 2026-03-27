@@ -1,4 +1,4 @@
-import { FormattedToken } from "@shared/helpers/parseReviewContent";
+import type { FormattedToken } from "@shared/helpers/parseReviewContent";
 
 /**
  * Props for the FormattedText component
@@ -24,30 +24,28 @@ export const FormattedText = ({ tokens }: FormattedTextProps) => {
     <>
       {tokens.map((token, index) => {
         switch (token.type) {
-          case 'text':
+          case "text":
             return <span key={index}>{token.content}</span>;
-          case 'bold':
+          case "bold":
             return (
               <strong key={index} className="font-black text-white">
                 {token.content}
               </strong>
             );
-          case 'italic':
+          case "italic":
             return <em key={index}>{token.content}</em>;
-          case 'underline':
+          case "underline":
             return <u key={index}>{token.content}</u>;
-          case 'colored':
+          case "colored":
             return (
-              <span
-                key={index}
-                style={{ color: token.color, fontWeight: 700 }}
-              >
+              <span key={index} style={{ color: token.color, fontWeight: 700 }}>
                 {token.content}
               </span>
             );
-          default:
+          default: {
             const _exhaustiveCheck: never = token;
             return _exhaustiveCheck;
+          }
         }
       })}
     </>

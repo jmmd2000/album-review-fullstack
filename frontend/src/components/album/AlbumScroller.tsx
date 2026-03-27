@@ -1,4 +1,4 @@
-import { DisplayAlbum } from "@shared/types";
+import type { DisplayAlbum } from "@shared/types";
 import { useMemo } from "react";
 
 interface AlbumScrollerProps {
@@ -10,14 +10,7 @@ const AlbumScroller = ({ albums }: AlbumScrollerProps) => {
   const randomizedAlbums = useMemo(() => {
     const shuffled = [...albums].sort(() => Math.random() - 0.5);
     // Create 6 sets of the randomized albums for smooth infinite scroll
-    return [
-      ...shuffled,
-      ...shuffled,
-      ...shuffled,
-      ...shuffled,
-      ...shuffled,
-      ...shuffled,
-    ];
+    return [...shuffled, ...shuffled, ...shuffled, ...shuffled, ...shuffled, ...shuffled];
   }, [albums]);
 
   return (

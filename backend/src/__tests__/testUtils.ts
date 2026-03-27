@@ -1,6 +1,5 @@
-export const resetTables = async (
-  query: (text: string, params?: any[]) => Promise<any>
-) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const resetTables = async (query: (text: string, params?: any[]) => Promise<any>) => {
   await query(
     "TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, genres, album_genres, related_genres, settings RESTART IDENTITY CASCADE;"
   );

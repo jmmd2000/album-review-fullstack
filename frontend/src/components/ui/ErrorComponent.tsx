@@ -1,5 +1,6 @@
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { useRouter, ErrorComponentProps, useParams } from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
+import { useRouter, useParams } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 /**
@@ -20,7 +21,7 @@ const ErrorComponent = ({ error }: ErrorComponentProps) => {
 
   return (
     <div className="flex items-center justify-center h-[80vh]">
-      <div className="flex flex-col items-center justify-center gap-4 p-5 border-2 text-red-500 bg-red-500/40 border-red-500 w-[400px] rounded-lg">
+      <div className="flex flex-col items-center justify-center gap-4 p-5 border-2 text-red-500 bg-red-500/40 border-red-500 w-100 rounded-lg">
         <h1 className="text-3xl font-bold">Error</h1>
         <p>{error.message}</p>
 

@@ -20,15 +20,12 @@ export function normalizeSpotifyImageUrl(url: string): string {
     urlObj.searchParams.sort();
 
     return urlObj.toString();
-  } catch (e) {
+  } catch {
     return url;
   }
 }
 
-export function areImageUrlsSame(
-  currentUrls: string[],
-  fetchedUrls: string[]
-): boolean {
+export function areImageUrlsSame(currentUrls: string[], fetchedUrls: string[]): boolean {
   if (currentUrls.length !== fetchedUrls.length) {
     return false;
   }

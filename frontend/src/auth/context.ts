@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { AuthContextType } from "@shared/types";
+import type { AuthContextType } from "@shared/types";
 
 /**
  * Context to provide auth status & login/logout functions.

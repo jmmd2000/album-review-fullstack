@@ -1,19 +1,7 @@
-import {
-  beforeAll,
-  beforeEach,
-  afterEach,
-  afterAll,
-  test,
-  expect,
-  jest,
-  describe,
-} from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
 import { closeDatabase, query } from "../../db";
 import { resetTables } from "./testUtils";
-import {
-  calculatePeakScore,
-  calculateLatestScore,
-} from "../helpers/calculatePeakAndLatestScores";
+import { calculatePeakScore, calculateLatestScore } from "../helpers/calculatePeakAndLatestScores";
 import { calculateArtistScore } from "../helpers/calculateArtistScore";
 import { calculateLeaderboardPositions } from "../helpers/calculateLeaderboardPositions";
 import type { ReviewedAlbum } from "@shared/types";
@@ -57,10 +45,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should handle less than 3 albums", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(90, 2020, true),
-        createMockAlbum(80, 2021, true),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(90, 2020, true), createMockAlbum(80, 2021, true)];
 
       const peakScore = calculatePeakScore(albums);
 
@@ -123,10 +108,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should return 0 for no contributing albums", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(90, 2020, false),
-        createMockAlbum(80, 2021, false),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(90, 2020, false), createMockAlbum(80, 2021, false)];
 
       const peakScore = calculatePeakScore(albums);
       expect(peakScore).toBe(0);
@@ -154,10 +136,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should handle less than 3 albums", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(90, 2023, true),
-        createMockAlbum(80, 2024, true),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(90, 2023, true), createMockAlbum(80, 2024, true)];
 
       const latestScore = calculateLatestScore(albums);
 
@@ -204,10 +183,7 @@ describe("Score Calculation Functions", () => {
     });
 
     test("should return 0 for no contributing albums", () => {
-      const albums: ReviewedAlbum[] = [
-        createMockAlbum(90, 2020, false),
-        createMockAlbum(80, 2021, false),
-      ];
+      const albums: ReviewedAlbum[] = [createMockAlbum(90, 2020, false), createMockAlbum(80, 2021, false)];
 
       const latestScore = calculateLatestScore(albums);
       expect(latestScore).toBe(0);
@@ -391,11 +367,7 @@ describe("Score Calculation Functions", () => {
 });
 
 // Helper function to create mock albums
-function createMockAlbum(
-  finalScore: number,
-  releaseYear: number,
-  affectsArtistScore: boolean
-): ReviewedAlbum {
+function createMockAlbum(finalScore: number, releaseYear: number, affectsArtistScore: boolean): ReviewedAlbum {
   return {
     id: Math.random(),
     spotifyID: `album_${Math.random()}`,

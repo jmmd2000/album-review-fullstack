@@ -7,25 +7,24 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // Global ignores
   {
-    ignores: [
-      "**/dist/**",
-      "**/node_modules/**",
-      "**/coverage/**",
-      "frontend/src/routeTree.gen.ts",
-    ],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "frontend/src/routeTree.gen.ts"],
   },
 
   // Base TS rules
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: "module",
+      },
+    },
     rules: {
       "no-extra-boolean-cast": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
-      "@typescript-eslint/consistent-type-imports": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/consistent-type-imports": ["warn", { disallowTypeAnnotations: false }],
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-unused-expressions": "off",
       "@typescript-eslint/no-explicit-any": "warn",
@@ -40,6 +39,7 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parser: tseslint.parser,
     },
     plugins: {
       "react-hooks": reactHooks,
@@ -56,6 +56,7 @@ export default tseslint.config(
     files: ["backend/**/*.ts"],
     languageOptions: {
       globals: globals.node,
+      parser: tseslint.parser,
     },
     rules: {
       "no-console": "off",
@@ -67,6 +68,7 @@ export default tseslint.config(
     files: ["shared/**/*.ts"],
     languageOptions: {
       globals: globals.node,
+      parser: tseslint.parser,
     },
   }
 );

@@ -1,27 +1,21 @@
 import "dotenv/config";
-import {
+import type {
   DisplayAlbum,
   ExtractedColor,
   DisplayTrack,
   GetPaginatedAlbumsOptions,
   ReviewedAlbum,
   ReviewedArtist,
-  ReviewedTrack,
   SpotifyAlbum,
-  RelatedGenre,
   PaginatedAlbumsResult,
   Genre,
   AlbumArtist,
 } from "@shared/types";
-import { ReceivedReviewData } from "@/api/controllers/albumController";
+import type { ReceivedReviewData } from "@/api/controllers/albumController";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
-import {
-  ArtistLeaderboardData,
-  calculateLeaderboardPositions,
-} from "@/helpers/calculateLeaderboardPositions";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { ArtistService } from "./artistService";
@@ -33,14 +27,9 @@ import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "./genreService";
 import { AppError } from "../middleware/errorHandler";
 
-// albumService.ts (or a helpers file)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isSpotifyAlbum(a: any): a is SpotifyAlbum {
-  return (
-    typeof a === "object" &&
-    typeof a.id === "string" &&
-    Array.isArray(a.artists) &&
-    typeof a.uri === "string"
-  );
+  return typeof a === "object" && typeof a.id === "string" && Array.isArray(a.artists) && typeof a.uri === "string";
 }
 
 export class AlbumService {
@@ -60,26 +49,17 @@ export class AlbumService {
     if (albumArtists.length === 0) {
       throw new Error("Album artists could not be resolved");
     }
-    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(
-      data.selectedArtistIDs,
-      albumArtists
-    );
+    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(data.selectedArtistIDs, albumArtists);
     // Allow per-artist scoring for collabs, but keep the solo toggle behavior
     const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
       data.scoreArtistIDs,
       selectedArtistIDs,
       albumArtists.length === 1 ? data.affectsArtistScore : undefined
     );
-    const primaryArtist =
-      albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ?? albumArtists[0];
+    const primaryArtist = albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ?? albumArtists[0];
 
     // Ensure all selected artists exist before linking tracks/albums
-    await AlbumService.ensureArtists(
-      selectedArtistIDs,
-      albumArtists,
-      scoreArtistIDs,
-      finalScore
-    );
+    await AlbumService.ensureArtists(selectedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
 
     // prepare misc album data
     const releaseDate = formatDate(spotifyAlbum.release_date);
@@ -117,9 +97,7 @@ export class AlbumService {
       albumArtists,
     });
 
-    const genreIDs = await Promise.all(
-      data.genres.map(name => GenreService.findOrCreateGenre(name))
-    );
+    const genreIDs = await Promise.all(data.genres.map(name => GenreService.findOrCreateGenre(name)));
 
     // Link new genres & bump related strengths
     await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs);
@@ -151,9 +129,7 @@ export class AlbumService {
         name: t.name,
         spotifyID: t.id,
         duration: t.duration_ms,
-        features: t.artists
-          .filter(x => !selectedArtistIDs.includes(x.id))
-          .map(x => ({ id: x.id, name: x.name })),
+        features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
         rating: track.rating!,
       });
       const linkArtistIDs = t.artists.map(a => a.id).filter(id => existingArtistIDs.has(id));
@@ -186,9 +162,7 @@ export class AlbumService {
     const artistIDs = artistLinks.map(link => link.artistSpotifyID);
     const artists = (await ArtistModel.getArtistsBySpotifyIDs(artistIDs)) as ReviewedArtist[];
     album.artistSpotifyIDs = artistIDs;
-    album.artistScoreIDs = artistLinks
-      .filter(link => link.affectsScore)
-      .map(link => link.artistSpotifyID);
+    album.artistScoreIDs = artistLinks.filter(link => link.affectsScore).map(link => link.artistSpotifyID);
     const tracks = await TrackModel.getTracksByAlbumID(id);
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
@@ -237,9 +211,7 @@ export class AlbumService {
     return { albums: displayAlbums, numArtists, numAlbums, numTracks };
   }
 
-  static async getPaginatedAlbums(
-    opts: GetPaginatedAlbumsOptions
-  ): Promise<PaginatedAlbumsResult> {
+  static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
 
     // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
@@ -264,9 +236,7 @@ export class AlbumService {
       albumArtists: album.albumArtists,
     }));
 
-    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(
-      albums.map(a => a.spotifyID)
-    );
+    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albums.map(a => a.spotifyID));
     for (const displayAlbum of displayAlbums) {
       displayAlbum.artistSpotifyIDs = artistMap.get(displayAlbum.spotifyID) ?? [];
     }
@@ -310,10 +280,7 @@ export class AlbumService {
       // Preserve existing album artists if the update payload omits them
       albumArtists = existingAlbum.albumArtists;
     }
-    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(
-      data.selectedArtistIDs,
-      albumArtists
-    );
+    const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(data.selectedArtistIDs, albumArtists);
     // Preserve "no score" state if all score toggles are off
     const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(
       data.scoreArtistIDs,
@@ -360,12 +327,7 @@ export class AlbumService {
     await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs);
 
     const trackArtistIDs = Array.from(
-      new Set(
-        data.ratedTracks.flatMap(track => [
-          track.artistSpotifyID,
-          ...track.features.map(f => f.id),
-        ])
-      )
+      new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)]))
     );
     const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
     const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
@@ -393,25 +355,19 @@ export class AlbumService {
         }
       }
 
-      if (
-        oldTrack &&
-        JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])
-      ) {
+      if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
         await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features);
       }
-      const linkArtistIDs = [
-        newTrack.artistSpotifyID,
-        ...newTrack.features.map(f => f.id),
-      ].filter(id => existingArtistIDs.has(id));
+      const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id =>
+        existingArtistIDs.has(id)
+      );
       await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID);
       await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs);
     }
 
     // Get new vs old genre IDs
     const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
-    const newIDs = await Promise.all(
-      data.genres.map(name => GenreService.findOrCreateGenre(name))
-    );
+    const newIDs = await Promise.all(data.genres.map(name => GenreService.findOrCreateGenre(name)));
     const toAdd = newIDs.filter(nid => !oldIDs.includes(nid));
     const toRemove = oldIDs.filter(oid => !newIDs.includes(oid));
 
@@ -424,9 +380,7 @@ export class AlbumService {
     await GenreModel.decrementRelatedStrength(toRemove);
     await GenreService.deleteIfUnused(toRemove);
 
-    await AlbumService.refreshArtists([
-      ...new Set([...previousArtistIDs, ...selectedArtistIDs]),
-    ]);
+    await AlbumService.refreshArtists([...new Set([...previousArtistIDs, ...selectedArtistIDs])]);
 
     return AlbumModel.findBySpotifyID(albumID);
   }
@@ -435,17 +389,12 @@ export class AlbumService {
     return AlbumModel.getReviewScoresByIds(ids);
   }
 
-  private static resolveSelectedArtistIDs(
-    selectedArtistIDs: string[] | undefined,
-    albumArtists: AlbumArtist[]
-  ) {
+  private static resolveSelectedArtistIDs(selectedArtistIDs: string[] | undefined, albumArtists: AlbumArtist[]) {
     if (albumArtists.length === 0) {
       return selectedArtistIDs ?? [];
     }
     const candidateIDs =
-      selectedArtistIDs && selectedArtistIDs.length > 0
-        ? selectedArtistIDs
-        : albumArtists.map(a => a.spotifyID);
+      selectedArtistIDs && selectedArtistIDs.length > 0 ? selectedArtistIDs : albumArtists.map(a => a.spotifyID);
     const allowed = new Set(albumArtists.map(a => a.spotifyID));
     const filtered = candidateIDs.filter(id => allowed.has(id));
     return filtered.length > 0 ? filtered : [albumArtists[0].spotifyID];
@@ -467,9 +416,7 @@ export class AlbumService {
     return scoreArtistIDs.filter(id => allowed.has(id));
   }
 
-  private static async resolveAlbumArtists(
-    album: SpotifyAlbum | ReviewedAlbum
-  ): Promise<AlbumArtist[]> {
+  private static async resolveAlbumArtists(album: SpotifyAlbum | ReviewedAlbum): Promise<AlbumArtist[]> {
     if ("albumArtists" in album && album.albumArtists?.length) {
       return album.albumArtists;
     }
@@ -552,9 +499,7 @@ export class AlbumService {
         continue;
       }
 
-      const contributing = albumLinks
-        .filter(link => link.affectsScore)
-        .map(link => link.album) as ReviewedAlbum[];
+      const contributing = albumLinks.filter(link => link.affectsScore).map(link => link.album) as ReviewedAlbum[];
 
       if (contributing.length === 0) {
         await ArtistModel.updateArtist(artistID, {
@@ -574,14 +519,8 @@ export class AlbumService {
         continue;
       }
 
-      const {
-        newAverageScore,
-        newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReasons,
-      } = calculateArtistScore(contributing);
+      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } =
+        calculateArtistScore(contributing);
 
       await ArtistModel.updateArtist(artistID, {
         averageScore: newAverageScore,

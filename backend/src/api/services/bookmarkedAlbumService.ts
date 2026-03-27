@@ -1,9 +1,5 @@
 import "dotenv/config";
-import {
-  DisplayAlbum,
-  SpotifyImage,
-  GetPaginatedBookmarkedAlbumsOptions,
-} from "@shared/types";
+import type { DisplayAlbum, SpotifyImage, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { AppError } from "../middleware/errorHandler";
 

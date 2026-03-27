@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Page } from "puppeteer";
+import type { Browser } from "puppeteer";
 import puppeteerExtra from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
@@ -141,11 +141,7 @@ export async function fetchArtistHeadersFromSpotify(
           const url = req.url();
 
           // Block fonts and some scripts, but allow images and main resources
-          if (
-            ["font"].includes(resourceType) ||
-            url.includes("google-analytics") ||
-            url.includes("googletagmanager")
-          ) {
+          if (["font"].includes(resourceType) || url.includes("google-analytics") || url.includes("googletagmanager")) {
             req.abort();
           } else {
             req.continue();
@@ -196,7 +192,7 @@ export async function fetchArtistHeadersFromSpotify(
             }, selector);
 
             if (bannerUrl) break;
-          } catch (e) {
+          } catch {
             // Continue to next selector
             continue;
           }
@@ -242,7 +238,7 @@ export async function fetchArtistHeadersFromSpotify(
           const url = await page.url();
           const title = await page.title();
           console.error(`Page URL: ${url}, Title: ${title}`);
-        } catch (e) {
+        } catch {
           console.error("Could not get page info for debugging");
         }
 

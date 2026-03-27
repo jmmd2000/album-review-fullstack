@@ -34,10 +34,7 @@ export function formatDate(inputDate: string): string {
       daySuffix = "rd";
     }
 
-    return `${formattedDate.replace(
-      `${dayOfMonth}`,
-      `${dayOfMonth}${daySuffix}`
-    )}`;
+    return `${formattedDate.replace(`${dayOfMonth}`, `${dayOfMonth}${daySuffix}`)}`;
   }
 }
 

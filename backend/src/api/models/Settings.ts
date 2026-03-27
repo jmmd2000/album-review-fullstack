@@ -12,6 +12,7 @@ export class SettingsModel {
       .then(r => r[0] || null);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async upsert(key: string, value: any) {
     return db
       .insert(settings)

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { UseFormRegisterReturn } from "react-hook-form";
+import type { UseFormRegisterReturn } from "react-hook-form";
 import { toast } from "sonner";
 
 interface ReviewContentInputProps {
@@ -52,8 +52,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
     }
     const current = textarea.value;
     const selected = current.substring(start, end);
-    const updated =
-      current.substring(0, start) + prefix + selected + suffix + current.substring(end);
+    const updated = current.substring(0, start) + prefix + selected + suffix + current.substring(end);
     textarea.value = updated;
     const event = new Event("input", { bubbles: true });
     textarea.dispatchEvent(event);
@@ -102,7 +101,7 @@ export const ReviewContentInput = ({ registration, value = "" }: ReviewContentIn
           <span className="text-[#fb2c36]">A</span>
         </button>
       </div>
-      <div className="rounded-lg bg-gradient-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
+      <div className="rounded-lg bg-linear-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
         <div className="relative px-5 py-4 border-l-4 border-neutral-800">
           <blockquote className="text-zinc-200 text-sm sm:text-base font-light">
             <textarea

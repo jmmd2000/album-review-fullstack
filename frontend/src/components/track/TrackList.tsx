@@ -1,7 +1,8 @@
-import { DisplayTrack } from "@shared/types";
+import type { DisplayTrack } from "@shared/types";
 import TrackCard from "./TrackCard";
-import { Controller, UseFormReturn } from "react-hook-form";
-import { CreateReviewFormData } from "@components/form/AlbumReviewForm";
+import type { UseFormReturn } from "react-hook-form";
+import { Controller } from "react-hook-form";
+import type { CreateReviewFormData } from "@components/form/AlbumReviewForm";
 import { useState } from "react";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 
@@ -22,20 +23,13 @@ interface TrackListProps {
 /**
  * This component creates a list of TrackCards.
  */
-const TrackList = ({
-  tracks,
-  formMethods,
-  maxHeight = "500px",
-  sortByRating = false,
-}: TrackListProps) => {
+const TrackList = ({ tracks, formMethods, maxHeight = "500px", sortByRating = false }: TrackListProps) => {
   // Local state to force re-renders when ratings change
   const [updatedTracks, setUpdatedTracks] = useState(tracks);
 
   // Function to handle rating changes
   const handleRatingChange = (index: number, newRating: number) => {
-    const newTracks = updatedTracks.map((track, i) =>
-      i === index ? { ...track, rating: newRating } : track
-    );
+    const newTracks = updatedTracks.map((track, i) => (i === index ? { ...track, rating: newRating } : track));
 
     // update local state to force re-render so the colour changes
     setUpdatedTracks(newTracks);
@@ -115,21 +109,14 @@ const TrackList = ({
                 </h3>
                 <div className="flex flex-col gap-2 mb-4">
                   {tierTracks.map(track =>
-                    renderTrackCard(
-                      track,
-                      tierTracks.indexOf(track),
-                      formMethods,
-                      handleRatingChange
-                    )
+                    renderTrackCard(track, tierTracks.indexOf(track), formMethods, handleRatingChange)
                   )}
                 </div>
               </div>
             );
           })
         : // Render tracks in original order
-          sortedTracks.map((track, index) =>
-            renderTrackCard(track, index, formMethods, handleRatingChange)
-          )}
+          sortedTracks.map((track, index) => renderTrackCard(track, index, formMethods, handleRatingChange))}
     </div>
   );
 
@@ -141,17 +128,9 @@ const TrackList = ({
     handleRatingChange?: (index: number, rating: number) => void
   ) {
     return formMethods ? (
-      <TrackCard
-        key={track.spotifyID}
-        track={track}
-        trackNumber={sortByRating ? undefined : index + 1}
-      >
+      <TrackCard key={track.spotifyID} track={track} trackNumber={sortByRating ? undefined : index + 1}>
         {/* Hidden input for track ID */}
-        <input
-          type="hidden"
-          {...formMethods.register(`tracks.${index}.spotifyID`)}
-          value={track.spotifyID}
-        />
+        <input type="hidden" {...formMethods.register(`tracks.${index}.spotifyID`)} value={track.spotifyID} />
 
         {/* Rating dropdown */}
         <Controller
@@ -186,11 +165,7 @@ const TrackList = ({
         />
       </TrackCard>
     ) : (
-      <TrackCard
-        key={track.spotifyID}
-        track={track}
-        trackNumber={sortByRating ? undefined : index + 1}
-      />
+      <TrackCard key={track.spotifyID} track={track} trackNumber={sortByRating ? undefined : index + 1} />
     );
   }
 };

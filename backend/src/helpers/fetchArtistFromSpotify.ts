@@ -1,4 +1,4 @@
-import { SpotifyArtist, SpotifyImage } from "@shared/types";
+import type { SpotifyArtist, SpotifyImage } from "@shared/types";
 import { SpotifyService } from "@/api/services/spotifyService";
 
 /**

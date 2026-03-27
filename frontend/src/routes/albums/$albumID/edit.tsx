@@ -1,10 +1,4 @@
-import {
-  ExtractedColor,
-  Genre,
-  ReviewedAlbum,
-  ReviewedArtist,
-  ReviewedTrack,
-} from "@shared/types";
+import type { ExtractedColor, Genre, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";

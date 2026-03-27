@@ -1,4 +1,4 @@
-import { DisplayTrack } from "@shared/types";
+import type { DisplayTrack } from "@shared/types";
 import { convertDuration } from "@/helpers/convertDuration";
 import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { Clock } from "lucide-react";
@@ -26,9 +26,7 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
 
   const hasRating = track.rating !== undefined;
   const hasFeatures = track.features && track.features.length > 0;
-  const featuresText = hasFeatures
-    ? track.features.map(feature => feature.name).join(", ")
-    : "";
+  const featuresText = hasFeatures ? track.features.map(feature => feature.name).join(", ") : "";
 
   // Get the smallest album image that's at least 64px
   const albumImage = track.imageURLs?.find(img => img.width >= 64) || track.imageURLs?.[0];
@@ -97,9 +95,7 @@ const TrackCard = ({ track, children, trackNumber }: TrackCardProps) => {
       {/* Rating or form input */}
       <div className="shrink-0 w-32 -mr-3 sm:mr-2">
         {hasRating && !children ? (
-          <p
-            className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}
-          >
+          <p className={`col-start-6 @[950px]/TrackList:col-start-7 text-center uppercase font-bold ${textColor}`}>
             {label}
           </p>
         ) : children ? (

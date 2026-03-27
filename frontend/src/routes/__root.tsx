@@ -64,11 +64,7 @@ const Navbar = () => {
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <button
-          onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4"
-          aria-label="Close menu"
-        >
+        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4" aria-label="Close menu">
           <X size={24} />
         </button>
         <img src="/favicon.ico" alt="logo" className="h-10 w-10 mb-6" />
@@ -82,12 +78,7 @@ const Navbar = () => {
         </div>
       </aside>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-9997"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-9997" onClick={() => setIsOpen(false)} />}
 
       {/* Desktop Navbar */}
       <header className="hidden sm:flex bg-neutral-900 text-white px-5 py-5 3xl:px-8 3xl:py-6 gap-5 items-center z-9999 relative">

@@ -45,16 +45,12 @@ describe("ArtistStack", () => {
       {
         spotifyID: "a4",
         name: "Diana",
-        imageURLs: [
-          { url: "https://i.scdn.co/image/ab6761610000f178d80695211689a9c8c3fee3b0" },
-        ],
+        imageURLs: [{ url: "https://i.scdn.co/image/ab6761610000f178d80695211689a9c8c3fee3b0" }],
       },
       {
         spotifyID: "a5",
         name: "Eve",
-        imageURLs: [
-          { url: "https://i.scdn.co/image/ab6761610000f178bc9546a945c7563a9eb21f3d" },
-        ],
+        imageURLs: [{ url: "https://i.scdn.co/image/ab6761610000f178bc9546a945c7563a9eb21f3d" }],
       },
     ];
 

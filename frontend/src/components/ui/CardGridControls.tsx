@@ -1,6 +1,7 @@
 import Button from "./Button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import SortDropdown, { SortDropdownProps } from "./SortDropdown";
+import type { SortDropdownProps } from "./SortDropdown";
+import SortDropdown from "./SortDropdown";
 interface PaginationControls {
   next: { action: () => void; disabled?: boolean };
   prev: { action: () => void; disabled?: boolean };

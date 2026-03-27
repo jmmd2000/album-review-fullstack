@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
 import { FormattedText } from "@components/ui/FormattedText";
-import { FormattedToken } from "@shared/helpers/parseReviewContent";
+import type { FormattedToken } from "@shared/helpers/parseReviewContent";
 
 describe("FormattedText", () => {
   it("renders plain text tokens", async () => {

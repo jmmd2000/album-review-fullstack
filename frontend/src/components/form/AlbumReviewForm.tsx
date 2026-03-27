@@ -1,4 +1,4 @@
-import {
+import type {
   DisplayTrack,
   ExtractedColor,
   Genre,
@@ -75,18 +75,10 @@ const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is Reviewed
   return (album as ReviewedAlbum).reviewScore !== undefined;
 };
 
-const AlbumReviewForm = ({
-  album,
-  tracks,
-  genres,
-  setSelectedColors,
-  selectedColors,
-}: AlbumReviewFormProps) => {
+const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
   const isEditing = isReviewedAlbum(album);
   const albumArtists =
-    "albumArtists" in album &&
-    Array.isArray(album.albumArtists) &&
-    album.albumArtists.length > 0
+    "albumArtists" in album && Array.isArray(album.albumArtists) && album.albumArtists.length > 0
       ? album.albumArtists
       : !isEditing
         ? album.artists.map(artist => ({
@@ -146,26 +138,23 @@ const AlbumReviewForm = ({
   }, [album, setSelectedColors]);
 
   // Initialize form with defaults
-  const { control, register, handleSubmit, setValue, getValues } =
-    useForm<CreateReviewFormData>({
-      defaultValues: {
-        tracks: displayTracks,
-        selectedArtistIDs: isEditing
-          ? album.artistSpotifyIDs && album.artistSpotifyIDs.length > 0
-            ? album.artistSpotifyIDs
-            : albumArtists.map(artist => artist.spotifyID)
-          : albumArtists.map(artist => artist.spotifyID),
-        scoreArtistIDs: isEditing
-          ? (album.artistScoreIDs ?? [])
-          : albumArtists.map(artist => artist.spotifyID),
-        bestSong: isEditing ? album.bestSong : "",
-        worstSong: isEditing ? album.worstSong : "",
-        reviewContent: isEditing ? album.reviewContent || "" : "",
-        colors: selectedColors,
-        genres: isEditing ? album.genres.map(g => ({ name: g })) : [],
-        affectsArtistScore: isEditing ? album.affectsArtistScore : true,
-      },
-    });
+  const { control, register, handleSubmit, setValue, getValues } = useForm<CreateReviewFormData>({
+    defaultValues: {
+      tracks: displayTracks,
+      selectedArtistIDs: isEditing
+        ? album.artistSpotifyIDs && album.artistSpotifyIDs.length > 0
+          ? album.artistSpotifyIDs
+          : albumArtists.map(artist => artist.spotifyID)
+        : albumArtists.map(artist => artist.spotifyID),
+      scoreArtistIDs: isEditing ? (album.artistScoreIDs ?? []) : albumArtists.map(artist => artist.spotifyID),
+      bestSong: isEditing ? album.bestSong : "",
+      worstSong: isEditing ? album.worstSong : "",
+      reviewContent: isEditing ? album.reviewContent || "" : "",
+      colors: selectedColors,
+      genres: isEditing ? album.genres.map(g => ({ name: g })) : [],
+      affectsArtistScore: isEditing ? album.affectsArtistScore : true,
+    },
+  });
 
   useEffect(() => {
     register("selectedArtistIDs");
@@ -203,13 +192,8 @@ const AlbumReviewForm = ({
     isError,
     isSuccess,
   } = useMutation({
-    mutationFn: ({
-      formData,
-      album,
-    }: {
-      formData: CreateReviewFormData;
-      album: SpotifyAlbum | ReviewedAlbum;
-    }) => submitReview(formData, album),
+    mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) =>
+      submitReview(formData, album),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
   });
 
@@ -221,7 +205,7 @@ const AlbumReviewForm = ({
     <>
       <div className="sticky top-0 z-50">
         {isEditing ? (
-          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
+          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto bg-linear-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
             <RatingChip
               rating={album.finalScore}
               options={{ textBelow: true, hideUnratedDialog: true }}
@@ -244,7 +228,7 @@ const AlbumReviewForm = ({
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-gradient-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
+          <div className="flex items-center justify-center w-[90%] md:w-[80ch] mx-auto my-8 bg-linear-to-b from-neutral-900/60 via-neutral-900/30 to-neutral-900/0 backdrop-blur-sm">
             <RatingChip
               rating={dynamicScores.finalScore}
               options={{ textBelow: true, hideUnratedDialog: true }}
@@ -320,10 +304,7 @@ const AlbumReviewForm = ({
             />
           }
         />
-        <ReviewContentInput
-          registration={register("reviewContent")}
-          value={getValues("reviewContent")}
-        />
+        <ReviewContentInput registration={register("reviewContent")} value={getValues("reviewContent")} />
 
         <TrackList tracks={displayTracks} formMethods={{ control, register, setValue }} />
 
@@ -345,10 +326,7 @@ const AlbumReviewForm = ({
 export default AlbumReviewForm;
 
 // Helper to send data to API
-const submitReview = async (
-  formData: CreateReviewFormData,
-  album: SpotifyAlbum | ReviewedAlbum
-) => {
+const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum | ReviewedAlbum) => {
   const formattedTracks = formData.tracks.map(t => ({ ...t, rating: Number(t.rating) || 0 }));
   const formattedGenres = formData.genres.map(g => g.name);
   const isEditing = isReviewedAlbum(album);

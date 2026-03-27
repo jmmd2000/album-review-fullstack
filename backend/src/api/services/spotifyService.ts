@@ -1,7 +1,6 @@
-import { SearchAlbumsOptions } from "@shared/types";
+import type { SearchAlbumsOptions } from "@shared/types";
 import { Spotify } from "@/api/models/Spotify";
-import { getAllGenres } from "@/helpers/getAllGenres";
-import { AlbumArtist } from "@shared/types";
+import type { AlbumArtist } from "@shared/types";
 import { GenreModel } from "../models/Genre";
 
 export class SpotifyService {

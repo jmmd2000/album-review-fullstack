@@ -19,9 +19,7 @@ beforeAll(() => {
 });
 
 beforeAll(async () => {
-  const res = await request(app)
-    .post("/api/auth/login")
-    .send({ password: process.env.ADMIN_PASSWORD! });
+  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
   expect(res.status).toBe(204);
 
   const setCookie = res.get("set-cookie");
@@ -90,7 +88,10 @@ test("PUT /api/albums/:albumID/edit - should update album review", async () => {
   const created = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
   mockUpdateData.album = created.body.album;
 
-  const updateRes = await request(app).put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").set("Cookie", authCookie).send(mockUpdateData);
+  const updateRes = await request(app)
+    .put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit")
+    .set("Cookie", authCookie)
+    .send(mockUpdateData);
 
   expect(updateRes.status).toBe(200);
 
@@ -118,16 +119,10 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
       },
     ],
   };
-  collabData.selectedArtistIDs = [
-    mockReviewData.album.artists[0].id,
-    "collab_artist_2",
-  ];
+  collabData.selectedArtistIDs = [mockReviewData.album.artists[0].id, "collab_artist_2"];
   collabData.scoreArtistIDs = [];
 
-  const response = await request(app)
-    .post("/api/albums/create")
-    .set("Cookie", authCookie)
-    .send(collabData);
+  const response = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(collabData);
 
   expect(response.status).toBe(201);
 
@@ -137,5 +132,6 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
   );
 
   expect(links.rowCount).toBe(2);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
 });

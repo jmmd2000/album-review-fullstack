@@ -53,8 +53,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -82,8 +81,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -111,8 +109,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -140,8 +137,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -169,8 +165,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -198,8 +193,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -227,8 +221,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -256,8 +249,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -285,8 +277,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -314,8 +305,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -343,8 +333,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -372,8 +361,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -401,8 +389,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -430,8 +417,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -459,8 +445,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",
@@ -488,8 +473,7 @@ export const mockReviewData = {
           artists: [
             {
               external_urls: {
-                spotify:
-                  "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
+                spotify: "https://open.spotify.com/artist/6qqNVTkY8uBg9cP3Jd7DAH",
               },
               href: "https://api.spotify.com/v1/artists/6qqNVTkY8uBg9cP3Jd7DAH",
               id: "6qqNVTkY8uBg9cP3Jd7DAH",

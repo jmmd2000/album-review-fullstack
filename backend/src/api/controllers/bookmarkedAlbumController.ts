@@ -1,6 +1,5 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { BookmarkedAlbumService } from "@/api/services/bookmarkedAlbumService";
-import { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
@@ -20,7 +19,7 @@ export const getBookmarkedAlbum = asyncHandler(async (req: Request, res: Respons
   res.status(200).json(album);
 });
 
-const getBookmarkStatusesSchema = z.object({
+const _getBookmarkStatusesSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   orderBy: z.enum(["finalScore", "releaseYear", "name", "createdAt"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
@@ -63,15 +62,17 @@ const getPaginatedBookmarkedAlbumsSchema = z.object({
   search: z.string().optional(),
 });
 
-export const getPaginatedBookmarkedAlbums = asyncHandler(
-  async (req: Request, res: Response) => {
-    const parsed = getPaginatedBookmarkedAlbumsSchema.safeParse(req.query);
-    if (!parsed.success) throw new AppError(parsed.error.message, 400);
+export const getPaginatedBookmarkedAlbums = asyncHandler(async (req: Request, res: Response) => {
+  const parsed = getPaginatedBookmarkedAlbumsSchema.safeParse(req.query);
+  if (!parsed.success) throw new AppError(parsed.error.message, 400);
 
-    const { page, orderBy, order, search } = parsed.data;
+  const { page, orderBy, order, search } = parsed.data;
 
-    const { albums, furtherPages, totalCount } =
-      await BookmarkedAlbumService.getPaginatedAlbums({ page, orderBy, order, search });
-    res.status(200).json({ albums, furtherPages, totalCount });
-  }
-);
+  const { albums, furtherPages, totalCount } = await BookmarkedAlbumService.getPaginatedAlbums({
+    page,
+    orderBy,
+    order,
+    search,
+  });
+  res.status(200).json({ albums, furtherPages, totalCount });
+});

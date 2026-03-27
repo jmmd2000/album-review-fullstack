@@ -28,9 +28,7 @@ jest.mock("../api/services/spotifyService", () => ({
 let authCookie: string[];
 
 beforeAll(async () => {
-  const res = await request(app)
-    .post("/api/auth/login")
-    .send({ password: process.env.ADMIN_PASSWORD! });
+  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
   expect(res.status).toBe(204);
   const setCookie = res.get("set-cookie");
   authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];

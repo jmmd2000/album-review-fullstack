@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { SettingsService } from "@/api/services/settingsService";
 import { ArtistService } from "@/api/services/artistService";
 import { asyncHandler } from "../middleware/asyncHandler";

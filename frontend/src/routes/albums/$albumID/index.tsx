@@ -1,4 +1,4 @@
-import { DisplayTrack, Genre, ReviewedAlbum, ReviewedArtist } from "@shared/types";
+import type { DisplayTrack, Genre, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
@@ -88,9 +88,7 @@ function RouteComponent() {
             imageURLs: artist.imageURLs,
           }))}
         />
-        <div className="3xl:mt-8 pb-10">
-          {album.genres && <GenrePills genres={albumGenres} />}
-        </div>
+        <div className="3xl:mt-8 pb-10">{album.genres && <GenrePills genres={albumGenres} />}</div>
       </BlurryHeader>
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />

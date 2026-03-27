@@ -1,11 +1,11 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
+import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
 import CardGrid from "@components/ui/CardGrid";
 import { motion } from "framer-motion";
 import ArtistCard from "@/components/artist/ArtistCard";
-import { SortDropdownProps } from "@/components/ui/SortDropdown";
+import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import { api } from "@/lib/api";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions): Promise<{
@@ -59,14 +59,8 @@ export const Route = createFileRoute("/artists/")({
     order: search.order,
     scoreType: search.scoreType,
   }),
-  loader: async ({
-    deps: { page, search, orderBy, order, scoreType },
-  }: {
-    deps: GetPaginatedArtistsOptions;
-  }) => {
-    return queryClient.ensureQueryData(
-      artistQueryOptions({ page, search, orderBy, order, scoreType })
-    );
+  loader: async ({ deps: { page, search, orderBy, order, scoreType } }: { deps: GetPaginatedArtistsOptions }) => {
+    return queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
   },
   component: RouteComponent,
   head: () => ({

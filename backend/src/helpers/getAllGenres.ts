@@ -10,7 +10,7 @@ export async function getAllGenres(): Promise<string[]> {
 
   // Flatten, dedupe, filter falsy, and sort
   const allGenres = rows
-    .flatMap((row) => row.genres || [])
+    .flatMap(row => row.genres || [])
     .filter((g): g is string => typeof g === "string" && g.trim() !== "")
     .filter((value, index, self) => self.indexOf(value) === index)
     .sort((a, b) => a.localeCompare(b));

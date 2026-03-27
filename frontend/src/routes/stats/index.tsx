@@ -4,7 +4,7 @@ import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { queryClient } from "@/main";
-import { Genre, DisplayAlbum, DisplayArtist, GetStatsOptions } from "@shared/types";
+import type { Genre, DisplayAlbum, DisplayArtist, GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
@@ -89,11 +89,7 @@ export const Route = createFileRoute("/stats/")({
     slug: search.slug ?? "",
     resource: search.resource ?? "albums",
   }),
-  loader: async ({
-    deps: { slug, resource },
-  }: {
-    deps: { slug: string; resource: "albums" | "tracks" | "artists" };
-  }) =>
+  loader: async ({ deps: { slug, resource } }: { deps: { slug: string; resource: "albums" | "tracks" | "artists" } }) =>
     Promise.all([
       queryClient.ensureQueryData(overviewQueryOptions),
       queryClient.ensureQueryData(genresQueryOptions(slug)),
@@ -112,9 +108,7 @@ function RouteComponent() {
   const { data: favourites } = useQuery(overviewQueryOptions);
   const { data: counts } = useQuery(countQueryOptions);
 
-  const [selectedResource, setSelectedResource] = useState<"albums" | "tracks" | "artists">(
-    "albums"
-  );
+  const [selectedResource, setSelectedResource] = useState<"albums" | "tracks" | "artists">("albums");
   const { data: distribution } = useQuery(distributionQueryOptions(selectedResource));
 
   const [selectedGenre, setSelectedGenre] = useState<string>(options.slug || "");
@@ -161,9 +155,7 @@ function RouteComponent() {
           <StatBox
             label="Albums"
             value={counts.albumCount}
-            icon={
-              <Disc className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-blue-500" />
-            }
+            icon={<Disc className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-blue-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -174,9 +166,7 @@ function RouteComponent() {
           <StatBox
             label="Artists"
             value={counts.artistCount}
-            icon={
-              <Users className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-green-500" />
-            }
+            icon={<Users className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-green-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -187,9 +177,7 @@ function RouteComponent() {
           <StatBox
             label="Tracks"
             value={counts.trackCount}
-            icon={
-              <Music className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-orange-500" />
-            }
+            icon={<Music className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-orange-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -200,9 +188,7 @@ function RouteComponent() {
           <StatBox
             label="Genres"
             value={counts.genreCount}
-            icon={
-              <Headphones className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-purple-500" />
-            }
+            icon={<Headphones className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-purple-500" />}
           />
         ) : (
           <NoDataFound message="Couldn't get data." />
@@ -239,33 +225,25 @@ function RouteComponent() {
           <div className="grid grid-cols-2 lg:grid-cols-4 content-center gap-8 3xl:gap-10 items-center mx-auto place-items-center 3xl:justify-items-stretch">
             {favourites?.favouriteAlbum && (
               <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">
-                  Favourite Album
-                </p>
+                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Favourite Album</p>
                 <AlbumCard album={favourites.favouriteAlbum} />
               </div>
             )}
             {favourites?.favouriteArtist && (
               <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">
-                  Favourite Artist
-                </p>
+                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Favourite Artist</p>
                 <ArtistCard artist={favourites.favouriteArtist} />
               </div>
             )}
             {favourites?.leastFavouriteAlbum && (
               <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">
-                  Least Favourite Album
-                </p>
+                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Least Favourite Album</p>
                 <AlbumCard album={favourites.leastFavouriteAlbum} />
               </div>
             )}
             {favourites?.leastFavouriteArtist && (
               <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">
-                  Least Favourite Artist
-                </p>
+                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Least Favourite Artist</p>
                 <ArtistCard artist={favourites.leastFavouriteArtist} />
               </div>
             )}
@@ -287,10 +265,7 @@ function RouteComponent() {
                 <option value="tracks">Track</option>
                 <option value="artists">Artist</option>
               </select>
-              <p className="text-lg 3xl:text-xl font-semibold tracking-wide">
-                {" "}
-                Rating Distribution
-              </p>
+              <p className="text-lg 3xl:text-xl font-semibold tracking-wide"> Rating Distribution</p>
             </div>
             <DistributionChart data={distribution} resource={selectedResource} />
           </div>
@@ -303,9 +278,7 @@ function RouteComponent() {
       <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-8 lg:row-start-2 3xl:col-start-7 3xl:col-span-4 3xl:row-start-2 z-50">
         {genre && genre.slug && genre.name ? (
           <div>
-            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 3xl:mb-4 font-semibold tracking-wide">
-              Genre Stats
-            </p>
+            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 3xl:mb-4 font-semibold tracking-wide">Genre Stats</p>
             <div className="flex justify-evenly items-center px-4 3xl:px-6">
               <div className="flex-4/5">
                 {genre.allGenres && (
@@ -325,21 +298,15 @@ function RouteComponent() {
               </div>
               <div className="flex flex-2/3 gap-2 mb-4 justify-evenly">
                 <div>
-                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">
-                    {genre.reviewedAlbumCount}
-                  </p>
-                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">
-                    Reviews
-                  </p>
+                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">{genre.reviewedAlbumCount}</p>
+                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">Reviews</p>
                 </div>
 
                 <div>
                   <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">
                     {genre.averageScore?.toFixed(0)}
                   </p>
-                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">
-                    Average score
-                  </p>
+                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">Average score</p>
                 </div>
               </div>
             </div>
@@ -354,17 +321,13 @@ function RouteComponent() {
         <div className="flex flex-row justify-evenly gap-8 3xl:gap-12 mb-2 max-w-[80%] 3xl:max-w-none m-auto">
           {genre?.albums?.highestRated && (
             <div className="flex flex-col gap-2 max-w-50 3xl:max-w-70">
-              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">
-                Favourite Album in Genre
-              </p>
+              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">Favourite Album in Genre</p>
               <AlbumCard album={genre.albums.highestRated} />
             </div>
           )}
           {genre?.albums?.lowestRated && (
             <div className="flex flex-col gap-2 max-w-50 3xl:max-w-70">
-              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">
-                Least Favourite Album in Genre
-              </p>
+              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">Least Favourite Album in Genre</p>
               <AlbumCard album={genre.albums.lowestRated} />
             </div>
           )}
@@ -375,9 +338,7 @@ function RouteComponent() {
       <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-12 lg:row-start-5 3xl:col-start-7 3xl:col-span-4 3xl:row-start-5 mb-8 lg:mb-0">
         {genre?.relatedGenres && genre.relatedGenres.length > 0 ? (
           <div className="mb-4 3xl:mb-6 flex flex-col gap-4 3xl:gap-6 items-start">
-            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 font-semibold tracking-wide">
-              Top Related Genres
-            </p>
+            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 font-semibold tracking-wide">Top Related Genres</p>
             <GenrePills genres={genre.relatedGenres || []} />
           </div>
         ) : (
@@ -393,9 +354,5 @@ interface NoDataFoundProps {
 }
 
 export const NoDataFound = ({ message }: NoDataFoundProps) => {
-  return (
-    <p className="flex items-center text-neutral-400 w-full h-full justify-center">
-      {message}
-    </p>
-  );
+  return <p className="flex items-center text-neutral-400 w-full h-full justify-center">{message}</p>;
 };

@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 /**
  * A typed Express request handler that returns a Promise.
@@ -16,7 +16,6 @@ type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => 
  * @param func Async Express request handler
  * @returns Wrapped handler with error forwarding
  */
-export const asyncHandler =
-  (func: AsyncRequestHandler) => (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(func(req, res, next)).catch(next);
-  };
+export const asyncHandler = (func: AsyncRequestHandler) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(func(req, res, next)).catch(next);
+};

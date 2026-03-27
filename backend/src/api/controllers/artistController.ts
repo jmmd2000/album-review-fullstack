@@ -1,6 +1,5 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { ArtistService } from "@/api/services/artistService";
-import { GetPaginatedArtistsOptions } from "@shared/types";
 import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
@@ -13,15 +12,7 @@ export const getAllArtists = asyncHandler(async (_req: Request, res: Response) =
 const getPaginatedArtistsSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   orderBy: z
-    .enum([
-      "totalScore",
-      "peakScore",
-      "latestScore",
-      "reviewCount",
-      "name",
-      "createdAt",
-      "leaderboardPosition",
-    ])
+    .enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"])
     .optional(),
   order: z.enum(["asc", "desc"]).optional(),
   search: z.string().optional(),
@@ -34,9 +25,7 @@ export const getPaginatedArtists = asyncHandler(async (req: Request, res: Respon
     throw new AppError(parsed.error.message, 400);
   }
 
-  const { artists, furtherPages, totalCount } = await ArtistService.getPaginatedArtists(
-    parsed.data
-  );
+  const { artists, furtherPages, totalCount } = await ArtistService.getPaginatedArtists(parsed.data);
   res.status(200).json({ artists, furtherPages, totalCount });
 });
 
@@ -87,9 +76,6 @@ export const updateSingleArtistHeader = asyncHandler(async (req: Request, res: R
   const paramsValid = updateSingleArtistHeaderParamsSchema.safeParse(req.params);
   if (!paramsValid.success) throw new AppError(paramsValid.error.message, 400);
 
-  await ArtistService.updateSingleArtistHeader(
-    paramsValid.data.artistID,
-    bodyValid.data.headerImage
-  );
+  await ArtistService.updateSingleArtistHeader(paramsValid.data.artistID, bodyValid.data.headerImage);
   res.status(200).json({ message: "Header image updated successfully" });
 });

@@ -31,22 +31,15 @@ export default function SortDropdown({
 }: SortDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<SortOption | null>(
-    defaultValue
-      ? options.find(option => option.value === defaultValue) || null
-      : null
+    defaultValue ? options.find(option => option.value === defaultValue) || null : null
   );
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
-    defaultDirection
-  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultDirection);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -115,9 +108,7 @@ export default function SortDropdown({
         onClick={toggleDropdown}
         whileHover={{ scale: 1.02 }}
       >
-        <div className="flex-1 truncate">
-          {selectedOption ? selectedOption.label : "Sort by..."}
-        </div>
+        <div className="flex-1 truncate">{selectedOption ? selectedOption.label : "Sort by..."}</div>
         <div className="flex items-center">
           {selectedOption && (
             <motion.button

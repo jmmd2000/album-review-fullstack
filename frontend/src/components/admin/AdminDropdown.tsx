@@ -1,27 +1,12 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Bookmark,
-  Settings,
-  Search,
-  Lock,
-  LockOpen,
-  Pencil,
-  Trash,
-  LogOut,
-  ImageIcon,
-} from "lucide-react";
-import { useState, useRef, useEffect, JSX } from "react";
+import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut, ImageIcon } from "lucide-react";
+import type { JSX } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/auth/useAuth";
 import { queryClient } from "@/main";
-import {
-  ReviewedAlbum,
-  ReviewedArtist,
-  DisplayTrack,
-  DisplayAlbum,
-  Genre,
-} from "@shared/types";
+import type { ReviewedAlbum, ReviewedArtist, DisplayTrack, DisplayAlbum, Genre } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@components/ui/Dialog";
 import { api } from "@/lib/api";
@@ -216,11 +201,7 @@ const AdminDropdown = () => {
         data-testid="admin-dropdown-button"
       >
         Admin
-        {isAdmin ? (
-          <LockOpen className="w-4 h-4 text-green-700" />
-        ) : (
-          <Lock className="w-4 h-4 text-red-700" />
-        )}
+        {isAdmin ? <LockOpen className="w-4 h-4 text-green-700" /> : <Lock className="w-4 h-4 text-red-700" />}
       </button>
 
       <AnimatePresence>
@@ -245,7 +226,7 @@ const AdminDropdown = () => {
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   onClick={handleLogin}
-                  className="rounded bg-gradient-to-br from-red-800 to-red-900/60  px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 cursor-pointer transition-colors"
+                  className="rounded bg-linear-to-br from-red-800 to-red-900/60  px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 cursor-pointer transition-colors"
                 >
                   Login
                 </button>
@@ -290,9 +271,7 @@ const AdminDropdown = () => {
       >
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Header Image URL
-            </label>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">Header Image URL</label>
             <input
               type="text"
               value={headerImageUrl}
@@ -301,13 +280,10 @@ const AdminDropdown = () => {
               className="w-full rounded bg-neutral-800 px-3 py-2 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-600"
               disabled={updateHeaderImageMut.isPending}
             />
-            <p className="text-xs text-neutral-400 mt-1">
-              Leave empty to remove the header image
-            </p>
+            <p className="text-xs text-neutral-400 mt-1">Leave empty to remove the header image</p>
             <p className="text-xs text-neutral-500 mt-2 font-mono bg-neutral-900/50 p-2 rounded border border-neutral-800">
               <span className="select-all">
-                document.querySelector('div[data-testid="background-image"]').style.backgroundImage.slice(5,
-                -2)
+                document.querySelector('div[data-testid="background-image"]').style.backgroundImage.slice(5, -2)
               </span>
             </p>
           </div>
@@ -324,7 +300,7 @@ const AdminDropdown = () => {
             </button>
             <button
               onClick={handleUpdateHeaderImage}
-              className="rounded bg-gradient-to-br from-red-800 to-red-900/60 px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded bg-linear-to-br from-red-800 to-red-900/60 px-4 py-2 text-sm text-white hover:from-red-700 hover:to-red-800/60 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={updateHeaderImageMut.isPending}
             >
               {updateHeaderImageMut.isPending ? "Updating..." : "Update"}
@@ -332,14 +308,8 @@ const AdminDropdown = () => {
           </div>
         </div>
       </Dialog>
-      <Dialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Album"
-      >
-        <p className="text-neutral-300 mb-4">
-          Are you sure you want to delete this album? This cannot be undone.
-        </p>
+      <Dialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Album">
+        <p className="text-neutral-300 mb-4">Are you sure you want to delete this album? This cannot be undone.</p>
         <div className="flex gap-2 justify-end">
           <button
             onClick={() => setShowDeleteConfirm(false)}

@@ -1,4 +1,4 @@
-import { AlbumArtist, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
+import type { AlbumArtist, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { formatDate } from "@shared/helpers/formatDate";
 import ArtistStack from "@components/artist/ArtistStack";

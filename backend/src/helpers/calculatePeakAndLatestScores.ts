@@ -1,5 +1,5 @@
 import { BAD_ALBUM_BONUS, GOOD_ALBUM_BONUS, MAX_SCORE } from "@/config/constants";
-import { ReviewedAlbum } from "@shared/types";
+import type { ReviewedAlbum } from "@shared/types";
 
 /**
  * Calculates the peak score for an artist based on their top 3 highest rated albums.

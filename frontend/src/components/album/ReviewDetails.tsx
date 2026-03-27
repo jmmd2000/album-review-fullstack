@@ -1,4 +1,4 @@
-import { DisplayTrack, ReviewedAlbum } from "@shared/types";
+import type { DisplayTrack, ReviewedAlbum } from "@shared/types";
 import RatingChip from "@/components/ui/RatingChip";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
@@ -71,12 +71,7 @@ interface BestWorstSongProps {
  * @param {string} bestSong The best song on the album
  * @param {string} worstSong The worst song on the album
  */
-export const BestWorstSong = ({
-  bestSong,
-  worstSong,
-  bestInput,
-  worstInput,
-}: BestWorstSongProps) => {
+export const BestWorstSong = ({ bestSong, worstSong, bestInput, worstInput }: BestWorstSongProps) => {
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 my-6 w-3/5 sm:w-full max-w-3xl">
       <motion.div

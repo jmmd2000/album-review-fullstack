@@ -1,4 +1,4 @@
-import { ReviewBonuses } from "@shared/types";
+import type { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -32,9 +32,7 @@ export const reviewedAlbums = pgTable(
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique constraint
     releaseDate: varchar("release_date", { length: 50 }).notNull(),
     releaseYear: integer("release_year").notNull(),
-    imageURLs: jsonb("image_urls")
-      .$type<{ url: string; height: number; width: number }[]>()
-      .notNull(),
+    imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     // scoredTracks: text("scored_tracks").notNull(), // JSON string
     bestSong: varchar("best_song", { length: 255 }).notNull(),
     worstSong: varchar("worst_song", { length: 255 }).notNull(),
@@ -77,10 +75,7 @@ export const albumArtists = pgTable(
   table => [
     index("album_artists_album_idx").on(table.albumSpotifyID),
     index("album_artists_artist_idx").on(table.artistSpotifyID),
-    uniqueIndex("album_artists_album_artist_key").on(
-      table.albumSpotifyID,
-      table.artistSpotifyID
-    ),
+    uniqueIndex("album_artists_album_artist_key").on(table.albumSpotifyID, table.artistSpotifyID),
   ]
 );
 
@@ -97,14 +92,10 @@ export const reviewedTracks = pgTable(
       .references(() => reviewedAlbums.spotifyID), // Foreign key reference to albums
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
-    features: jsonb("features")
-      .$type<{ id: string; name: string }[]>()
-      .notNull(),
+    features: jsonb("features").$type<{ id: string; name: string }[]>().notNull(),
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).default(
-      sql`now()`
-    ),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(),
@@ -129,10 +120,7 @@ export const trackArtists = pgTable(
   table => [
     index("track_artists_track_idx").on(table.trackSpotifyID),
     index("track_artists_artist_idx").on(table.artistSpotifyID),
-    uniqueIndex("track_artists_track_artist_key").on(
-      table.trackSpotifyID,
-      table.artistSpotifyID
-    ),
+    uniqueIndex("track_artists_track_artist_key").on(table.trackSpotifyID, table.artistSpotifyID),
   ]
 );
 
@@ -142,9 +130,7 @@ export const reviewedArtists = pgTable(
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
-    imageURLs: jsonb("image_urls")
-      .$type<{ url: string; height: number; width: number }[]>()
-      .notNull(),
+    imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     headerImage: varchar("header_image", { length: 255 }),
     averageScore: real("average_score").notNull(),
     leaderboardPosition: integer("leaderboard_position"),
@@ -177,9 +163,7 @@ export const bookmarkedAlbums = pgTable("bookmarked_albums", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(),
-  imageURLs: jsonb("image_urls")
-    .$type<{ url: string; height: number; width: number }[]>()
-    .notNull(),
+  imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
   artistName: varchar("artist_name", { length: 255 }).notNull(),
   artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
   releaseYear: integer("release_year").notNull(),
@@ -237,10 +221,7 @@ export const albumGenres = pgTable(
   table => [
     index("album_genres_album_idx").on(table.albumSpotifyID), // looking up genres by album
     index("album_genres_genre_idx").on(table.genreID), // finding all albums in a genre
-    uniqueIndex("album_genres_album_genre_key").on(
-      table.albumSpotifyID,
-      table.genreID
-    ),
+    uniqueIndex("album_genres_album_genre_key").on(table.albumSpotifyID, table.genreID),
   ]
 );
 
@@ -263,9 +244,7 @@ export const relatedGenres = pgTable(
       .$onUpdateFn(() => sql`now()`)
       .notNull(),
   },
-  table => [
-    uniqueIndex("related_genres_key").on(table.genreID, table.relatedGenreID),
-  ]
+  table => [uniqueIndex("related_genres_key").on(table.genreID, table.relatedGenreID)]
 );
 
 // KV store for settings

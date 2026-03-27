@@ -23,19 +23,9 @@ const ImageComparison = ({
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1">
-        <ImageComponent
-          url={beforeImage}
-          isHeader={isHeader}
-          artistName={artistName}
-          size={size}
-        />
+        <ImageComponent url={beforeImage} isHeader={isHeader} artistName={artistName} size={size} />
         <span className="text-xs text-neutral-500">→</span>
-        <ImageComponent
-          url={afterImage}
-          isHeader={isHeader}
-          artistName={artistName}
-          size={size}
-        />
+        <ImageComponent url={afterImage} isHeader={isHeader} artistName={artistName} size={size} />
       </div>
     </div>
   );
@@ -54,12 +44,7 @@ interface ImageComponentProps {
   size?: string;
 }
 
-const ImageComponent = ({
-  url,
-  isHeader,
-  artistName,
-  size = "w-8 h-8",
-}: ImageComponentProps) => {
+const ImageComponent = ({ url, isHeader, artistName, size = "w-8 h-8" }: ImageComponentProps) => {
   if (!url) {
     return (
       <div

@@ -80,10 +80,7 @@ function RouteComponent() {
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
-  const labelMap: Record<
-    RecalcResult["changedArtists"][number]["changes"][number]["field"],
-    string
-  > = {
+  const labelMap: Record<RecalcResult["changedArtists"][number]["changes"][number]["field"], string> = {
     totalScore: "Overall",
     peakScore: "Peak",
     latestScore: "Latest",
@@ -96,10 +93,7 @@ function RouteComponent() {
     latestLeaderboardPosition: "Latest Rank",
   };
 
-  const formatVal = (
-    val: number | null,
-    field: RecalcResult["changedArtists"][number]["changes"][number]["field"]
-  ) => {
+  const formatVal = (val: number | null, field: RecalcResult["changedArtists"][number]["changes"][number]["field"]) => {
     if (val === null || val === undefined) return "\u2014";
     if (field === "unrated") return val ? "Yes" : "No";
     if (
@@ -136,11 +130,7 @@ function RouteComponent() {
             accentBgLight="bg-fuchsia-500/20"
             accentText="text-fuchsia-500"
             accentFill="bg-fuchsia-500"
-            lastRun={
-              lastRuns["artist_images_last_run"]
-                ? timeAgo(lastRuns["artist_images_last_run"])
-                : "Never"
-            }
+            lastRun={lastRuns["artist_images_last_run"] ? timeAgo(lastRuns["artist_images_last_run"]) : "Never"}
             job={images.state}
             onTrigger={images.trigger}
             onDismiss={images.dismiss}
@@ -156,11 +146,7 @@ function RouteComponent() {
             accentBgLight="bg-violet-500/20"
             accentText="text-violet-500"
             accentFill="bg-violet-500"
-            lastRun={
-              lastRuns["artist_headers_last_run"]
-                ? timeAgo(lastRuns["artist_headers_last_run"])
-                : "Never"
-            }
+            lastRun={lastRuns["artist_headers_last_run"] ? timeAgo(lastRuns["artist_headers_last_run"]) : "Never"}
             job={headers.state}
             onTrigger={headers.trigger}
             onDismiss={headers.dismiss}
@@ -176,57 +162,42 @@ function RouteComponent() {
             accentBgLight="bg-cyan-500/20"
             accentText="text-cyan-500"
             accentFill="bg-cyan-500"
-            lastRun={
-              lastRuns["artist_scores_last_run"]
-                ? timeAgo(lastRuns["artist_scores_last_run"])
-                : "Never"
-            }
+            lastRun={lastRuns["artist_scores_last_run"] ? timeAgo(lastRuns["artist_scores_last_run"]) : "Never"}
             onTrigger={() => recalcScoresMut.mutate()}
             isPending={recalcScoresMut.isPending}
           >
             {/* Recalc specific results */}
             {recalcScoresMut.isSuccess && recalcScoresMut.data && (
               <div className="text-xs text-neutral-400">
-                Updated {recalcScoresMut.data.updatedCount} of{" "}
-                {recalcScoresMut.data.totalProcessed} artists.
+                Updated {recalcScoresMut.data.updatedCount} of {recalcScoresMut.data.totalProcessed} artists.
               </div>
             )}
-            {recalcScoresMut.isSuccess &&
-              recalcScoresMut.data &&
-              recalcScoresMut.data.changedArtists.length > 0 && (
-                <div className="p-3 border border-neutral-800 rounded-lg bg-neutral-900/60 max-h-48 overflow-auto">
-                  <div className="flex items-center gap-2 text-sm text-neutral-200 mb-2">
-                    <ArrowRightLeft className="w-4 h-4" />
-                    <span>Updated artists</span>
-                  </div>
-                  <div className="space-y-2 text-xs text-neutral-300">
-                    {recalcScoresMut.data.changedArtists.slice(0, 8).map(artist => (
-                      <div
-                        key={artist.spotifyID}
-                        className="border border-neutral-800 rounded-md p-2"
-                      >
-                        <div className="font-medium text-neutral-100 mb-1">{artist.name}</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {artist.changes.map(change => (
-                            <div key={change.field}>
-                              <span className="text-neutral-500">
-                                {labelMap[change.field]}:
-                              </span>{" "}
-                              {formatVal(change.before, change.field)} →{" "}
-                              {formatVal(change.after, change.field)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    {recalcScoresMut.data.changedArtists.length > 8 && (
-                      <div className="text-neutral-500">
-                        + {recalcScoresMut.data.changedArtists.length - 8} more...
-                      </div>
-                    )}
-                  </div>
+            {recalcScoresMut.isSuccess && recalcScoresMut.data && recalcScoresMut.data.changedArtists.length > 0 && (
+              <div className="p-3 border border-neutral-800 rounded-lg bg-neutral-900/60 max-h-48 overflow-auto">
+                <div className="flex items-center gap-2 text-sm text-neutral-200 mb-2">
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span>Updated artists</span>
                 </div>
-              )}
+                <div className="space-y-2 text-xs text-neutral-300">
+                  {recalcScoresMut.data.changedArtists.slice(0, 8).map(artist => (
+                    <div key={artist.spotifyID} className="border border-neutral-800 rounded-md p-2">
+                      <div className="font-medium text-neutral-100 mb-1">{artist.name}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {artist.changes.map(change => (
+                          <div key={change.field}>
+                            <span className="text-neutral-500">{labelMap[change.field]}:</span>{" "}
+                            {formatVal(change.before, change.field)} → {formatVal(change.after, change.field)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {recalcScoresMut.data.changedArtists.length > 8 && (
+                    <div className="text-neutral-500">+ {recalcScoresMut.data.changedArtists.length - 8} more...</div>
+                  )}
+                </div>
+              </div>
+            )}
             {recalcScoresMut.isError && (
               <div className="text-xs text-red-400">
                 {recalcScoresMut.error?.message ?? "Failed to recalculate scores."}

@@ -1,24 +1,11 @@
 import "dotenv/config";
-import {
-  desc,
-  eq,
-  ilike,
-  asc,
-  or,
-  count,
-  inArray,
-  exists,
-  sql,
-  and,
-  isNull,
-} from "drizzle-orm";
-import { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
+import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
+import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import {
   albumGenres,
   albumArtists,
   genres as genresTable,
   reviewedAlbums,
-  reviewedArtists,
   reviewedTracks,
   trackArtists,
 } from "@/db/schema";
@@ -42,10 +29,7 @@ export class AlbumModel {
       .then(r => r[0]);
   }
 
-  static async updateAlbum(
-    spotifyID: string,
-    values: Partial<typeof reviewedAlbums.$inferInsert>
-  ) {
+  static async updateAlbum(spotifyID: string, values: Partial<typeof reviewedAlbums.$inferInsert>) {
     return db
       .update(reviewedAlbums)
       .set({ ...values, updatedAt: new Date() })
@@ -76,8 +60,8 @@ export class AlbumModel {
   }: GetPaginatedAlbumsOptions) {
     const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
-    const sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
-    const sortDirection = validOrder.includes(order) ? order : "desc";
+    const _sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
+    const _sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
 
     // If requested genres, look up the matching album IDs
@@ -91,6 +75,7 @@ export class AlbumModel {
     }
 
     // Build exact same query, + one extra WHERE if albumIds is set
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = db
       .select()
       .from(reviewedAlbums)
@@ -110,23 +95,17 @@ export class AlbumModel {
       const secondaryField = validSecondaryOrderBy.includes(secondaryOrderBy || "finalScore")
         ? secondaryOrderBy || "finalScore"
         : "finalScore";
-      const secondaryDirection = validOrder.includes(secondaryOrder || "desc")
-        ? secondaryOrder || "desc"
-        : "desc";
+      const secondaryDirection = validOrder.includes(secondaryOrder || "desc") ? secondaryOrder || "desc" : "desc";
 
       if (order === "asc") {
         baseOrder = [
           asc(reviewedAlbums[orderBy]),
-          secondaryDirection === "asc"
-            ? asc(reviewedAlbums[secondaryField])
-            : desc(reviewedAlbums[secondaryField]),
+          secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField]),
         ];
       } else {
         baseOrder = [
           desc(reviewedAlbums[orderBy]),
-          secondaryDirection === "asc"
-            ? asc(reviewedAlbums[secondaryField])
-            : desc(reviewedAlbums[secondaryField]),
+          secondaryDirection === "asc" ? asc(reviewedAlbums[secondaryField]) : desc(reviewedAlbums[secondaryField]),
         ];
       }
     } else {
@@ -187,10 +166,7 @@ export class AlbumModel {
 
   static async getAlbumsByArtistsWithAffects(artistSpotifyIDs: string[]) {
     if (artistSpotifyIDs.length === 0)
-      return new Map<
-        string,
-        { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]
-      >();
+      return new Map<string, { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]>();
 
     const rows = await db
       .select({
@@ -202,10 +178,7 @@ export class AlbumModel {
       .innerJoin(albumArtists, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
       .where(inArray(albumArtists.artistSpotifyID, artistSpotifyIDs));
 
-    const map = new Map<
-      string,
-      { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]
-    >();
+    const map = new Map<string, { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]>();
     for (const row of rows) {
       const existing = map.get(row.artistSpotifyID) ?? [];
       existing.push({ album: row.album, affectsScore: row.affectsScore });
@@ -221,14 +194,9 @@ export class AlbumModel {
       .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
       .leftJoin(
         albumArtists,
-        and(
-          eq(albumArtists.albumSpotifyID, reviewedTracks.albumSpotifyID),
-          eq(albumArtists.artistSpotifyID, artistID)
-        )
+        and(eq(albumArtists.albumSpotifyID, reviewedTracks.albumSpotifyID), eq(albumArtists.artistSpotifyID, artistID))
       )
-      .where(
-        and(eq(trackArtists.artistSpotifyID, artistID), isNull(albumArtists.artistSpotifyID))
-      )
+      .where(and(eq(trackArtists.artistSpotifyID, artistID), isNull(albumArtists.artistSpotifyID)))
       .groupBy(reviewedTracks.albumSpotifyID);
 
     return rows.map(r => r.albumSpotifyID);
@@ -295,17 +263,10 @@ export class AlbumModel {
     if (artistIDs.length === 0) return;
     return db
       .delete(albumArtists)
-      .where(
-        and(
-          eq(albumArtists.albumSpotifyID, albumSpotifyID),
-          inArray(albumArtists.artistSpotifyID, artistIDs)
-        )
-      );
+      .where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
   }
 
-  static async getReviewScoresByIds(
-    ids: string[]
-  ): Promise<{ spotifyID: string; reviewScore: number }[]> {
+  static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {
     const rows = await db
       .select({
         spotifyID: reviewedAlbums.spotifyID,

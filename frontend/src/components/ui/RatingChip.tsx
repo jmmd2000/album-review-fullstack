@@ -3,7 +3,7 @@ import { getRatingStyles } from "@/helpers/getRatingStyles";
 import { useState } from "react";
 import ScoreBreakdown from "@/components/album/ScoreBreakdown";
 
-import { ReviewBonuses } from "@shared/types";
+import type { ReviewBonuses } from "@shared/types";
 import { motion } from "framer-motion";
 import { Info, StarOff } from "lucide-react";
 import Dialog from "./Dialog";
@@ -47,32 +47,23 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
   // Slightly smaller font for unrated when not small variant
   const unratedSizeClass = !options?.small && isUnrated ? "text-3xl" : "";
 
-  const cardStyles = cva(
-    ["flex", "items-center", "flex-col", "gap-1", "w-max", "mx-auto", "relative", textColor],
-    {
-      variants: {
-        small: { false: "mt-12 mb-4" },
-      },
-    }
-  );
+  const cardStyles = cva(["flex", "items-center", "flex-col", "gap-1", "w-max", "mx-auto", "relative", textColor], {
+    variants: {
+      small: { false: "mt-12 mb-4" },
+    },
+  });
 
-  const textStyles = cva(
-    [borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"],
-    {
-      variants: {
-        small: {
-          true: "border-1 text-xs md:text-sm px-1 rounded-sm",
-          false: "border-2 text-4xl px-4 py-2",
-        },
+  const textStyles = cva([borderColor, "text-center", "rounded-lg", backgroundColorLighter, "w-max"], {
+    variants: {
+      small: {
+        true: "border-1 text-xs md:text-sm px-1 rounded-sm",
+        false: "border-2 text-4xl px-4 py-2",
       },
-    }
-  );
+    },
+  });
 
   const showInfoButton =
-    options?.textBelow &&
-    (scoreBreakdown || tooltipContent) &&
-    !isUnrated &&
-    !options?.hideUnratedDialog;
+    options?.textBelow && (scoreBreakdown || tooltipContent) && !isUnrated && !options?.hideUnratedDialog;
 
   return (
     <div className={cardStyles({ small: options?.small ?? false })}>
@@ -98,24 +89,18 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
             >
               <Info className="w-4 h-4" />
             </motion.button>
-            <Dialog
-              isOpen={isDialogOpen}
-              onClose={() => setDialogOpen(false)}
-              title="Unrated artists"
-            >
-              <p className="text-zinc-200 mb-2">
-                This artist is unrated. None of their reviews provide them a score.
-              </p>
+            <Dialog isOpen={isDialogOpen} onClose={() => setDialogOpen(false)} title="Unrated artists">
+              <p className="text-zinc-200 mb-2">This artist is unrated. None of their reviews provide them a score.</p>
               <p className="text-zinc-200">There are two potential reasons for this:</p>
               <ol className="text-zinc-200 ml-3 list-decimal p-2">
                 <li className="text-zinc-400">
-                  I don't plan to review their entire discography, and I feel like basing their
-                  score on a fraction of their work isn't accurate.
+                  I don't plan to review their entire discography, and I feel like basing their score on a fraction of
+                  their work isn't accurate.
                 </li>
                 <li className="text-zinc-400 mt-1">
-                  I <em>do</em> plan to review their entire discography, but I either haven't
-                  gotten around to it yet, they only have one album, or their other releases
-                  are non-albums (mixtapes, EPs etc.) which I don't count towards their score.
+                  I <em>do</em> plan to review their entire discography, but I either haven't gotten around to it yet,
+                  they only have one album, or their other releases are non-albums (mixtapes, EPs etc.) which I don't
+                  count towards their score.
                 </li>
               </ol>
             </Dialog>
@@ -156,7 +141,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
           >
             <StarOff className="w-4 h-4 text-yellow-900" aria-label="Does not affect artist score" />
           </motion.div>
-          <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+          <div className="absolute bottom-full left-0 mb-2 w-52 border border-neutral-800 bg-linear-to-br from-neutral-800 to-neutral-900 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
             This review does not affect this artist's overall score.
           </div>
         </div>
@@ -173,11 +158,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
       )}
 
       {tooltipContent && !isUnrated && (
-        <Dialog
-          isOpen={isDialogOpen}
-          onClose={() => setDialogOpen(false)}
-          title={tooltipContent.title}
-        >
+        <Dialog isOpen={isDialogOpen} onClose={() => setDialogOpen(false)} title={tooltipContent.title}>
           <p className="text-zinc-200">{tooltipContent.description}</p>
         </Dialog>
       )}

@@ -7,16 +7,10 @@ interface ArtistImageProps {
   size?: string;
 }
 
-const ArtistImage = ({
-  imageUrl,
-  artistName,
-  size = "w-6 h-6",
-}: ArtistImageProps) => {
+const ArtistImage = ({ imageUrl, artistName, size = "w-6 h-6" }: ArtistImageProps) => {
   if (!imageUrl) {
     return (
-      <div
-        className={`${size} rounded-full bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}
-      >
+      <div className={`${size} rounded-full bg-neutral-700 flex items-center justify-center text-xs text-neutral-400`}>
         {artistName.charAt(0).toUpperCase()}
       </div>
     );

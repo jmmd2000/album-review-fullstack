@@ -1,4 +1,4 @@
-import { Genre } from "@shared/types";
+import type { Genre } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 
 /**

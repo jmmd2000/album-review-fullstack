@@ -1,12 +1,8 @@
 import { SettingsModel } from "@/api/models/Settings";
 import { AppError } from "../middleware/errorHandler";
 
-export type SettingValue =
-  | string
-  | number
-  | boolean
-  | Date
-  | { [key: string]: any };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SettingValue = string | number | boolean | Date | { [key: string]: any };
 
 export class SettingsService {
   static async get<T = SettingValue>(key: string): Promise<T | null> {
@@ -22,9 +18,7 @@ export class SettingsService {
   }
 
   // Artist updates specific methods
-  static async getLastRun(
-    type: "images" | "headers" | "scores"
-  ): Promise<Date | null> {
+  static async getLastRun(type: "images" | "headers" | "scores"): Promise<Date | null> {
     if (type !== "images" && type !== "headers" && type !== "scores") {
       throw new AppError("Type must be 'images', 'headers', or 'scores'", 400);
     }
@@ -37,18 +31,13 @@ export class SettingsService {
     const lastRuns: Record<string, Date | null> = {};
 
     for (const entry of results) {
-      lastRuns[entry.key] = entry.value
-        ? new Date(entry.value as string)
-        : null;
+      lastRuns[entry.key] = entry.value ? new Date(entry.value as string) : null;
     }
 
     return lastRuns;
   }
 
-  static async setLastRun(
-    type: "images" | "headers" | "scores",
-    date: Date = new Date()
-  ): Promise<void> {
+  static async setLastRun(type: "images" | "headers" | "scores", date: Date = new Date()): Promise<void> {
     await this.set(`artist_${type}_last_run`, date.toISOString());
   }
 }

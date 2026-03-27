@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, RefreshCw, X, ChevronDown } from "lucide-react";
-import { Progress } from "@shared/types";
+import type { Progress } from "@shared/types";
 import ArtistImage from "@/components/settings/ArtistImage";
 import ImageComparison from "@/components/settings/ImageComparison";
 
@@ -22,14 +22,7 @@ interface JobSummaryProps {
   onDismiss: () => void;
 }
 
-const JobSummary = ({
-  changedEntries,
-  sameEntries,
-  errorEntries,
-  total,
-  imageType,
-  onDismiss,
-}: JobSummaryProps) => {
+const JobSummary = ({ changedEntries, sameEntries, errorEntries, total, imageType, onDismiss }: JobSummaryProps) => {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<ResultTab>(
     changedEntries.length > 0 ? "changed" : sameEntries.length > 0 ? "unchanged" : "errors"
@@ -97,10 +90,7 @@ const JobSummary = ({
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-300 transition-colors px-1.5 py-0.5 rounded hover:bg-neutral-800"
             >
               {expanded ? "Hide" : "Details"}
-              <motion.div
-                animate={{ rotate: expanded ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
+              <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown className="w-3 h-3" />
               </motion.div>
             </button>
@@ -171,23 +161,15 @@ const JobSummary = ({
                             {hasComparison ? (
                               <ImageComparison
                                 beforeImage={isImage ? entry.artistImage : entry.headerImage}
-                                afterImage={
-                                  isImage ? entry.newArtistImage : entry.newHeaderImage
-                                }
+                                afterImage={isImage ? entry.newArtistImage : entry.newHeaderImage}
                                 artistName={entry.artistName}
                                 size="w-7 h-7"
                                 type={isImage ? "profile" : "header"}
                               />
                             ) : (
-                              <ArtistImage
-                                imageUrl={entry.artistImage}
-                                artistName={entry.artistName}
-                                size="w-7 h-7"
-                              />
+                              <ArtistImage imageUrl={entry.artistImage} artistName={entry.artistName} size="w-7 h-7" />
                             )}
-                            <span className="text-xs text-neutral-300 truncate">
-                              {entry.artistName}
-                            </span>
+                            <span className="text-xs text-neutral-300 truncate">{entry.artistName}</span>
                           </div>
                         );
                       })}
@@ -203,14 +185,8 @@ const JobSummary = ({
                             className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900/80"
                           >
                             <CheckCircle className="w-3 h-3 text-neutral-600 shrink-0" />
-                            <ArtistImage
-                              imageUrl={entry.artistImage}
-                              artistName={entry.artistName}
-                              size="w-5 h-5"
-                            />
-                            <span className="text-xs text-neutral-500 truncate">
-                              {entry.artistName}
-                            </span>
+                            <ArtistImage imageUrl={entry.artistImage} artistName={entry.artistName} size="w-5 h-5" />
+                            <span className="text-xs text-neutral-500 truncate">{entry.artistName}</span>
                           </div>
                         ))}
                       </div>
@@ -225,14 +201,8 @@ const JobSummary = ({
                           className="flex items-center gap-2.5 px-3 py-2 border-b border-neutral-800/50 last:border-0"
                         >
                           <X className="w-3 h-3 text-red-400/60 shrink-0" />
-                          <ArtistImage
-                            imageUrl={entry.artistImage}
-                            artistName={entry.artistName}
-                            size="w-5 h-5"
-                          />
-                          <span className="text-xs text-neutral-400 truncate">
-                            {entry.artistName}
-                          </span>
+                          <ArtistImage imageUrl={entry.artistImage} artistName={entry.artistName} size="w-5 h-5" />
+                          <span className="text-xs text-neutral-400 truncate">{entry.artistName}</span>
                         </div>
                       ))}
                     </TabContent>
@@ -251,12 +221,7 @@ export default JobSummary;
 
 /** Wrapper for animated tab content transitions */
 const TabContent = ({ children }: { children: React.ReactNode }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 0.15 }}
-  >
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
     {children}
   </motion.div>
 );

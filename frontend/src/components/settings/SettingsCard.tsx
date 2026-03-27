@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Loader2 } from "lucide-react";
-import { Progress } from "@shared/types";
+import type { Progress } from "@shared/types";
 import JobProgressBar from "@/components/settings/JobProgressBar";
 import JobSummary from "@/components/settings/JobSummary";
 
@@ -105,9 +105,7 @@ const SettingsCard = ({
       <div className="p-6 flex-1 flex flex-col">
         {/* Header row */}
         <div className="flex items-center gap-3 mb-4">
-          <div
-            className={`flex items-center justify-center w-12 h-12 rounded-full ${accentBgLight} ${accentText}`}
-          >
+          <div className={`flex items-center justify-center w-12 h-12 rounded-full ${accentBgLight} ${accentText}`}>
             {icon}
           </div>
           <div className="flex-1 min-w-0">
@@ -181,8 +179,7 @@ const SettingsCard = ({
 
           {/* Last run timestamp */}
           <span className="text-xs text-neutral-500 mt-auto">
-            Last updated:{" "}
-            {isRunning ? "In progress" : isComplete && !job?.dismissed ? "Just now" : lastRun}
+            Last updated: {isRunning ? "In progress" : isComplete && !job?.dismissed ? "Just now" : lastRun}
           </span>
         </div>
 

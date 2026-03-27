@@ -2,7 +2,7 @@ import "dotenv/config";
 import { count, eq, sql, asc } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db } from "@/index";
-import { ReviewedTrack } from "@shared/types";
+import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
   static async getTracksByAlbumID(albumID: string) {
@@ -32,10 +32,7 @@ export class TrackModel {
       .where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
-  static async updateTrackFeatures(
-    spotifyID: string,
-    features: { id: string; name: string }[]
-  ) {
+  static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[]) {
     return db
       .update(reviewedTracks)
       .set({ features, updatedAt: new Date() })

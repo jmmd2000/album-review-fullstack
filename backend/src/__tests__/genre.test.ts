@@ -10,9 +10,7 @@ let authCookie: string[];
 const albumID = mockReviewData.album.id;
 
 beforeAll(async () => {
-  const res = await request(app)
-    .post("/api/auth/login")
-    .send({ password: process.env.ADMIN_PASSWORD! });
+  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
   expect(res.status).toBe(204);
   const setCookie = res.get("set-cookie");
   authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
@@ -38,8 +36,8 @@ test("album creation stores genres", async () => {
   const res = await request(app).get(`/api/albums/${albumID}`).set("Cookie", authCookie);
   expect(res.status).toBe(200);
 
-  const albumGenres = (res.body.albumGenres as Genre[]).map((g) => g.name).sort();
-  const allGenres = (res.body.allGenres as Genre[]).map((g) => g.name).sort();
+  const albumGenres = (res.body.albumGenres as Genre[]).map(g => g.name).sort();
+  const allGenres = (res.body.allGenres as Genre[]).map(g => g.name).sort();
   const expected = [...mockReviewData.genres].sort();
   expect(albumGenres).toEqual(expected);
   expect(allGenres).toEqual(expected);
@@ -67,9 +65,9 @@ test("updating genres replaces old entries", async () => {
   expect(update.status).toBe(200);
 
   const res = await request(app).get(`/api/albums/${albumID}`).set("Cookie", authCookie);
-  const names = (res.body.albumGenres as Genre[]).map((g) => g.name).sort();
+  const names = (res.body.albumGenres as Genre[]).map(g => g.name).sort();
   expect(names).toEqual(["genre1", "genre2", "genre3"]);
-  const allNames = (res.body.allGenres as Genre[]).map((g) => g.name).sort();
+  const allNames = (res.body.allGenres as Genre[]).map(g => g.name).sort();
   expect(allNames).toEqual(["genre1", "genre2", "genre3"]);
 });
 
