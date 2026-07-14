@@ -31,3 +31,5 @@ frontend/cypress/screenshots/
 .env
 .drizzle
 .tanstack
+
+docs/

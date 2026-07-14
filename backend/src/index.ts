@@ -33,8 +33,9 @@ import settingsRoutes from "@/api/routes/settingsRoutes";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
 import testRoutes from "@/api/routes/testRoutes";
+import { resolveDatabaseURL } from "@/config/database";
 
-export const db = drizzle(env.DATABASE_URL);
+export const db = drizzle(resolveDatabaseURL());
 
 export const app = express();
 

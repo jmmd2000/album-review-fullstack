@@ -1,18 +1,8 @@
 import request from "supertest";
 import { app } from "../index";
-import { afterAll, test, expect, describe, beforeAll } from "@jest/globals";
-import pg from "pg";
+import { test, expect, describe } from "@jest/globals";
 
-let pool: pg.Pool;
 let authCookie: string[] = [];
-
-beforeAll(async () => {
-  pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-});
-
-afterAll(async () => {
-  await pool.end();
-});
 
 describe("Auth (JWT + bcrypt)", () => {
   test("POST /api/auth/login succeeds with valid password and sets httpOnly cookie", async () => {
