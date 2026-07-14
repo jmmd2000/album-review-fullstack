@@ -9,7 +9,7 @@ const config: Config = {
     "^@shared/(.*)$": "<rootDir>/../shared/src/$1",
   },
   moduleFileExtensions: ["ts", "tsx", "js"],
-  setupFiles: ["dotenv/config"],
+  setupFiles: ["<rootDir>/src/__tests__/jest.setup.ts"],
   testMatch: ["**/__tests__/**/*.test.ts"],
   transform: {
     "^.+\\.tsx?$": "ts-jest",

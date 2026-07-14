@@ -1,10 +1,11 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import { resolveDatabaseURL } from "@/config/database";
 
 dotenv.config();
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: resolveDatabaseURL(),
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
