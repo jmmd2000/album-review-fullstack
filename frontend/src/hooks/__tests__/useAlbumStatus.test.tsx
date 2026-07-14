@@ -95,4 +95,25 @@ describe("useAlbumStatus", () => {
 
     expect(result.current.isLoading).toBe(true);
   });
+
+  it("queries the correct endpoints with the right id formats", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({}).mockResolvedValueOnce([]);
+
+    renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/api/albums/scores?ids=album-1,album-2");
+    });
+    expect(api.get).toHaveBeenCalledWith("/api/bookmarks/status?ids=album-1&ids=album-2");
+  });
+
+  it("surfaces isError when a query fails instead of hiding it", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("boom"));
+
+    const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+  });
 });

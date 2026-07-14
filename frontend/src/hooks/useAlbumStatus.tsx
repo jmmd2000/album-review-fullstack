@@ -7,7 +7,11 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   const qs = new URLSearchParams(ids.map(id => Array.from(["ids", id]))).toString();
 
   // Bookmark‐status query
-  const { data: bookmarkData = {}, isLoading: isLoadingBookmarks } = useQuery<Record<string, boolean>, Error>({
+  const {
+    data: bookmarkData = {},
+    isLoading: isLoadingBookmarks,
+    isError: isBookmarksError,
+  } = useQuery<Record<string, boolean>, Error>({
     queryKey: ["bookmarks", ids],
     queryFn: async () => {
       return api.get<Record<string, boolean>>(`/api/bookmarks/status?${qs}`);
@@ -18,10 +22,14 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   });
 
   // review‐score query
-  const { data: scoreArray = [], isLoading: isLoadingScores } = useQuery<Array<{ spotifyID: string; reviewScore: number }>, Error>({
-    queryKey: ["albums", "status", ids],
+  const {
+    data: scoreArray = [],
+    isLoading: isLoadingScores,
+    isError: isScoresError,
+  } = useQuery<Array<{ spotifyID: string; reviewScore: number }>, Error>({
+    queryKey: ["albums", "scores", ids],
     queryFn: async () => {
-      return api.get<Array<{ spotifyID: string; reviewScore: number }>>(`/api/albums/status?${qs}`);
+      return api.get<Array<{ spotifyID: string; reviewScore: number }>>(`/api/albums/scores?ids=${ids.join(",")}`);
     },
     // scores rarely change so no need to auto refetch
     staleTime: Infinity,
@@ -44,6 +52,6 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
   return {
     data: enriched,
     isLoading: isLoadingBookmarks || isLoadingScores,
-    isError: false, // you can combine bookmarkData and scoreArray errors if you wish
+    isError: isBookmarksError || isScoresError,
   };
 }
