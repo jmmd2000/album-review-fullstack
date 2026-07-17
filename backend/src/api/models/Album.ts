@@ -50,28 +50,18 @@ export class AlbumModel {
     const OFFSET = (page - 1) * PAGE_SIZE;
 
     // If requested genres, look up the matching album IDs
-    let albumIds: string[] | undefined;
+    let albumIDs: string[] | undefined;
     if (genres?.length) {
-      albumIds = await this.getAlbumIdsByGenres(genres);
+      albumIDs = await this.getAlbumIdsByGenres(genres);
       // nothing matched, early return empty result
-      if (albumIds.length === 0) {
+      if (albumIDs.length === 0) {
         return { albums: [], totalCount: 0, furtherPages: false };
       }
     }
 
-    // Build exact same query, + one extra WHERE if albumIds is set
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q: any = db
-      .select()
-      .from(reviewedAlbums)
-      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
-
-    if (search.trim()) {
-      q = q.where(
-        sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} 
-           OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})`
-      );
-    }
+    // Combine the genre and search filters into a single WHERE.
+    const genreFilter = albumIDs ? inArray(reviewedAlbums.spotifyID, albumIDs) : undefined;
+    const searchFilter = search.trim() ? sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})` : undefined;
 
     let baseOrder;
     if (orderBy === "releaseYear") {
@@ -90,7 +80,10 @@ export class AlbumModel {
       baseOrder = order === "asc" ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
     }
 
-    const albums: DisplayAlbum[] = await q
+    const albums: DisplayAlbum[] = await db
+      .select()
+      .from(reviewedAlbums)
+      .where(and(genreFilter, searchFilter))
       .orderBy(...baseOrder)
       .limit(PAGE_SIZE + 1)
       .offset(OFFSET);
@@ -101,7 +94,7 @@ export class AlbumModel {
     const [{ count: totalCount }] = await db
       .select({ count: count() })
       .from(reviewedAlbums)
-      .where(albumIds ? inArray(reviewedAlbums.spotifyID, albumIds) : undefined);
+      .where(albumIDs ? inArray(reviewedAlbums.spotifyID, albumIDs) : undefined);
 
     return {
       albums,

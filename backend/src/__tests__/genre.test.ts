@@ -81,3 +81,29 @@ test("deleting album clears unused genres", async () => {
   expect(res.status).toBe(200);
   expect(res.body.genres.length).toBe(0);
 });
+
+test("genre filter is kept when a search term is also present", async () => {
+  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+
+  await request(app)
+    .post("/api/albums/create")
+    .set("Cookie", authCookie)
+    .send({
+      ...mockReviewData,
+      album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU", name: "Midnight Rockers" },
+      genres: ["rock"],
+    });
+
+  const res = await request(app)
+    .get(`/api/albums?genres=${encodeURIComponent("pop")}&search=${encodeURIComponent("Midnight")}`)
+    .set("Cookie", authCookie);
+
+  expect(res.status).toBe(200);
+  expect(res.body.albums).toHaveLength(0);
+
+  const popOnly = await request(app)
+    .get(`/api/albums?genres=${encodeURIComponent("pop")}`)
+    .set("Cookie", authCookie);
+  expect(popOnly.body.albums).toHaveLength(1);
+  expect(popOnly.body.albums[0]).toHaveProperty("spotifyID", mockReviewData.album.id);
+});
