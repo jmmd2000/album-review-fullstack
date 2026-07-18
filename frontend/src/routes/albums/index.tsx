@@ -1,13 +1,16 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
+import { motion } from "framer-motion";
+
+import { queryClient } from "@/main";
+import { api } from "@/lib/api";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
-import { motion } from "framer-motion";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
-import { api } from "@/lib/api";
+
+import type { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
+import { PAGE_SIZE } from "@shared/constants";
 
 async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
   const queryParams = new URLSearchParams();
@@ -205,7 +208,7 @@ function RouteComponent() {
             },
             page: {
               pageNumber: options.page || 1,
-              totalPages: Math.ceil(data.totalCount / 35),
+              totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
             },
           },
           sortSettings: sortSettings,

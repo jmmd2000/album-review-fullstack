@@ -1,5 +1,5 @@
 /** Number of items per page in paginated queries. */
-export const PAGE_SIZE = 35;
+export { PAGE_SIZE } from "@shared/constants";
 
 /** Maximum possible score for an artist (capped). */
 export const MAX_SCORE = 100;
