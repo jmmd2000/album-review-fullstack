@@ -91,10 +91,7 @@ export class AlbumModel {
     const furtherPages = albums.length > PAGE_SIZE;
     if (furtherPages) albums.pop();
 
-    const [{ count: totalCount }] = await db
-      .select({ count: count() })
-      .from(reviewedAlbums)
-      .where(albumIDs ? inArray(reviewedAlbums.spotifyID, albumIDs) : undefined);
+    const [{ count: totalCount }] = await db.select({ count: count() }).from(reviewedAlbums).where(and(genreFilter, searchFilter));
 
     return {
       albums,
