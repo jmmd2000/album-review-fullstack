@@ -1,13 +1,16 @@
-import AlbumCard from "@/components/album/AlbumCard";
-import CardGrid from "@/components/ui/CardGrid";
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import type { SortDropdownProps } from "@/components/ui/SortDropdown";
-import { api } from "@/lib/api";
-import { queryClient } from "@/main";
-import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import { motion } from "framer-motion";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+
+import { api } from "@/lib/api";
+import { queryClient } from "@/main";
+import CardGrid from "@/components/ui/CardGrid";
+import AlbumCard from "@/components/album/AlbumCard";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
+import type { SortDropdownProps } from "@/components/ui/SortDropdown";
+
+import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import { PAGE_SIZE } from "@shared/constants";
 
 async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
   const queryParams = new URLSearchParams();
@@ -125,7 +128,7 @@ function RouteComponent() {
               },
               page: {
                 pageNumber: options.page || 1,
-                totalPages: Math.ceil(data.totalCount / 35),
+                totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
               },
             },
             sortSettings: sortSettings,

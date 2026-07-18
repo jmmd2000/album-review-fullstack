@@ -1,12 +1,15 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/main";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
-import CardGrid from "@components/ui/CardGrid";
 import { motion } from "framer-motion";
+
+import { queryClient } from "@/main";
+import { api } from "@/lib/api";
+import CardGrid from "@components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
-import { api } from "@/lib/api";
+
+import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
+import { PAGE_SIZE } from "@shared/constants";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions): Promise<{
   artists: DisplayArtist[];
@@ -158,7 +161,7 @@ function RouteComponent() {
 
   // Calculate current position for each artist based on sort order
   const artistsWithPosition = data.artists.map((artist, index) => {
-    const currentPosition = (options.page || 1) * 35 - 35 + index + 1;
+    const currentPosition = (options.page || 1) * PAGE_SIZE - PAGE_SIZE + index + 1;
 
     // Determine which score to display based on sort type
     let displayScore = artist.totalScore;
@@ -194,7 +197,7 @@ function RouteComponent() {
             },
             page: {
               pageNumber: options.page || 1,
-              totalPages: Math.ceil(data.totalCount / 35),
+              totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
             },
           },
           sortSettings: sortSettings,
