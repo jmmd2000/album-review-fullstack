@@ -4,38 +4,44 @@
  * @returns {string} The formatted date i.e. 'September 22nd, 2023'
  */
 export function formatDate(inputDate: string): string {
-  //* Some release dates from spotify are just the year, so we need to check for that
-  if (inputDate.length < 5) {
+  const dateParts = inputDate.split("-").map(Number);
+  const [year, month, day] = dateParts;
+
+  // Year only, e.g. "2023" - Spotify sometimes gives just the year
+  if (dateParts.length === 1) {
     return inputDate;
-  } else {
-    // Parse the input date string into a Date object
-    const dateParts = inputDate.split("-").map(Number);
-    const [year, month, day] = dateParts;
-    const parsedDate = new Date(year!, month! - 1, day);
-
-    // Format the date using Intl.DateTimeFormat
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-
-    const formattedDate = formatter.format(parsedDate);
-
-    // Extract day and add the appropriate suffix (e.g., "1st", "2nd", "3rd", "4th")
-    const dayOfMonth = parsedDate.getDate();
-    let daySuffix = "th";
-
-    if (dayOfMonth === 1 || dayOfMonth === 21 || dayOfMonth === 31) {
-      daySuffix = "st";
-    } else if (dayOfMonth === 2 || dayOfMonth === 22) {
-      daySuffix = "nd";
-    } else if (dayOfMonth === 3 || dayOfMonth === 23) {
-      daySuffix = "rd";
-    }
-
-    return `${formattedDate.replace(`${dayOfMonth}`, `${dayOfMonth}${daySuffix}`)}`;
   }
+
+  // Year and month only, e.g. "2023-09" (release_date_precision "month") -> "September 2023"
+  if (dateParts.length === 2) {
+    const parsedDate = new Date(year!, month! - 1, 1);
+    if (isNaN(parsedDate.getTime())) return inputDate;
+    return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long" }).format(parsedDate);
+  }
+
+  // Full date, e.g. "2023-09-22" -> "September 22nd, 2023"
+  const parsedDate = new Date(year!, month! - 1, day);
+  if (isNaN(parsedDate.getTime())) return inputDate;
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedDate = formatter.format(parsedDate);
+
+  // Extract the day and add the appropriate suffix (e.g. "1st", "2nd", "3rd", "4th")
+  const dayOfMonth = parsedDate.getDate();
+  let daySuffix = "th";
+  if (dayOfMonth === 1 || dayOfMonth === 21 || dayOfMonth === 31) {
+    daySuffix = "st";
+  } else if (dayOfMonth === 2 || dayOfMonth === 22) {
+    daySuffix = "nd";
+  } else if (dayOfMonth === 3 || dayOfMonth === 23) {
+    daySuffix = "rd";
+  }
+
+  return formattedDate.replace(`${dayOfMonth}`, `${dayOfMonth}${daySuffix}`);
 }
 
 /**
