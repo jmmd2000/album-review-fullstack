@@ -12,6 +12,7 @@ import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositi
 import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { AppError } from "../middleware/errorHandler";
+import { db, type Executor } from "@/db/client";
 
 export class ArtistService {
   /**
@@ -57,77 +58,79 @@ export class ArtistService {
 
     const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(artists.map(a => a.spotifyID));
 
-    for (const artist of artists) {
-      const albumLinks = allAlbumLinks.get(artist.spotifyID) ?? [];
-      const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
-      const reviewCount = albums.length;
-      const contributing = albumLinks.filter(link => link.affectsScore).map(link => link.album) as ReviewedAlbum[];
+    await db.transaction(async tx => {
+      for (const artist of artists) {
+        const albumLinks = allAlbumLinks.get(artist.spotifyID) ?? [];
+        const albums = albumLinks.map(link => link.album) as ReviewedAlbum[];
+        const reviewCount = albums.length;
+        const contributing = albumLinks.filter(link => link.affectsScore).map(link => link.album) as ReviewedAlbum[];
 
-      if (contributing.length === 0) {
+        if (contributing.length === 0) {
+          const updates = {
+            unrated: true,
+            averageScore: 0,
+            bonusPoints: 0,
+            totalScore: 0,
+            peakScore: 0,
+            latestScore: 0,
+            bonusReason: JSON.stringify([]),
+            reviewCount,
+            leaderboardPosition: null,
+            peakLeaderboardPosition: null,
+            latestLeaderboardPosition: null,
+          };
+
+          const needsUpdate =
+            artist.unrated === false ||
+            hasNumericChange(artist.averageScore, 0) ||
+            hasNumericChange(artist.bonusPoints, 0) ||
+            hasNumericChange(artist.totalScore, 0) ||
+            hasNumericChange(artist.peakScore, 0) ||
+            hasNumericChange(artist.latestScore, 0) ||
+            (artist.bonusReason ?? "[]") !== updates.bonusReason ||
+            artist.reviewCount !== reviewCount ||
+            artist.leaderboardPosition !== null ||
+            artist.peakLeaderboardPosition !== null ||
+            artist.latestLeaderboardPosition !== null;
+
+          if (needsUpdate) {
+            await ArtistModel.updateArtist(artist.spotifyID, updates, tx);
+          }
+          continue;
+        }
+
+        const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
+
         const updates = {
-          unrated: true,
-          averageScore: 0,
-          bonusPoints: 0,
-          totalScore: 0,
-          peakScore: 0,
-          latestScore: 0,
-          bonusReason: JSON.stringify([]),
+          averageScore: newAverageScore,
+          bonusPoints: newBonusPoints,
+          totalScore,
+          peakScore,
+          latestScore,
+          bonusReason: JSON.stringify(bonusReasons),
           reviewCount,
-          leaderboardPosition: null,
-          peakLeaderboardPosition: null,
-          latestLeaderboardPosition: null,
+          unrated: false,
         };
 
         const needsUpdate =
-          artist.unrated === false ||
-          hasNumericChange(artist.averageScore, 0) ||
-          hasNumericChange(artist.bonusPoints, 0) ||
-          hasNumericChange(artist.totalScore, 0) ||
-          hasNumericChange(artist.peakScore, 0) ||
-          hasNumericChange(artist.latestScore, 0) ||
+          artist.unrated ||
+          hasNumericChange(artist.averageScore, newAverageScore) ||
+          hasNumericChange(artist.bonusPoints, newBonusPoints) ||
+          hasNumericChange(artist.totalScore, totalScore) ||
+          hasNumericChange(artist.peakScore, peakScore) ||
+          hasNumericChange(artist.latestScore, latestScore) ||
           (artist.bonusReason ?? "[]") !== updates.bonusReason ||
-          artist.reviewCount !== reviewCount ||
-          artist.leaderboardPosition !== null ||
-          artist.peakLeaderboardPosition !== null ||
-          artist.latestLeaderboardPosition !== null;
+          artist.reviewCount !== reviewCount;
 
         if (needsUpdate) {
-          await ArtistModel.updateArtist(artist.spotifyID, updates);
+          await ArtistModel.updateArtist(artist.spotifyID, updates, tx);
         }
-        continue;
       }
 
-      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
-
-      const updates = {
-        averageScore: newAverageScore,
-        bonusPoints: newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReason: JSON.stringify(bonusReasons),
-        reviewCount,
-        unrated: false,
-      };
-
-      const needsUpdate =
-        artist.unrated ||
-        hasNumericChange(artist.averageScore, newAverageScore) ||
-        hasNumericChange(artist.bonusPoints, newBonusPoints) ||
-        hasNumericChange(artist.totalScore, totalScore) ||
-        hasNumericChange(artist.peakScore, peakScore) ||
-        hasNumericChange(artist.latestScore, latestScore) ||
-        (artist.bonusReason ?? "[]") !== updates.bonusReason ||
-        artist.reviewCount !== reviewCount;
-
-      if (needsUpdate) {
-        await ArtistModel.updateArtist(artist.spotifyID, updates);
+      if (artists.length > 0) {
+        await ArtistService.updateAllLeaderboardPositions(tx);
       }
-    }
-
-    if (artists.length > 0) {
-      await ArtistService.updateAllLeaderboardPositions();
-    }
+    });
 
     const refreshed = await ArtistModel.getAllArtists();
     const changedArtists: {
@@ -224,9 +227,9 @@ export class ArtistService {
   /**
    * Updates all leaderboard positions (overall, peak, latest) for all artists
    */
-  static async updateAllLeaderboardPositions() {
+  static async updateAllLeaderboardPositions(executor: Executor = db) {
     // Get all rated artists
-    const allArtists = await ArtistModel.getAllArtists();
+    const allArtists = await ArtistModel.getAllArtists(executor);
     const ratedArtists = allArtists.filter(artist => !artist.unrated);
 
     if (ratedArtists.length === 0) return;
@@ -257,17 +260,17 @@ export class ArtistService {
 
     // Update overall leaderboard positions
     for (const artist of overallPositions) {
-      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
     // Update peak leaderboard positions
     for (const artist of peakPositions) {
-      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
     // Update latest leaderboard positions
     for (const artist of latestPositions) {
-      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!, executor);
     }
   }
   static async getAllArtists() {

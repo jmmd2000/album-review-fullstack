@@ -2,19 +2,20 @@ import { GenreModel } from "@/api/models/Genre";
 import { AppError } from "../middleware/errorHandler";
 import type { Genre, RelatedGenre } from "@shared/types";
 import slugify from "slugify";
+import { db, type Executor } from "@/db/client";
 
 export class GenreService {
   static async getAllGenres() {
     return await GenreModel.getAllGenres();
   }
 
-  static async findOrCreateGenre(name: string): Promise<number> {
+  static async findOrCreateGenre(name: string, executor: Executor = db): Promise<number> {
     const slug = slugify(name, { lower: true, strict: true });
 
-    let genre = await GenreModel.findBySlug(slug);
+    let genre = await GenreModel.findBySlug(slug, executor);
     if (genre) return genre.id;
 
-    genre = await GenreModel.createGenre({ name, slug });
+    genre = await GenreModel.createGenre({ name, slug }, executor);
     return genre.id;
   }
 
@@ -87,15 +88,15 @@ export class GenreService {
     return filtered;
   }
 
-  static async deleteIfUnused(genreIDs: number[]) {
-    const usageCounts = await GenreModel.getAlbumCountsByGenreIDs(genreIDs);
+  static async deleteIfUnused(genreIDs: number[], executor: Executor = db) {
+    const usageCounts = await GenreModel.getAlbumCountsByGenreIDs(genreIDs, executor);
 
     for (const genreID of genreIDs) {
       const usageCount = usageCounts.get(genreID) ?? 0;
 
       if (usageCount === 0) {
-        await GenreModel.deleteRelatedGenresByID(genreID);
-        await GenreModel.deleteGenreByID(genreID);
+        await GenreModel.deleteRelatedGenresByID(genreID, executor);
+        await GenreModel.deleteGenreByID(genreID, executor);
       }
     }
   }

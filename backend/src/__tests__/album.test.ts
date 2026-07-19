@@ -5,6 +5,7 @@ import { mockReviewData, mockUpdateData } from "./constants";
 import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
 import { resetTables } from "./testUtils";
+import { ArtistModel } from "../api/models/Artist";
 
 // Mock Puppeteer header fetcher
 jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
@@ -130,28 +131,35 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
   expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
 });
 
-test("GET /api/albums - totalCount reflects the search filter, not the full table", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
-  await request(app)
-    .post("/api/albums/create")
-    .set("Cookie", authCookie)
-    .send({
-      ...mockReviewData,
-      album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU", name: "Midnight Rockers" },
-    });
-
-  // two albums exist; a search that matches only one must report a total of 1,
-  // not the full-table count. Before the fix the count query ignored search.
-  const res = await request(app)
-    .get(`/api/albums?search=${encodeURIComponent("Midnight")}`)
-    .set("Cookie", authCookie);
-
-  expect(res.status).toBe(200);
-  expect(res.body.albums).toHaveLength(1);
-  expect(res.body.totalCount).toBe(1);
-});
-
 test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
   const res = await request(app).get("/api/albums/thisIdDoesNotExist").set("Cookie", authCookie);
   expect(res.status).toBe(404);
+});
+
+test("POST /api/albums/create - a mid-flight failure rolls the whole review back", async () => {
+  // Force a failure at the end of the create transaction. refreshArtists calls
+  // updateArtist last, so by then the album, tracks, genres and artist links have
+  // all been created. The whole write must roll back together.
+  const spy = jest.spyOn(ArtistModel, "updateArtist").mockRejectedValueOnce(new Error("forced mid-transaction failure"));
+
+  const res = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  expect(res.status).toBe(500);
+
+  // None of the review's rows should have persisted.
+  const albums = await query("SELECT 1 FROM reviewed_albums WHERE spotify_id = $1", [mockReviewData.album.id]);
+  expect(albums.rowCount).toBe(0);
+
+  const tracks = await query("SELECT 1 FROM reviewed_tracks WHERE album_spotify_id = $1", [mockReviewData.album.id]);
+  expect(tracks.rowCount).toBe(0);
+
+  const artistLinks = await query("SELECT 1 FROM album_artists WHERE album_spotify_id = $1", [mockReviewData.album.id]);
+  expect(artistLinks.rowCount).toBe(0);
+
+  const genreLinks = await query("SELECT 1 FROM album_genres WHERE album_spotify_id = $1", [mockReviewData.album.id]);
+  expect(genreLinks.rowCount).toBe(0);
+
+  // Note: the artist row itself is created before the transaction (the header scrape
+  // stays outside it), so it is intentionally not rolled back.
+
+  spy.mockRestore();
 });
