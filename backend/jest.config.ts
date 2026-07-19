@@ -10,11 +10,11 @@ const config: Config = {
   },
   moduleFileExtensions: ["ts", "tsx", "js"],
   setupFiles: ["<rootDir>/src/__tests__/jest.setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/src/__tests__/jest.setupAfterEnv.ts"],
   testMatch: ["**/__tests__/**/*.test.ts"],
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },
-  detectOpenHandles: true,
   forceExit: true,
 };
 
