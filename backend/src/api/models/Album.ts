@@ -2,7 +2,7 @@ import "dotenv/config";
 import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
 export class AlbumModel {

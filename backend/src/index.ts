@@ -1,5 +1,4 @@
 import "@/config/env";
-import { drizzle } from "drizzle-orm/node-postgres";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -17,9 +16,6 @@ import settingsRoutes from "@/api/routes/settingsRoutes";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
 import testRoutes from "@/api/routes/testRoutes";
-import { resolveDatabaseURL } from "@/config/database";
-
-export const db = drizzle(resolveDatabaseURL());
 
 export const app = express();
 

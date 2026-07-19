@@ -2,7 +2,8 @@ import request from "supertest";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
 import { PAGE_SIZE } from "@shared/constants";
 
-import { app, db } from "../index";
+import { app } from "../index";
+import { db } from "@/db/client";
 import { reviewedAlbums, reviewedArtists } from "../db/schema";
 import { closeDatabase, query } from "../../db";
 import { resetTables } from "./testUtils";

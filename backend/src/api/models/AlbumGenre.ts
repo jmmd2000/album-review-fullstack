@@ -1,5 +1,5 @@
 import { albumGenres } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import type { AlbumGenre } from "@shared/types";
 
 export class AlbumGenreModel {

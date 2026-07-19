@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, count, inArray } from "drizzle-orm";
 import { reviewedArtists } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import type { GetPaginatedArtistsOptions, ReviewedArtist } from "@shared/types";
 import { PAGE_SIZE } from "@/config/constants";
 
