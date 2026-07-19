@@ -22,4 +22,6 @@ export const env = {
   JWT_SECRET: requireSecret("JWT_SECRET", 32),
   SPOTIFY_CLIENT_ID: requireEnv("SPOTIFY_CLIENT_ID"),
   SPOTIFY_CLIENT_SECRET: requireEnv("SPOTIFY_CLIENT_SECRET"),
+  // comma-separated production/staging origins, injected per environment.
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
 };
