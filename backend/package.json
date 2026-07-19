@@ -29,6 +29,7 @@
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.39.3",
     "express": "^4.21.2",
+    "express-rate-limit": "8.6.0",
     "extract-colors": "^4.1.1",
     "get-pixels": "^3.3.3",
     "helmet": "^8.3.0",
