@@ -15,8 +15,8 @@ export class GenreModel {
       .then(r => r[0].count);
   }
 
-  static async findBySlug(slug: string) {
-    return db
+  static async findBySlug(slug: string, executor: Executor = db) {
+    return executor
       .select()
       .from(genres)
       .where(eq(genres.slug, slug))
@@ -113,9 +113,9 @@ export class GenreModel {
     return result[0].count;
   }
 
-  static async getAlbumCountsByGenreIDs(genreIDs: number[]) {
+  static async getAlbumCountsByGenreIDs(genreIDs: number[], executor: Executor = db) {
     if (genreIDs.length === 0) return new Map<number, number>();
-    const rows = await db.select({ genreID: albumGenres.genreID, count: count() }).from(albumGenres).where(inArray(albumGenres.genreID, genreIDs)).groupBy(albumGenres.genreID);
+    const rows = await executor.select({ genreID: albumGenres.genreID, count: count() }).from(albumGenres).where(inArray(albumGenres.genreID, genreIDs)).groupBy(albumGenres.genreID);
     const map = new Map<number, number>();
     for (const row of rows) {
       map.set(row.genreID, row.count);
@@ -123,12 +123,12 @@ export class GenreModel {
     return map;
   }
 
-  static async deleteRelatedGenresByID(genreID: number) {
-    await db.delete(relatedGenres).where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
+  static async deleteRelatedGenresByID(genreID: number, executor: Executor = db) {
+    await executor.delete(relatedGenres).where(or(eq(relatedGenres.genreID, genreID), eq(relatedGenres.relatedGenreID, genreID)));
   }
 
-  static async deleteGenreByID(genreID: number) {
-    await db.delete(genres).where(eq(genres.id, genreID));
+  static async deleteGenreByID(genreID: number, executor: Executor = db) {
+    await executor.delete(genres).where(eq(genres.id, genreID));
   }
 
   static async getAlbumsByGenreIDRaw(genreID: number) {

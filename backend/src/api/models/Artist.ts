@@ -6,8 +6,8 @@ import type { GetPaginatedArtistsOptions, ReviewedArtist } from "@shared/types";
 import { PAGE_SIZE } from "@/config/constants";
 
 export class ArtistModel {
-  static async getAllArtists(): Promise<ReviewedArtist[]> {
-    return db.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
+  static async getAllArtists(executor: Executor = db): Promise<ReviewedArtist[]> {
+    return executor.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
   }
 
   static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "", scoreType = "overall" }: GetPaginatedArtistsOptions) {
@@ -46,13 +46,13 @@ export class ArtistModel {
       .then(r => r[0]);
   }
 
-  static async getArtistsBySpotifyIDs(ids: string[]) {
+  static async getArtistsBySpotifyIDs(ids: string[], executor: Executor = db) {
     if (ids.length === 0) return [];
-    return db.select().from(reviewedArtists).where(inArray(reviewedArtists.spotifyID, ids));
+    return executor.select().from(reviewedArtists).where(inArray(reviewedArtists.spotifyID, ids));
   }
 
-  static async deleteArtist(artistID: string) {
-    return db.delete(reviewedArtists).where(eq(reviewedArtists.spotifyID, artistID));
+  static async deleteArtist(artistID: string, executor: Executor = db) {
+    return executor.delete(reviewedArtists).where(eq(reviewedArtists.spotifyID, artistID));
   }
 
   static async createArtist(values: typeof reviewedArtists.$inferInsert, executor: Executor = db) {

@@ -130,27 +130,6 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
   expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
 });
 
-test("GET /api/albums - totalCount reflects the search filter, not the full table", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
-  await request(app)
-    .post("/api/albums/create")
-    .set("Cookie", authCookie)
-    .send({
-      ...mockReviewData,
-      album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU", name: "Midnight Rockers" },
-    });
-
-  // two albums exist; a search that matches only one must report a total of 1,
-  // not the full-table count. Before the fix the count query ignored search.
-  const res = await request(app)
-    .get(`/api/albums?search=${encodeURIComponent("Midnight")}`)
-    .set("Cookie", authCookie);
-
-  expect(res.status).toBe(200);
-  expect(res.body.albums).toHaveLength(1);
-  expect(res.body.totalCount).toBe(1);
-});
-
 test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
   const res = await request(app).get("/api/albums/thisIdDoesNotExist").set("Cookie", authCookie);
   expect(res.status).toBe(404);

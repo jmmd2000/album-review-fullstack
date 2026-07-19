@@ -124,10 +124,10 @@ export class AlbumModel {
       .where(eq(albumArtists.artistSpotifyID, spotifyID));
   }
 
-  static async getAlbumsByArtistsWithAffects(artistSpotifyIDs: string[]) {
+  static async getAlbumsByArtistsWithAffects(artistSpotifyIDs: string[], executor: Executor = db) {
     if (artistSpotifyIDs.length === 0) return new Map<string, { album: typeof reviewedAlbums.$inferSelect; affectsScore: boolean }[]>();
 
-    const rows = await db
+    const rows = await executor
       .select({
         album: reviewedAlbums,
         affectsScore: albumArtists.affectsScore,

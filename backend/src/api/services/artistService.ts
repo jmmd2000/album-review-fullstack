@@ -12,6 +12,7 @@ import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositi
 import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { AppError } from "../middleware/errorHandler";
+import { db, type Executor } from "@/db/client";
 
 export class ArtistService {
   /**
@@ -224,9 +225,9 @@ export class ArtistService {
   /**
    * Updates all leaderboard positions (overall, peak, latest) for all artists
    */
-  static async updateAllLeaderboardPositions() {
+  static async updateAllLeaderboardPositions(executor: Executor = db) {
     // Get all rated artists
-    const allArtists = await ArtistModel.getAllArtists();
+    const allArtists = await ArtistModel.getAllArtists(executor);
     const ratedArtists = allArtists.filter(artist => !artist.unrated);
 
     if (ratedArtists.length === 0) return;
@@ -257,17 +258,17 @@ export class ArtistService {
 
     // Update overall leaderboard positions
     for (const artist of overallPositions) {
-      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
     // Update peak leaderboard positions
     for (const artist of peakPositions) {
-      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
     // Update latest leaderboard positions
     for (const artist of latestPositions) {
-      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!);
+      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!, executor);
     }
   }
   static async getAllArtists() {

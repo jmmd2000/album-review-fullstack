@@ -15,6 +15,7 @@ import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "./genreService";
 import { AppError } from "../middleware/errorHandler";
+import { db, type Executor } from "@/db/client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isSpotifyAlbum(a: any): a is SpotifyAlbum {
@@ -59,74 +60,87 @@ export class AlbumService {
       }
     }
 
-    // create album
-    const album = await AlbumModel.createAlbum({
-      name: spotifyAlbum.name,
-      spotifyID: spotifyAlbum.id,
-      releaseDate,
-      releaseYear,
-      imageURLs: spotifyAlbum.images,
-      bestSong: data.bestSong,
-      worstSong: data.worstSong,
-      runtime,
-      reviewContent: data.reviewContent,
-      reviewScore: baseScore,
-      reviewBonuses: bonuses,
-      finalScore,
-      affectsArtistScore: scoreArtistIDs.length > 0,
-      artistSpotifyID: primaryArtist.spotifyID,
-      artistName: primaryArtist.name,
-      colors: colors.map(c => ({ hex: c.hex })),
-      genres: data.genres,
-      albumArtists,
+    // create album, tracks, genres, links and score refresh as one atomic unit
+    return await db.transaction(async tx => {
+      const album = await AlbumModel.createAlbum(
+        {
+          name: spotifyAlbum.name,
+          spotifyID: spotifyAlbum.id,
+          releaseDate,
+          releaseYear,
+          imageURLs: spotifyAlbum.images,
+          bestSong: data.bestSong,
+          worstSong: data.worstSong,
+          runtime,
+          reviewContent: data.reviewContent,
+          reviewScore: baseScore,
+          reviewBonuses: bonuses,
+          finalScore,
+          affectsArtistScore: scoreArtistIDs.length > 0,
+          artistSpotifyID: primaryArtist.spotifyID,
+          artistName: primaryArtist.name,
+          colors: colors.map(c => ({ hex: c.hex })),
+          genres: data.genres,
+          albumArtists,
+        },
+        tx
+      );
+
+      // Sequential, not Promise.all: these share the transaction's single connection.
+      const genreIDs: number[] = [];
+      for (const name of data.genres) {
+        genreIDs.push(await GenreService.findOrCreateGenre(name, tx));
+      }
+
+      // Link new genres & bump related strengths
+      await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs, tx);
+      await GenreModel.incrementRelatedStrength(genreIDs, tx);
+
+      await AlbumModel.upsertAlbumArtists(
+        album.spotifyID,
+        selectedArtistIDs.map(artistSpotifyID => ({
+          artistSpotifyID,
+          affectsScore: scoreArtistIDs.includes(artistSpotifyID),
+        })),
+        tx
+      );
+
+      // create track entries
+      const trackArtistIDs = Array.from(new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id))));
+      const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
+      const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
+      selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
+
+      for (const track of data.ratedTracks) {
+        const t = spotifyAlbum.tracks.items.find(i => i.id === track.spotifyID);
+        if (!t) continue;
+        await TrackModel.createTrack(
+          {
+            albumSpotifyID: album.spotifyID,
+            artistSpotifyID: primaryArtist.spotifyID,
+            artistName: primaryArtist.name,
+            name: t.name,
+            spotifyID: t.id,
+            duration: t.duration_ms,
+            features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
+            rating: track.rating!,
+          },
+          tx
+        );
+        const linkArtistIDs = t.artists.map(a => a.id).filter(id => existingArtistIDs.has(id));
+        await TrackModel.linkArtistsToTrack(t.id, linkArtistIDs, tx);
+      }
+
+      // Remove from bookmarks
+      const isBookmarked = await BookmarkedAlbumModel.findBySpotifyID(album.spotifyID);
+      if (isBookmarked) {
+        await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID, tx);
+      }
+
+      await AlbumService.refreshArtists(selectedArtistIDs, tx);
+
+      return album;
     });
-
-    const genreIDs = await Promise.all(data.genres.map(name => GenreService.findOrCreateGenre(name)));
-
-    // Link new genres & bump related strengths
-    await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs);
-    await GenreModel.incrementRelatedStrength(genreIDs);
-
-    await AlbumModel.upsertAlbumArtists(
-      album.spotifyID,
-      selectedArtistIDs.map(artistSpotifyID => ({
-        artistSpotifyID,
-        affectsScore: scoreArtistIDs.includes(artistSpotifyID),
-      }))
-    );
-
-    // create track entries
-    const trackArtistIDs = Array.from(new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id))));
-    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
-    const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
-    selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
-
-    for (const track of data.ratedTracks) {
-      const t = spotifyAlbum.tracks.items.find(i => i.id === track.spotifyID);
-      if (!t) continue;
-      await TrackModel.createTrack({
-        albumSpotifyID: album.spotifyID,
-        artistSpotifyID: primaryArtist.spotifyID,
-        artistName: primaryArtist.name,
-        name: t.name,
-        spotifyID: t.id,
-        duration: t.duration_ms,
-        features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
-        rating: track.rating!,
-      });
-      const linkArtistIDs = t.artists.map(a => a.id).filter(id => existingArtistIDs.has(id));
-      await TrackModel.linkArtistsToTrack(t.id, linkArtistIDs);
-    }
-
-    // Remove from bookmarks
-    const isBookmarked = await BookmarkedAlbumModel.findBySpotifyID(album.spotifyID);
-    if (isBookmarked) {
-      await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID);
-    }
-
-    await AlbumService.refreshArtists(selectedArtistIDs);
-
-    return album;
   }
 
   static async getAlbumByID(
@@ -236,17 +250,20 @@ export class AlbumService {
     if (!album) throw new AppError("Album not found", 404);
     const artistIDs = await AlbumModel.getAlbumArtistIDs(id);
 
-    // Remove old genres, decrement related strengths and deleted genres if unused
     const oldIDs = await GenreModel.getGenreIDsForAlbum(id);
-    await GenreModel.unlinkGenresFromAlbum(id, oldIDs);
-    await GenreModel.decrementRelatedStrength(oldIDs);
-    await GenreService.deleteIfUnused(oldIDs);
 
-    // Remove tracks and album
-    await TrackModel.deleteTracksByAlbumID(id);
-    await AlbumModel.deleteAlbum(id);
+    await db.transaction(async tx => {
+      // Remove old genres, decrement related strengths and delete genres if unused
+      await GenreModel.unlinkGenresFromAlbum(id, oldIDs, tx);
+      await GenreModel.decrementRelatedStrength(oldIDs, tx);
+      await GenreService.deleteIfUnused(oldIDs, tx);
 
-    await AlbumService.refreshArtists(artistIDs);
+      // Remove tracks and album
+      await TrackModel.deleteTracksByAlbumID(id, tx);
+      await AlbumModel.deleteAlbum(id, tx);
+
+      await AlbumService.refreshArtists(artistIDs, tx);
+    });
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
@@ -278,82 +295,95 @@ export class AlbumService {
     // Ensure any newly added artists exist before updates
     await AlbumService.ensureArtists(addedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
 
-    // update review fields and AAS flag
-    await AlbumModel.updateAlbum(albumID, {
-      reviewContent: data.reviewContent,
-      bestSong: data.bestSong,
-      worstSong: data.worstSong,
-      genres: data.genres,
-      colors: data.colors,
-      reviewScore: baseScore,
-      reviewBonuses: bonuses,
-      finalScore: finalScore,
-      affectsArtistScore: scoreArtistIDs.length > 0,
-      artistSpotifyID: primaryArtist.spotifyID,
-      artistName: primaryArtist.name,
-      albumArtists,
-    });
+    await db.transaction(async tx => {
+      // update review fields and AAS flag
+      await AlbumModel.updateAlbum(
+        albumID,
+        {
+          reviewContent: data.reviewContent,
+          bestSong: data.bestSong,
+          worstSong: data.worstSong,
+          genres: data.genres,
+          colors: data.colors,
+          reviewScore: baseScore,
+          reviewBonuses: bonuses,
+          finalScore: finalScore,
+          affectsArtistScore: scoreArtistIDs.length > 0,
+          artistSpotifyID: primaryArtist.spotifyID,
+          artistName: primaryArtist.name,
+          albumArtists,
+        },
+        tx
+      );
 
-    await AlbumModel.upsertAlbumArtists(
-      albumID,
-      selectedArtistIDs.map(artistSpotifyID => ({
-        artistSpotifyID,
-        affectsScore: scoreArtistIDs.includes(artistSpotifyID),
-      }))
-    );
-    await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs);
+      await AlbumModel.upsertAlbumArtists(
+        albumID,
+        selectedArtistIDs.map(artistSpotifyID => ({
+          artistSpotifyID,
+          affectsScore: scoreArtistIDs.includes(artistSpotifyID),
+        })),
+        tx
+      );
+      await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs, tx);
 
-    const trackArtistIDs = Array.from(new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)])));
-    const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
-    const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
-    selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
+      const trackArtistIDs = Array.from(new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)])));
+      const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
+      const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
+      selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
 
-    for (const newTrack of data.ratedTracks) {
-      const oldTrack = existingTracks.find(t => t.spotifyID === newTrack.spotifyID);
+      for (const newTrack of data.ratedTracks) {
+        const oldTrack = existingTracks.find(t => t.spotifyID === newTrack.spotifyID);
 
-      if (!oldTrack) {
-        // new track
-        await TrackModel.createTrack({
-          albumSpotifyID: albumID,
-          artistSpotifyID: newTrack.artistSpotifyID,
-          artistName: newTrack.artistName,
-          name: newTrack.name,
-          spotifyID: newTrack.spotifyID,
-          duration: newTrack.duration,
-          features: newTrack.features,
-          rating: newTrack.rating ?? 0,
-        });
-      } else if (oldTrack.rating !== newTrack.rating) {
-        // just a rating change
-        if (newTrack.rating !== undefined) {
-          await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating);
+        if (!oldTrack) {
+          // new track
+          await TrackModel.createTrack(
+            {
+              albumSpotifyID: albumID,
+              artistSpotifyID: newTrack.artistSpotifyID,
+              artistName: newTrack.artistName,
+              name: newTrack.name,
+              spotifyID: newTrack.spotifyID,
+              duration: newTrack.duration,
+              features: newTrack.features,
+              rating: newTrack.rating ?? 0,
+            },
+            tx
+          );
+        } else if (oldTrack.rating !== newTrack.rating) {
+          // just a rating change
+          if (newTrack.rating !== undefined) {
+            await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating, tx);
+          }
         }
+
+        if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
+          await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features, tx);
+        }
+        const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id => existingArtistIDs.has(id));
+        await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID, tx);
+        await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs, tx);
       }
 
-      if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
-        await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features);
+      // Get new vs old genre IDs (sequential: shared transaction connection)
+      const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
+      const newIDs: number[] = [];
+      for (const name of data.genres) {
+        newIDs.push(await GenreService.findOrCreateGenre(name, tx));
       }
-      const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id => existingArtistIDs.has(id));
-      await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID);
-      await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs);
-    }
+      const toAdd = newIDs.filter(nid => !oldIDs.includes(nid));
+      const toRemove = oldIDs.filter(oid => !newIDs.includes(oid));
 
-    // Get new vs old genre IDs
-    const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
-    const newIDs = await Promise.all(data.genres.map(name => GenreService.findOrCreateGenre(name)));
-    const toAdd = newIDs.filter(nid => !oldIDs.includes(nid));
-    const toRemove = oldIDs.filter(oid => !newIDs.includes(oid));
+      // Add new genres and increment related strengths
+      await GenreModel.linkGenresToAlbum(albumID, toAdd, tx);
+      await GenreModel.incrementRelatedStrength(toAdd, tx);
 
-    // Add new genres and increment related strengths
-    await GenreModel.linkGenresToAlbum(albumID, toAdd);
-    await GenreModel.incrementRelatedStrength(toAdd);
+      // Remove old genres, decrement related strengths and delete if unused
+      await GenreModel.unlinkGenresFromAlbum(albumID, toRemove, tx);
+      await GenreModel.decrementRelatedStrength(toRemove, tx);
+      await GenreService.deleteIfUnused(toRemove, tx);
 
-    // Remove old genres, decrement related strengths and delete if unused
-    await GenreModel.unlinkGenresFromAlbum(albumID, toRemove);
-    await GenreModel.decrementRelatedStrength(toRemove);
-    await GenreService.deleteIfUnused(toRemove);
-
-    await AlbumService.refreshArtists([...new Set([...previousArtistIDs, ...selectedArtistIDs])]);
+      await AlbumService.refreshArtists([...new Set([...previousArtistIDs, ...selectedArtistIDs])], tx);
+    });
 
     return AlbumModel.findBySpotifyID(albumID);
   }
@@ -440,15 +470,15 @@ export class AlbumService {
     }
   }
 
-  private static async refreshArtists(artistIDs: string[]) {
+  private static async refreshArtists(artistIDs: string[], executor: Executor = db) {
     const uniqueArtistIDs = Array.from(new Set(artistIDs)).filter(Boolean);
     if (uniqueArtistIDs.length === 0) return;
 
     let updated = false;
 
-    const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(uniqueArtistIDs);
+    const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(uniqueArtistIDs, executor);
     const existingArtistIDs = new Set(existingArtists.map(a => a.spotifyID));
-    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(uniqueArtistIDs);
+    const allAlbumLinks = await AlbumModel.getAlbumsByArtistsWithAffects(uniqueArtistIDs, executor);
 
     for (const artistID of uniqueArtistIDs) {
       if (!existingArtistIDs.has(artistID)) continue;
@@ -457,7 +487,7 @@ export class AlbumService {
       const all = albumLinks.map(link => link.album) as ReviewedAlbum[];
 
       if (all.length === 0) {
-        await ArtistModel.deleteArtist(artistID);
+        await ArtistModel.deleteArtist(artistID, executor);
         updated = true;
         continue;
       }
@@ -477,7 +507,7 @@ export class AlbumService {
           leaderboardPosition: null,
           peakLeaderboardPosition: null,
           latestLeaderboardPosition: null,
-        });
+        }, executor);
         updated = true;
         continue;
       }
@@ -493,12 +523,12 @@ export class AlbumService {
         bonusReason: JSON.stringify(bonusReasons),
         reviewCount: all.length,
         unrated: false,
-      });
+      }, executor);
       updated = true;
     }
 
     if (updated) {
-      await ArtistService.updateAllLeaderboardPositions();
+      await ArtistService.updateAllLeaderboardPositions(executor);
     }
   }
 }
