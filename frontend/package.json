@@ -18,7 +18,6 @@
     "@tailwindcss/vite": "^4.0.8",
     "@tanstack/react-query": "^5.66.0",
     "@tanstack/react-router": "^1.105.0",
-    "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.476.0",
@@ -37,22 +36,19 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/axios": "^0.9.36",
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "@types/socket.io": "^3.0.1",
-    "@types/socket.io-client": "^1.4.36",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "cypress": "^15.10.0",
     "dotenv": "^17.3.1",
     "jsdom": "^28.0.0",
+    "prettier": "^3.9.5",
     "ts-node": "^10.9.2",
     "typescript": "~5.7.2",
     "vite": "^6.1.0",
-    "vitest": "^4.0.18",
-    "prettier": "^3.9.5"
+    "vitest": "^4.0.18"
   }
 }
