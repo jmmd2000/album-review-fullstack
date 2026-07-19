@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { count, eq, sql, asc } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
-import { db } from "@/db/client";
+import { db, type Executor } from "@/db/client";
 import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
@@ -9,24 +9,24 @@ export class TrackModel {
     return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.createdAt));
   }
 
-  static async deleteTracksByAlbumID(albumID: string) {
-    return db.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
+  static async deleteTracksByAlbumID(albumID: string, executor: Executor = db) {
+    return executor.delete(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID));
   }
 
-  static async createTrack(values: typeof reviewedTracks.$inferInsert) {
-    return db
+  static async createTrack(values: typeof reviewedTracks.$inferInsert, executor: Executor = db) {
+    return executor
       .insert(reviewedTracks)
       .values(values)
       .returning()
       .then(r => r[0]);
   }
 
-  static async updateTrackRating(spotifyID: string, rating: number) {
-    return db.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
+  static async updateTrackRating(spotifyID: string, rating: number, executor: Executor = db) {
+    return executor.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
-  static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[]) {
-    return db.update(reviewedTracks).set({ features, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
+  static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[], executor: Executor = db) {
+    return executor.update(reviewedTracks).set({ features, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
   static async getTrackCount() {
@@ -54,9 +54,9 @@ export class TrackModel {
     return db.select().from(reviewedTracks) as Promise<ReviewedTrack[]>;
   }
 
-  static async linkArtistsToTrack(trackSpotifyID: string, artistIDs: string[]) {
+  static async linkArtistsToTrack(trackSpotifyID: string, artistIDs: string[], executor: Executor = db) {
     if (artistIDs.length === 0) return;
-    return db
+    return executor
       .insert(trackArtists)
       .values(
         artistIDs.map(artistSpotifyID => ({
@@ -69,7 +69,7 @@ export class TrackModel {
       });
   }
 
-  static async unlinkArtistsFromTrack(trackSpotifyID: string) {
-    return db.delete(trackArtists).where(eq(trackArtists.trackSpotifyID, trackSpotifyID));
+  static async unlinkArtistsFromTrack(trackSpotifyID: string, executor: Executor = db) {
+    return executor.delete(trackArtists).where(eq(trackArtists.trackSpotifyID, trackSpotifyID));
   }
 }

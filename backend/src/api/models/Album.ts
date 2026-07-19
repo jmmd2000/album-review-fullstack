@@ -2,7 +2,7 @@ import "dotenv/config";
 import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
-import { db } from "@/db/client";
+import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
 export class AlbumModel {
@@ -14,23 +14,23 @@ export class AlbumModel {
       .then(r => r[0]);
   }
 
-  static async createAlbum(values: typeof reviewedAlbums.$inferInsert) {
-    return db
+  static async createAlbum(values: typeof reviewedAlbums.$inferInsert, executor: Executor = db) {
+    return executor
       .insert(reviewedAlbums)
       .values(values)
       .returning()
       .then(r => r[0]);
   }
 
-  static async updateAlbum(spotifyID: string, values: Partial<typeof reviewedAlbums.$inferInsert>) {
-    return db
+  static async updateAlbum(spotifyID: string, values: Partial<typeof reviewedAlbums.$inferInsert>, executor: Executor = db) {
+    return executor
       .update(reviewedAlbums)
       .set({ ...values, updatedAt: new Date() })
       .where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
-  static async deleteAlbum(spotifyID: string) {
-    return db.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, spotifyID));
+  static async deleteAlbum(spotifyID: string, executor: Executor = db) {
+    return executor.delete(reviewedAlbums).where(eq(reviewedAlbums.spotifyID, spotifyID));
   }
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
@@ -192,9 +192,9 @@ export class AlbumModel {
     return map;
   }
 
-  static async upsertAlbumArtists(albumSpotifyID: string, entries: { artistSpotifyID: string; affectsScore: boolean }[]) {
+  static async upsertAlbumArtists(albumSpotifyID: string, entries: { artistSpotifyID: string; affectsScore: boolean }[], executor: Executor = db) {
     if (entries.length === 0) return;
-    return db
+    return executor
       .insert(albumArtists)
       .values(
         entries.map(entry => ({
@@ -209,9 +209,9 @@ export class AlbumModel {
       });
   }
 
-  static async unlinkArtistsFromAlbum(albumSpotifyID: string, artistIDs: string[]) {
+  static async unlinkArtistsFromAlbum(albumSpotifyID: string, artistIDs: string[], executor: Executor = db) {
     if (artistIDs.length === 0) return;
-    return db.delete(albumArtists).where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
+    return executor.delete(albumArtists).where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
   }
 
   static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {

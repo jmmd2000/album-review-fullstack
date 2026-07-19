@@ -2,7 +2,7 @@ import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { bookmarkedAlbums } from "@/db/schema";
-import { db } from "@/db/client";
+import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
 export class BookmarkedAlbumModel {
@@ -27,8 +27,8 @@ export class BookmarkedAlbumModel {
       .then(r => r[0]);
   }
 
-  static async removeBookmarkedAlbum(spotifyID: string) {
-    return db.delete(bookmarkedAlbums).where(eq(bookmarkedAlbums.spotifyID, spotifyID));
+  static async removeBookmarkedAlbum(spotifyID: string, executor: Executor = db) {
+    return executor.delete(bookmarkedAlbums).where(eq(bookmarkedAlbums.spotifyID, spotifyID));
   }
 
   static async getAllBookmarkedAlbums() {

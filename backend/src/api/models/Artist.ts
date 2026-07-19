@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { desc, eq, ilike, asc, count, inArray } from "drizzle-orm";
 import { reviewedArtists } from "@/db/schema";
-import { db } from "@/db/client";
+import { db, type Executor } from "@/db/client";
 import type { GetPaginatedArtistsOptions, ReviewedArtist } from "@shared/types";
 import { PAGE_SIZE } from "@/config/constants";
 
@@ -55,16 +55,16 @@ export class ArtistModel {
     return db.delete(reviewedArtists).where(eq(reviewedArtists.spotifyID, artistID));
   }
 
-  static async createArtist(values: typeof reviewedArtists.$inferInsert) {
-    return db
+  static async createArtist(values: typeof reviewedArtists.$inferInsert, executor: Executor = db) {
+    return executor
       .insert(reviewedArtists)
       .values(values)
       .returning()
       .then(r => r[0]);
   }
 
-  static async updateArtist(spotifyID: string, values: Partial<typeof reviewedArtists.$inferInsert>) {
-    return db
+  static async updateArtist(spotifyID: string, values: Partial<typeof reviewedArtists.$inferInsert>, executor: Executor = db) {
+    return executor
       .update(reviewedArtists)
       .set({ ...values, updatedAt: new Date() })
       .where(eq(reviewedArtists.spotifyID, spotifyID));
@@ -81,15 +81,15 @@ export class ArtistModel {
     return db.select().from(reviewedArtists).orderBy(desc(reviewedArtists.totalScore));
   }
 
-  static async updateLeaderboardPosition(id: number, position: number | null) {
-    return db.update(reviewedArtists).set({ leaderboardPosition: position }).where(eq(reviewedArtists.id, id));
+  static async updateLeaderboardPosition(id: number, position: number | null, executor: Executor = db) {
+    return executor.update(reviewedArtists).set({ leaderboardPosition: position }).where(eq(reviewedArtists.id, id));
   }
 
-  static async updatePeakLeaderboardPosition(id: number, position: number | null) {
-    return db.update(reviewedArtists).set({ peakLeaderboardPosition: position }).where(eq(reviewedArtists.id, id));
+  static async updatePeakLeaderboardPosition(id: number, position: number | null, executor: Executor = db) {
+    return executor.update(reviewedArtists).set({ peakLeaderboardPosition: position }).where(eq(reviewedArtists.id, id));
   }
 
-  static async updateLatestLeaderboardPosition(id: number, position: number | null) {
-    return db.update(reviewedArtists).set({ latestLeaderboardPosition: position }).where(eq(reviewedArtists.id, id));
+  static async updateLatestLeaderboardPosition(id: number, position: number | null, executor: Executor = db) {
+    return executor.update(reviewedArtists).set({ latestLeaderboardPosition: position }).where(eq(reviewedArtists.id, id));
   }
 }
