@@ -544,7 +544,7 @@ export class ArtistService {
       });
 
       // Fetch new data from Spotify
-      const artistData = await fetchArtistFromSpotify(id, `https://api.spotify.com/v1/artists/${id}`);
+      const artistData = await fetchArtistFromSpotify(id);
       if (!artistData) continue;
 
       const newArtistImage = artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;

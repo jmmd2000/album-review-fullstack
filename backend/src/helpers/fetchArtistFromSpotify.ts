@@ -16,10 +16,9 @@ export interface ArtistData {
 /**
  * Fetches an artist's data from Spotify.
  * @param id The artist's Spotify ID.
- * @param url The API endpoint to fetch the artist's data.
- * @returns A promise resolving to `ArtistData` if found, otherwise `null`.
+ * @returns A promise resolving to the artist if found, otherwise `null`.
  */
-export const fetchArtistFromSpotify = async (id: string, url: string): Promise<SpotifyArtist | null> => {
+export const fetchArtistFromSpotify = async (id: string): Promise<SpotifyArtist | null> => {
   const token = await SpotifyService.getAccessToken();
   const searchParameters = {
     method: "GET",
@@ -29,9 +28,10 @@ export const fetchArtistFromSpotify = async (id: string, url: string): Promise<S
     },
   };
 
-  const response = await fetch(url, searchParameters);
+  const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, searchParameters);
+
+  if (!response.ok) return null;
 
   const artist = (await response.json()) as SpotifyArtist;
-
   return artist;
 };
