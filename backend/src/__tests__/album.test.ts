@@ -150,3 +150,8 @@ test("GET /api/albums - totalCount reflects the search filter, not the full tabl
   expect(res.body.albums).toHaveLength(1);
   expect(res.body.totalCount).toBe(1);
 });
+
+test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
+  const res = await request(app).get("/api/albums/thisIdDoesNotExist").set("Cookie", authCookie);
+  expect(res.status).toBe(404);
+});

@@ -139,7 +139,8 @@ export class AlbumService {
     allGenres?: Genre[];
     albumGenres?: Genre[];
   }> {
-    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
+    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum | undefined;
+    if (!album) throw new AppError("Album not found", 404);
     const artistLinks = await AlbumModel.getAlbumArtistLinks(album.spotifyID);
     const artistIDs = artistLinks.map(link => link.artistSpotifyID);
     const artists = (await ArtistModel.getArtistsBySpotifyIDs(artistIDs)) as ReviewedArtist[];
