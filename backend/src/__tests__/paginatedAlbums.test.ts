@@ -3,9 +3,8 @@ import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from "@jest/
 import { PAGE_SIZE } from "@shared/constants";
 
 import { app } from "../index";
-import { db } from "@/db/client";
+import { db, closeDatabase, query } from "@/db/client";
 import { reviewedAlbums, reviewedArtists } from "../db/schema";
-import { closeDatabase, query } from "../../db";
 import { resetTables } from "./testUtils";
 
 let authCookie: string[];

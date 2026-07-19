@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
-import { closeDatabase, query } from "../../db";
+import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { calculatePeakScore, calculateLatestScore } from "../helpers/calculatePeakAndLatestScores";
 import { calculateArtistScore } from "../helpers/calculateArtistScore";
