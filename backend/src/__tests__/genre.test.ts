@@ -52,6 +52,7 @@ test("filter albums by genre", async () => {
   expect(res.status).toBe(200);
   expect(res.body.albums.length).toBe(1);
   expect(res.body.albums[0]).toHaveProperty("spotifyID", albumID);
+  expect(res.body.totalCount).toBe(1);
 });
 
 test("updating genres replaces old entries", async () => {
@@ -100,10 +101,12 @@ test("genre filter is kept when a search term is also present", async () => {
 
   expect(res.status).toBe(200);
   expect(res.body.albums).toHaveLength(0);
+  expect(res.body.totalCount).toBe(0);
 
   const popOnly = await request(app)
     .get(`/api/albums?genres=${encodeURIComponent("pop")}`)
     .set("Cookie", authCookie);
   expect(popOnly.body.albums).toHaveLength(1);
   expect(popOnly.body.albums[0]).toHaveProperty("spotifyID", mockReviewData.album.id);
+  expect(popOnly.body.totalCount).toBe(1);
 });
