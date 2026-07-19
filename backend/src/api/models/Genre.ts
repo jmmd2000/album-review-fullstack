@@ -1,5 +1,5 @@
 import { albumGenres, genres, relatedGenres, reviewedAlbums } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import type { Genre, ReviewedAlbum } from "@shared/types";
 import { and, count, eq, inArray, or, sql } from "drizzle-orm";
 

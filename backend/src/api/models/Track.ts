@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { count, eq, sql, asc } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {

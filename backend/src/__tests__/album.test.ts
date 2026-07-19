@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "../index";
-import { closeDatabase, query } from "../../db";
+import { closeDatabase, query } from "@/db/client";
 import { mockReviewData, mockUpdateData } from "./constants";
 import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";

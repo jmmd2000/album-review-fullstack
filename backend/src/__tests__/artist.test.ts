@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "../index";
-import { closeDatabase, query } from "../../db";
+import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import type { ReviewedArtist } from "@shared/types";

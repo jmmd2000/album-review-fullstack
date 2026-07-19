@@ -2,7 +2,7 @@ import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { bookmarkedAlbums } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
 export class BookmarkedAlbumModel {

@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
 import request from "supertest";
 import { app } from "../index";
-import { closeDatabase, query } from "../../db";
+import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
 

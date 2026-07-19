@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "../index";
-import { closeDatabase, query } from "../../db";
+import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
 

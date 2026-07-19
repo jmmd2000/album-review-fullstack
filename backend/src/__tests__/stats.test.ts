@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, afterEach, test, expect } from "@jest/globals";
-import { query, closeDatabase } from "../../db";
+import { query, closeDatabase } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { StatsService } from "@/api/services/statsService";
 import { ArtistModel } from "@/api/models/Artist";

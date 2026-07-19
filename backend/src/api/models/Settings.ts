@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
 import { settings } from "@/db/schema";
-import { db } from "@/index";
+import { db } from "@/db/client";
 
 export class SettingsModel {
   static async findByKey(key: string) {
