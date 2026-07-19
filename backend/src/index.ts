@@ -19,6 +19,10 @@ import testRoutes from "@/api/routes/testRoutes";
 
 export const app = express();
 
+// Behind nginx in production: trust the first proxy hop so the rate limiter and
+// req.ip see the real client address rather than the proxy's.
+app.set("trust proxy", 1);
+
 const corsOptions = {
   origin: CORS_ORIGINS,
   credentials: true,
