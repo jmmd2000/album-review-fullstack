@@ -66,3 +66,13 @@ test("GET /api/artists/details/:artistID - should return artist details", async 
   expect(response.body).toHaveProperty("albums");
   expect(response.body).toHaveProperty("tracks");
 });
+
+test("POST /api/artists/headerImage - returns 404 for an unknown artist", async () => {
+  const res = await request(app).post("/api/artists/headerImage?spotifyID=thisIdDoesNotExist").set("Cookie", authCookie);
+  expect(res.status).toBe(404);
+});
+
+test("POST /api/artists/profileImage - returns 404 for an unknown artist", async () => {
+  const res = await request(app).post("/api/artists/profileImage?spotifyID=thisIdDoesNotExist").set("Cookie", authCookie);
+  expect(res.status).toBe(404);
+});

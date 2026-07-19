@@ -135,16 +135,7 @@ export class ArtistService {
       name: string;
       changes: {
         field:
-          | "totalScore"
-          | "peakScore"
-          | "latestScore"
-          | "averageScore"
-          | "bonusPoints"
-          | "reviewCount"
-          | "unrated"
-          | "leaderboardPosition"
-          | "peakLeaderboardPosition"
-          | "latestLeaderboardPosition";
+          "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition";
         before: number | null;
         after: number | null;
       }[];
@@ -169,32 +160,14 @@ export class ArtistService {
 
       const changes: {
         field:
-          | "totalScore"
-          | "peakScore"
-          | "latestScore"
-          | "averageScore"
-          | "bonusPoints"
-          | "reviewCount"
-          | "unrated"
-          | "leaderboardPosition"
-          | "peakLeaderboardPosition"
-          | "latestLeaderboardPosition";
+          "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition";
         before: number | null;
         after: number | null;
       }[] = [];
 
       const addChange = (
         field:
-          | "totalScore"
-          | "peakScore"
-          | "latestScore"
-          | "averageScore"
-          | "bonusPoints"
-          | "reviewCount"
-          | "unrated"
-          | "leaderboardPosition"
-          | "peakLeaderboardPosition"
-          | "latestLeaderboardPosition",
+          "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition",
         beforeVal: number | null,
         afterVal: number | null
       ) => {
@@ -397,13 +370,20 @@ export class ArtistService {
   }
 
   static async updateArtistHeaders(all: boolean, spotifyID?: string): Promise<void> {
+    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
+
+    let dbArtists;
+    if (all) {
+      dbArtists = await ArtistModel.getAllArtists();
+    } else {
+      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
+      if (!artist) throw new AppError("Artist not found", 404);
+      dbArtists = [artist];
+    }
+
     const FAKE = false;
     const BATCH_SIZE = 6; // Process this many at a time
     const io = getSocket();
-
-    const dbArtists = all ? await ArtistModel.getAllArtists() : spotifyID ? [await ArtistModel.getArtistBySpotifyID(spotifyID)] : [];
-
-    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
 
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
       ...a,
@@ -527,12 +507,19 @@ export class ArtistService {
   }
 
   static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
-    const io = getSocket();
+    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
+
     // Fetch the artist list
-    const dbArtists = all ? await ArtistModel.getAllArtists() : spotifyID ? [await ArtistModel.getArtistBySpotifyID(spotifyID)] : [];
-    if (!all && !spotifyID) {
-      throw new Error("Must specify either all=true or a spotifyID");
+    let dbArtists;
+    if (all) {
+      dbArtists = await ArtistModel.getAllArtists();
+    } else {
+      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
+      if (!artist) throw new AppError("Artist not found", 404);
+      dbArtists = [artist];
     }
+
+    const io = getSocket();
 
     // Normalize to ReviewedArtist shape
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
