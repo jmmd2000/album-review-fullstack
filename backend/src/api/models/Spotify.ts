@@ -3,7 +3,7 @@ import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
 import { AppError } from "../middleware/errorHandler";
-import { env } from "@/index";
+import { env } from "@/config/env";
 
 export class Spotify {
   private static accessToken: string | null = null;
