@@ -13,6 +13,7 @@ import authRoutes from "@/api/routes/authRoutes";
 import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
 import statsRoutes from "@/api/routes/statsRoutes";
 import settingsRoutes from "@/api/routes/settingsRoutes";
+import healthRoutes from "@/api/routes/healthRoutes";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
 import testRoutes from "@/api/routes/testRoutes";
@@ -41,6 +42,7 @@ app.options("/ws/*", (req, res) => {
   res.sendStatus(200);
 });
 
+app.use("/api/health", healthRoutes);
 app.use("/api/spotify", spotifyRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/tracks", trackRoutes);
