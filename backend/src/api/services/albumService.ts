@@ -24,7 +24,7 @@ function isSpotifyAlbum(a: any): a is SpotifyAlbum {
 
 export class AlbumService {
   static async createAlbumReview(data: ReceivedReviewData) {
-    if (!isSpotifyAlbum(data.album)) throw new Error("Invalid album data: Expected a SpotifyAlbum, received something else");
+    if (!isSpotifyAlbum(data.album)) throw new AppError("Invalid album data: Expected a SpotifyAlbum, received something else", 400);
 
     const spotifyAlbum = data.album;
     if (await AlbumModel.findBySpotifyID(spotifyAlbum.id)) {
@@ -35,9 +35,8 @@ export class AlbumService {
     const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
 
     const albumArtists = await AlbumService.resolveAlbumArtists(spotifyAlbum);
-    if (albumArtists.length === 0) {
-      throw new Error("Album artists could not be resolved");
-    }
+    if (albumArtists.length === 0) throw new AppError("Album artists could not be resolved", 400);
+
     const selectedArtistIDs = AlbumService.resolveSelectedArtistIDs(data.selectedArtistIDs, albumArtists);
     // Allow per-artist scoring for collabs, but keep the solo toggle behavior
     const scoreArtistIDs = AlbumService.resolveScoreArtistIDs(data.scoreArtistIDs, selectedArtistIDs, albumArtists.length === 1 ? data.affectsArtistScore : undefined);
@@ -495,35 +494,43 @@ export class AlbumService {
       const contributing = albumLinks.filter(link => link.affectsScore).map(link => link.album) as ReviewedAlbum[];
 
       if (contributing.length === 0) {
-        await ArtistModel.updateArtist(artistID, {
-          unrated: true,
-          averageScore: 0,
-          bonusPoints: 0,
-          totalScore: 0,
-          peakScore: 0,
-          latestScore: 0,
-          bonusReason: JSON.stringify([]),
-          reviewCount: all.length,
-          leaderboardPosition: null,
-          peakLeaderboardPosition: null,
-          latestLeaderboardPosition: null,
-        }, executor);
+        await ArtistModel.updateArtist(
+          artistID,
+          {
+            unrated: true,
+            averageScore: 0,
+            bonusPoints: 0,
+            totalScore: 0,
+            peakScore: 0,
+            latestScore: 0,
+            bonusReason: JSON.stringify([]),
+            reviewCount: all.length,
+            leaderboardPosition: null,
+            peakLeaderboardPosition: null,
+            latestLeaderboardPosition: null,
+          },
+          executor
+        );
         updated = true;
         continue;
       }
 
       const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
 
-      await ArtistModel.updateArtist(artistID, {
-        averageScore: newAverageScore,
-        bonusPoints: newBonusPoints,
-        totalScore,
-        peakScore,
-        latestScore,
-        bonusReason: JSON.stringify(bonusReasons),
-        reviewCount: all.length,
-        unrated: false,
-      }, executor);
+      await ArtistModel.updateArtist(
+        artistID,
+        {
+          averageScore: newAverageScore,
+          bonusPoints: newBonusPoints,
+          totalScore,
+          peakScore,
+          latestScore,
+          bonusReason: JSON.stringify(bonusReasons),
+          reviewCount: all.length,
+          unrated: false,
+        },
+        executor
+      );
       updated = true;
     }
 

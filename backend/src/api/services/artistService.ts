@@ -373,7 +373,7 @@ export class ArtistService {
   }
 
   static async updateArtistHeaders(all: boolean, spotifyID?: string): Promise<void> {
-    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
+    if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     let dbArtists;
     if (all) {
@@ -510,7 +510,7 @@ export class ArtistService {
   }
 
   static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
-    if (!all && !spotifyID) throw new Error("Must specify either all=true or a spotifyID");
+    if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     // Fetch the artist list
     let dbArtists;
