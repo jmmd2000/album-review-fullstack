@@ -84,9 +84,7 @@ interface ChartData {
 interface CustomTooltipProps {
   active?: boolean;
   payload?: ReadonlyArray<{
-    payload: ChartData;
-    value: number;
-    dataKey: string;
+    payload?: ChartData;
   }>;
   label?: string | number;
   resource: "albums" | "tracks" | "artists";
@@ -95,6 +93,7 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label, resource }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    if (!data) return null;
 
     return (
       <div className="rounded-lg px-4 py-3 border border-white/20 shadow-lg text-white backdrop-blur-sm bg-linear-to-b from-neutral-900/80 via-neutral-900/50 to-neutral-900/20">

@@ -29,6 +29,7 @@ frontend/cypress/screenshots/
 *.sw?
 
 .env
+.env.prod
 .drizzle
 .tanstack
 
