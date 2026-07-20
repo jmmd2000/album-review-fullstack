@@ -2,6 +2,7 @@ packages:
   - "frontend"
   - "backend"
   - "shared"
+minimumReleaseAge: 0
 allowBuilds:
   cypress: true
   esbuild: true

@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:18 AS build
+FROM node:22 AS build
 
 RUN corepack enable
 
@@ -24,10 +24,10 @@ RUN pnpm run build
 
 # Deploy prod deps to a clean directory
 WORKDIR /app
-RUN pnpm --filter @album-reviews/backend deploy --prod /deploy
+RUN pnpm --filter @album-reviews/backend deploy --prod --legacy /deploy
 
 # Stage 2: Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 RUN apk add --no-cache chromium
 
