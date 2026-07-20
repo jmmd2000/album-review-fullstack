@@ -63,6 +63,21 @@ export default tseslint.config(
     },
   },
 
+  // Backend request layer: force AppError over bare throws so the error
+  // handler can return the right HTTP status.
+  {
+    files: ["backend/src/api/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ThrowStatement > NewExpression[callee.name=/^(Error|TypeError|RangeError|EvalError|ReferenceError|SyntaxError|URIError|AggregateError)$/]",
+          message: "Throw an AppError with a status code instead of a bare Error, so the error handler returns the right HTTP status.",
+        },
+      ],
+    },
+  },
+
   // Shared
   {
     files: ["shared/**/*.ts"],
