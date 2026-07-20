@@ -26,7 +26,7 @@ export class Spotify {
     };
     try {
       const response = await fetch(tokenEndpoint, requestOptions);
-      if (!response.ok) throw new AppError("Failed to get Spotify access token.", 500);
+      if (!response.ok) throw new AppError("Failed to get Spotify access token.", 502);
 
       const data = await response.json();
 
@@ -37,7 +37,7 @@ export class Spotify {
       return this.accessToken;
     } catch (err) {
       if (err instanceof AppError) throw err;
-      throw new AppError("Spotify authentication failed.", 500);
+      throw new AppError("Spotify authentication failed.", 502);
     }
   }
 
@@ -60,7 +60,7 @@ export class Spotify {
         },
       });
 
-      if (!response.ok) throw new AppError("Spotify search failed.", 500);
+      if (!response.ok) throw new AppError("Spotify search failed.", 502);
       const data = await response.json();
 
       // Map raw Spotify data into your DisplayAlbum shape
@@ -153,7 +153,7 @@ export class Spotify {
       return results.filter((artist): artist is SpotifyArtist => artist !== null);
     } catch (err) {
       if (err instanceof AppError) throw err;
-      throw new AppError("Failed to fetch artist data from Spotify.", 500);
+      throw new AppError("Failed to fetch artist data from Spotify.", 502);
     }
   }
 }
