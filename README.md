@@ -29,7 +29,7 @@ make dev-backend # http://localhost:4000
 ## Database
 
 ```bash
-cd backend
+cd apps/api
 
 # Push db changes
 pnpm db:push

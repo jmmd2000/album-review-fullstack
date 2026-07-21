@@ -1,7 +1,7 @@
 packages:
-  - "frontend"
-  - "backend"
-  - "shared"
+  - "apps/api"
+  - "apps/web"
+  - "packages/shared"
 minimumReleaseAge: 0
 allowBuilds:
   cypress: true

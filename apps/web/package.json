@@ -1,5 +1,5 @@
 {
-  "name": "@album-reviews/frontend",
+  "name": "@album-reviews/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",

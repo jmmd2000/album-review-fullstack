@@ -39,18 +39,18 @@ pipeline {
             
             parallel failFast: true,
               "Backend Build": {
-                sh "docker build -f backend/Dockerfile -t ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG} ."
+                sh "docker build -f apps/api/Dockerfile -t ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG} ."
               },
               "Frontend Build": {
-                sh "docker build -f frontend/Dockerfile -t ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG} ."
+                sh "docker build -f apps/web/Dockerfile -t ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG} ."
               }
 
             parallel(
               "Backend Push": {
-                sh "docker push ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}"
+                sh "docker push ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG}"
               },
               "Frontend Push": {
-                sh "docker push ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG}"
+                sh "docker push ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG}"
               }
             )
           }

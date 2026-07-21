@@ -1,5 +1,5 @@
 {
-  "name": "@album-reviews/backend",
+  "name": "@album-reviews/api",
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
