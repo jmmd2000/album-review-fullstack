@@ -1,11 +1,11 @@
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
-import request from "supertest";
-import { app } from "../index";
+import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
 import { ArtistService } from "../api/services/ArtistService";
 import type { ReviewedArtist } from "@shared/types";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
 // Mock Puppeteer header fetcher to avoid launch errors
 jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
@@ -29,14 +29,7 @@ jest.mock("../helpers/fetchArtistFromSpotify", () => ({
   ),
 }));
 
-let authCookie: string[];
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
+const authCookie = adminCookie();
 
 beforeEach(async () => {
   await resetTables(query);
@@ -47,7 +40,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
@@ -97,9 +89,9 @@ describe("Artist Leaderboard Position Updates", () => {
     }));
 
     // Create the artists
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist2Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist3Data);
+    await api.post("/api/albums/create", artist1Data, authCookie);
+    await api.post("/api/albums/create", artist2Data, authCookie);
+    await api.post("/api/albums/create", artist3Data, authCookie);
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -156,8 +148,8 @@ describe("Artist Leaderboard Position Updates", () => {
     }));
 
     // Create the artists
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist2Data);
+    await api.post("/api/albums/create", artist1Data, authCookie);
+    await api.post("/api/albums/create", artist2Data, authCookie);
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -222,8 +214,8 @@ describe("Artist Leaderboard Position Updates", () => {
     }));
 
     // Create the artists
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(ratedArtistData);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(unratedArtistData);
+    await api.post("/api/albums/create", ratedArtistData, authCookie);
+    await api.post("/api/albums/create", unratedArtistData, authCookie);
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -359,14 +351,14 @@ describe("Artist Score Calculation Integration", () => {
     }));
 
     // Create the albums
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album2Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album3Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album4Data);
+    await api.post("/api/albums/create", album1Data, authCookie);
+    await api.post("/api/albums/create", album2Data, authCookie);
+    await api.post("/api/albums/create", album3Data, authCookie);
+    await api.post("/api/albums/create", album4Data, authCookie);
 
     // Get the artist details
-    const response = await request(app).get("/api/artists/test_artist");
-    const artist: ReviewedArtist = response.body;
+    const response = await api.get("/api/artists/test_artist");
+    const artist: ReviewedArtist = await response.json();
 
     expect(response.status).toBe(200);
     expect(artist.peakScore).toBeGreaterThan(0);
@@ -410,13 +402,13 @@ describe("Artist Score Calculation Integration", () => {
     }));
 
     // Create the albums
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album2Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album3Data);
+    await api.post("/api/albums/create", album1Data, authCookie);
+    await api.post("/api/albums/create", album2Data, authCookie);
+    await api.post("/api/albums/create", album3Data, authCookie);
 
     // Get the artist details
-    const response = await request(app).get("/api/artists/three_album_artist");
-    const artist: ReviewedArtist = response.body;
+    const response = await api.get("/api/artists/three_album_artist");
+    const artist: ReviewedArtist = await response.json();
 
     expect(response.status).toBe(200);
 
