@@ -12,6 +12,7 @@ import album from "@/api/routes/AlbumRoutes";
 import track from "@/api/routes/TrackRoutes";
 import artist from "@/api/routes/ArtistRoutes";
 import bookmark from "@/api/routes/BookmarkedAlbumRoutes";
+import stats from "@/api/routes/StatsRoutes";
 
 export const app = new Hono<{ Variables: { db: Executor } }>();
 
@@ -38,6 +39,7 @@ app.route("/api/albums", album);
 app.route("/api/tracks", track);
 app.route("/api/artists", artist);
 app.route("/api/bookmarks", bookmark);
+app.route("/api/stats", stats);
 
 // HTTPExceptions and AppErrors carry their own status and a safe message.
 // Anything else is logged in full and returns a generic 500 so internals never reach the client.
