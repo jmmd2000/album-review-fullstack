@@ -7,6 +7,7 @@ import { db, query, type Executor } from "@/db/client";
 
 import auth from "@/api/routes/AuthRoutes";
 import album from "@/api/routes/AlbumRoutes";
+import track from "@/api/routes/TrackRoutes";
 
 export const app = new Hono<{ Variables: { db: Executor } }>();
 
@@ -30,6 +31,7 @@ app.get("/api/health", async c => {
 
 app.route("/api/auth", auth);
 app.route("/api/albums", album);
+app.route("/api/tracks", track);
 
 // HTTPExceptions have their own status and a safe message. Anything else is
 // logged in full and returns a generic 500 so internals never reach the client.
