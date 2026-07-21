@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 coverage/
-frontend/cypress/screenshots/
+apps/web/cypress/screenshots/
 
 # pnpm
 .pnpm-store/

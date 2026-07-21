@@ -7,10 +7,10 @@ dev:
 	wait
 
 dev-frontend:
-	cd frontend && pnpm dev
+	cd apps/web && pnpm dev
 
 dev-backend:
-	cd backend && pnpm dev
+	cd apps/api && pnpm dev
 
 kill-ports:
 	@-pkill -f "tsx src/index.ts" 2>/dev/null; true
@@ -20,18 +20,18 @@ kill-ports:
 test: test-backend test-frontend kill-ports test-e2e
 
 test-backend:
-	cd backend && pnpm test
+	cd apps/api && pnpm test
 
 test-frontend:
-	cd frontend && pnpm test
+	cd apps/web && pnpm test
 
 test-e2e: kill-ports
 	@( \
-		(cd backend && pnpm dev >/dev/null 2>&1) & BPID=$$!; \
-		(cd frontend && pnpm dev >/dev/null 2>&1) & FPID=$$!; \
+		(cd apps/api && pnpm dev >/dev/null 2>&1) & BPID=$$!; \
+		(cd apps/web && pnpm dev >/dev/null 2>&1) & FPID=$$!; \
 		trap "kill $$BPID $$FPID 2>/dev/null; wait $$BPID $$FPID 2>/dev/null; true" EXIT INT TERM; \
 		sleep 8; \
-		cd frontend && pnpm e2e:run; \
+		cd apps/web && pnpm e2e:run; \
 	)
 
 lint:

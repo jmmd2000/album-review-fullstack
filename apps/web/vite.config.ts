@@ -20,7 +20,7 @@ export default defineConfig({
         // Allow local frontend project directory
         path.resolve(__dirname),
         // Allow shared directory
-        path.resolve(__dirname, "../shared"),
+        path.resolve(__dirname, "../../packages/shared"),
       ],
     },
   },
@@ -29,7 +29,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "src"),
       "@components": path.resolve(__dirname, "src/components"),
-      "@shared": path.resolve(__dirname, "../shared/src"),
+      "@shared": path.resolve(__dirname, "../../packages/shared/src"),
     },
   },
 });

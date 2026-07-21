@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // Global ignores
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "frontend/src/routeTree.gen.ts"],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "apps/web/src/routeTree.gen.ts"],
   },
 
   // Base TS rules
@@ -35,7 +35,7 @@ export default tseslint.config(
 
   // Frontend
   {
-    files: ["frontend/**/*.{ts,tsx}"],
+    files: ["apps/web/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -53,7 +53,7 @@ export default tseslint.config(
 
   // Backend
   {
-    files: ["backend/**/*.ts"],
+    files: ["apps/api/**/*.ts"],
     languageOptions: {
       globals: globals.node,
       parser: tseslint.parser,
@@ -66,7 +66,7 @@ export default tseslint.config(
   // Backend request layer: force AppError over bare throws so the error
   // handler can return the right HTTP status.
   {
-    files: ["backend/src/api/**/*.ts"],
+    files: ["apps/api/src/api/**/*.ts"],
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -80,7 +80,7 @@ export default tseslint.config(
 
   // Shared
   {
-    files: ["shared/**/*.ts"],
+    files: ["packages/shared/**/*.ts"],
     languageOptions: {
       globals: globals.node,
       parser: tseslint.parser,

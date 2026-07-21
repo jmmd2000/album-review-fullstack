@@ -23,14 +23,14 @@ services:
   # Behind a profile so it never starts with `up`, and it uses no traefik labels so it
   # never joins the router while migrations run.
   migrate:
-    image: ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}
+    image: ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG}
     profiles: ["migrate"]
     command:
       [
         "./node_modules/.bin/drizzle-kit",
         "migrate",
         "--config",
-        "/app/dist/backend/drizzle.config.js",
+        "/app/dist/apps/api/drizzle.config.js",
       ]
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -41,8 +41,8 @@ services:
     networks:
       - app_network
 
-  backend:
-    image: ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}
+  api:
+    image: ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG}
     restart: always
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -73,18 +73,18 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web_proxy"
-      - "traefik.http.routers.${APP_NAME}-backend.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/api`)"
-      - "traefik.http.routers.${APP_NAME}-backend.entrypoints=websecure"
-      - "traefik.http.routers.${APP_NAME}-backend.tls.certresolver=myresolver"
-      - "traefik.http.routers.${APP_NAME}-backend-ws.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/ws`)"
-      - "traefik.http.routers.${APP_NAME}-backend-ws.entrypoints=websecure"
-      - "traefik.http.routers.${APP_NAME}-backend-ws.tls.certresolver=myresolver"
+      - "traefik.http.routers.${APP_NAME}-api.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${APP_NAME}-api.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-api.tls.certresolver=myresolver"
+      - "traefik.http.routers.${APP_NAME}-api-ws.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.${APP_NAME}-api-ws.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-api-ws.tls.certresolver=myresolver"
 
-  frontend:
-    image: ghcr.io/${GITHUB_USER}/album-frontend:${IMAGE_TAG}
+  web:
+    image: ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG}
     restart: always
     depends_on:
-      backend:
+      api:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:80/ || exit 1"]
@@ -98,9 +98,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web_proxy"
-      - "traefik.http.routers.${APP_NAME}-frontend.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      - "traefik.http.routers.${APP_NAME}-frontend.entrypoints=websecure"
-      - "traefik.http.routers.${APP_NAME}-frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.${APP_NAME}-web.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.${APP_NAME}-web.entrypoints=websecure"
+      - "traefik.http.routers.${APP_NAME}-web.tls.certresolver=myresolver"
 
 networks:
   app_network:

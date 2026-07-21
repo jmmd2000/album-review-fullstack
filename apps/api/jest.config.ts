@@ -6,7 +6,7 @@ const config: Config = {
   testTimeout: 30000,
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^@shared/(.*)$": "<rootDir>/../shared/src/$1",
+    "^@shared/(.*)$": "<rootDir>/../../packages/shared/src/$1",
   },
   moduleFileExtensions: ["ts", "tsx", "js"],
   setupFiles: ["<rootDir>/src/__tests__/jest.setup.ts"],
