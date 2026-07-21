@@ -1,5 +1,3 @@
-import type { SpotifyAlbum } from "../types";
-
 /**
  * Formats a duration in milliseconds to a human-readable format
  * @param {number} durationMs The duration in milliseconds
@@ -35,10 +33,10 @@ export function formatDuration(durationMs: number, form: "short" | "long"): stri
 
 /**
  * Gets the total duration of an album
- * @param {SpotifyAlbum} album The album to calculate the total duration for
+ * @param album The album to calculate the total duration for
  * @returns {string} The total duration of the album
  */
-export default function getTotalDuration(album: SpotifyAlbum): string {
+export default function getTotalDuration(album: { tracks: { items: { duration_ms: number }[] } }): string {
   const totalDurationMs = album.tracks.items.reduce((acc, track) => acc + track.duration_ms, 0);
   return formatDuration(totalDurationMs, "long");
 }

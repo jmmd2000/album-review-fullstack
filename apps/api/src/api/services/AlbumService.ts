@@ -1,17 +1,5 @@
 import "dotenv/config";
-import type { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, SpotifyAlbum, PaginatedAlbumsResult, Genre, AlbumArtist } from "@shared/types";
-export type ReceivedReviewData = {
-  ratedTracks: DisplayTrack[];
-  bestSong: string;
-  worstSong: string;
-  reviewContent: string;
-  affectsArtistScore: boolean;
-  album: SpotifyAlbum | ReviewedAlbum;
-  colors: ExtractedColor[];
-  genres: string[];
-  selectedArtistIDs: string[];
-  scoreArtistIDs: string[];
-};
+import type { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre, AlbumArtist } from "@shared/types";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
@@ -27,10 +15,10 @@ import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "./genreService";
 import { AppError } from "../middleware/errorHandler";
 import { db, type Executor } from "@/db/client";
+import type { ReceivedReviewData, ReceivedSpotifyAlbum, ReceivedReviewedAlbum } from "@/api/schemas/reviewSchema";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isSpotifyAlbum(a: any): a is SpotifyAlbum {
-  return typeof a === "object" && typeof a.id === "string" && Array.isArray(a.artists) && typeof a.uri === "string";
+function isSpotifyAlbum(album: ReceivedReviewData["album"]): album is ReceivedSpotifyAlbum {
+  return !!album && "uri" in album && "tracks" in album;
 }
 
 export class AlbumService {
@@ -424,7 +412,7 @@ export class AlbumService {
     return scoreArtistIDs.filter(id => allowed.has(id));
   }
 
-  private static async resolveAlbumArtists(album: SpotifyAlbum | ReviewedAlbum): Promise<AlbumArtist[]> {
+  private static async resolveAlbumArtists(album: ReceivedSpotifyAlbum | ReceivedReviewedAlbum): Promise<AlbumArtist[]> {
     if ("albumArtists" in album && album.albumArtists?.length) {
       return album.albumArtists;
     }

@@ -1,21 +1,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { AlbumService, type ReceivedReviewData } from "@/api/services/AlbumService";
+import { AlbumService } from "@/api/services/AlbumService";
+import { reviewDataSchema } from "@/api/schemas/reviewSchema";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
-
-const reviewDataSchema = z.object({
-  ratedTracks: z.array(z.any()),
-  bestSong: z.string(),
-  worstSong: z.string(),
-  reviewContent: z.string(),
-  affectsArtistScore: z.boolean(),
-  album: z.record(z.string(), z.any()),
-  colors: z.array(z.any()),
-  genres: z.array(z.string()),
-  selectedArtistIDs: z.array(z.string()).optional(),
-  scoreArtistIDs: z.array(z.string()).optional(),
-});
 
 const paginatedSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -62,7 +50,7 @@ album.get("/", validate("query", paginatedSchema), async c => {
 });
 
 album.post("/create", requireAdmin, validate("json", reviewDataSchema), async c => {
-  const reviewedAlbum = await AlbumService.createAlbumReview(c.req.valid("json") as ReceivedReviewData);
+  const reviewedAlbum = await AlbumService.createAlbumReview(c.req.valid("json"));
   return c.json(reviewedAlbum, 201);
 });
 
@@ -72,7 +60,7 @@ album.delete("/:albumID", requireAdmin, async c => {
 });
 
 album.put("/:albumID/edit", requireAdmin, validate("json", reviewDataSchema), async c => {
-  const updated = await AlbumService.updateAlbumReview(c.req.valid("json") as ReceivedReviewData, c.req.param("albumID"));
+  const updated = await AlbumService.updateAlbumReview(c.req.valid("json"), c.req.param("albumID"));
   return c.json(updated);
 });
 
