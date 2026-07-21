@@ -7,7 +7,7 @@ import { fetchArtistHeadersFromSpotify } from "@/helpers/fetchArtistHeaderFromSp
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import { getSocket } from "@/socket";
 import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseSpotifyImageURL";
-import { SettingsService } from "./settingsService";
+import { SettingsService } from "./SettingsService";
 import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositions";
 import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
