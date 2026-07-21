@@ -1,6 +1,17 @@
 import "dotenv/config";
 import type { DisplayAlbum, ExtractedColor, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, SpotifyAlbum, PaginatedAlbumsResult, Genre, AlbumArtist } from "@shared/types";
-import type { ReceivedReviewData } from "@/api/controllers/albumController";
+export type ReceivedReviewData = {
+  ratedTracks: DisplayTrack[];
+  bestSong: string;
+  worstSong: string;
+  reviewContent: string;
+  affectsArtistScore: boolean;
+  album: SpotifyAlbum | ReviewedAlbum;
+  colors: ExtractedColor[];
+  genres: string[];
+  selectedArtistIDs: string[];
+  scoreArtistIDs: string[];
+};
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";

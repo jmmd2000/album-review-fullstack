@@ -6,7 +6,6 @@ import helmet from "helmet";
 import http from "http";
 import { CORS_ORIGINS } from "@/config/cors";
 import spotifyRoutes from "@/api/routes/spotifyRoutes";
-import albumRoutes from "@/api/routes/albumRoutes";
 import trackRoutes from "@/api/routes/trackRoutes";
 import artistRoutes from "@/api/routes/artistRoutes";
 import bookmarkedAlbumRoutes from "@/api/routes/bookmarkedAlbumRoutes";
@@ -41,7 +40,6 @@ app.options("/ws/*", (req, res) => {
 });
 
 app.use("/api/spotify", spotifyRoutes);
-app.use("/api/albums", albumRoutes);
 app.use("/api/tracks", trackRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/bookmarks", bookmarkedAlbumRoutes);
