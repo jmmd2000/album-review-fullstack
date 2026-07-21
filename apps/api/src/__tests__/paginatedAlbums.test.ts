@@ -1,13 +1,13 @@
-import request from "supertest";
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
 import { PAGE_SIZE } from "@shared/constants";
 
-import { app } from "../index";
 import { db, closeDatabase, query } from "@/db/client";
 import { reviewedAlbums, reviewedArtists } from "../db/schema";
 import { resetTables } from "./testUtils";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
-let authCookie: string[];
+const authCookie = adminCookie();
 
 // Inserts `count` bare album rows directly (plus one artist to satisfy the
 // foreign key), so pagination and search can be exercised without doing the
@@ -37,13 +37,6 @@ async function seedAlbums(count: number, overrides: (index: number) => Partial<t
   await db.insert(reviewedAlbums).values(rows);
 }
 
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
-
 beforeEach(async () => {
   await resetTables(query);
 });
@@ -53,7 +46,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
@@ -63,14 +55,13 @@ test("search alone matches the album name", async () => {
     spotifyID: `search-name-${index}`,
   }));
 
-  const res = await request(app)
-    .get(`/api/albums?search=${encodeURIComponent("Midnight")}`)
-    .set("Cookie", authCookie);
-
+  const res = await api.get(`/api/albums?search=${encodeURIComponent("Midnight")}`, authCookie);
   expect(res.status).toBe(200);
-  expect(res.body.albums).toHaveLength(1);
-  expect(res.body.albums[0].spotifyID).toBe("search-name-0");
-  expect(res.body.totalCount).toBe(1);
+
+  const body = await res.json();
+  expect(body.albums).toHaveLength(1);
+  expect(body.albums[0].spotifyID).toBe("search-name-0");
+  expect(body.totalCount).toBe(1);
 });
 
 test("search alone matches the artist name", async () => {
@@ -80,27 +71,27 @@ test("search alone matches the artist name", async () => {
     spotifyID: `search-artist-${index}`,
   }));
 
-  const res = await request(app)
-    .get(`/api/albums?search=${encodeURIComponent("Radiohead")}`)
-    .set("Cookie", authCookie);
-
+  const res = await api.get(`/api/albums?search=${encodeURIComponent("Radiohead")}`, authCookie);
   expect(res.status).toBe(200);
-  expect(res.body.albums).toHaveLength(1);
-  expect(res.body.albums[0].spotifyID).toBe("search-artist-0");
-  expect(res.body.totalCount).toBe(1);
+
+  const body = await res.json();
+  expect(body.albums).toHaveLength(1);
+  expect(body.albums[0].spotifyID).toBe("search-artist-0");
+  expect(body.totalCount).toBe(1);
 });
 
 test("pagination exposes furtherPages and correct page boundaries", async () => {
   await seedAlbums(PAGE_SIZE + 1);
 
-  const pageOne = await request(app).get("/api/albums?page=1").set("Cookie", authCookie);
-  expect(pageOne.status).toBe(200);
-  expect(pageOne.body.albums).toHaveLength(PAGE_SIZE);
-  expect(pageOne.body.furtherPages).toBe(true);
-  expect(pageOne.body.totalCount).toBe(PAGE_SIZE + 1);
+  const pageOneRes = await api.get("/api/albums?page=1", authCookie);
+  expect(pageOneRes.status).toBe(200);
+  const pageOne = await pageOneRes.json();
+  expect(pageOne.albums).toHaveLength(PAGE_SIZE);
+  expect(pageOne.furtherPages).toBe(true);
+  expect(pageOne.totalCount).toBe(PAGE_SIZE + 1);
 
-  const pageTwo = await request(app).get("/api/albums?page=2").set("Cookie", authCookie);
-  expect(pageTwo.body.albums).toHaveLength(1);
-  expect(pageTwo.body.furtherPages).toBe(false);
-  expect(pageTwo.body.totalCount).toBe(PAGE_SIZE + 1);
+  const pageTwo = await (await api.get("/api/albums?page=2", authCookie)).json();
+  expect(pageTwo.albums).toHaveLength(1);
+  expect(pageTwo.furtherPages).toBe(false);
+  expect(pageTwo.totalCount).toBe(PAGE_SIZE + 1);
 });
