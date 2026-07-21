@@ -1,10 +1,9 @@
-import request from "supertest";
-import { app } from "../index";
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { api } from "./apiRequest";
 
 jest.mock("../api/services/SpotifyService", () => ({
   SpotifyService: {
@@ -25,15 +24,6 @@ jest.mock("../api/services/SpotifyService", () => ({
   },
 }));
 
-let authCookie: string[];
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
-
 beforeEach(async () => {
   await resetTables(query);
 });
@@ -43,29 +33,28 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
 test("GET /api/spotify/token - Should return token", async () => {
-  const response = await request(app).get("/api/spotify/token");
+  const response = await api.get("/api/spotify/token");
   expect(response.status).toBe(200);
-  expect(response.body).toEqual({ token: "mock_token" });
+  expect(await response.json()).toEqual({ token: "mock_token" });
 });
 
 test("GET /api/spotify/albums/search?query=abba - Should return albums", async () => {
-  const response = await request(app).get("/api/spotify/albums/search?query=abba");
+  const response = await api.get("/api/spotify/albums/search?query=abba");
   expect(response.status).toBe(200);
-  const data: DisplayAlbum[] = response.body;
+  const data: DisplayAlbum[] = await response.json();
   expect(Array.isArray(data)).toBe(true);
   expect(data[0]).toHaveProperty("name");
   expect(data[0]).toHaveProperty("spotifyID");
 });
 
 test("GET /api/spotify/albums/:albumID - Should return album", async () => {
-  const response = await request(app).get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false");
+  const response = await api.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false");
   expect(response.status).toBe(200);
-  const data: SpotifyAlbum = response.body;
+  const data: SpotifyAlbum = await response.json();
   expect(data).toHaveProperty("id", mockReviewData.album.id);
   expect(data).toHaveProperty("name", mockReviewData.album.name);
 });
