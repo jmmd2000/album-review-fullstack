@@ -41,6 +41,9 @@ COPY --from=build /app/backend/dist ./dist
 COPY --from=build /app/backend/tsconfig.json ./dist/backend/tsconfig.json
 COPY --from=build /app/shared ./shared
 
+# Ship the drizzle migration files so drizzle-kit migrate can run at deploy time
+COPY --from=build /app/backend/drizzle ./drizzle
+
 # Set environment
 ENV NODE_ENV=production
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
@@ -51,5 +54,4 @@ ENV TS_NODE_PROJECT=./dist/backend/tsconfig.json
 # Expose port
 EXPOSE 4000
 
-# Run DB migration then app
-CMD ["sh", "-c", "./node_modules/.bin/drizzle-kit push --config $DRIZZLE_CONFIG_PATH && node -r tsconfig-paths/register dist/backend/src/index.js"]
+CMD ["node", "-r", "tsconfig-paths/register", "dist/backend/src/index.js"]
