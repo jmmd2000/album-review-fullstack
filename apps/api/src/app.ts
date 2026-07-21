@@ -5,6 +5,8 @@ import { HTTPException } from "hono/http-exception";
 import { CORS_ORIGINS } from "@/config/cors";
 import { db, query, type Executor } from "@/db/client";
 
+import auth from "@/api/routes/AuthRoutes";
+
 export const app = new Hono<{ Variables: { db: Executor } }>();
 
 app.use("*", cors({ origin: CORS_ORIGINS, credentials: true }));
@@ -24,6 +26,8 @@ app.get("/api/health", async c => {
     return c.json({ ok: false }, 503);
   }
 });
+
+app.route("/api/auth", auth);
 
 // HTTPExceptions have their own status and a safe message. Anything else is
 // logged in full and returns a generic 500 so internals never reach the client.

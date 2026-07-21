@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import { AuthService } from "../services/authService";
+import { AuthService } from "../services/AuthService";
 
 export const requireAdmin: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies?.token;

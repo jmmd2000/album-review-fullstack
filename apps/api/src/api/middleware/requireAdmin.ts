@@ -1,7 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
-import { AuthService } from "@/api/services/authService";
+import { AuthService } from "@/api/services/AuthService";
 
 /**
  * Guards admin-only routes. Reads the JWT from the `token`
