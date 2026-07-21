@@ -6,7 +6,7 @@ import { resetTables } from "./testUtils";
 import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
 
-jest.mock("../api/services/spotifyService", () => ({
+jest.mock("../api/services/SpotifyService", () => ({
   SpotifyService: {
     getAccessToken: jest.fn(() => Promise.resolve("mock_token")),
     searchAlbums: jest.fn(() =>

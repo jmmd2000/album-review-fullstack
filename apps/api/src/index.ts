@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import http from "http";
 import { CORS_ORIGINS } from "@/config/cors";
-import spotifyRoutes from "@/api/routes/spotifyRoutes";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
 import testRoutes from "@/api/routes/testRoutes";
@@ -33,8 +32,6 @@ app.options("/ws/*", (req, res) => {
   res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Cookie");
   res.sendStatus(200);
 });
-
-app.use("/api/spotify", spotifyRoutes);
 
 // Dev/test only routes
 if (process.env.NODE_ENV !== "production") {
