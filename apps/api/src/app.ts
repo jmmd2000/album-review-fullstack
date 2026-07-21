@@ -16,6 +16,7 @@ import stats from "@/api/routes/StatsRoutes";
 import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
 import test from "@/api/routes/TestRoutes";
+import job from "@/api/routes/JobRoutes";
 
 export const app = new Hono<{ Variables: { db: Executor } }>();
 
@@ -45,6 +46,7 @@ app.route("/api/bookmarks", bookmark);
 app.route("/api/stats", stats);
 app.route("/api/settings", settings);
 app.route("/api/spotify", spotify);
+app.route("/api/jobs", job);
 
 // Dev/test only.
 if (process.env.NODE_ENV !== "production") {

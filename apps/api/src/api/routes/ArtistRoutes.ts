@@ -46,14 +46,4 @@ artist.delete("/:artistID", requireAdmin, async c => {
   return c.body(null, 204);
 });
 
-artist.post("/headerImage", requireAdmin, async c => {
-  await ArtistService.updateArtistHeaders(c.req.query("all") === "true", c.req.query("spotifyID"));
-  return c.body(null, 204);
-});
-
-artist.post("/profileImage", requireAdmin, async c => {
-  await ArtistService.updateArtistImages(c.req.query("all") === "true", c.req.query("spotifyID"));
-  return c.body(null, 204);
-});
-
 export default artist;

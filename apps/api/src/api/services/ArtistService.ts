@@ -5,7 +5,7 @@ import { TrackModel } from "@/api/models/Track";
 import { toSortableDate } from "@shared/helpers/formatDate";
 import { fetchArtistHeadersFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
-import { getSocket } from "@/socket";
+import type { JobEmit } from "@/api/services/JobService";
 import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseSpotifyImageURL";
 import { SettingsService } from "./SettingsService";
 import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositions";
@@ -372,7 +372,7 @@ export class ArtistService {
     });
   }
 
-  static async updateArtistHeaders(all: boolean, spotifyID?: string): Promise<void> {
+  static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     let dbArtists;
@@ -386,7 +386,6 @@ export class ArtistService {
 
     const FAKE = false;
     const BATCH_SIZE = 6; // Process this many at a time
-    const io = getSocket();
 
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
       ...a,
@@ -414,7 +413,7 @@ export class ArtistService {
           const artistImage = currentArtist?.imageURLs?.[0]?.url;
 
           // Emit fetching progress
-          io.emit("artist:headers:fetching", {
+          emit("fetching", {
             index: processedCount + completed,
             total,
             spotifyID: currentArtistID,
@@ -435,7 +434,7 @@ export class ArtistService {
         processedCount++;
 
         // ALWAYS emit progress first (for live banner updates)
-        io.emit("artist:headers:progress", {
+        emit("progress", {
           index: processedCount,
           total,
           spotifyID: id,
@@ -454,7 +453,7 @@ export class ArtistService {
           const normalizedNew = normalizeSpotifyImageUrl(newHeaderImage);
 
           if (normalizedCurrent === normalizedNew) {
-            io.emit("artist:headers:same", {
+            emit("same", {
               index: processedCount,
               total,
               spotifyID: id,
@@ -463,7 +462,7 @@ export class ArtistService {
               headerImage: current,
             });
           } else {
-            io.emit("artist:headers:changed", {
+            emit("changed", {
               index: processedCount,
               total,
               spotifyID: id,
@@ -480,7 +479,7 @@ export class ArtistService {
               });
             } catch (err) {
               console.error(`Header update failed for ${id}:`, err);
-              io.emit("artist:headers:error", {
+              emit("failed", {
                 spotifyID: id,
                 index: processedCount,
                 total,
@@ -492,7 +491,7 @@ export class ArtistService {
             }
           }
         } else {
-          io.emit("artist:headers:error", {
+          emit("failed", {
             spotifyID: id,
             total,
             index: processedCount,
@@ -505,11 +504,10 @@ export class ArtistService {
       }
     }
 
-    io.emit("artist:headers:done");
     await SettingsService.setLastRun("headers", new Date());
   }
 
-  static async updateArtistImages(all: boolean, spotifyID?: string): Promise<void> {
+  static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     // Fetch the artist list
@@ -521,8 +519,6 @@ export class ArtistService {
       if (!artist) throw new AppError("Artist not found", 404);
       dbArtists = [artist];
     }
-
-    const io = getSocket();
 
     // Normalize to ReviewedArtist shape
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
@@ -537,7 +533,7 @@ export class ArtistService {
 
       const currentArtistImage = imageURLs && imageURLs.length > 0 ? imageURLs[0].url : undefined;
 
-      io.emit("artist:images:progress", {
+      emit("progress", {
         index: i + 1,
         total,
         spotifyID: id,
@@ -560,7 +556,7 @@ export class ArtistService {
       const same = areImageUrlsSame(currentUrls, fetchedUrls);
 
       if (same) {
-        io.emit("artist:images:same", {
+        emit("same", {
           index: i + 1,
           total,
           spotifyID: id,
@@ -569,7 +565,7 @@ export class ArtistService {
         });
         continue;
       } else {
-        io.emit("artist:images:changed", {
+        emit("changed", {
           index: i + 1,
           total,
           spotifyID: id,
@@ -585,7 +581,7 @@ export class ArtistService {
           });
         } catch (err) {
           console.error(`Image update failed for ${id}:`, err);
-          io.emit("artist:images:error", {
+          emit("failed", {
             spotifyID: id,
             artistName: name,
             artistImage: currentArtistImage,
@@ -595,7 +591,6 @@ export class ArtistService {
       }
     }
 
-    io.emit("artist:images:done");
     await SettingsService.setLastRun("images", new Date());
   }
 }
