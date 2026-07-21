@@ -18,7 +18,7 @@ import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
-import { ArtistService } from "./artistService";
+import { ArtistService } from "./ArtistService";
 import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";

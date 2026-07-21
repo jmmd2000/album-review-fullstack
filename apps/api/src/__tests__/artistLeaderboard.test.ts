@@ -4,7 +4,7 @@ import { app } from "../index";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
-import { ArtistService } from "../api/services/artistService";
+import { ArtistService } from "../api/services/ArtistService";
 import type { ReviewedArtist } from "@shared/types";
 
 // Mock Puppeteer header fetcher to avoid launch errors

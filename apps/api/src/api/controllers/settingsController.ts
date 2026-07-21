@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { SettingsService } from "@/api/services/settingsService";
-import { ArtistService } from "@/api/services/artistService";
+import { ArtistService } from "@/api/services/ArtistService";
 import { asyncHandler } from "../middleware/asyncHandler";
 import z from "zod";
 import { AppError } from "../middleware/errorHandler";
