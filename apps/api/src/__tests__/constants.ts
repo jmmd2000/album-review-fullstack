@@ -502,70 +502,22 @@ export const mockReviewData = {
     genres: [],
   },
   ratedTracks: [
-    {
-      spotifyID: "4HOryCnbme0zBnF8LWij3f",
-      rating: 1,
-    },
-    {
-      spotifyID: "7bcy34fBT2ap1L4bfPsl9q",
-      rating: 1,
-    },
-    {
-      spotifyID: "2KnuaZYoGzDoHiBTNYOTXG",
-      rating: 1,
-    },
-    {
-      spotifyID: "3YUMWmx8EJq0DurfuIwoGh",
-      rating: 1,
-    },
-    {
-      spotifyID: "4t2OeILB07eMGTXSUbMPEu",
-      rating: 1,
-    },
-    {
-      spotifyID: "0FfqyjhB6Kspvit1oOo7ax",
-      rating: 1,
-    },
-    {
-      spotifyID: "4191RXFPa7Ge9XkA4cWlna",
-      rating: 1,
-    },
-    {
-      spotifyID: "5XsAal7ZcWg1I5T4NcRjkv",
-      rating: 1,
-    },
-    {
-      spotifyID: "4T2zre0jqstNJ5Gt0WG9lz",
-      rating: 1,
-    },
-    {
-      spotifyID: "5uSG6fUPRaehaV820zcpsK",
-      rating: 1,
-    },
-    {
-      spotifyID: "5jhBwnqzNNrENXnYrAdoCe",
-      rating: 1,
-    },
-    {
-      spotifyID: "042Sl6Mn83JHyLEqdK7uI0",
-      rating: 1,
-    },
-    {
-      spotifyID: "38GBNKZUhfBkk3oNlWzRYd",
-      rating: 1,
-    },
-    {
-      spotifyID: "20R4HfKloPKgXDqU7UKk3x",
-      rating: 1,
-    },
-    {
-      spotifyID: "4RVwu0g32PAqgUiJoXsdF8",
-      rating: 1,
-    },
-    {
-      spotifyID: "4ak9GGe6afmi2HbxEjvhIC",
-      rating: 1,
-    },
+    { spotifyID: "4HOryCnbme0zBnF8LWij3f", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Getting Older", duration: 244221, rating: 1, features: [] },
+    { spotifyID: "7bcy34fBT2ap1L4bfPsl9q", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "I Didn't Change My Number", duration: 158463, rating: 1, features: [] },
+    { spotifyID: "2KnuaZYoGzDoHiBTNYOTXG", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Billie Bossa Nova", duration: 196730, rating: 1, features: [] },
+    { spotifyID: "3YUMWmx8EJq0DurfuIwoGh", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "my future", duration: 210005, rating: 1, features: [] },
+    { spotifyID: "4t2OeILB07eMGTXSUbMPEu", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Oxytocin", duration: 210232, rating: 1, features: [] },
+    { spotifyID: "0FfqyjhB6Kspvit1oOo7ax", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "GOLDWING", duration: 151536, rating: 1, features: [] },
+    { spotifyID: "4191RXFPa7Ge9XkA4cWlna", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Lost Cause", duration: 212496, rating: 1, features: [] },
+    { spotifyID: "5XsAal7ZcWg1I5T4NcRjkv", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Halley's Comet", duration: 234761, rating: 1, features: [] },
+    { spotifyID: "4T2zre0jqstNJ5Gt0WG9lz", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Not My Responsibility", duration: 227679, rating: 1, features: [] },
+    { spotifyID: "5uSG6fUPRaehaV820zcpsK", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "OverHeated", duration: 214058, rating: 1, features: [] },
+    { spotifyID: "5jhBwnqzNNrENXnYrAdoCe", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Everybody Dies", duration: 206622, rating: 1, features: [] },
+    { spotifyID: "042Sl6Mn83JHyLEqdK7uI0", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Your Power", duration: 245896, rating: 1, features: [] },
+    { spotifyID: "38GBNKZUhfBkk3oNlWzRYd", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "NDA", duration: 195776, rating: 1, features: [] },
+    { spotifyID: "20R4HfKloPKgXDqU7UKk3x", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Therefore I Am", duration: 173539, rating: 1, features: [] },
+    { spotifyID: "4RVwu0g32PAqgUiJoXsdF8", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Happier Than Ever", duration: 298899, rating: 1, features: [] },
+    { spotifyID: "4ak9GGe6afmi2HbxEjvhIC", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Male Fantasy", duration: 194886, rating: 1, features: [] },
   ],
   bestSong: "2",
   worstSong: "3",
