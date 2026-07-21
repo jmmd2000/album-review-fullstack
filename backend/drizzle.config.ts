@@ -2,7 +2,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import { defineConfig } from "drizzle-kit";
-import { resolveDatabaseURL } from "@/config/database";
+// Relative import so drizzle-kit can load this config without a path-alias resolver
+import { resolveDatabaseURL } from "./src/config/database";
 
 const isProd = process.env.NODE_ENV === "production";
 
