@@ -6,7 +6,6 @@ pipeline {
     choice(name: 'ACTION', choices: ['Build and Deploy', 'Deploy Only'], description: 'Full rebuild and deploy? Or just deploy existing images? (i.e. deploying to production once checked on staging)')
     booleanParam(name: 'CONFIRM_TESTED', defaultValue: false, description: 'I have definitely run tests locally!!')
     booleanParam(name: 'TAKE_BACKUP', defaultValue: true, description: 'Backup before deploying (prod only)')
-    booleanParam(name: 'RUN_MIGRATIONS', defaultValue: false, description: 'Run DB migrations?')
     string(name: 'OVERRIDE_TAG', defaultValue: '', description: 'Manually specify a tag (empty = current commit hash)')
   }
 
@@ -85,29 +84,16 @@ pipeline {
             sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod 600 ${targetDir}/.env'"
 
             // Add dynamic variables to the .env file
-            sh """
-ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << "ENDSSH"
-cd ${targetDir}
-echo "IMAGE_TAG=${IMAGE_TAG}" >> .env
-echo "GITHUB_USER=${GITHUB_USER}" >> .env
-echo "APP_NAME=${appNameEnv}" >> .env
-echo "DOMAIN=${domain}" >> .env
-ENDSSH
-"""
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && echo \"IMAGE_TAG=${IMAGE_TAG}\" >> .env && echo \"GITHUB_USER=${GITHUB_USER}\" >> .env && echo \"APP_NAME=${appNameEnv}\" >> .env && echo \"DOMAIN=${domain}\" >> .env'"
 
             if (params.TAKE_BACKUP && params.DEPLOY_ENV == 'production') {
               echo "Taking backup of prod before deploying..."
               sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && ./backup.sh || echo \"Backup failed but proceeding...\"'"
             }
 
-            // Command VPS to pull and restart
-            sh """
-ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << "ENDSSH"
-cd ${targetDir}
-docker compose pull
-docker compose up -d --remove-orphans
-ENDSSH
-"""
+            // Pull images and bring the database up first (waiting until healthy) so migrations
+            // can run before the app starts.
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose pull && docker compose up -d --wait db'"
 
             if (params.DEPLOY_ENV == 'staging') {
               echo "Restoring latest prod backup into staging DB..."
@@ -115,24 +101,14 @@ ENDSSH
               sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && cat \$LATEST | docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB'"
             }
 
-          }
-        }
-      }
-    }
+            // Run migrations as an explicit one-off step. The exit code propagates, so a failed
+            // migration aborts the deploy here, before the new app containers come up.
+            echo "Running migrations..."
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose run --rm migrate'"
 
-    stage('DB Migrations') {
-      when { expression { params.RUN_MIGRATIONS == true } }
-      steps {
-        script {
-          def targetDir = params.DEPLOY_ENV == 'production' ? "/home/james/album-review/prod" : "/home/james/album-review/staging"
-          echo "Running migrations..."
-          sshagent(['vps-ssh']) {
-            sh """
-ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} << 'ENDSSH'
-cd ${targetDir}
-docker compose exec -T backend ./node_modules/.bin/drizzle-kit push --config /app/dist/backend/drizzle.config.js
-ENDSSH
-"""
+            // Bring up the app now that the schema is migrated.
+            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose up -d --remove-orphans'"
+
           }
         }
       }

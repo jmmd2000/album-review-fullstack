@@ -19,6 +19,28 @@ services:
       timeout: 5s
       retries: 5
 
+  # One-off migration runner, invoked at deploy time via `docker compose run --rm migrate`.
+  # Behind a profile so it never starts with `up`, and it uses no traefik labels so it
+  # never joins the router while migrations run.
+  migrate:
+    image: ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}
+    profiles: ["migrate"]
+    command:
+      [
+        "./node_modules/.bin/drizzle-kit",
+        "migrate",
+        "--config",
+        "/app/dist/backend/drizzle.config.js",
+      ]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
   backend:
     image: ghcr.io/${GITHUB_USER}/album-backend:${IMAGE_TAG}
     restart: always
