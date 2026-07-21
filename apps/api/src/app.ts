@@ -15,6 +15,7 @@ import bookmark from "@/api/routes/BookmarkedAlbumRoutes";
 import stats from "@/api/routes/StatsRoutes";
 import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
+import test from "@/api/routes/TestRoutes";
 
 export const app = new Hono<{ Variables: { db: Executor } }>();
 
@@ -44,6 +45,11 @@ app.route("/api/bookmarks", bookmark);
 app.route("/api/stats", stats);
 app.route("/api/settings", settings);
 app.route("/api/spotify", spotify);
+
+// Dev/test only.
+if (process.env.NODE_ENV !== "production") {
+  app.route("/api/test", test);
+}
 
 // HTTPExceptions and AppErrors carry their own status and a safe message.
 // Anything else is logged in full and returns a generic 500 so internals never reach the client.

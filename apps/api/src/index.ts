@@ -7,7 +7,6 @@ import http from "http";
 import { CORS_ORIGINS } from "@/config/cors";
 import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
-import testRoutes from "@/api/routes/testRoutes";
 
 export const app = express();
 
@@ -32,11 +31,6 @@ app.options("/ws/*", (req, res) => {
   res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Cookie");
   res.sendStatus(200);
 });
-
-// Dev/test only routes
-if (process.env.NODE_ENV !== "production") {
-  app.use("/api/test", testRoutes);
-}
 
 app.use(errorHandler);
 
