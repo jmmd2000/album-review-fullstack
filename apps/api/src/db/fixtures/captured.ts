@@ -22,7 +22,11 @@ export interface CapturedArtist {
 export interface CapturedAlbum {
   spotifyID: string;
   name: string;
+  /** Already formatted for display, as the album row stores it */
+  releaseDate: string;
   releaseYear: number;
+  /** Total runtime string as the album row stores it */
+  runtime: string;
   imageURLs: SpotifyImage[];
   colors: ExtractedColor[];
   artists: CapturedArtist[];

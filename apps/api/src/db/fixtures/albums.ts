@@ -5,7 +5,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "7aJuG4TFXa2hmE4z1yxc3n",
     "name": "HIT ME HARD AND SOFT",
+    "releaseDate": "May 17th, 2024",
     "releaseYear": 2024,
+    "runtime": "43 minutes 50 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b27371d62ea7ea8a5be92d3c1f62",
@@ -140,7 +142,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "3HHNR44YbP7XogMVwzbodx",
     "name": "Twelve Carat Toothache",
+    "releaseDate": "June 3rd, 2022",
     "releaseYear": 2022,
+    "runtime": "43 minutes 18 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b27334362676667a4322838ccc97",
@@ -337,7 +341,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "2ODvWsOgouMbaA5xf0RkJe",
     "name": "Starboy",
+    "releaseDate": "November 25th, 2016",
     "releaseYear": 2016,
+    "runtime": "68 minutes 36 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b2734718e2b124f79258be7bc452",
@@ -564,7 +570,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "6trNtQUgC8cgbWcqoMYkOR",
     "name": "beerbongs & bentleys",
+    "releaseDate": "April 27th, 2018",
     "releaseYear": 2018,
+    "runtime": "64 minutes 14 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b273b1c4b76e23414c9f20242268",
@@ -792,7 +800,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "0S0KGZnfBGSIssfF54WSJh",
     "name": "WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?",
+    "releaseDate": "March 29th, 2019",
     "releaseYear": 2019,
+    "runtime": "42 minutes 55 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b27350a3147b4edd7701a876c6ce",
@@ -959,7 +969,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "4g1ZRSobMefqF6nelkgibi",
     "name": "Hollywood's Bleeding",
+    "releaseDate": "September 6th, 2019",
     "releaseYear": 2019,
+    "runtime": "51 minutes 4 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b2739478c87599550dd73bfa7e02",
@@ -1197,7 +1209,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "5MS3MvWHJ3lOZPLiMxzOU6",
     "name": "Her Loss",
+    "releaseDate": "November 4th, 2022",
     "releaseYear": 2022,
+    "runtime": "60 minutes 40 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b27302854a7060fccc1a66a4b5ad",
@@ -1460,7 +1474,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "55huyEjfSVsk9nnmmKp5df",
     "name": "Eyes Wide Open",
+    "releaseDate": "April 10th, 2015",
     "releaseYear": 2015,
+    "runtime": "40 minutes 37 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b2735d9a77afd5c144581be1e74e",
@@ -1611,7 +1627,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "392p3shh2jkxUxY2VHvlH8",
     "name": "channel ORANGE",
+    "releaseDate": "July 10th, 2012",
     "releaseYear": 2012,
+    "runtime": "55 minutes 47 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b2737aede4855f6d0d738012e2e5",
@@ -1820,7 +1838,9 @@ export const capturedAlbums: CapturedAlbum[] = [
   {
     "spotifyID": "2vlhlrgMaXqcnhRqIEV9AP",
     "name": "Dua Lipa",
+    "releaseDate": "June 2nd, 2017",
     "releaseYear": 2017,
+    "runtime": "40 minutes 46 seconds",
     "imageURLs": [
       {
         "url": "https://i.scdn.co/image/ab67616d0000b273b627441824c5d0748c8cb077",

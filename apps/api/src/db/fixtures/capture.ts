@@ -1,6 +1,8 @@
 import { writeFileSync } from "fs";
 import path from "path";
 import "dotenv/config";
+import { formatDate } from "@shared/helpers/formatDate";
+import getTotalDuration from "@shared/helpers/formatDuration";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { getImageColors } from "@/helpers/getImageColors";
@@ -38,7 +40,9 @@ const capture = async () => {
     albums.push({
       spotifyID: album.id,
       name: album.name,
+      releaseDate: formatDate(album.release_date),
       releaseYear: Number(album.release_date.split("-")[0]),
+      runtime: getTotalDuration(album),
       imageURLs: album.images,
       colors,
       artists: album.artists.map(artist => ({
