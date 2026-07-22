@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { HTTPException } from "hono/http-exception";
+import { AppError } from "@/api/AppError";
 import { BookmarkedAlbumService } from "@/api/services/BookmarkedAlbumService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
@@ -36,7 +36,7 @@ const bookmark = new Hono()
     // Accept ?ids=1,2,3 or repeated ?ids=1&ids=2
     const raw = c.req.queries("ids") ?? [];
     const ids = raw.flatMap(value => (value.includes(",") ? value.split(",") : [value])).filter(Boolean);
-    if (ids.length === 0) throw new HTTPException(400, { message: "ids parameter is required." });
+    if (ids.length === 0) throw new AppError("ids parameter is required.", 400);
 
     const bookmarkedIds = await BookmarkedAlbumService.getBookmarkedByIds(ids);
     const statusMap: Record<string, boolean> = {};
