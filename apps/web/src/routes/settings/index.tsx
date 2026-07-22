@@ -4,12 +4,10 @@ import { queryClient } from "@/main";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Camera, ImageIcon, RefreshCw, ArrowRightLeft } from "lucide-react";
-import { useSocket } from "@/hooks/useSocket";
 import { useJobProgress } from "@/hooks/useJobProgress";
 import SettingsCard from "@/components/settings/SettingsCard";
 import { timeAgo } from "@shared/helpers/formatDate";
 import { api } from "@/lib/api";
-import { useCallback } from "react";
 
 async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
   return api.get("/api/settings/last-runs");
@@ -46,18 +44,10 @@ type RecalcResult = {
 };
 
 function RouteComponent() {
-  const socket = useSocket();
   const { data: lastRuns } = useSuspenseQuery(settingsQueryOptions());
 
-  const imageTrigger = useCallback(async () => {
-    await api.post("/api/artists/profileImage?all=true");
-  }, []);
-  const headerTrigger = useCallback(async () => {
-    await api.post("/api/artists/headerImage?all=true");
-  }, []);
-
-  const images = useJobProgress({ socket, job: "images", triggerFn: imageTrigger });
-  const headers = useJobProgress({ socket, job: "headers", triggerFn: headerTrigger });
+  const images = useJobProgress({ endpoint: "/api/jobs/artist-images" });
+  const headers = useJobProgress({ endpoint: "/api/jobs/artist-headers" });
 
   const recalcScoresMut = useMutation<RecalcResult, Error, void>({
     mutationFn: async () => {
