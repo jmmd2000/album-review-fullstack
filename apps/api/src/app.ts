@@ -18,37 +18,40 @@ import spotify from "@/api/routes/SpotifyRoutes";
 import test from "@/api/routes/TestRoutes";
 import job from "@/api/routes/JobRoutes";
 
-export const app = new Hono<{ Variables: { db: Executor } }>();
+const base = new Hono<{ Variables: { db: Executor } }>();
 
-app.use("*", cors({ origin: CORS_ORIGINS, credentials: true }));
-app.use("*", secureHeaders());
+base.use("*", cors({ origin: CORS_ORIGINS, credentials: true }));
+base.use("*", secureHeaders());
 
 // Expose the db executor on the context so services can read c.var.db.
-app.use("*", async (c, next) => {
+base.use("*", async (c, next) => {
   c.set("db", db);
   await next();
 });
 
-app.get("/api/health", async c => {
-  try {
-    await query("SELECT 1");
-    return c.json({ ok: true });
-  } catch {
-    return c.json({ ok: false }, 503);
-  }
-});
+// Routes are chained so their types accumulate into AppType for the RPC client.
+export const app = base
+  .get("/api/health", async c => {
+    try {
+      await query("SELECT 1");
+      return c.json({ ok: true });
+    } catch {
+      return c.json({ ok: false }, 503);
+    }
+  })
+  .route("/api/auth", auth)
+  .route("/api/albums", album)
+  .route("/api/tracks", track)
+  .route("/api/artists", artist)
+  .route("/api/bookmarks", bookmark)
+  .route("/api/stats", stats)
+  .route("/api/settings", settings)
+  .route("/api/spotify", spotify)
+  .route("/api/jobs", job);
 
-app.route("/api/auth", auth);
-app.route("/api/albums", album);
-app.route("/api/tracks", track);
-app.route("/api/artists", artist);
-app.route("/api/bookmarks", bookmark);
-app.route("/api/stats", stats);
-app.route("/api/settings", settings);
-app.route("/api/spotify", spotify);
-app.route("/api/jobs", job);
+export type AppType = typeof app;
 
-// Dev/test only.
+// Dev/test only, kept off AppType (the frontend never calls it).
 if (process.env.NODE_ENV !== "production") {
   app.route("/api/test", test);
 }

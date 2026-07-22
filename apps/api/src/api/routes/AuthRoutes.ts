@@ -12,23 +12,20 @@ const COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60,
 };
 
-const auth = new Hono();
-
-auth.post("/login", loginRateLimiter, validate("json", z.object({ password: z.string().min(1, "Password is required") })), async c => {
-  const { password } = c.req.valid("json");
-  const token = await AuthService.authenticate(password);
-  setCookie(c, "token", token, COOKIE_OPTIONS);
-  return c.body(null, 204);
-});
-
-auth.post("/logout", c => {
-  deleteCookie(c, "token");
-  return c.body(null, 204);
-});
-
-auth.get("/status", c => {
-  const isAdmin = AuthService.verifyToken(getCookie(c, "token"));
-  return c.json({ isAdmin });
-});
+const auth = new Hono()
+  .post("/login", loginRateLimiter, validate("json", z.object({ password: z.string().min(1, "Password is required") })), async c => {
+    const { password } = c.req.valid("json");
+    const token = await AuthService.authenticate(password);
+    setCookie(c, "token", token, COOKIE_OPTIONS);
+    return c.body(null, 204);
+  })
+  .post("/logout", c => {
+    deleteCookie(c, "token");
+    return c.body(null, 204);
+  })
+  .get("/status", c => {
+    const isAdmin = AuthService.verifyToken(getCookie(c, "token"));
+    return c.json({ isAdmin });
+  });
 
 export default auth;

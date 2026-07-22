@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 import { query } from "@/db/client";
 
-const test = new Hono();
-
 // Truncates the review-related tables to reset state between test runs.
 // Dev/test only: mounted behind a NODE_ENV guard in app.ts.
-test.delete("/reset", async c => {
+const test = new Hono().delete("/reset", async c => {
   await query(`
     TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists,
     album_artists, track_artists, bookmarked_albums, album_genres
