@@ -65,39 +65,53 @@ export class GenreModel {
     return [...forward, ...reverse];
   }
 
-  static async incrementRelatedStrength(genreIDs: number[], executor: Executor = db) {
-    for (let i = 0; i < genreIDs.length; i++) {
-      for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
-
-        await executor
-          .insert(relatedGenres)
-          .values({ genreID: g1, relatedGenreID: g2, strength: 1 })
-          .onConflictDoUpdate({
-            target: [relatedGenres.genreID, relatedGenres.relatedGenreID],
-            set: {
-              strength: sql`${relatedGenres.strength} + 1`,
-              updatedAt: sql`now()`,
-            },
-          });
+  // Every unordered pair of distinct genre ids, each normalised to (low, high) so a
+  // pair maps to a single related_genres row no matter what order the ids arrive in.
+  // Deduping the ids first means a single batched statement never touches the same
+  // pair twice, and rules out self-pairs from a repeated id.
+  private static buildRelatedPairs(genreIDs: number[]): [number, number][] {
+    const ids = [...new Set(genreIDs)];
+    const pairs: [number, number][] = [];
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        pairs.push(ids[i] < ids[j] ? [ids[i], ids[j]] : [ids[j], ids[i]]);
       }
     }
+    return pairs;
+  }
+
+  static async incrementRelatedStrength(genreIDs: number[], executor: Executor = db) {
+    const pairs = GenreModel.buildRelatedPairs(genreIDs);
+    if (pairs.length === 0) return;
+
+    await executor
+      .insert(relatedGenres)
+      .values(pairs.map(([genreID, relatedGenreID]) => ({ genreID, relatedGenreID, strength: 1 })))
+      .onConflictDoUpdate({
+        target: [relatedGenres.genreID, relatedGenres.relatedGenreID],
+        set: {
+          strength: sql`${relatedGenres.strength} + 1`,
+          updatedAt: sql`now()`,
+        },
+      });
   }
 
   static async decrementRelatedStrength(genreIDs: number[], executor: Executor = db) {
-    for (let i = 0; i < genreIDs.length; i++) {
-      for (let j = i + 1; j < genreIDs.length; j++) {
-        const [g1, g2] = genreIDs[i] < genreIDs[j] ? [genreIDs[i], genreIDs[j]] : [genreIDs[j], genreIDs[i]];
+    const pairs = GenreModel.buildRelatedPairs(genreIDs);
+    if (pairs.length === 0) return;
 
-        await executor
-          .update(relatedGenres)
-          .set({
-            strength: sql`GREATEST(${relatedGenres.strength} - 1, 0)`,
-            updatedAt: sql`now()`,
-          })
-          .where(and(eq(relatedGenres.genreID, g1), eq(relatedGenres.relatedGenreID, g2)));
-      }
-    }
+    const tuples = sql.join(
+      pairs.map(([genreID, relatedGenreID]) => sql`(${genreID}, ${relatedGenreID})`),
+      sql`, `
+    );
+
+    await executor
+      .update(relatedGenres)
+      .set({
+        strength: sql`GREATEST(${relatedGenres.strength} - 1, 0)`,
+        updatedAt: sql`now()`,
+      })
+      .where(sql`(${relatedGenres.genreID}, ${relatedGenres.relatedGenreID}) in (${tuples})`);
   }
 
   static async updateGenre(slug: string, values: Partial<typeof genres.$inferInsert>) {
