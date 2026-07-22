@@ -77,6 +77,21 @@ services:
       - "traefik.http.routers.${APP_NAME}-api.entrypoints=websecure"
       - "traefik.http.routers.${APP_NAME}-api.tls.certresolver=myresolver"
 
+  # Chromium sidecar for the artist header scraper. The api connects to it over
+  # websocket with the token, internal network only, nothing routes through traefik.
+  browserless:
+    image: ghcr.io/browserless/chromium:latest
+    restart: always
+    environment:
+      TOKEN: ${BROWSERLESS_TOKEN}
+      # Matches the scraper's old batch size, anything beyond it queues inside browserless
+      CONCURRENT: 6
+      # Per-session cap in ms, a header page scrape is well under this
+      TIMEOUT: 60000
+    mem_limit: 2g
+    networks:
+      - app_network
+
   web:
     image: ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG}
     restart: always

@@ -27,6 +27,12 @@ services:
       - "4000:4000"
     command: pnpm run dev # use nodemon for live reload
 
+  browserless:
+    environment:
+      TOKEN: ${BROWSERLESS_TOKEN:-dev-token} # fixed fallback so dev boots without a .env entry
+    ports:
+      - "3000:3000" # browserless debugger UI
+
   web:
     build:
       context: ./apps/web
