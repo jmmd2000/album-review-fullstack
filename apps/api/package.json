@@ -43,7 +43,6 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "slugify": "^1.6.9",
-    "socket.io": "^4.8.1",
     "tsconfig-paths": "^4.2.0",
     "zod": "^4.4.3"
   },

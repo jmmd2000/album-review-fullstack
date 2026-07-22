@@ -76,9 +76,6 @@ services:
       - "traefik.http.routers.${APP_NAME}-api.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/api`)"
       - "traefik.http.routers.${APP_NAME}-api.entrypoints=websecure"
       - "traefik.http.routers.${APP_NAME}-api.tls.certresolver=myresolver"
-      - "traefik.http.routers.${APP_NAME}-api-ws.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)) && PathPrefix(`/ws`)"
-      - "traefik.http.routers.${APP_NAME}-api-ws.entrypoints=websecure"
-      - "traefik.http.routers.${APP_NAME}-api-ws.tls.certresolver=myresolver"
 
   web:
     image: ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG}

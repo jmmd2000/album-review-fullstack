@@ -3,9 +3,7 @@ import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import http from "http";
 import { CORS_ORIGINS } from "@/config/cors";
-import { initSocket } from "@/socket";
 import { errorHandler } from "./api/middleware/errorHandler";
 
 export const app = express();
@@ -24,22 +22,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 
-app.options("/ws/*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,Cookie");
-  res.sendStatus(200);
-});
-
 app.use(errorHandler);
 
-// Create HTTP server and attach Socket.IO
-const server = http.createServer(app);
-initSocket(server);
-
 if (require.main === module) {
-  server.listen(4000, () => {
+  app.listen(4000, () => {
     console.log("Server is running on port 4000");
   });
 }
