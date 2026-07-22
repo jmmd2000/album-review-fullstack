@@ -153,6 +153,9 @@ importers:
       framer-motion:
         specifier: ^12.42.2
         version: 12.42.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      hono:
+        specifier: ^4.12.31
+        version: 4.12.31
       lucide-react:
         specifier: ^0.476.0
         version: 0.476.0(react@19.2.7)
@@ -178,6 +181,9 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
     devDependencies:
+      '@album-reviews/api':
+        specifier: workspace:*
+        version: link:../api
       '@tanstack/router-devtools':
         specifier: ^1.167.0
         version: 1.167.0(@tanstack/react-router@1.170.18(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(@tanstack/router-core@1.171.15)(csstype@3.2.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

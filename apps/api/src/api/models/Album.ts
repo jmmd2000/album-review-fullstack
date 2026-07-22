@@ -43,10 +43,7 @@ export class AlbumModel {
   }
 
   static async getPaginatedAlbums({ page = 1, orderBy = "createdAt", order = "desc", search = "", genres, secondaryOrderBy, secondaryOrder }: GetPaginatedAlbumsOptions) {
-    const validOrderBy = ["finalScore", "releaseYear", "name", "createdAt"] as const;
     const validOrder = ["asc", "desc"] as const;
-    const _sortField = validOrderBy.includes(orderBy) ? orderBy : "finalScore";
-    const _sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
 
     // If requested genres, look up the matching album IDs
