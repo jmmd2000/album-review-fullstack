@@ -1,6 +1,6 @@
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
-import { beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 

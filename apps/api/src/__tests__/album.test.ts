@@ -1,7 +1,7 @@
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData, mockUpdateData } from "./constants";
 import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { beforeAll, beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { resetTables } from "./testUtils";
 import { ArtistModel } from "../api/models/Artist";
 import { api } from "./apiRequest";
@@ -11,7 +11,7 @@ const authCookie = adminCookie();
 
 // Suppress duplicate-key console errors during tests
 beforeAll(() => {
-  jest.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 beforeEach(async () => {
@@ -114,7 +114,7 @@ test("POST /api/albums/create - a mid-flight failure rolls the whole review back
   // Force a failure at the end of the create transaction. refreshArtists calls
   // updateArtist last, so by then the album, tracks, genres and artist links have
   // all been created. The whole write must roll back together.
-  const spy = jest.spyOn(ArtistModel, "updateArtist").mockRejectedValueOnce(new Error("forced mid-transaction failure"));
+  const spy = vi.spyOn(ArtistModel, "updateArtist").mockRejectedValueOnce(new Error("forced mid-transaction failure"));
 
   const res = await api.post("/api/albums/create", mockReviewData, authCookie);
   expect(res.status).toBe(500);

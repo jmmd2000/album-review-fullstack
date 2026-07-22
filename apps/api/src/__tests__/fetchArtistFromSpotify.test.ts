@@ -1,12 +1,12 @@
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-jest.mock("../api/services/SpotifyService", () => ({
-  SpotifyService: { getAccessToken: jest.fn(() => Promise.resolve("test-token")) },
+vi.mock("../api/services/SpotifyService", () => ({
+  SpotifyService: { getAccessToken: vi.fn(() => Promise.resolve("test-token")) },
 }));
 
 import { fetchArtistFromSpotify } from "../helpers/fetchArtistFromSpotify";
 
-const mockFetch = jest.fn<(input: unknown, init?: unknown) => Promise<unknown>>();
+const mockFetch = vi.fn<(input: unknown, init?: unknown) => Promise<unknown>>();
 global.fetch = mockFetch as unknown as typeof fetch;
 
 beforeEach(() => {

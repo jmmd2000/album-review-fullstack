@@ -1,6 +1,6 @@
 import { app } from "@/app";
 import { closeDatabase } from "@/db/client";
-import { afterAll, test, expect, describe } from "@jest/globals";
+import { afterAll, test, expect, describe } from "vitest";
 
 afterAll(async () => {
   await closeDatabase();

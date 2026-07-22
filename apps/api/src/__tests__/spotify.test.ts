@@ -2,27 +2,31 @@ import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
-import { beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 
-jest.mock("../api/services/SpotifyService", () => ({
-  SpotifyService: {
-    getAccessToken: jest.fn(() => Promise.resolve("mock_token")),
-    searchAlbums: jest.fn(() =>
-      Promise.resolve([
-        {
-          spotifyID: "1",
-          name: "Mock Album",
-          artistName: "Mock Artist",
-          artistSpotifyID: "artist1",
-          releaseYear: 2024,
-          imageURLs: [],
-        },
-      ])
-    ),
-    getAlbum: jest.fn(() => Promise.resolve(mockReviewData.album)),
-  },
-}));
+// Async factory so the mock can import its fixture without fighting vi.mock hoisting
+vi.mock("../api/services/SpotifyService", async () => {
+  const { mockReviewData } = await import("./constants");
+  return {
+    SpotifyService: {
+      getAccessToken: vi.fn(() => Promise.resolve("mock_token")),
+      searchAlbums: vi.fn(() =>
+        Promise.resolve([
+          {
+            spotifyID: "1",
+            name: "Mock Album",
+            artistName: "Mock Artist",
+            artistSpotifyID: "artist1",
+            releaseYear: 2024,
+            imageURLs: [],
+          },
+        ])
+      ),
+      getAlbum: vi.fn(() => Promise.resolve(mockReviewData.album)),
+    },
+  };
+});
 
 beforeEach(async () => {
   await resetTables(query);

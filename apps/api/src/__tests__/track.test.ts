@@ -2,13 +2,13 @@ import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import type { DisplayTrack } from "@shared/types";
-import { beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 
 // Mock Puppeteer header fetcher to avoid launch errors
-jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
-  fetchArtistHeaderFromSpotify: jest.fn(() => Promise.resolve(null)),
+vi.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
+  fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
 }));
 
 const authCookie = adminCookie();

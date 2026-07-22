@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { JobService, type JobEvent } from "@/api/services/JobService";
 
 const collect = async (stream: AsyncGenerator<JobEvent>): Promise<JobEvent[]> => {

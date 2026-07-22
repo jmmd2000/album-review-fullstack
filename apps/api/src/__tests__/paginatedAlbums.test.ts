@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect } from "vitest";
 import { PAGE_SIZE } from "@shared/constants";
 
 import { db, closeDatabase, query } from "@/db/client";

@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, vi, describe } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
@@ -6,13 +6,13 @@ import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 
 // Mock Puppeteer header fetcher to avoid launch errors
-jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
-  fetchArtistHeaderFromSpotify: jest.fn(() => Promise.resolve(null)),
+vi.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
+  fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
 }));
 
 // Mock Spotify artist fetcher
-jest.mock("../helpers/fetchArtistFromSpotify", () => ({
-  fetchArtistFromSpotify: jest.fn((id: string) =>
+vi.mock("../helpers/fetchArtistFromSpotify", () => ({
+  fetchArtistFromSpotify: vi.fn((id: string) =>
     Promise.resolve({
       id: id,
       name: "Test Artist",

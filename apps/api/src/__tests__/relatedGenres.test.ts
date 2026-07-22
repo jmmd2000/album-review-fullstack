@@ -2,7 +2,7 @@ import { closeDatabase, db, query } from "@/db/client";
 import { genres, relatedGenres } from "@/db/schema";
 import { GenreModel } from "@/api/models/Genre";
 import { resetTables } from "./testUtils";
-import { beforeEach, afterAll, test, expect } from "@jest/globals";
+import { beforeEach, afterAll, test, expect } from "vitest";
 
 beforeEach(async () => {
   await resetTables(query);

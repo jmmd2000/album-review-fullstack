@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, afterEach, test, expect } from "@jest/globals";
+import { afterAll, beforeEach, afterEach, test, expect } from "vitest";
 import { query, closeDatabase } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { StatsService } from "@/api/services/StatsService";

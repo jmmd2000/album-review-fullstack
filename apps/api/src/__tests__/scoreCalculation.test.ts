@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, vi, describe } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { calculatePeakScore, calculateLatestScore } from "../helpers/calculatePeakAndLatestScores";
@@ -7,8 +7,8 @@ import { calculateLeaderboardPositions } from "../helpers/calculateLeaderboardPo
 import type { ReviewedAlbum } from "@shared/types";
 
 // Mock Puppeteer header fetcher to avoid launch errors
-jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
-  fetchArtistHeaderFromSpotify: jest.fn(() => Promise.resolve(null)),
+vi.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
+  fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
 }));
 
 beforeEach(async () => {
