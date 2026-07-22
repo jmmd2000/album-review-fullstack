@@ -1,5 +1,5 @@
 import { SettingsModel } from "@/api/models/Settings";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SettingValue = string | number | boolean | Date | { [key: string]: any };

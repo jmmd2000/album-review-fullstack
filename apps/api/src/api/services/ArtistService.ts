@@ -11,7 +11,7 @@ import { SettingsService } from "./SettingsService";
 import type { ArtistLeaderboardData } from "@/helpers/calculateLeaderboardPositions";
 import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPositions";
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 import { db, type Executor } from "@/db/client";
 
 export class ArtistService {

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import type { DisplayAlbum, SpotifyImage, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 
 export class BookmarkedAlbumService {
   static async bookmarkAlbum(album: DisplayAlbum) {

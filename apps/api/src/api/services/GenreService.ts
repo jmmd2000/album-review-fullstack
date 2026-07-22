@@ -1,5 +1,5 @@
 import { GenreModel } from "@/api/models/Genre";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 import type { Genre, RelatedGenre } from "@shared/types";
 import slugify from "slugify";
 import { db, type Executor } from "@/db/client";

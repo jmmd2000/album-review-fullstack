@@ -12,8 +12,8 @@ import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
-import { GenreService } from "./genreService";
-import { AppError } from "../middleware/errorHandler";
+import { GenreService } from "@/api/services/GenreService";
+import { AppError } from "@/api/AppError";
 import { db, type Executor } from "@/db/client";
 import type { ReceivedReviewData, ReceivedSpotifyAlbum, ReceivedReviewedAlbum } from "@/api/schemas/reviewSchema";
 

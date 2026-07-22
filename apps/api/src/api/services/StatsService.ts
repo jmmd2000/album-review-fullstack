@@ -2,7 +2,7 @@ import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
 import type { DisplayAlbum, DisplayArtist, Genre } from "@shared/types";
 import { GenreModel } from "@/api/models/Genre";
-import { GenreService } from "./genreService";
+import { GenreService } from "@/api/services/GenreService";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
 import { AlbumGenreModel } from "@/api/models/AlbumGenre";
 import { ratingTiers } from "@/helpers/ratingTiers";

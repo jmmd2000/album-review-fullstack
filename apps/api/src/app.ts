@@ -4,7 +4,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { CORS_ORIGINS } from "@/config/cors";
-import { AppError } from "@/api/middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 import { db, query, type Executor } from "@/db/client";
 
 import auth from "@/api/routes/AuthRoutes";

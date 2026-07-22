@@ -2,7 +2,7 @@ import type { DisplayAlbum, ExtractedColor, SearchAlbumsOptions, SpotifyAlbum, S
 import { getImageColors } from "@/helpers/getImageColors";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "./BookmarkedAlbum";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "../AppError";
 import { env } from "@/config/env";
 
 export class Spotify {

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { AppError } from "../middleware/errorHandler";
+import { AppError } from "@/api/AppError";
 import { env } from "@/config/env";
 
 const TOKEN_EXPIRY = "7d";
