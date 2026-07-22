@@ -19,10 +19,14 @@ const idsSchema = z.object({
   ids: z.string().min(1, "ids parameter is required"),
 });
 
+const allAlbumsSchema = z.object({
+  includeCounts: z.enum(["true", "false"]).optional(),
+});
+
 // Static paths are registered before /:albumID so "all"/"scores" aren't matched as an id.
 const album = new Hono()
-  .get("/all", async c => {
-    const albums = await AlbumService.getAllAlbums(c.req.query("includeCounts") === "true");
+  .get("/all", validate("query", allAlbumsSchema), async c => {
+    const albums = await AlbumService.getAllAlbums(c.req.valid("query").includeCounts === "true");
     return c.json(albums, 200);
   })
   .get("/scores", validate("query", idsSchema), async c => {

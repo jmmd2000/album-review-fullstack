@@ -1,4 +1,4 @@
-import type { AlbumArtist, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
+import type { AlbumArtist, Jsonified, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { formatDate } from "@shared/helpers/formatDate";
 import ArtistStack from "@components/artist/ArtistStack";
@@ -8,7 +8,7 @@ import ArtistStack from "@components/artist/ArtistStack";
  */
 interface AlbumDetailsProps {
   /** The album being reviewed */
-  album: ReviewedAlbum | SpotifyAlbum;
+  album: Jsonified<ReviewedAlbum | SpotifyAlbum>;
   /** The artists of the album */
   artists: AlbumArtist[];
   /** The number of tracks on the album */
@@ -16,8 +16,8 @@ interface AlbumDetailsProps {
 }
 
 // Type guard to check if the album is a ReviewedAlbum
-const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is ReviewedAlbum => {
-  return (album as ReviewedAlbum).reviewScore !== undefined;
+const isReviewedAlbum = (album: Jsonified<SpotifyAlbum | ReviewedAlbum>): album is Jsonified<ReviewedAlbum> => {
+  return (album as Jsonified<ReviewedAlbum>).reviewScore !== undefined;
 };
 
 /**

@@ -1,6 +1,5 @@
-import type { SearchAlbumsOptions } from "@shared/types";
+import type { AlbumArtist, Genre, SearchAlbumsOptions, SpotifyAlbum } from "@shared/types";
 import { Spotify } from "@/api/models/Spotify";
-import type { AlbumArtist } from "@shared/types";
 import { GenreModel } from "../models/Genre";
 
 export class SpotifyService {
@@ -12,7 +11,14 @@ export class SpotifyService {
     return await Spotify.searchAlbums(query);
   }
 
-  static async getAlbum(id: string, includeGenres: boolean = true) {
+  static async getAlbum(
+    id: string,
+    includeGenres: boolean = true
+  ): Promise<{
+    album: SpotifyAlbum;
+    artists: AlbumArtist[];
+    genres?: Genre[];
+  }> {
     const album = await Spotify.getAlbum(id);
     const artistIDs = album.artists.map(a => a.id);
     const artistDetails = await Spotify.getArtists(artistIDs);

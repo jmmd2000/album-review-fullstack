@@ -1,4 +1,4 @@
-import type { ExtractedColor, Genre, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
+import type { ExtractedColor } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
@@ -9,22 +9,10 @@ import ErrorComponent from "@components/ui/ErrorComponent";
 import HeaderDetails from "@/components/layout/HeaderDetails";
 import AlbumDetails from "@/components/album/AlbumDetails";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
-async function fetchAlbumFromDB(albumSpotifyID: string): Promise<{
-  album: ReviewedAlbum;
-  artists: ReviewedArtist[];
-  tracks: ReviewedTrack[];
-  allGenres: Genre[];
-  albumGenres: Genre[];
-}> {
-  return api.get<{
-    album: ReviewedAlbum;
-    artists: ReviewedArtist[];
-    tracks: ReviewedTrack[];
-    allGenres: Genre[];
-    albumGenres: Genre[];
-  }>(`/api/albums/${albumSpotifyID}`);
+async function fetchAlbumFromDB(albumSpotifyID: string) {
+  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
 }
 
 const albumQueryOptions = (albumSpotifyID: string) =>
@@ -77,7 +65,7 @@ function RouteComponent() {
           />
         </BlurryHeader>
 
-        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.allGenres} />
+        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.allGenres ?? []} />
       </RequireAdmin>
     </>
   );

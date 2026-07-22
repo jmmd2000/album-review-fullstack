@@ -3,30 +3,29 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
 import { queryClient } from "@/main";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 
-import type { GetPaginatedAlbumsOptions, PaginatedAlbumsResult } from "@shared/types";
+import type { GetPaginatedAlbumsOptions } from "@shared/types";
 import { PAGE_SIZE } from "@shared/constants";
 
-async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
-  const queryParams = new URLSearchParams();
-
-  if (options.page) queryParams.set("page", String(options.page));
-  if (options.order) queryParams.set("order", options.order);
-  if (options.orderBy) queryParams.set("orderBy", options.orderBy);
-  if (options.search) queryParams.set("search", options.search);
-  if (options.genres) {
-    const genres = Array.isArray(options.genres) ? options.genres.join(",") : options.genres;
-    queryParams.set("genres", genres);
-  }
-  if (options.secondaryOrderBy) queryParams.set("secondaryOrderBy", options.secondaryOrderBy);
-  if (options.secondaryOrder) queryParams.set("secondaryOrder", options.secondaryOrder);
-
-  return api.get(`/api/albums?${queryParams.toString()}`);
+async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
+  return handle(
+    client.api.albums.$get({
+      query: {
+        ...(options.page ? { page: String(options.page) } : {}),
+        ...(options.order ? { order: options.order } : {}),
+        ...(options.orderBy ? { orderBy: options.orderBy } : {}),
+        ...(options.search ? { search: options.search } : {}),
+        ...(options.genres ? { genres: Array.isArray(options.genres) ? options.genres.join(",") : options.genres } : {}),
+        ...(options.secondaryOrderBy ? { secondaryOrderBy: options.secondaryOrderBy } : {}),
+        ...(options.secondaryOrder ? { secondaryOrder: options.secondaryOrder } : {}),
+      },
+    })
+  );
 }
 
 const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>

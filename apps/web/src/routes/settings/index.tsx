@@ -7,10 +7,11 @@ import { Camera, ImageIcon, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { useJobProgress } from "@/hooks/useJobProgress";
 import SettingsCard from "@/components/settings/SettingsCard";
 import { timeAgo } from "@shared/helpers/formatDate";
-import { api } from "@/lib/api";
+import type { InferResponseType } from "hono/client";
+import { client, handle } from "@/lib/client";
 
-async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
-  return api.get("/api/settings/last-runs");
+async function fetchLastRunDetails() {
+  return handle(client.api.settings["last-runs"].$get());
 }
 
 const settingsQueryOptions = () =>
@@ -29,30 +30,16 @@ export const Route = createFileRoute("/settings/")({
   component: RouteComponent,
 });
 
-type RecalcResult = {
-  updatedCount: number;
-  totalProcessed: number;
-  changedArtists: {
-    spotifyID: string;
-    name: string;
-    changes: {
-      field: "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition";
-      before: number | null;
-      after: number | null;
-    }[];
-  }[];
-};
+type RecalcResult = InferResponseType<(typeof client.api.settings)["recalculate-scores"]["$post"]>;
 
 function RouteComponent() {
   const { data: lastRuns } = useSuspenseQuery(settingsQueryOptions());
 
-  const images = useJobProgress({ endpoint: "/api/jobs/artist-images" });
-  const headers = useJobProgress({ endpoint: "/api/jobs/artist-headers" });
+  const images = useJobProgress({ job: "artist-images" });
+  const headers = useJobProgress({ job: "artist-headers" });
 
   const recalcScoresMut = useMutation<RecalcResult, Error, void>({
-    mutationFn: async () => {
-      return api.post<RecalcResult>("/api/settings/recalculate-scores");
-    },
+    mutationFn: () => handle(client.api.settings["recalculate-scores"].$post()),
   });
 
   const containerVariants = {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { UseFormRegister, UseFieldArrayRemove, UseFieldArrayAppend, UseFormSetValue } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import type { Genre } from "@shared/types";
+import type { Genre, Jsonified } from "@shared/types";
 import type { CreateReviewFormData } from "./AlbumReviewForm";
 
 interface GenreSelectorProps {
@@ -11,7 +11,7 @@ interface GenreSelectorProps {
   removeGenre: UseFieldArrayRemove;
   addGenre: UseFieldArrayAppend<CreateReviewFormData, "genres">;
   setValue: UseFormSetValue<CreateReviewFormData>;
-  genres: Genre[];
+  genres: Jsonified<Genre>[];
 }
 
 const GenreSelector = ({ genreFields, register, removeGenre, addGenre, setValue, genres }: GenreSelectorProps) => {

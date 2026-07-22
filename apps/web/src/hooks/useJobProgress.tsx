@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import type { Progress } from "@shared/types";
 import type { JobState } from "@/components/settings/SettingsCard";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
 type JobAction =
   | { type: "START" }
@@ -100,14 +100,14 @@ const EVENT_ACTIONS: Record<string, DataAction["type"]> = {
 };
 
 interface UseJobProgressOptions {
-  /** POST endpoint that starts the job and returns { jobID }. */
-  endpoint: string;
+  /** Which artist job to start, maps to POST /api/jobs/:job and returns { jobID }. */
+  job: "artist-images" | "artist-headers";
 }
 
-export function useJobProgress({ endpoint }: UseJobProgressOptions) {
+export function useJobProgress({ job }: UseJobProgressOptions) {
   const [state, dispatch] = useReducer(jobReducer, initialState);
   const sourceRef = useRef<EventSource | null>(null);
-  const storageKey = `jobID:${endpoint}`;
+  const storageKey = `jobID:${job}`;
 
   const stop = useCallback(() => {
     sourceRef.current?.close();
@@ -154,13 +154,13 @@ export function useJobProgress({ endpoint }: UseJobProgressOptions) {
   const trigger = useCallback(async () => {
     dispatch({ type: "START" });
     try {
-      const { jobID } = await api.post<{ jobID: string }>(endpoint);
+      const { jobID } = await handle(client.api.jobs[job].$post());
       localStorage.setItem(storageKey, jobID);
       listen(jobID);
     } catch {
       dispatch({ type: "RESET" });
     }
-  }, [endpoint, storageKey, listen]);
+  }, [job, storageKey, listen]);
 
   const dismiss = useCallback(() => dispatch({ type: "DISMISS" }), []);
 

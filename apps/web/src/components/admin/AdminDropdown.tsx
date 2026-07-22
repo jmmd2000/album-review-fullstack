@@ -9,7 +9,7 @@ import { queryClient } from "@/main";
 import type { ReviewedAlbum, ReviewedArtist, DisplayTrack, DisplayAlbum, Genre } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@components/ui/Dialog";
-import { api } from "@/lib/api";
+import { client, handleVoid } from "@/lib/client";
 import { toast } from "sonner";
 
 interface LinkItem {
@@ -84,7 +84,7 @@ const AdminDropdown = () => {
   const handleDelete = async () => {
     if (!albumID) return;
     try {
-      await api.delete(`/api/albums/${albumID}`);
+      await handleVoid(client.api.albums[":albumID"].$delete({ param: { albumID } }));
       queryClient.invalidateQueries({ queryKey: ["artists"] });
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       navigate({ to: "/albums" });
@@ -97,9 +97,7 @@ const AdminDropdown = () => {
   const updateHeaderImageMut = useMutation<void, Error, string>({
     mutationFn: async (headerImage: string) => {
       if (!artistID) throw new Error("Artist ID is required");
-      await api.put(`/api/artists/${artistID}/headerImage`, {
-        headerImage: headerImage.trim() || null,
-      });
+      await handleVoid(client.api.artists[":artistID"].headerImage.$put({ param: { artistID }, json: { headerImage: headerImage.trim() || null } }));
     },
     onSuccess: () => {
       if (artistID) {

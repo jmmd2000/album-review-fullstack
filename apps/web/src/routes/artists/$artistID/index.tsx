@@ -1,6 +1,5 @@
 import ErrorComponent from "@components/ui/ErrorComponent";
 import { queryClient } from "@/main";
-import type { DisplayAlbum, DisplayTrack, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import HeaderDetails from "@/components/layout/HeaderDetails";
@@ -10,20 +9,10 @@ import CardGrid from "@/components/ui/CardGrid";
 import AlbumCard from "@/components/album/AlbumCard";
 import { useEffect } from "react";
 import TrackList from "@/components/track/TrackList";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
-async function fetchReviewedArtist(artistSpotifyID: string): Promise<{
-  artist: ReviewedArtist;
-  albums: DisplayAlbum[];
-  featuredAlbums: DisplayAlbum[];
-  tracks: DisplayTrack[];
-}> {
-  return api.get<{
-    artist: ReviewedArtist;
-    albums: DisplayAlbum[];
-    featuredAlbums: DisplayAlbum[];
-    tracks: DisplayTrack[];
-  }>(`/api/artists/details/${artistSpotifyID}`);
+async function fetchReviewedArtist(artistSpotifyID: string) {
+  return handle(client.api.artists.details[":artistID"].$get({ param: { artistID: artistSpotifyID } }));
 }
 
 const artistQueryOptions = (artistID: string) =>
@@ -70,7 +59,7 @@ function RouteComponent() {
 
   const albumString = albums.length > 1 ? `${albums.length} albums` : `${albums.length} album`;
 
-  const podiumCheck = (pos: number) => {
+  const podiumCheck = (pos: number | null) => {
     if (pos === 1) return <Crown color="#d4af37" size={16} />;
     if (pos === 2) return <Trophy color="#C0C0C0" size={16} />;
     if (pos === 3) return <Medal color="#CD7F32" size={16} />;

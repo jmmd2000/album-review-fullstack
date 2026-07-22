@@ -180,7 +180,14 @@ export class AlbumService {
     return { album, artists, tracks: displayTracks, allGenres, albumGenres };
   }
 
-  static async getAllAlbums(includeCounts = false) {
+  static async getAllAlbums(
+    includeCounts = false
+  ): Promise<{
+    albums: DisplayAlbum[];
+    numArtists?: number;
+    numAlbums?: number;
+    numTracks?: number;
+  }> {
     const albums = await AlbumModel.getAllAlbums();
     const albumIDs = albums.map(album => album.spotifyID);
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
