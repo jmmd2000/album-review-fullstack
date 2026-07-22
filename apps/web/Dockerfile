@@ -3,9 +3,7 @@ FROM node:22-alpine AS build
 
 RUN corepack enable
 
-# The api workspace ships puppeteer, but the web build only needs the api's types, not a browser
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV CYPRESS_INSTALL_BINARY=0
 
 WORKDIR /app
 
