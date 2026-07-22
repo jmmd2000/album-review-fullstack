@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio --verbose",
     "db:seed": "tsx ./src/db/seed.ts",
-    "db:wipe": "tsx ./src/db/wipe.ts"
+    "db:wipe": "tsx ./src/db/wipe.ts",
+    "db:capture-fixtures": "tsx ./src/db/fixtures/capture.ts"
   },
   "keywords": [],
   "author": "",
