@@ -1,169 +1,186 @@
-import { getAdminCookie } from "@/helpers/getAdminCookie";
-import type { SpotifyAlbum } from "@shared/types";
 import "dotenv/config";
+import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
+import type { DisplayTrack, ReviewedAlbum } from "@shared/types";
+import { calculateArtistScore } from "@/helpers/calculateArtistScore";
+import { db, closeDatabase } from "@/db/client";
+import { AlbumModel } from "@/api/models/Album";
+import { ArtistModel } from "@/api/models/Artist";
+import { TrackModel } from "@/api/models/Track";
+import { GenreModel } from "@/api/models/Genre";
+import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
+import { GenreService } from "@/api/services/GenreService";
+import { ArtistService } from "@/api/services/ArtistService";
+import { BOOKMARKED_IDS, REVIEW_CONTENT, REVIEWED, capturedAlbum, ratingFor } from "./fixtures/fixtures";
 
-const ALBUM_IDS = [
-  "7fRrTyKvE4Skh93v97gtcU",
-  "0S0KGZnfBGSIssfF54WSJh",
-  "0JGOiO34nwfUdDrD612dOp",
-  "7aJuG4TFXa2hmE4z1yxc3n",
-  "0EiI8ylL0FmWWpgHVTsZjZ",
-  "5s0rmjP8XOPhP6HhqOhuyC",
-  "6trNtQUgC8cgbWcqoMYkOR",
-  "4g1ZRSobMefqF6nelkgibi",
-  "3HHNR44YbP7XogMVwzbodx",
-  "1F9LY06gadScF4g3g3BrDC",
-  "4f2G7uAWqzpOPwEfCDV87A",
-  "2lIZef4lzdvZkiiCzvPKj7",
-  "4HTy9WFTYooRjE9giTmzAF",
-  "0Ydm84ftyiWRGOIFkdl30L",
-  "5lKlFlReHOLShQKyRv6AL9",
-  "1uROBP2G4MP0O4w1v5Cpbg",
-  "1qMFjBarjO2xD15BwXZguD",
-  "04E0aLUdCHnhnnYrDDvcHq",
-  "4o3RJndRhHxkieQzQGhmbw",
-  "4piJq7R3gjUOxnYs6lDCTg",
-  "1nAQbHeOWTfQzbOoFrvndW",
-  "2ODvWsOgouMbaA5xf0RkJe",
-  "1vL2mgGTukkrUxXt0loeTN",
-  "6tkjU4Umpo79wwkgPMV3nZ",
-  "392p3shh2jkxUxY2VHvlH8",
-  "0AP5O47kJWlaKVnnybKvQI",
-  "0RHX9XECH8IVI3LNgWDpmQ",
-  "4AueWk2dGXqbMFx7ogEAs7",
-  "3dcenoRctm8OAnqoCrQrLd",
-  "4NtamseeVOGesCm8W9oHSz",
-  "7lpVrkFA2XivBC5cis1dil",
-  "5MfAxS5zz8MlfROjGQVXhy",
-  "3U8n8LzBx2o9gYXvvNq4uH",
-  "2JdjS6jjOml7nt7Yjo0nnh",
-  "5r36AJ6VOJtp00oxSkBZ5h",
-  "7iOAJaGBmk67o337zaqt0R",
-  "55huyEjfSVsk9nnmmKp5df",
-  "1ORxRsK3MrSLvh7VQTF01F",
-  "4FyGpObwABjn0o8Tdp7AZz",
-  "6DmPNcfpkXBVRJsEIJY9tl",
-  "0rmhjUgoVa17LZuS8xWQ3v",
-  "6s84u2TUpR3wdUv4NgKA2j",
-  "2dqn5yOQWdyGwOpOIi9O4x",
-  "6czdbbMtGbAkZ6ud2OMTcg",
-  "7xV2TzoaVc0ycW7fwBwAml",
-  "4E7bV0pzG0LciBSWTszra6",
-  "2vlhlrgMaXqcnhRqIEV9AP",
-  "59ULskOkBMij4zL8pS7mi0",
-  "72ZfMxLCPG8mlWC0TXfZQi",
-  "3bvS3DlTwV35j2qwFhDvxx",
-  "7CwQcswdSnPsSwQtskEmT4",
-  "7mzrIsaAjnXihW3InKjlC3",
-  "1uyf3l2d4XYwiEqAb7t7fX",
-  "1JnjcAIKQ9TSJFVFierTB8",
-  "664z6KAZKVhAY36vBCLmiN",
-  "097eYvf9NKjFnv4xA9s2oV",
-  "1FZKIm3JVDCxTchXDo5jOV",
-  "6ZG5lRT77aJ3btmArcykra",
-  "2WFFcvzM0CgLaSq4MSkyZk",
-  "3T4tUhGYeRNVUGevb0wThu",
-  "1xn54DMo2qIqBuMqHtUsFd",
-  "32iAEBstCjauDhyKpGjTuq",
-  "0P3oVJBFOv3TDXlYRhGL7s",
-  "3n5Coa56i6foIGITrYGX7o",
-  "0Ug5scDXUIgGN8yanDBLQw",
-  "2wiPF3m0ylst0JSk1IvZL8",
-  "6n9DKpOxwifT5hOXtgLZSL",
-  "1btu0SV2DOI5HoFsvUd78F",
-];
-
-const REVIEW = {
-  reviewContent:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla sit amet urna a odio volutpat fringilla. Curabitur in augue quis mi dignissim posuere sed eget urna. Aenean tempus lacus at lacus auctor ultrices. Nullam sem erat, posuere sed blandit et, tristique ac ex. Donec ornare malesuada fermentum. Praesent accumsan est eget eros porttitor ornare. Proin sodales semper odio ac porttitor. Nunc scelerisque nunc eget sagittis vulputate. Nulla neque nunc, placerat sed laoreet ut, lobortis et orci. Fusce rutrum risus nec vestibulum pellentesque. Vestibulum mi libero, mattis in mi ac, lacinia dictum nulla. Nullam nisi odio, pharetra vitae interdum ac, lobortis in dui. Fusce convallis mattis risus id efficitur. In elementum, lorem eu eleifend sagittis, ligula arcu mattis nisl, vitae sodales dolor sem vestibulum mauris. Etiam elementum, libero vel semper suscipit, lacus purus ullamcorper leo, id scelerisque est nisi quis nulla. Nullam in consectetur dui, eget congue sapien. Curabitur lobortis diam eu pellentesque vulputate. Pellentesque varius id risus dictum dictum. Sed suscipit turpis massa, tristique consectetur dolor pellentesque sodales. Mauris eleifend suscipit iaculis. In suscipit at libero eget pellentesque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Donec vestibulum ex nulla, sed rutrum enim convallis at.",
-};
-
-const GENRES = [
-  "alternative-pop",
-  "alternative-rock",
-  "alternative-rap",
-  "alternative-hip-hop",
-  "r&b",
-  "jazz",
-  "blues",
-  "alternative-country",
-  "classical",
-  "metal",
-  "electronic",
-  "reggae",
-  "alternative-folk",
-  "indie",
-  "punk",
-  "hip-hop/rap",
-  "r&b/soul",
-  "pop/rap",
-  "heartland rock",
-  "experimental pop",
-  "avant-garde",
-];
-
-export const seed = async (spotifyIDs: string[], review: { reviewContent: string }, logging: boolean = false) => {
-  const cookie = await getAdminCookie();
-  if (logging) console.log("Logged in, got cookie...");
-  const albums: SpotifyAlbum[] = [];
-  while (spotifyIDs.length > 0) {
-    const randomIndex = Math.floor(Math.random() * spotifyIDs.length);
-    const id = spotifyIDs.splice(randomIndex, 1)[0];
-    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetching album with id \x1b[33m${id}\x1b[0m`);
-    const response = await fetch(`http://localhost:4000/api/spotify/albums/${id}?includeGenres=false`);
-    const data: SpotifyAlbum = await response.json();
-    albums.push(data);
-    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Fetched album \x1b[33m${data.name}\x1b[0m`);
+// Seeds the database directly from the checked-in fixture snapshot, no server,
+// no network, and the same scores every run. Scores come from the same pure
+// helpers the app uses, so seeded numbers track the real scoring logic.
+const seed = async () => {
+  const existing = await AlbumModel.getAllAlbums();
+  if (existing.length > 0) {
+    throw new Error(`Seed: the database already has ${existing.length} reviewed albums, run db:wipe first`);
   }
 
-  const reviewedAlbums = albums.map(album => {
-    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Reviewing album \x1b[33m${album.name}\x1b[0m`);
-    const bestSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
-    const worstSong = album.tracks.items[Math.floor(Math.random() * album.tracks.items.length)].name;
-    const randomGenres = Array.from({ length: 6 }, () => GENRES[Math.floor(Math.random() * GENRES.length)]);
-    return {
-      ...review,
-      bestSong: bestSong,
-      worstSong: worstSong,
-      genres: randomGenres,
-      album,
-      affectsArtistScore: Math.random() < 0.95,
-      ratedTracks: album.tracks.items.map(track => {
-        return {
-          spotifyID: track.id,
-          rating: Math.floor(Math.random() * 10) + 1,
-        };
-      }),
-    };
+  await db.transaction(async tx => {
+    const createdArtistIDs = new Set<string>();
+    const albumRowsByArtist = new Map<string, { row: ReviewedAlbum; contributes: boolean }[]>();
+
+    for (const review of REVIEWED) {
+      const captured = capturedAlbum(review.spotifyID);
+      const albumArtistIDs = captured.artists.map(artist => artist.spotifyID);
+      const excluded = new Set((review.scoreExcludedArtistIndexes ?? []).map(index => albumArtistIDs[index]));
+      const scoreArtistIDs = review.affectsArtistScore ? albumArtistIDs.filter(id => !excluded.has(id)) : [];
+      const primaryArtist = captured.artists[0];
+
+      // Build the rated track list and score the album with the app's own scoring helper
+      const ratedTracks: DisplayTrack[] = captured.tracks.map((track, index) => ({
+        spotifyID: track.spotifyID,
+        name: track.name,
+        artistName: track.artistName,
+        artistSpotifyID: track.artistSpotifyID,
+        duration: track.duration,
+        features: track.features.filter(feature => !albumArtistIDs.includes(feature.id)),
+        rating: ratingFor(index, review.offset),
+      }));
+      const { baseScore, bonuses, finalScore } = calculateAlbumScore(ratedTracks);
+
+      const byRating = [...ratedTracks].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      const bestSong = byRating[0].name;
+      const worstSong = byRating[byRating.length - 1].name;
+
+      // Artists start neutral; aggregates are computed once every album is in
+      for (const artist of captured.artists) {
+        if (createdArtistIDs.has(artist.spotifyID)) continue;
+        await ArtistModel.createArtist(
+          {
+            name: artist.name,
+            spotifyID: artist.spotifyID,
+            imageURLs: artist.imageURLs,
+            headerImage: null,
+            averageScore: 0,
+            bonusPoints: 0,
+            totalScore: 0,
+            bonusReason: JSON.stringify([]),
+            reviewCount: 0,
+            unrated: true,
+            leaderboardPosition: null,
+          },
+          tx
+        );
+        createdArtistIDs.add(artist.spotifyID);
+      }
+
+      const albumRow = (await AlbumModel.createAlbum(
+        {
+          name: captured.name,
+          spotifyID: captured.spotifyID,
+          releaseDate: captured.releaseDate,
+          releaseYear: captured.releaseYear,
+          imageURLs: captured.imageURLs,
+          bestSong,
+          worstSong,
+          runtime: captured.runtime,
+          reviewContent: REVIEW_CONTENT,
+          reviewScore: baseScore,
+          reviewBonuses: bonuses,
+          finalScore,
+          affectsArtistScore: scoreArtistIDs.length > 0,
+          artistSpotifyID: primaryArtist.spotifyID,
+          artistName: primaryArtist.name,
+          colors: captured.colors,
+          genres: review.genres,
+          albumArtists: captured.artists.map(artist => ({ spotifyID: artist.spotifyID, name: artist.name, imageURLs: artist.imageURLs })),
+        },
+        tx
+      )) as ReviewedAlbum;
+
+      // Genres, links and related strengths through the same code the app uses
+      const genreIDs: number[] = [];
+      for (const name of review.genres) {
+        genreIDs.push(await GenreService.findOrCreateGenre(name, tx));
+      }
+      await GenreModel.linkGenresToAlbum(captured.spotifyID, genreIDs, tx);
+      await GenreModel.incrementRelatedStrength(genreIDs, tx);
+
+      await AlbumModel.upsertAlbumArtists(
+        captured.spotifyID,
+        albumArtistIDs.map(artistSpotifyID => ({ artistSpotifyID, affectsScore: scoreArtistIDs.includes(artistSpotifyID) })),
+        tx
+      );
+
+      for (const track of ratedTracks) {
+        await TrackModel.createTrack(
+          {
+            albumSpotifyID: captured.spotifyID,
+            artistSpotifyID: primaryArtist.spotifyID,
+            artistName: primaryArtist.name,
+            name: track.name,
+            spotifyID: track.spotifyID,
+            duration: track.duration,
+            features: track.features,
+            rating: track.rating!,
+          },
+          tx
+        );
+        const trackArtistIDs = [track.artistSpotifyID, ...track.features.map(feature => feature.id)].filter(id => createdArtistIDs.has(id));
+        await TrackModel.linkArtistsToTrack(track.spotifyID, trackArtistIDs, tx);
+      }
+
+      // Remember each artist's albums for the aggregate pass
+      for (const artistID of albumArtistIDs) {
+        const rows = albumRowsByArtist.get(artistID) ?? [];
+        rows.push({ row: albumRow, contributes: scoreArtistIDs.includes(artistID) });
+        albumRowsByArtist.set(artistID, rows);
+      }
+
+      console.log(`Seed: reviewed ${captured.name} (final score ${finalScore})`);
+    }
+
+    // Aggregate pass, same maths as the app's artist refresh, unrated artists keep their zeros
+    for (const [artistID, links] of albumRowsByArtist) {
+      const contributing = links.filter(link => link.contributes).map(link => link.row);
+      if (contributing.length === 0) {
+        // Mirror the app's unrated branch, the linked reviews still count, the scores stay zero
+        await ArtistModel.updateArtist(artistID, { reviewCount: links.length }, tx);
+        continue;
+      }
+
+      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
+      await ArtistModel.updateArtist(
+        artistID,
+        {
+          averageScore: newAverageScore,
+          bonusPoints: newBonusPoints,
+          totalScore,
+          peakScore,
+          latestScore,
+          bonusReason: JSON.stringify(bonusReasons),
+          reviewCount: links.length,
+          unrated: false,
+        },
+        tx
+      );
+    }
+
+    await ArtistService.updateAllLeaderboardPositions(tx);
   });
 
-  for (const reviewedAlbum of reviewedAlbums) {
-    if (logging) console.log(`\x1b[34mSeed:\x1b[0m Creating review for album \x1b[33m${reviewedAlbum.album.name}\x1b[0m`);
-    try {
-      const response = await fetch(`http://localhost:4000/api/albums/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookie,
-        },
-        body: JSON.stringify(reviewedAlbum),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        if (logging) console.error(error);
-      } else {
-        if (logging) console.log(`\x1b[34mSeed:\x1b[0m \x1b[31mAn unknown error occurred.\x1b[0m`);
-      }
-    }
+  // Bookmarks sit outside the review graph
+  for (const spotifyID of BOOKMARKED_IDS) {
+    const captured = capturedAlbum(spotifyID);
+    await BookmarkedAlbumModel.bookmarkAlbum({
+      name: captured.name,
+      spotifyID: captured.spotifyID,
+      imageURLs: captured.imageURLs,
+      artistName: captured.artists[0].name,
+      artistSpotifyID: captured.artists[0].spotifyID,
+      releaseYear: captured.releaseYear,
+    });
+    console.log(`Seed: bookmarked ${captured.name}`);
   }
 
-  console.log(`\x1b[34mSeed:\x1b[0m \x1b[32mSeeding complete.\x1b[0m`);
+  console.log(`Seed: done. ${REVIEWED.length} reviewed albums, ${BOOKMARKED_IDS.length} bookmarks.`);
+  await closeDatabase();
 };
 
-// Disable this call when running tests
-seed(ALBUM_IDS, REVIEW, true);
+seed();
