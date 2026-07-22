@@ -9,7 +9,7 @@ const test = new Hono().delete("/reset", async c => {
     album_artists, track_artists, bookmarked_albums, album_genres
     RESTART IDENTITY CASCADE
   `);
-  return c.json({ success: true, message: "Test data reset" });
+  return c.json({ success: true, message: "Test data reset" }, 200);
 });
 
 export default test;

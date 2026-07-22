@@ -43,16 +43,16 @@ const bookmark = new Hono()
     for (const id of ids) {
       statusMap[id] = bookmarkedIds.includes(id);
     }
-    return c.json(statusMap);
+    return c.json(statusMap, 200);
   })
   .get("/all", async c => {
-    return c.json(await BookmarkedAlbumService.getAllAlbums());
+    return c.json(await BookmarkedAlbumService.getAllAlbums(), 200);
   })
   .get("/", validate("query", paginatedSchema), async c => {
-    return c.json(await BookmarkedAlbumService.getPaginatedAlbums(c.req.valid("query")));
+    return c.json(await BookmarkedAlbumService.getPaginatedAlbums(c.req.valid("query")), 200);
   })
   .get("/:albumID", async c => {
-    return c.json(await BookmarkedAlbumService.getAlbumByID(c.req.param("albumID")));
+    return c.json(await BookmarkedAlbumService.getAlbumByID(c.req.param("albumID")), 200);
   })
   .post("/:albumID/add", validate("json", bookmarkAlbumSchema), async c => {
     const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(c.req.valid("json"));

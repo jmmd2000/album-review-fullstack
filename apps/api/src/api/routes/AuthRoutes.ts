@@ -25,7 +25,7 @@ const auth = new Hono()
   })
   .get("/status", c => {
     const isAdmin = AuthService.verifyToken(getCookie(c, "token"));
-    return c.json({ isAdmin });
+    return c.json({ isAdmin }, 200);
   });
 
 export default auth;

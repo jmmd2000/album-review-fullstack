@@ -23,16 +23,16 @@ const idsSchema = z.object({
 const album = new Hono()
   .get("/all", async c => {
     const albums = await AlbumService.getAllAlbums(c.req.query("includeCounts") === "true");
-    return c.json(albums);
+    return c.json(albums, 200);
   })
   .get("/scores", validate("query", idsSchema), async c => {
     const { ids } = c.req.valid("query");
     const idList = ids.includes(",") ? ids.split(",").map(s => s.trim()) : [ids];
-    return c.json(await AlbumService.getReviewScoresByIds(idList));
+    return c.json(await AlbumService.getReviewScoresByIds(idList), 200);
   })
   .get("/:albumID", async c => {
     const data = await AlbumService.getAlbumByID(c.req.param("albumID"), c.req.query("includeGenres") !== "false");
-    return c.json(data);
+    return c.json(data, 200);
   })
   .get("/", validate("query", paginatedSchema), async c => {
     const { genres, ...opts } = c.req.valid("query");
@@ -42,7 +42,7 @@ const album = new Hono()
           .map(s => s.trim())
           .filter(Boolean)
       : undefined;
-    return c.json(await AlbumService.getPaginatedAlbums({ ...opts, genres: genreList }));
+    return c.json(await AlbumService.getPaginatedAlbums({ ...opts, genres: genreList }), 200);
   })
   .post("/create", requireAdmin, validate("json", reviewDataSchema), async c => {
     const reviewedAlbum = await AlbumService.createAlbumReview(c.req.valid("json"));
@@ -54,7 +54,7 @@ const album = new Hono()
   })
   .put("/:albumID/edit", requireAdmin, validate("json", reviewDataSchema), async c => {
     const updated = await AlbumService.updateAlbumReview(c.req.valid("json"), c.req.param("albumID"));
-    return c.json(updated);
+    return c.json(updated, 200);
   });
 
 export default album;

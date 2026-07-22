@@ -34,7 +34,7 @@ export const app = base
   .get("/api/health", async c => {
     try {
       await query("SELECT 1");
-      return c.json({ ok: true });
+      return c.json({ ok: true }, 200);
     } catch {
       return c.json({ ok: false }, 503);
     }

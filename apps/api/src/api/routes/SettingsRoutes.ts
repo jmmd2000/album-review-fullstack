@@ -17,27 +17,27 @@ const setSettingSchema = z.object({
 const settings = new Hono()
   .use(requireAdmin)
   .get("/last-runs", async c => {
-    return c.json(await SettingsService.getAllLastRuns());
+    return c.json(await SettingsService.getAllLastRuns(), 200);
   })
   .get("/last-runs/:type", validate("param", lastRunTypeSchema), async c => {
     const lastRun = await SettingsService.getLastRun(c.req.valid("param").type);
-    return c.json({ lastRun });
+    return c.json({ lastRun }, 200);
   })
   .get("/setting/:key", async c => {
     const key = c.req.param("key");
     const value = await SettingsService.get(key);
-    return c.json({ key, value });
+    return c.json({ key, value }, 200);
   })
   .put("/setting/:key", validate("json", setSettingSchema), async c => {
     const key = c.req.param("key");
     const { value } = c.req.valid("json");
     await SettingsService.set(key, value);
-    return c.json({ key, value, message: "Setting updated successfully" });
+    return c.json({ key, value, message: "Setting updated successfully" }, 200);
   })
   .post("/recalculate-scores", async c => {
     const result = await ArtistService.recalculateAllArtistScores();
     await SettingsService.setLastRun("scores");
-    return c.json(result);
+    return c.json(result, 200);
   });
 
 export default settings;

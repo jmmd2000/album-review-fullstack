@@ -9,16 +9,16 @@ const distributionSchema = z.object({
 
 const stats = new Hono()
   .get("/favourites", async c => {
-    return c.json(await StatsService.getFavourites());
+    return c.json(await StatsService.getFavourites(), 200);
   })
   .get("/genres", async c => {
-    return c.json(await StatsService.getGenreStats(c.req.query("slug")));
+    return c.json(await StatsService.getGenreStats(c.req.query("slug")), 200);
   })
   .get("/distribution", validate("query", distributionSchema), async c => {
-    return c.json(await StatsService.getRatingDistribution(c.req.valid("query").resource));
+    return c.json(await StatsService.getRatingDistribution(c.req.valid("query").resource), 200);
   })
   .get("/counts", async c => {
-    return c.json(await StatsService.getResourceCounts());
+    return c.json(await StatsService.getResourceCounts(), 200);
   });
 
 export default stats;
