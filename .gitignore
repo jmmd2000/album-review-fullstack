@@ -30,6 +30,7 @@ apps/web/cypress/screenshots/
 
 .env
 .env.prod
+.env.staging
 .drizzle
 .tanstack
 

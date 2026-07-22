@@ -38,9 +38,7 @@
     "hono": "^4.12.31",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",
-    "puppeteer": "^24.6.1",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "puppeteer-core": "^24.6.1",
     "slugify": "^1.6.9",
     "tsconfig-paths": "^4.2.0",
     "zod": "^4.4.3"

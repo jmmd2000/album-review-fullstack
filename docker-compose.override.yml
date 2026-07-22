@@ -23,6 +23,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      BROWSERLESS_URL: ws://browserless:3000
+      BROWSERLESS_TOKEN: ${BROWSERLESS_TOKEN:-dev-token}
     ports:
       - "4000:4000"
     command: pnpm run dev # use nodemon for live reload

@@ -1,9 +1,8 @@
-import type { Browser } from "puppeteer";
-import puppeteerExtra from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import puppeteer, { type Browser, type Page } from "puppeteer-core";
+import { env } from "@/config/env";
 
-// Global browser instance for reuse
-let globalBrowser: Browser | null = null;
+// Scrapes run through the browserless sidecar
+const browserWSEndpoint = `${env.BROWSERLESS_URL}?token=${env.BROWSERLESS_TOKEN}`;
 
 // Fake header URLs for testing
 const FAKE_HEADERS = [
@@ -25,45 +24,6 @@ function getFakeHeaderUrl(): string {
   return FAKE_HEADERS[Math.floor(Math.random() * FAKE_HEADERS.length)];
 }
 
-// Initialize browser once and reuse
-async function getBrowser(): Promise<Browser> {
-  if (!globalBrowser || !globalBrowser.connected) {
-    // puppeteer-extra with stealth plugin to avoid detection
-    puppeteerExtra.use(StealthPlugin());
-
-    globalBrowser = (await puppeteerExtra.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-zygote",
-        "--disable-extensions",
-        "--disable-background-timer-throttling",
-        "--disable-backgrounding-occluded-windows",
-        "--disable-renderer-backgrounding",
-        "--disable-web-security",
-        "--disable-features=VizDisplayCompositor",
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      ],
-    })) as Browser;
-
-    // Clean up on process exit
-    process.on("exit", () => closeBrowser());
-    process.on("SIGTERM", () => closeBrowser());
-    process.on("SIGINT", () => closeBrowser());
-  }
-  return globalBrowser;
-}
-
-async function closeBrowser(): Promise<void> {
-  if (globalBrowser) {
-    await globalBrowser.close();
-    globalBrowser = null;
-  }
-}
-
 // Single artist fetch (for backward compat)
 export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake: boolean = false): Promise<string | null> {
   const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
@@ -80,6 +40,14 @@ export async function fetchArtistHeadersFromSpotify(
   const results: Record<string, string | null> = {};
   let completed = 0;
 
+  const markDone = (spotifyArtistID: string, bannerUrl: string | null) => {
+    results[spotifyArtistID] = bannerUrl;
+    completed++;
+    if (onProgress) {
+      onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
+    }
+  };
+
   // -- fake mode for testing
   if (fake) {
     // Process in chunks to simulate real batching behavior
@@ -95,12 +63,7 @@ export async function fetchArtistHeadersFromSpotify(
 
         // simulate real conditions with some failures
         const success = Math.random() > 0.1;
-        results[spotifyArtistID] = success ? getFakeHeaderUrl() : null;
-
-        completed++;
-        if (onProgress) {
-          onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
-        }
+        markDone(spotifyArtistID, success ? getFakeHeaderUrl() : null);
       });
 
       await Promise.all(promises);
@@ -111,24 +74,35 @@ export async function fetchArtistHeadersFromSpotify(
   // -- /fake mode for testing
 
   // Real implementation
-  const browser = await getBrowser();
-
-  // Process in batches to avoid overwhelming the browser
   const chunks = [];
   for (let i = 0; i < spotifyArtistIDs.length; i += concurrency) {
     chunks.push(spotifyArtistIDs.slice(i, i + concurrency));
   }
 
   for (const chunk of chunks) {
+    // One browserless session per chunk, shared by its pages
+    let browser: Browser;
+    try {
+      browser = await puppeteer.connect({ browserWSEndpoint });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Failed to open a browserless session:", errorMessage);
+      for (const spotifyArtistID of chunk) {
+        markDone(spotifyArtistID, null);
+      }
+      continue;
+    }
+
     const promises = chunk.map(async spotifyArtistID => {
-      const page = await browser.newPage();
+      let page: Page | null = null;
 
       try {
+        page = await browser.newPage();
+
         // Set longer timeouts
         page.setDefaultTimeout(20000);
         page.setDefaultNavigationTimeout(20000);
 
-        // Set viewport to mimic real browser
         await page.setViewport({ width: 1920, height: 1080 });
 
         // Block unnecessary resources but allow images (needed for background)
@@ -145,9 +119,8 @@ export async function fetchArtistHeadersFromSpotify(
           }
         });
 
-        // Navigate to the artist page
         await page.goto(`https://open.spotify.com/artist/${spotifyArtistID}`, {
-          waitUntil: "networkidle2", // Wait for network to be idle
+          waitUntil: "domcontentloaded",
         });
 
         // Wait for the page to load and try multiple selectors
@@ -213,43 +186,33 @@ export async function fetchArtistHeadersFromSpotify(
           });
         }
 
-        results[spotifyArtistID] = bannerUrl;
-
-        // Emit progress after each completion
-        completed++;
-        if (onProgress) {
-          onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
-        }
+        markDone(spotifyArtistID, bannerUrl);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error(`Failed to fetch header for ${spotifyArtistID}:`, errorMessage);
 
         // Log additional debugging info
         try {
-          const url = await page.url();
-          const title = await page.title();
+          const url = page ? await page.url() : "(no page)";
+          const title = page ? await page.title() : "(no page)";
           console.error(`Page URL: ${url}, Title: ${title}`);
         } catch {
           console.error("Could not get page info for debugging");
         }
 
-        results[spotifyArtistID] = null;
-
-        // Still count as completed for progress
-        completed++;
-        if (onProgress) {
-          onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
-        }
+        markDone(spotifyArtistID, null);
       } finally {
-        await page.close();
+        // The page may already be gone if the sidecar cuts off
+        if (page) await page.close().catch(() => {});
       }
     });
 
     // Wait for current batch to complete before starting next
     await Promise.all(promises);
+
+    // Ends this chunks browserless session
+    await browser.close().catch(() => {});
   }
 
   return results;
 }
-
-export { closeBrowser };

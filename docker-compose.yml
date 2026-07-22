@@ -53,6 +53,8 @@ services:
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
       JWT_SECRET: ${JWT_SECRET}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN}
+      BROWSERLESS_URL: ws://browserless:3000
+      BROWSERLESS_TOKEN: ${BROWSERLESS_TOKEN}
       NODE_ENV: production
     depends_on:
       db:

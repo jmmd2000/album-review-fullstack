@@ -24,4 +24,7 @@ export const env = {
   SPOTIFY_CLIENT_SECRET: requireEnv("SPOTIFY_CLIENT_SECRET"),
   // comma-separated production/staging origins, injected per environment.
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+  // Browserless sidecar for the header scraper.
+  BROWSERLESS_URL: process.env.BROWSERLESS_URL ?? "ws://localhost:3000",
+  BROWSERLESS_TOKEN: process.env.BROWSERLESS_TOKEN ?? "dev-token",
 };
