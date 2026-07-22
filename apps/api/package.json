@@ -6,6 +6,7 @@
     "start": "node dist/index.js",
     "dev": "nodemon --watch src --legacy-watch --exec tsx src/index.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
     "test:album": "jest album.test.ts --detectOpenHandles",
     "test:artist": "jest artist.test.ts --detectOpenHandles",
