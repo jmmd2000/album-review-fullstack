@@ -1,6 +1,6 @@
 # Frontend Dockerfile for development
 
-FROM node:latest
+FROM node:22
 
 RUN corepack enable
 

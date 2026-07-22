@@ -29,29 +29,26 @@ RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
 # Stage 2: Production stage
 FROM node:22-alpine AS production
 
-RUN apk add --no-cache chromium
-
 WORKDIR /app
 
 # Copy workspace files and package files
 COPY --from=build /deploy/node_modules ./node_modules
 
-# Copy the compiled app from build
+# Copy the compiled app from build. Path aliases are already rewritten to
+# relative requires by tsc-alias, so nothing resolves them at runtime
 COPY --from=build /app/apps/api/dist ./dist
-COPY --from=build /app/apps/api/tsconfig.json ./dist/apps/api/tsconfig.json
-COPY --from=build /app/packages/shared ./packages/shared
 
 # Ship the drizzle migration files so drizzle-kit migrate can run at deploy time
 COPY --from=build /app/apps/api/drizzle ./drizzle
 
 # Set environment
 ENV NODE_ENV=production
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV DRIZZLE_CONFIG_PATH=/app/dist/apps/api/drizzle.config.js
-ENV TS_NODE_PROJECT=./dist/apps/api/tsconfig.json
+ENV DRIZZLE_CONFIG_PATH=/app/dist/drizzle.config.js
+
+# The app only reads its own files, which stay root-owned, the process runs unprivileged
+USER node
 
 # Expose port
 EXPOSE 4000
 
-CMD ["node", "-r", "tsconfig-paths/register", "dist/apps/api/src/index.js"]
+CMD ["node", "dist/index.js"]
