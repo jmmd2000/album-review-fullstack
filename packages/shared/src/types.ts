@@ -1,4 +1,11 @@
 /**
+ * Recursively maps a server-side type to its JSON shape: Dates
+ * become strings, everything else is walked through. Use it on the frontend
+ * wherever API response data flows into a typed shape.
+ */
+export type Jsonified<T> = T extends Date ? string : T extends (infer U)[] ? Jsonified<U>[] : T extends object ? { [K in keyof T]: Jsonified<T[K]> } : T;
+
+/**
  * Represents a Spotify album search response.
  */
 export interface SpotifySearchResponse {

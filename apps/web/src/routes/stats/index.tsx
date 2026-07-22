@@ -4,56 +4,29 @@ import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { queryClient } from "@/main";
-import type { Genre, DisplayAlbum, DisplayArtist, GetStatsOptions } from "@shared/types";
+import type { GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Music, Users, Disc, Headphones } from "lucide-react";
 import DistributionChart from "@/components/stats/DistributionChart";
 import { Dropdown } from "@/components/ui/Dropdown";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
-async function fetchOverview(): Promise<{
-  leastFavouriteGenre: Genre | null;
-  favouriteGenre: Genre | null;
-  leastFavouriteAlbum: DisplayAlbum | null;
-  favouriteAlbum: DisplayAlbum | null;
-  leastFavouriteArtist: DisplayArtist | null;
-  favouriteArtist: DisplayArtist | null;
-}> {
-  return api.get("/api/stats/favourites");
+async function fetchOverview() {
+  return handle(client.api.stats.favourites.$get());
 }
 
-async function fetchGenreStats(slug: string): Promise<{
-  reviewedAlbumCount: number | null;
-  averageScore: number | null;
-  relatedGenres: Genre[] | null;
-  albums: {
-    highestRated: DisplayAlbum;
-    lowestRated: DisplayAlbum;
-  } | null;
-  name: string | null;
-  slug: string | null;
-  allGenres: Genre[];
-}> {
-  const queryParams = new URLSearchParams();
-  if (slug) queryParams.set("slug", slug);
-  return api.get(`/api/stats/genres?${queryParams.toString()}`);
+async function fetchGenreStats(slug: string) {
+  return handle(client.api.stats.genres.$get({ query: { slug } }));
 }
 
-async function fetchRatingDistribution(resource: "albums" | "tracks" | "artists"): Promise<{ rating: string; count: number }[]> {
-  const queryParams = new URLSearchParams();
-  if (resource) queryParams.set("resource", resource);
-  return api.get(`/api/stats/distribution?${queryParams.toString()}`);
+async function fetchRatingDistribution(resource: "albums" | "tracks" | "artists") {
+  return handle(client.api.stats.distribution.$get({ query: { resource } }));
 }
 
-async function fetchResourceCounts(): Promise<{
-  albumCount: number;
-  artistCount: number;
-  genreCount: number;
-  trackCount: number;
-}> {
-  return api.get("/api/stats/counts");
+async function fetchResourceCounts() {
+  return handle(client.api.stats.counts.$get());
 }
 
 const overviewQueryOptions = queryOptions({

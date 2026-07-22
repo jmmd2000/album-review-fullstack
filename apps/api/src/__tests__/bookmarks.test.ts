@@ -1,8 +1,8 @@
-import request from "supertest";
-import { app } from "../index";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect } from "@jest/globals";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
 const mockAlbum = {
   spotifyID: "1",
@@ -15,14 +15,7 @@ const mockAlbum = {
   affectsArtistScore: false,
 };
 
-let authCookie: string[];
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
+const authCookie = adminCookie();
 
 beforeEach(async () => {
   await resetTables(query);
@@ -33,30 +26,29 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
 test("bookmark album and fetch", async () => {
-  const add = await request(app).post("/api/bookmarks/1/add").set("Cookie", authCookie).send(mockAlbum);
+  const add = await api.post("/api/bookmarks/1/add", mockAlbum, authCookie);
   expect(add.status).toBe(201);
 
-  const fetched = await request(app).get("/api/bookmarks/1").set("Cookie", authCookie);
+  const fetched = await api.get("/api/bookmarks/1", authCookie);
   expect(fetched.status).toBe(200);
-  expect(fetched.body).toHaveProperty("spotifyID", "1");
+  expect(await fetched.json()).toHaveProperty("spotifyID", "1");
 });
 
 test("bookmark statuses", async () => {
-  await request(app).post("/api/bookmarks/1/add").set("Cookie", authCookie).send(mockAlbum);
+  await api.post("/api/bookmarks/1/add", mockAlbum, authCookie);
 
-  const statusRes = await request(app).get("/api/bookmarks/status?ids=1,2").set("Cookie", authCookie);
+  const statusRes = await api.get("/api/bookmarks/status?ids=1,2", authCookie);
   expect(statusRes.status).toBe(200);
-  expect(statusRes.body).toEqual({ "1": true, "2": false });
+  expect(await statusRes.json()).toEqual({ "1": true, "2": false });
 });
 
 test("remove bookmarked album", async () => {
-  await request(app).post("/api/bookmarks/1/add").set("Cookie", authCookie).send(mockAlbum);
+  await api.post("/api/bookmarks/1/add", mockAlbum, authCookie);
 
-  const del = await request(app).delete("/api/bookmarks/1/remove").set("Cookie", authCookie);
+  const del = await api.delete("/api/bookmarks/1/remove", authCookie);
   expect(del.status).toBe(204);
 });

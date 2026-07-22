@@ -1,4 +1,3 @@
-import type { DisplayTrack, Genre, ReviewedAlbum, ReviewedArtist } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
@@ -10,22 +9,10 @@ import ReviewDetails from "@components/album/ReviewDetails";
 import GenrePills from "@/components/ui/GenrePills";
 import HeaderDetails from "@/components/layout/HeaderDetails";
 import { useEffect } from "react";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
-async function fetchAlbumReview(albumSpotifyID: string): Promise<{
-  album: ReviewedAlbum;
-  artists: ReviewedArtist[];
-  tracks: DisplayTrack[];
-  allGenres: Genre[];
-  albumGenres: Genre[];
-}> {
-  return api.get<{
-    album: ReviewedAlbum;
-    artists: ReviewedArtist[];
-    tracks: DisplayTrack[];
-    allGenres: Genre[];
-    albumGenres: Genre[];
-  }>(`/api/albums/${albumSpotifyID}?includeGenres=true`);
+async function fetchAlbumReview(albumSpotifyID: string) {
+  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
 }
 
 const reviewQueryOptions = (albumID: string) =>
@@ -83,7 +70,7 @@ function RouteComponent() {
             imageURLs: artist.imageURLs,
           }))}
         />
-        <div className="3xl:mt-8 pb-10">{album.genres && <GenrePills genres={albumGenres} />}</div>
+        <div className="3xl:mt-8 pb-10">{album.genres && <GenrePills genres={albumGenres ?? []} />}</div>
       </BlurryHeader>
       <ReviewDetails album={album} tracks={tracks} />
       <TrackList tracks={tracks} />

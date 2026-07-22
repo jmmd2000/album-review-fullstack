@@ -1,17 +1,38 @@
 import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Mock } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useAlbumStatus } from "../useAlbumStatus";
-import { api } from "@/lib/api";
+import { client } from "@/lib/client";
 import type { DisplayAlbum } from "@shared/types";
 
-vi.mock("@/lib/api", () => ({
-  api: {
-    get: vi.fn(),
-  },
-}));
+// Replace the RPC client's two status endpoints with mocks, but keep the real
+// handle() so the response-unwrapping path is exercised for real.
+vi.mock("@/lib/client", async importActual => {
+  const actual = await importActual<typeof import("@/lib/client")>();
+  return {
+    ...actual,
+    client: {
+      api: {
+        bookmarks: { status: { $get: vi.fn() } },
+        albums: { scores: { $get: vi.fn() } },
+      },
+    },
+  };
+});
+
+// Minimal stand-in for the hono ClientResponse that handle() reads.
+const jsonResponse = (data: unknown, ok = true, status = 200) => ({
+  ok,
+  status,
+  statusText: ok ? "OK" : "Error",
+  json: async () => data,
+});
+
+const bookmarksGet = client.api.bookmarks.status.$get as unknown as Mock;
+const scoresGet = client.api.albums.scores.$get as unknown as Mock;
 
 const mockAlbums: DisplayAlbum[] = [
   {
@@ -53,12 +74,13 @@ describe("useAlbumStatus", () => {
   const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
   it("merges bookmark and score data into albums", async () => {
-    vi.mocked(api.get)
-      .mockResolvedValueOnce({ "album-1": true, "album-2": false })
-      .mockResolvedValueOnce([
+    bookmarksGet.mockResolvedValue(jsonResponse({ "album-1": true, "album-2": false }));
+    scoresGet.mockResolvedValue(
+      jsonResponse([
         { spotifyID: "album-1", reviewScore: 85 },
         { spotifyID: "album-2", reviewScore: 72 },
-      ]);
+      ])
+    );
 
     const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
 
@@ -73,7 +95,8 @@ describe("useAlbumStatus", () => {
   });
 
   it("keeps the album's existing finalScore when API has no score for it", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({}).mockResolvedValueOnce([]);
+    bookmarksGet.mockResolvedValue(jsonResponse({}));
+    scoresGet.mockResolvedValue(jsonResponse([]));
 
     const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
 
@@ -89,7 +112,8 @@ describe("useAlbumStatus", () => {
 
   it("is loading while queries are in flight", () => {
     // Never resolve — stay pending
-    vi.mocked(api.get).mockReturnValue(new Promise(() => {}));
+    bookmarksGet.mockReturnValue(new Promise(() => {}));
+    scoresGet.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
 
@@ -97,18 +121,20 @@ describe("useAlbumStatus", () => {
   });
 
   it("queries the correct endpoints with the right id formats", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({}).mockResolvedValueOnce([]);
+    bookmarksGet.mockResolvedValue(jsonResponse({}));
+    scoresGet.mockResolvedValue(jsonResponse([]));
 
     renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith("/api/albums/scores?ids=album-1,album-2");
+      expect(scoresGet).toHaveBeenCalledWith({ query: { ids: "album-1,album-2" } });
     });
-    expect(api.get).toHaveBeenCalledWith("/api/bookmarks/status?ids=album-1&ids=album-2");
+    expect(bookmarksGet).toHaveBeenCalledWith({ query: { ids: ["album-1", "album-2"] } });
   });
 
   it("surfaces isError when a query fails instead of hiding it", async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({}).mockRejectedValueOnce(new Error("boom"));
+    bookmarksGet.mockResolvedValue(jsonResponse({}));
+    scoresGet.mockRejectedValue(new Error("boom"));
 
     const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
 

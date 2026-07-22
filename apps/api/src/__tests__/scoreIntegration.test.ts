@@ -1,9 +1,9 @@
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
-import request from "supertest";
-import { app } from "../index";
+import { beforeEach, afterEach, afterAll, test, expect, jest, describe } from "@jest/globals";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
 // Mock Puppeteer header fetcher to avoid launch errors
 jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
@@ -27,14 +27,7 @@ jest.mock("../helpers/fetchArtistFromSpotify", () => ({
   ),
 }));
 
-let authCookie: string[];
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
+const authCookie = adminCookie();
 
 beforeEach(async () => {
   await resetTables(query);
@@ -45,7 +38,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
@@ -59,7 +51,7 @@ describe("Score Integration Tests", () => {
       rating: 8,
     }));
 
-    const response = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(albumData);
+    const response = await api.post("/api/albums/create", albumData, authCookie);
 
     expect(response.status).toBe(201);
 
@@ -85,7 +77,7 @@ describe("Score Integration Tests", () => {
       rating: 6,
     }));
 
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(albumData);
+    await api.post("/api/albums/create", albumData, authCookie);
 
     // Update album with higher ratings
     const updateData = { ...albumData };
@@ -94,7 +86,7 @@ describe("Score Integration Tests", () => {
       rating: 9,
     }));
 
-    await request(app).put(`/api/albums/${albumData.album.id}`).set("Cookie", authCookie).send(updateData);
+    await api.put(`/api/albums/${albumData.album.id}`, updateData, authCookie);
 
     // Check that all scores were updated
     const result = await query("SELECT * FROM reviewed_artists WHERE spotify_id = $1", [albumData.album.artists[0].id]);
@@ -199,10 +191,10 @@ describe("Score Integration Tests", () => {
     }));
 
     // Create all albums
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album2Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album3Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(album4Data);
+    await api.post("/api/albums/create", album1Data, authCookie);
+    await api.post("/api/albums/create", album2Data, authCookie);
+    await api.post("/api/albums/create", album3Data, authCookie);
+    await api.post("/api/albums/create", album4Data, authCookie);
 
     // Check that scores are different
     const result = await query("SELECT * FROM reviewed_artists WHERE spotify_id = $1", [album1Data.album.artists[0].id]);
@@ -257,8 +249,8 @@ describe("Score Integration Tests", () => {
     }));
 
     // Create both artists
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist1Data);
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(artist2Data);
+    await api.post("/api/albums/create", artist1Data, authCookie);
+    await api.post("/api/albums/create", artist2Data, authCookie);
 
     // Check initial positions
     let result = await query("SELECT * FROM reviewed_artists ORDER BY total_score DESC");
@@ -287,7 +279,7 @@ describe("Score Integration Tests", () => {
       id: `unique_track_4b_new_${index}`,
     }));
 
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(newAlbumData);
+    await api.post("/api/albums/create", newAlbumData, authCookie);
 
     // Check that positions were updated
     result = await query("SELECT * FROM reviewed_artists ORDER BY total_score DESC");
@@ -310,20 +302,20 @@ describe("Score Integration Tests", () => {
       rating: 8,
     }));
 
-    await request(app).post("/api/albums/create").set("Cookie", authCookie).send(albumData);
+    await api.post("/api/albums/create", albumData, authCookie);
 
     // Test different score type parameters
-    const overallResponse = await request(app).get("/api/artists?orderBy=totalScore&order=desc&scoreType=overall");
-    const peakResponse = await request(app).get("/api/artists?orderBy=totalScore&order=desc&scoreType=peak");
-    const latestResponse = await request(app).get("/api/artists?orderBy=totalScore&order=desc&scoreType=latest");
+    const overallResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=overall");
+    const peakResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=peak");
+    const latestResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=latest");
 
     expect(overallResponse.status).toBe(200);
     expect(peakResponse.status).toBe(200);
     expect(latestResponse.status).toBe(200);
 
     // All should return the same artist (since it's the only one)
-    expect(overallResponse.body.artists).toHaveLength(1);
-    expect(peakResponse.body.artists).toHaveLength(1);
-    expect(latestResponse.body.artists).toHaveLength(1);
+    expect((await overallResponse.json()).artists).toHaveLength(1);
+    expect((await peakResponse.json()).artists).toHaveLength(1);
+    expect((await latestResponse.json()).artists).toHaveLength(1);
   });
 });

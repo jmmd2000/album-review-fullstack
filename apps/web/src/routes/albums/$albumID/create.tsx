@@ -2,7 +2,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { useEffect, useState } from "react";
-import type { DisplayAlbum, ExtractedColor, Genre, SpotifyAlbum, AlbumArtist } from "@shared/types";
+import type { DisplayAlbum, ExtractedColor } from "@shared/types";
 import ErrorComponent from "@components/ui/ErrorComponent";
 import BlurryHeader from "@components/layout/BlurryHeader";
 import AlbumReviewForm from "@components/form/AlbumReviewForm";
@@ -10,7 +10,7 @@ import HeaderDetails from "@/components/layout/HeaderDetails";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import AlbumDetails from "@/components/album/AlbumDetails";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
 //# --------------------------------------------------------------------------------------------- #
 //# The usual structure for a route would be like:
@@ -38,16 +38,8 @@ import { api } from "@/lib/api";
 //# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
 //# --------------------------------------------------------------------------------------------- #
 
-async function fetchAlbumFromSpotify(albumSpotifyID: string): Promise<{
-  album: SpotifyAlbum;
-  artists: AlbumArtist[];
-  genres: Genre[];
-}> {
-  return api.get<{
-    album: SpotifyAlbum;
-    artists: AlbumArtist[];
-    genres: Genre[];
-  }>(`/api/spotify/albums/${albumSpotifyID}`);
+async function fetchAlbumFromSpotify(albumSpotifyID: string) {
+  return handle(client.api.spotify.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
 }
 
 const albumQueryOptions = (albumSpotifyID: string) =>
@@ -122,7 +114,7 @@ function RouteComponent() {
           {data.artists && data.artists.length > 0 && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artists={data.artists} />}
         </BlurryHeader>
 
-        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres} />
+        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres ?? []} />
       </RequireAdmin>
     </>
   );

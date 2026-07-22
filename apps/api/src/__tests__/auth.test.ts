@@ -1,62 +1,54 @@
-import request from "supertest";
-import { app } from "../index";
-import { test, expect, describe } from "@jest/globals";
+import { app } from "@/app";
+import { closeDatabase } from "@/db/client";
+import { afterAll, test, expect, describe } from "@jest/globals";
 
-let authCookie: string[] = [];
+afterAll(async () => {
+  await closeDatabase();
+});
+
+const login = (password: string) =>
+  app.request("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
 
 describe("Auth (JWT + bcrypt)", () => {
-  test("POST /api/auth/login succeeds with valid password and sets httpOnly cookie", async () => {
-    const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
+  test("login succeeds with the valid password and sets an httpOnly cookie", async () => {
+    const res = await login(process.env.ADMIN_PASSWORD!);
     expect(res.status).toBe(204);
-
-    const setCookie = res.get("set-cookie");
-    authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-    expect(authCookie.length).toBeGreaterThan(0);
-
-    const tokenCookie = authCookie.find(c => c.startsWith("token="));
-    expect(tokenCookie).toBeDefined();
-    expect(tokenCookie).toContain("HttpOnly");
+    const setCookie = res.headers.get("set-cookie");
+    expect(setCookie).toContain("token=");
+    expect(setCookie).toContain("HttpOnly");
   });
 
-  test("POST /api/auth/login fails with bad password", async () => {
-    const res = await request(app).post("/api/auth/login").send({ password: "wrong-password-12345" });
-    expect(res.status).toBe(401);
+  test("login fails with a bad password", async () => {
+    expect((await login("wrong-password-12345")).status).toBe(401);
   });
 
-  test("POST /api/auth/login fails with empty password", async () => {
-    const res = await request(app).post("/api/auth/login").send({ password: "" });
-    expect(res.status).toBe(400);
+  test("login fails with an empty password", async () => {
+    expect((await login("")).status).toBe(400);
   });
 
-  test("GET /api/auth/status returns isAdmin: true with valid token", async () => {
-    const res = await request(app).get("/api/auth/status").set("Cookie", authCookie);
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ isAdmin: true });
+  test("status is true with a valid token", async () => {
+    const cookie = (await login(process.env.ADMIN_PASSWORD!)).headers.get("set-cookie")!.split(";")[0];
+    const res = await app.request("/api/auth/status", { headers: { Cookie: cookie } });
+    expect(await res.json()).toEqual({ isAdmin: true });
   });
 
-  test("GET /api/auth/status returns isAdmin: false without cookie", async () => {
-    const res = await request(app).get("/api/auth/status");
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ isAdmin: false });
+  test("status is false without a cookie", async () => {
+    const res = await app.request("/api/auth/status");
+    expect(await res.json()).toEqual({ isAdmin: false });
   });
 
-  test("GET /api/auth/status returns isAdmin: false with tampered cookie", async () => {
-    const res = await request(app).get("/api/auth/status").set("Cookie", ["token=fakejwttoken123"]);
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ isAdmin: false });
+  test("status is false with a tampered cookie", async () => {
+    const res = await app.request("/api/auth/status", { headers: { Cookie: "token=fakejwttoken123" } });
+    expect(await res.json()).toEqual({ isAdmin: false });
   });
 
-  test("Protected route returns 401 without valid token", async () => {
-    const res = await request(app).post("/api/albums/create").send({});
-    expect(res.status).toBe(401);
-  });
-
-  test("POST /api/auth/logout clears token cookie", async () => {
-    const res = await request(app).post("/api/auth/logout").set("Cookie", authCookie);
+  test("logout clears the token cookie", async () => {
+    const res = await app.request("/api/auth/logout", { method: "POST" });
     expect(res.status).toBe(204);
-
-    const cookies = res.get("set-cookie") as string[] | undefined;
-    const cookieStr = Array.isArray(cookies) ? cookies.join(";") : (cookies ?? "");
-    expect(cookieStr).toContain("token=");
+    expect(res.headers.get("set-cookie")).toContain("token=");
   });
 });

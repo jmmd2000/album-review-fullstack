@@ -1,24 +1,17 @@
-import request from "supertest";
-import { app } from "../index";
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import type { DisplayTrack } from "@shared/types";
-import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
 // Mock Puppeteer header fetcher to avoid launch errors
 jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
   fetchArtistHeaderFromSpotify: jest.fn(() => Promise.resolve(null)),
 }));
 
-let authCookie: string[];
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
-});
+const authCookie = adminCookie();
 
 beforeEach(async () => {
   await resetTables(query);
@@ -29,29 +22,28 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
 test("GET /api/tracks/:albumID - should return album tracks", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  await api.post("/api/albums/create", mockReviewData, authCookie);
 
-  const response = await request(app).get("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
-
+  const response = await api.get("/api/tracks/0JGOiO34nwfUdDrD612dOp", authCookie);
   expect(response.status).toBe(200);
-  const tracks: DisplayTrack[] = response.body;
+
+  const tracks: DisplayTrack[] = await response.json();
   expect(Array.isArray(tracks)).toBe(true);
   expect(tracks[0]).toHaveProperty("spotifyID");
   expect(tracks[0]).toHaveProperty("name");
 });
 
 test("DELETE /api/tracks/:albumID - should delete album tracks", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  await api.post("/api/albums/create", mockReviewData, authCookie);
 
-  const delRes = await request(app).delete("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
+  const delRes = await api.delete("/api/tracks/0JGOiO34nwfUdDrD612dOp", authCookie);
   expect(delRes.status).toBe(204);
 
-  const response = await request(app).get("/api/tracks/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
-  const tracks: DisplayTrack[] = response.body;
+  const response = await api.get("/api/tracks/0JGOiO34nwfUdDrD612dOp", authCookie);
+  const tracks: DisplayTrack[] = await response.json();
   expect(tracks.length).toBe(0);
 });

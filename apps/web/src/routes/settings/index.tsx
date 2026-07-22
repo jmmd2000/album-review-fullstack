@@ -4,15 +4,14 @@ import { queryClient } from "@/main";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Camera, ImageIcon, RefreshCw, ArrowRightLeft } from "lucide-react";
-import { useSocket } from "@/hooks/useSocket";
 import { useJobProgress } from "@/hooks/useJobProgress";
 import SettingsCard from "@/components/settings/SettingsCard";
 import { timeAgo } from "@shared/helpers/formatDate";
-import { api } from "@/lib/api";
-import { useCallback } from "react";
+import type { InferResponseType } from "hono/client";
+import { client, handle } from "@/lib/client";
 
-async function fetchLastRunDetails(): Promise<Record<string, Date | null>> {
-  return api.get("/api/settings/last-runs");
+async function fetchLastRunDetails() {
+  return handle(client.api.settings["last-runs"].$get());
 }
 
 const settingsQueryOptions = () =>
@@ -31,38 +30,16 @@ export const Route = createFileRoute("/settings/")({
   component: RouteComponent,
 });
 
-type RecalcResult = {
-  updatedCount: number;
-  totalProcessed: number;
-  changedArtists: {
-    spotifyID: string;
-    name: string;
-    changes: {
-      field: "totalScore" | "peakScore" | "latestScore" | "averageScore" | "bonusPoints" | "reviewCount" | "unrated" | "leaderboardPosition" | "peakLeaderboardPosition" | "latestLeaderboardPosition";
-      before: number | null;
-      after: number | null;
-    }[];
-  }[];
-};
+type RecalcResult = InferResponseType<(typeof client.api.settings)["recalculate-scores"]["$post"]>;
 
 function RouteComponent() {
-  const socket = useSocket();
   const { data: lastRuns } = useSuspenseQuery(settingsQueryOptions());
 
-  const imageTrigger = useCallback(async () => {
-    await api.post("/api/artists/profileImage?all=true");
-  }, []);
-  const headerTrigger = useCallback(async () => {
-    await api.post("/api/artists/headerImage?all=true");
-  }, []);
-
-  const images = useJobProgress({ socket, job: "images", triggerFn: imageTrigger });
-  const headers = useJobProgress({ socket, job: "headers", triggerFn: headerTrigger });
+  const images = useJobProgress({ job: "artist-images" });
+  const headers = useJobProgress({ job: "artist-headers" });
 
   const recalcScoresMut = useMutation<RecalcResult, Error, void>({
-    mutationFn: async () => {
-      return api.post<RecalcResult>("/api/settings/recalculate-scores");
-    },
+    mutationFn: () => handle(client.api.settings["recalculate-scores"].$post()),
   });
 
   const containerVariants = {

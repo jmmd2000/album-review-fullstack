@@ -1,12 +1,12 @@
-import type { Genre } from "@shared/types";
+import type { Genre, Jsonified } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 
 /**
  * The props for the GenrePills component.
  */
 interface GenrePillsProps {
-  /** The genres to display */
-  genres: Genre[];
+  /** The genres to display (as they arrive from the API). */
+  genres: Jsonified<Genre>[];
 }
 
 /**

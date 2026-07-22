@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
@@ -20,17 +21,18 @@
     "@tanstack/react-router": "^1.170.18",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.42.2",
+    "hono": "^4.12.31",
     "lucide-react": "^0.476.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.82.0",
     "react-responsive": "^10.0.1",
     "recharts": "^3.9.2",
-    "socket.io-client": "^4.8.1",
     "sonner": "^2.0.3",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@album-reviews/api": "workspace:*",
     "@tanstack/router-devtools": "^1.167.0",
     "@tanstack/router-plugin": "^1.168.23",
     "@testing-library/jest-dom": "^6.9.1",

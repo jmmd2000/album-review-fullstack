@@ -3,32 +3,26 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
 import { queryClient } from "@/main";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 import CardGrid from "@components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
-import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
+import type { GetPaginatedArtistsOptions } from "@shared/types";
 import { PAGE_SIZE } from "@shared/constants";
 
-async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions): Promise<{
-  artists: DisplayArtist[];
-  furtherPages: boolean;
-  totalCount: number;
-}> {
-  const queryParams = new URLSearchParams();
-
-  if (options.page) queryParams.set("page", String(options.page));
-  if (options.order) queryParams.set("order", options.order);
-  if (options.orderBy) queryParams.set("orderBy", options.orderBy);
-  if (options.search) queryParams.set("search", options.search);
-  if (options.scoreType) queryParams.set("scoreType", options.scoreType);
-
-  return api.get<{
-    artists: DisplayArtist[];
-    furtherPages: boolean;
-    totalCount: number;
-  }>(`/api/artists?${queryParams.toString()}`);
+async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
+  return handle(
+    client.api.artists.$get({
+      query: {
+        ...(options.page ? { page: String(options.page) } : {}),
+        ...(options.order ? { order: options.order } : {}),
+        ...(options.orderBy ? { orderBy: options.orderBy } : {}),
+        ...(options.search ? { search: options.search } : {}),
+        ...(options.scoreType ? { scoreType: options.scoreType } : {}),
+      },
+    })
+  );
 }
 
 const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>

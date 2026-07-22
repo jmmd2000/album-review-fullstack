@@ -1,21 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DisplayAlbum } from "@shared/types";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
 export function useAlbumStatus(albums: DisplayAlbum[]) {
   const ids = albums.map(a => a.spotifyID);
-  const qs = new URLSearchParams(ids.map(id => Array.from(["ids", id]))).toString();
 
   // Bookmark‐status query
   const {
     data: bookmarkData = {},
     isLoading: isLoadingBookmarks,
     isError: isBookmarksError,
-  } = useQuery<Record<string, boolean>, Error>({
+  } = useQuery({
     queryKey: ["bookmarks", ids],
-    queryFn: async () => {
-      return api.get<Record<string, boolean>>(`/api/bookmarks/status?${qs}`);
-    },
+    queryFn: () => handle(client.api.bookmarks.status.$get({ query: { ids } })),
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: "always",
@@ -26,11 +23,9 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
     data: scoreArray = [],
     isLoading: isLoadingScores,
     isError: isScoresError,
-  } = useQuery<Array<{ spotifyID: string; reviewScore: number }>, Error>({
+  } = useQuery({
     queryKey: ["albums", "scores", ids],
-    queryFn: async () => {
-      return api.get<Array<{ spotifyID: string; reviewScore: number }>>(`/api/albums/scores?ids=${ids.join(",")}`);
-    },
+    queryFn: () => handle(client.api.albums.scores.$get({ query: { ids: ids.join(",") } })),
     // scores rarely change so no need to auto refetch
     staleTime: Infinity,
   });

@@ -1,30 +1,17 @@
-import request from "supertest";
-import { app } from "../index";
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData, mockUpdateData } from "./constants";
 import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from "@shared/types";
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, jest } from "@jest/globals";
 import { resetTables } from "./testUtils";
 import { ArtistModel } from "../api/models/Artist";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
-// Mock Puppeteer header fetcher
-jest.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
-  fetchArtistHeaderFromSpotify: jest.fn(() => Promise.resolve(null)),
-}));
-
-let authCookie: string[];
+const authCookie = adminCookie();
 
 // Suppress duplicate-key console errors during tests
 beforeAll(() => {
   jest.spyOn(console, "error").mockImplementation(() => {});
-});
-
-beforeAll(async () => {
-  const res = await request(app).post("/api/auth/login").send({ password: process.env.ADMIN_PASSWORD! });
-  expect(res.status).toBe(204);
-
-  const setCookie = res.get("set-cookie");
-  authCookie = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
 });
 
 beforeEach(async () => {
@@ -36,28 +23,26 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await request(app).post("/api/auth/logout").set("Cookie", authCookie).send();
   await closeDatabase();
 });
 
 test("POST /api/albums/create - should create a new album review", async () => {
-  const response = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
-
-  expect(response.status).toBe(201);
-  expect(response.body).toHaveProperty("spotifyID", "0JGOiO34nwfUdDrD612dOp");
+  const res = await api.post("/api/albums/create", mockReviewData, authCookie);
+  expect(res.status).toBe(201);
+  expect(await res.json()).toHaveProperty("spotifyID", "0JGOiO34nwfUdDrD612dOp");
 });
 
 test("GET /api/albums/:albumID - should return a review for a given album", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  await api.post("/api/albums/create", mockReviewData, authCookie);
 
-  const response = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
-  expect(response.status).toBe(200);
+  const res = await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie);
+  expect(res.status).toBe(200);
 
   const returned: {
     album: ReviewedAlbum;
     artists: ReviewedArtist[];
     tracks: ReviewedTrack[];
-  } = response.body;
+  } = await res.json();
 
   expect(returned.album).toHaveProperty("spotifyID");
   expect(returned.album).toHaveProperty("name");
@@ -66,36 +51,29 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 });
 
 test("GET /api/albums - should return all album reviews", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
-  await request(app)
-    .post("/api/albums/create")
-    .set("Cookie", authCookie)
-    .send({
-      ...mockReviewData,
-      album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" },
-    });
+  await api.post("/api/albums/create", mockReviewData, authCookie);
+  await api.post("/api/albums/create", { ...mockReviewData, album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" } }, authCookie);
 
-  const response = await request(app).get("/api/albums").set("Cookie", authCookie);
-  expect(response.status).toBe(200);
+  const res = await api.get("/api/albums", authCookie);
+  expect(res.status).toBe(200);
 
-  const { albums }: { albums: DisplayAlbum[] } = response.body;
+  const { albums }: { albums: DisplayAlbum[] } = await res.json();
   expect(albums[0]).toHaveProperty("spotifyID");
   expect(Array.isArray(albums[0].imageURLs)).toBe(true);
 });
 
 test("PUT /api/albums/:albumID/edit - should update album review", async () => {
-  await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  await api.post("/api/albums/create", mockReviewData, authCookie);
 
-  const created = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
-  mockUpdateData.album = created.body.album;
+  const created = await (await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie)).json();
+  mockUpdateData.album = created.album;
 
-  const updateRes = await request(app).put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit").set("Cookie", authCookie).send(mockUpdateData);
-
+  const updateRes = await api.put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit", mockUpdateData, authCookie);
   expect(updateRes.status).toBe(200);
 
-  const updated = await request(app).get("/api/albums/0JGOiO34nwfUdDrD612dOp").set("Cookie", authCookie);
-  expect(updated.body.album.reviewScore).toBe(90);
-  expect(updated.body.album.reviewContent).toBe(mockUpdateData.reviewContent);
+  const updated = await (await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie)).json();
+  expect(updated.album.reviewScore).toBe(90);
+  expect(updated.album.reviewContent).toBe(mockUpdateData.reviewContent);
 }, 15000);
 
 test("POST /api/albums/create - should persist per-artist score flags", async () => {
@@ -106,9 +84,7 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
     artists: [
       mockReviewData.album.artists[0],
       {
-        external_urls: {
-          spotify: "https://open.spotify.com/artist/collab_artist_2",
-        },
+        external_urls: { spotify: "https://open.spotify.com/artist/collab_artist_2" },
         href: "https://api.spotify.com/v1/artists/collab_artist_2",
         id: "collab_artist_2",
         name: "Collab Artist 2",
@@ -120,19 +96,17 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
   collabData.selectedArtistIDs = [mockReviewData.album.artists[0].id, "collab_artist_2"];
   collabData.scoreArtistIDs = [];
 
-  const response = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(collabData);
-
-  expect(response.status).toBe(201);
+  const res = await api.post("/api/albums/create", collabData, authCookie);
+  expect(res.status).toBe(201);
 
   const links = await query("SELECT artist_spotify_id, affects_score FROM album_artists WHERE album_spotify_id = $1 ORDER BY artist_spotify_id", ["collab_album_1"]);
-
   expect(links.rowCount).toBe(2);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
 });
 
 test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
-  const res = await request(app).get("/api/albums/thisIdDoesNotExist").set("Cookie", authCookie);
+  const res = await api.get("/api/albums/thisIdDoesNotExist", authCookie);
   expect(res.status).toBe(404);
 });
 
@@ -142,7 +116,7 @@ test("POST /api/albums/create - a mid-flight failure rolls the whole review back
   // all been created. The whole write must roll back together.
   const spy = jest.spyOn(ArtistModel, "updateArtist").mockRejectedValueOnce(new Error("forced mid-transaction failure"));
 
-  const res = await request(app).post("/api/albums/create").set("Cookie", authCookie).send(mockReviewData);
+  const res = await api.post("/api/albums/create", mockReviewData, authCookie);
   expect(res.status).toBe(500);
 
   // None of the review's rows should have persisted.

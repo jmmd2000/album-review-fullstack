@@ -1,5 +1,4 @@
 import { queryClient } from "@/main";
-import type { DisplayAlbum } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@components/ui/ErrorComponent";
@@ -10,21 +9,10 @@ import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { NoDataFound } from "./stats";
 import { Disc, Music, Users } from "lucide-react";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 
-async function fetchAllAlbums(): Promise<{
-  albums: DisplayAlbum[];
-  numArtists: number;
-  numAlbums: number;
-  numTracks: number;
-}> {
-  const data = await api.get<{
-    albums: DisplayAlbum[];
-    numArtists: number;
-    numAlbums: number;
-    numTracks: number;
-  }>("/api/albums/all?includeCounts=true");
-  return data;
+async function fetchAllAlbums() {
+  return handle(client.api.albums.all.$get({ query: { includeCounts: "true" } }));
 }
 
 const statsQueryOptions = queryOptions({
@@ -48,7 +36,7 @@ function Index() {
         <div className="flex flex-col pt-8 sm:pt-12 md:justify-center md:pt-0 min-h-[calc(100vh-70px)] md:min-h-[calc(100vh-80px)]">
           <div className="flex flex-col gap-10 sm:gap-12 md:gap-16 w-full md:w-3/4 lg:w-2/3 xl:w-1/2 3xl:w-2/5">
             <IntroductoryText />
-            <HomeStats numArtists={data.numArtists} numAlbums={data.numAlbums} numTracks={data.numTracks} />
+            <HomeStats numArtists={data.numArtists ?? 0} numAlbums={data.numAlbums ?? 0} numTracks={data.numTracks ?? 0} />
           </div>
         </div>
       </GradientOverlay>

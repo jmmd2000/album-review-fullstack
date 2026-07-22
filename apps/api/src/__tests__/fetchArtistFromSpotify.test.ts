@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 
-jest.mock("../api/services/spotifyService", () => ({
+jest.mock("../api/services/SpotifyService", () => ({
   SpotifyService: { getAccessToken: jest.fn(() => Promise.resolve("test-token")) },
 }));
 

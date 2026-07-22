@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import type { Progress } from "@shared/types";
-import type { Socket } from "socket.io-client";
 import type { JobState } from "@/components/settings/SettingsCard";
+import { client, handle } from "@/lib/client";
 
 type JobAction =
   | { type: "START" }
@@ -54,10 +54,7 @@ function jobReducer(state: JobState, action: JobAction): JobState {
         ...state,
         index: action.payload.index,
         total: action.payload.total,
-        results: {
-          ...state.results,
-          same: [...state.results.same, action.payload],
-        },
+        results: { ...state.results, same: [...state.results.same, action.payload] },
       };
 
     case "CHANGED":
@@ -65,10 +62,7 @@ function jobReducer(state: JobState, action: JobAction): JobState {
         ...state,
         index: action.payload.index,
         total: action.payload.total,
-        results: {
-          ...state.results,
-          changed: [...state.results.changed, action.payload],
-        },
+        results: { ...state.results, changed: [...state.results.changed, action.payload] },
       };
 
     case "ERROR":
@@ -76,24 +70,14 @@ function jobReducer(state: JobState, action: JobAction): JobState {
         ...state,
         index: action.payload.index,
         total: action.payload.total,
-        results: {
-          ...state.results,
-          errors: [...state.results.errors, action.payload],
-        },
+        results: { ...state.results, errors: [...state.results.errors, action.payload] },
       };
 
     case "DONE":
-      return {
-        ...state,
-        phase: "complete",
-        current: null,
-      };
+      return { ...state, phase: "complete", current: null };
 
     case "DISMISS":
-      return {
-        ...state,
-        dismissed: true,
-      };
+      return { ...state, dismissed: true };
 
     case "RESET":
       return initialState;
@@ -103,60 +87,88 @@ function jobReducer(state: JobState, action: JobAction): JobState {
   }
 }
 
+type DataAction = Extract<JobAction, { payload: Progress }>;
+
+// SSE event name -> reducer action. "failed" rather than "error" because
+// EventSource reserves the "error" event for its own connection failures.
+const EVENT_ACTIONS: Record<string, DataAction["type"]> = {
+  fetching: "FETCHING",
+  progress: "PROGRESS",
+  same: "SAME",
+  changed: "CHANGED",
+  failed: "ERROR",
+};
+
 interface UseJobProgressOptions {
-  /** Socket instance */
-  socket: Socket | null;
-  /** Job that's triggered */
-  job: string;
-  /** Function that triggers the job */
-  triggerFn: () => Promise<void>;
+  /** Which artist job to start, maps to POST /api/jobs/:job and returns { jobID }. */
+  job: "artist-images" | "artist-headers";
 }
 
-export function useJobProgress({ socket, job, triggerFn }: UseJobProgressOptions) {
+export function useJobProgress({ job }: UseJobProgressOptions) {
   const [state, dispatch] = useReducer(jobReducer, initialState);
+  const sourceRef = useRef<EventSource | null>(null);
+  const storageKey = `jobID:${job}`;
 
-  // Subscribe to socket events
+  const stop = useCallback(() => {
+    sourceRef.current?.close();
+    sourceRef.current = null;
+  }, []);
+
+  // Open an SSE stream for a running job and feed its events into the reducer.
+  const listen = useCallback(
+    (jobID: string) => {
+      stop();
+      const source = new EventSource(`/api/jobs/${jobID}/events`, { withCredentials: true });
+      sourceRef.current = source;
+
+      for (const [event, type] of Object.entries(EVENT_ACTIONS)) {
+        source.addEventListener(event, e => dispatch({ type, payload: JSON.parse((e as MessageEvent).data) as Progress } as DataAction));
+      }
+
+      source.addEventListener("done", () => {
+        dispatch({ type: "DONE" });
+        localStorage.removeItem(storageKey);
+        stop();
+      });
+
+      // Only a fatal error (job gone / 404) leaves the source CLOSED, a transient
+      // drop stays CONNECTING and EventSource retries, resuming via Last-Event-ID.
+      source.onerror = () => {
+        if (source.readyState === EventSource.CLOSED) {
+          localStorage.removeItem(storageKey);
+          stop();
+          dispatch({ type: "RESET" });
+        }
+      };
+    },
+    [storageKey, stop]
+  );
+
+  // Reattach to a job still running (or recently finished) after a remount.
   useEffect(() => {
-    if (!socket) return;
-
-    const prefix = `artist:${job}`;
-
-    const onFetching = (data: Progress) => dispatch({ type: "FETCHING", payload: data });
-    const onProgress = (data: Progress) => dispatch({ type: "PROGRESS", payload: data });
-    const onSame = (data: Progress) => dispatch({ type: "SAME", payload: data });
-    const onChanged = (data: Progress) => dispatch({ type: "CHANGED", payload: data });
-    const onError = (data: Progress) => dispatch({ type: "ERROR", payload: data });
-    const onDone = () => dispatch({ type: "DONE" });
-
-    socket.on(`${prefix}:fetching`, onFetching);
-    socket.on(`${prefix}:progress`, onProgress);
-    socket.on(`${prefix}:same`, onSame);
-    socket.on(`${prefix}:changed`, onChanged);
-    socket.on(`${prefix}:error`, onError);
-    socket.on(`${prefix}:done`, onDone);
-
-    return () => {
-      socket.off(`${prefix}:fetching`, onFetching);
-      socket.off(`${prefix}:progress`, onProgress);
-      socket.off(`${prefix}:same`, onSame);
-      socket.off(`${prefix}:changed`, onChanged);
-      socket.off(`${prefix}:error`, onError);
-      socket.off(`${prefix}:done`, onDone);
-    };
-  }, [socket, job]);
+    const running = localStorage.getItem(storageKey);
+    if (running) listen(running);
+    return stop;
+  }, [storageKey, listen, stop]);
 
   const trigger = useCallback(async () => {
     dispatch({ type: "START" });
     try {
-      await triggerFn();
+      const { jobID } = await handle(client.api.jobs[job].$post());
+      localStorage.setItem(storageKey, jobID);
+      listen(jobID);
     } catch {
-      // trigger failed - the job never started
       dispatch({ type: "RESET" });
     }
-  }, [triggerFn]);
+  }, [job, storageKey, listen]);
 
   const dismiss = useCallback(() => dispatch({ type: "DISMISS" }), []);
-  const reset = useCallback(() => dispatch({ type: "RESET" }), []);
+
+  const reset = useCallback(() => {
+    stop();
+    localStorage.removeItem(storageKey);
+    dispatch({ type: "RESET" });
+  }, [storageKey, stop]);
 
   return { state, trigger, dismiss, reset };
 }

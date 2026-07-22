@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, afterEach, test, expect } from "@jest/globals";
 import { query, closeDatabase } from "@/db/client";
 import { resetTables } from "./testUtils";
-import { StatsService } from "@/api/services/statsService";
+import { StatsService } from "@/api/services/StatsService";
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 import { GenreModel } from "@/api/models/Genre";

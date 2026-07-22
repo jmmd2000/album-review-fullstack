@@ -3,10 +3,10 @@ import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
 import GenrePills from "@components/ui/GenrePills";
-import type { Genre } from "@shared/types";
+import type { Genre, Jsonified } from "@shared/types";
 
-const now = new Date();
-const mockGenres: Genre[] = [
+const now = new Date().toISOString();
+const mockGenres: Jsonified<Genre>[] = [
   { id: 1, name: "Hip Hop", slug: "hip-hop", createdAt: now, updatedAt: now },
   { id: 2, name: "R&B", slug: "r-and-b", createdAt: now, updatedAt: now },
   { id: 3, name: "Pop", slug: "pop", createdAt: now, updatedAt: now },

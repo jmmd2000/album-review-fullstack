@@ -1,4 +1,4 @@
-import type { DisplayTrack, ExtractedColor, Genre, ReviewBonuses, ReviewedAlbum, ReviewedTrack, SpotifyAlbum } from "@shared/types";
+import type { DisplayTrack, ExtractedColor, Genre, Jsonified, ReviewBonuses, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import TrackList from "@components/track/TrackList";
@@ -8,7 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import RatingChip from "@components/ui/RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { queryClient } from "@/main";
-import { api } from "@/lib/api";
+import { client, handleVoid } from "@/lib/client";
 import { ColourPicker } from "@components/form/ColourPicker";
 import ArtistSelector from "@components/form/ArtistSelector";
 import { ReviewContentInput } from "@components/form/ReviewContentInput";
@@ -51,11 +51,11 @@ export type CreateReviewFormData = {
 // If it's a ReviewedAlbum, the tracks need to be passed in
 interface AlbumReviewFormProps {
   /*** The album to review */
-  album: SpotifyAlbum | ReviewedAlbum;
-  /** Optional ReviewedTracks */
-  tracks?: ReviewedTrack[];
+  album: Jsonified<SpotifyAlbum | ReviewedAlbum>;
+  /** Existing tracks (edit flow) */
+  tracks?: DisplayTrack[];
   /** Array of existing genre objects */
-  genres: Genre[];
+  genres: Jsonified<Genre>[];
   /** Selected colors setter to pass the data back up the tree */
   setSelectedColors: React.Dispatch<React.SetStateAction<ExtractedColor[]>>;
   /** Selected colors */
@@ -63,8 +63,8 @@ interface AlbumReviewFormProps {
 }
 
 // Type guard for ReviewedAlbum
-const isReviewedAlbum = (album: SpotifyAlbum | ReviewedAlbum): album is ReviewedAlbum => {
-  return (album as ReviewedAlbum).reviewScore !== undefined;
+const isReviewedAlbum = (album: Jsonified<SpotifyAlbum | ReviewedAlbum>): album is Jsonified<ReviewedAlbum> => {
+  return (album as Jsonified<ReviewedAlbum>).reviewScore !== undefined;
 };
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
@@ -184,7 +184,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isError,
     isSuccess,
   } = useMutation({
-    mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: SpotifyAlbum | ReviewedAlbum }) => submitReview(formData, album),
+    mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: Jsonified<SpotifyAlbum | ReviewedAlbum> }) => submitReview(formData, album),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
   });
 
@@ -285,22 +285,22 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
 export default AlbumReviewForm;
 
 // Helper to send data to API
-const submitReview = async (formData: CreateReviewFormData, album: SpotifyAlbum | ReviewedAlbum) => {
-  const formattedTracks = formData.tracks.map(t => ({ ...t, rating: Number(t.rating) || 0 }));
-  const formattedGenres = formData.genres.map(g => g.name);
-  const isEditing = isReviewedAlbum(album);
-  const path = isEditing ? `/api/albums/${album.spotifyID}/edit` : `/api/albums/create`;
-  const method = isEditing ? api.put : api.post;
-  await method(path, {
-    album,
+const submitReview = async (formData: CreateReviewFormData, album: Jsonified<SpotifyAlbum | ReviewedAlbum>) => {
+  const common = {
     reviewContent: formData.reviewContent,
     bestSong: formData.bestSong,
     worstSong: formData.worstSong,
-    ratedTracks: formattedTracks,
+    ratedTracks: formData.tracks.map(t => ({ ...t, rating: Number(t.rating) || 0 })),
     colors: formData.colors,
-    genres: formattedGenres,
+    genres: formData.genres.map(g => g.name),
     affectsArtistScore: formData.affectsArtistScore,
     selectedArtistIDs: formData.selectedArtistIDs,
     scoreArtistIDs: formData.scoreArtistIDs,
-  });
+  };
+
+  if (isReviewedAlbum(album)) {
+    await handleVoid(client.api.albums[":albumID"].edit.$put({ param: { albumID: album.spotifyID }, json: { ...common, album } }));
+  } else {
+    await handleVoid(client.api.albums.create.$post({ json: { ...common, album } }));
+  }
 };

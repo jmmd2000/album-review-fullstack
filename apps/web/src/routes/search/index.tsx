@@ -3,7 +3,7 @@ import CardGrid from "@/components/ui/CardGrid";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 import { queryClient } from "@/main";
 import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
@@ -11,11 +11,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-async function searchSpotifyAlbums(query: SearchAlbumsOptions): Promise<DisplayAlbum[]> {
-  const queryParams = new URLSearchParams();
-  if (query) queryParams.set("query", String(query.query));
-
-  return api.get<DisplayAlbum[]>(`/api/spotify/albums/search?${queryParams.toString()}`);
+async function searchSpotifyAlbums(query: SearchAlbumsOptions) {
+  return handle(client.api.spotify.albums.search.$get({ query: { query: String(query.query) } }));
 }
 
 const searchQueryOptions = (query: SearchAlbumsOptions) =>

@@ -2,29 +2,27 @@ import { motion } from "framer-motion";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { api } from "@/lib/api";
+import { client, handle } from "@/lib/client";
 import { queryClient } from "@/main";
 import CardGrid from "@/components/ui/CardGrid";
 import AlbumCard from "@/components/album/AlbumCard";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
-import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { PAGE_SIZE } from "@shared/constants";
 
-async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlbumsOptions): Promise<{ albums: DisplayAlbum[]; furtherPages: boolean; totalCount: number }> {
-  const queryParams = new URLSearchParams();
-
-  if (options.page) queryParams.set("page", String(options.page));
-  if (options.order) queryParams.set("order", options.order);
-  if (options.orderBy) queryParams.set("orderBy", options.orderBy);
-  if (options.search) queryParams.set("search", options.search);
-
-  return api.get<{
-    albums: DisplayAlbum[];
-    furtherPages: boolean;
-    totalCount: number;
-  }>(`/api/bookmarks?${queryParams.toString()}`);
+async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlbumsOptions) {
+  return handle(
+    client.api.bookmarks.$get({
+      query: {
+        ...(options.page ? { page: String(options.page) } : {}),
+        ...(options.order ? { order: options.order } : {}),
+        ...(options.orderBy ? { orderBy: options.orderBy } : {}),
+        ...(options.search ? { search: options.search } : {}),
+      },
+    })
+  );
 }
 
 const albumQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>

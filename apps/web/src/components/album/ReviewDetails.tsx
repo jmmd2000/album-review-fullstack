@@ -1,4 +1,4 @@
-import type { DisplayTrack, ReviewedAlbum } from "@shared/types";
+import type { DisplayTrack, Jsonified, ReviewedAlbum } from "@shared/types";
 import RatingChip from "@/components/ui/RatingChip";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ import { FormattedText } from "@/components/ui/FormattedText";
  */
 interface ReviewDetailsProps {
   /** The album being reviewed */
-  album: ReviewedAlbum;
+  album: Jsonified<ReviewedAlbum>;
   /** The tracks on the album */
   tracks: DisplayTrack[];
 }
