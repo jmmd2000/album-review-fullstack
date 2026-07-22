@@ -3,12 +3,17 @@ FROM node:22-alpine AS build
 
 RUN corepack enable
 
+# The api workspace ships puppeteer, but the web build only needs the api's types, not a browser
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 WORKDIR /app
 
 # Copy workspace and package files
 COPY pnpm-workspace.yaml .
 COPY package.json pnpm-lock.yaml ./
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
 
 # Set up structure for shared dependencies
@@ -16,6 +21,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY apps/web ./apps/web
+COPY apps/api ./apps/api
 COPY packages/shared ./packages/shared
 
 # Build the frontend
