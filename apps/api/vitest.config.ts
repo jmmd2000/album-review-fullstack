@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
@@ -10,6 +10,13 @@ export default defineConfig({
     globalSetup: ["./src/__tests__/globalSetup.ts"],
     // Each worker has a private copy of the test database, see globalSetup.ts
     maxWorkers: 4,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      // Report every source file, not just the ones the tests import
+      include: ["src/**/*.ts"],
+      exclude: [...coverageConfigDefaults.exclude, "src/db/fixtures/**"],
+    },
   },
   resolve: {
     alias: {
