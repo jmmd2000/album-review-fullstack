@@ -42,7 +42,7 @@ help:
 	@echo "  make test          - Run all tests (backend, frontend, e2e)"
 	@echo "  make test-backend  - Run backend Jest tests"
 	@echo "  make test-frontend - Run frontend Vitest unit tests"
-	@echo "  make test-e2e      - Run Cypress e2e tests"
+	@echo "  make test-e2e      - Run Playwright e2e tests"
 	@echo "  make kill-ports    - Kill processes on 4000/5173"
 	@echo "  make lint          - Run ESLint on all packages"
 	@echo "  make format        - Fix ESLint issues"
