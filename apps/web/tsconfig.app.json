@@ -16,11 +16,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*", "../api/src/*"],
+      "@/*": ["./src/*", "../api/src/*"],
       "@shared/*": ["../../packages/shared/src/*"],
-      "@components/*": ["src/components/*"]
+      "@components/*": ["./src/components/*"]
     },
     "types": ["vite/client"],
     "typeRoots": ["./src", "./node_modules/@types"],

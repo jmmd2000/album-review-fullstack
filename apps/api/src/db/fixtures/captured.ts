@@ -22,6 +22,10 @@ export interface CapturedArtist {
 export interface CapturedAlbum {
   spotifyID: string;
   name: string;
+  /** Spotify uri, the create submit sends it back to the api untouched */
+  uri: string;
+  /** The raw date string from spotify, the formatted one is below */
+  rawReleaseDate: string;
   /** Already formatted for display, as the album row stores it */
   releaseDate: string;
   releaseYear: number;

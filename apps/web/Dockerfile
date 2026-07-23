@@ -3,7 +3,7 @@ FROM node:22-alpine AS build
 
 RUN corepack enable
 
-ENV CYPRESS_INSTALL_BINARY=0
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 WORKDIR /app
 

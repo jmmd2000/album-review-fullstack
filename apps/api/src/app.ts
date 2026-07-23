@@ -15,7 +15,6 @@ import bookmark from "@/api/routes/BookmarkedAlbumRoutes";
 import stats from "@/api/routes/StatsRoutes";
 import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
-import test from "@/api/routes/TestRoutes";
 import job from "@/api/routes/JobRoutes";
 
 const base = new Hono<{ Variables: { db: Executor } }>();
@@ -50,11 +49,6 @@ export const app = base
   .route("/api/jobs", job);
 
 export type AppType = typeof app;
-
-// Dev/test only, kept off AppType (the frontend never calls it).
-if (process.env.NODE_ENV !== "production") {
-  app.route("/api/test", test);
-}
 
 // HTTPExceptions and AppErrors carry their own status and a safe message.
 // Anything else is logged in full and returns a generic 500 so internals never reach the client.

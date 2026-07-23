@@ -40,6 +40,8 @@ const capture = async () => {
     albums.push({
       spotifyID: album.id,
       name: album.name,
+      uri: album.uri,
+      rawReleaseDate: album.release_date,
       releaseDate: formatDate(album.release_date),
       releaseYear: Number(album.release_date.split("-")[0]),
       runtime: getTotalDuration(album),
