@@ -25,14 +25,8 @@ test-backend:
 test-frontend:
 	cd apps/web && pnpm test
 
-test-e2e: kill-ports
-	@( \
-		(cd apps/api && pnpm dev >/dev/null 2>&1) & BPID=$$!; \
-		(cd apps/web && pnpm dev >/dev/null 2>&1) & FPID=$$!; \
-		trap "kill $$BPID $$FPID 2>/dev/null; wait $$BPID $$FPID 2>/dev/null; true" EXIT INT TERM; \
-		sleep 8; \
-		cd apps/web && pnpm e2e:run; \
-	)
+test-e2e:
+	cd apps/web && pnpm e2e
 
 lint:
 	pnpm lint
