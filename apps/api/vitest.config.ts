@@ -9,7 +9,7 @@ export default defineConfig({
     setupFiles: ["./src/__tests__/vitest.setup.ts"],
     globalSetup: ["./src/__tests__/globalSetup.ts"],
     // Each worker has a private copy of the test database, see globalSetup.ts
-    maxWorkers: 4,
+    maxWorkers: 8,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

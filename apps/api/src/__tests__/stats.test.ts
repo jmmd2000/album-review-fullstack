@@ -155,6 +155,21 @@ test("rating distribution groups albums by tier", async () => {
   expect(total).toBe(3);
 });
 
+test("rating distribution scales track ratings up to the album tiers", async () => {
+  const dist = await StatsService.getRatingDistribution("tracks");
+  const perfect = dist.find(d => d.rating === "Perfect");
+  expect(perfect?.count).toBe(3);
+  const total = dist.reduce((sum, d) => sum + d.count, 0);
+  expect(total).toBe(3);
+});
+
+test("rating distribution groups artists by total score", async () => {
+  const dist = await StatsService.getRatingDistribution("artists");
+  expect(dist.find(d => d.rating === "Perfect")?.count).toBe(1);
+  expect(dist.find(d => d.rating === "Meh")?.count).toBe(1);
+  expect(dist.find(d => d.rating === "Good")?.count).toBe(1);
+});
+
 test("resource counts summarise totals", async () => {
   const counts = await StatsService.getResourceCounts();
   expect(counts.albumCount).toBe(3);
