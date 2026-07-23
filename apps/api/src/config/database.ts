@@ -13,6 +13,17 @@ export const resolveDatabaseURL = (): string => {
     if (!testDatabaseUrl) {
       throw new Error('DATABASE_URL_TEST must be set when NODE_ENV is "test"');
     }
+
+    // Each vitest worker gets its own copy of the test database, created by the
+    // suite's global setup, so files can run in parallel without sharing state.
+    // Outside vitest (seeding, wiping) the base test database is used as before.
+    const workerID = process.env.VITEST_POOL_ID;
+    if (workerID) {
+      const url = new URL(testDatabaseUrl);
+      url.pathname = `${url.pathname}_w${workerID}`;
+      return url.toString();
+    }
+
     return testDatabaseUrl;
   }
 
