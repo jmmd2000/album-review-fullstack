@@ -7,11 +7,13 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
+    "dev": "pnpm -r --parallel dev",
     "lint": "eslint .",
     "format": "prettier --write . && eslint . --fix",
     "format:check": "prettier --check . && eslint .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "e2e": "pnpm --filter @album-reviews/web e2e",
     "build": "pnpm -r build",
     "prepare": "husky"
   },

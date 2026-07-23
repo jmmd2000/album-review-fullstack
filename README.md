@@ -2,15 +2,15 @@
 
 ## Overview
 
-A personal music review app for tracking album reviews. Uses the Spotify API and allows me to rate albums, track score statistics and bookmark albums for later. Built as a monorepo with a React frontend and Express backend.
+A personal music review app for tracking album reviews. Uses the Spotify API and allows me to rate albums, track score statistics and bookmark albums for later. Built as a pnpm monorepo with a React frontend and a Hono backend.
 
 See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
 
 ## Tech Stack
 
-**Frontend:** React, Vite, TailwindCSS, TypeScript, TanStack Router, React Query, Vitest, Cypress
+**Frontend:** React, Vite, TailwindCSS, TypeScript, TanStack Router, React Query, Vitest, Playwright
 
-**Backend:** Express, TypeScript, Drizzle ORM, PostgreSQL, Jest
+**Backend:** Hono, TypeScript, Drizzle ORM, PostgreSQL, Vitest
 
 ## Development
 
@@ -19,11 +19,11 @@ See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
 pnpm install
 
 # Start both frontend and backend
-make dev
+pnpm dev
 
-# Can also run individually with:
-make dev-frontend # http://localhost:5173
-make dev-backend # http://localhost:4000
+# Or run one side on its own
+pnpm --filter @album-reviews/api dev # http://localhost:4000
+pnpm --filter @album-reviews/web dev # http://localhost:5173
 ```
 
 ## Database
@@ -44,18 +44,31 @@ pnpm db:wipe
 ## Testing
 
 ```bash
-# Run all tests
-make test
+# Run the unit and integration suites in every package
+pnpm test
 
-# Run backend tests only
-make test-backend
+# Run the Playwright e2e suite
+pnpm e2e
+```
 
-# Run frontend tests only (unit + e2e)
-make test-frontend
+## Other root commands
+
+```bash
+# Lint everything
+pnpm lint
+
+# Format and autofix everything
+pnpm format
+
+# Typecheck every package
+pnpm typecheck
+
+# Build every package
+pnpm build
 ```
 
 ## Project Structure
 
-- `backend/` - Express server
-- `frontend/` - React app
-- `shared/` - Shared types and utilities used by both frontend and backend
+- `apps/api` - Hono server
+- `apps/web` - React app
+- `packages/shared` - Types and helpers used by both sides
