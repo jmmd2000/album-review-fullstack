@@ -42,7 +42,7 @@ describe("RequireAdmin", () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: "/" });
   });
 
-  it("holds without redirecting while the status is pending", () => {
+  it("shows a skeleton without redirecting while the status is pending", () => {
     authState.isPending = true;
 
     render(
@@ -52,6 +52,7 @@ describe("RequireAdmin", () => {
     );
 
     expect(screen.queryByText("admin only content")).not.toBeInTheDocument();
+    expect(screen.getByTestId("skeleton-detail")).toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
   });
 });
