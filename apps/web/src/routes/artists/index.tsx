@@ -1,10 +1,11 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
+import { useListControls } from "@/hooks/useListControls";
+import { ListPageLayout } from "@components/layout/ListPageLayout";
 import CardGrid from "@components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
@@ -79,37 +80,7 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(artistQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const handleNextPage = () => {
-    if (data?.furtherPages) {
-      navigate({
-        search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
-          ...prev,
-          page: (prev.page || 1) + 1,
-        }),
-      });
-    }
-  };
-
-  const handlePrevPage = () => {
-    navigate({
-      search: (prev: Partial<GetPaginatedArtistsOptions>) => {
-        const currentPage = prev.page || 1;
-        if (currentPage > 1) {
-          return { ...prev, page: currentPage - 1 };
-        }
-        return prev;
-      },
-    });
-  };
-
-  const handleSearch = (search: string) => {
-    navigate({
-      search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
-        ...prev,
-        search,
-      }),
-    });
-  };
+  const { search, pagination } = useListControls<GetPaginatedArtistsOptions>({ page: options.page, data, navigate });
 
   const sortSettings: SortDropdownProps = {
     options: [
@@ -178,29 +149,14 @@ function RouteComponent() {
   });
 
   return (
-    <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+    <ListPageLayout page={options.page}>
       <CardGrid
         cards={artistsWithPosition.map(artist => (
           <ArtistCard key={artist.spotifyID} artist={artist} />
         ))}
         counter={data.totalCount}
-        controls={{
-          search: handleSearch,
-          pagination: {
-            next: { action: handleNextPage, disabled: !data.furtherPages },
-            prev: {
-              action: handlePrevPage,
-              disabled: options.page === 1 || options.page === undefined,
-            },
-            page: {
-              pageNumber: options.page || 1,
-              totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
-            },
-          },
-          sortSettings: sortSettings,
-          secondarySortSettings: secondarySortSettings,
-        }}
+        controls={{ search, pagination, sortSettings, secondarySortSettings }}
       />
-    </motion.div>
+    </ListPageLayout>
   );
 }

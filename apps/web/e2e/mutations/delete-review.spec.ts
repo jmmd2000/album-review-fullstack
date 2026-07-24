@@ -19,8 +19,9 @@ test("deleting a review removes the album and its orphaned artist", async ({ pag
   await page.getByRole("button", { name: "Delete Album" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
 
-  // Deleting navigates back to the library, where the album is gone
-  await expect(page).toHaveURL(/\/albums$/);
+  // Deleting navigates back to the library, where the album is gone. The
+  // delete can queue behind another spec's transaction, hence the allowance
+  await expect(page).toHaveURL(/\/albums$/, { timeout: 15000 });
   await expect(page.getByTestId("album-card").filter({ hasText: targetAlbum.name })).toHaveCount(0);
 
   // The artist had no other reviews, so they leave the leaderboard too

@@ -58,7 +58,9 @@ test("create album review flow", async ({ page }) => {
   }
 
   await page.getByTestId("album-review-form").getByRole("button", { name: "Submit" }).click();
-  await expect(page.getByText("Review submitted successfully!")).toBeVisible();
+  // Under parallel mutations the submit can queue behind another spec's
+  // leaderboard-updating transaction, so give it room beyond the default
+  await expect(page.getByText("Review submitted successfully!")).toBeVisible({ timeout: 15000 });
 
   // The album page shows the review with the score we predicted
   await page.goto("/albums");
