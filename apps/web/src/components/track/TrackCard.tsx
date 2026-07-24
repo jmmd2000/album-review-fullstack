@@ -1,6 +1,6 @@
 import type { DisplayTrack } from "@shared/types";
 import { convertDuration } from "@/helpers/convertDuration";
-import { getRatingStyles } from "@/helpers/getRatingStyles";
+import { getRatingStyles } from "@shared/helpers/ratingTiers";
 import { Clock } from "lucide-react";
 import { motion } from "framer-motion";
 

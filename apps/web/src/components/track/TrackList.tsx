@@ -4,7 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import type { CreateReviewFormData } from "@components/form/AlbumReviewForm";
 import { useState } from "react";
-import { getRatingStyles } from "@/helpers/getRatingStyles";
+import { getRatingStyles } from "@shared/helpers/ratingTiers";
 
 /**
  * The props for the TrackList component.

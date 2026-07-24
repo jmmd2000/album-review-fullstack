@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { getRatingStyles } from "@/helpers/getRatingStyles";
+import { getRatingStyles } from "@shared/helpers/ratingTiers";
 import { useState } from "react";
 import ScoreBreakdown from "@/components/album/ScoreBreakdown";
 

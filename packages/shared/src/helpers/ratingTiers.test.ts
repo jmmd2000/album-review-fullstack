@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getRatingStyles } from "../getRatingStyles";
+import { getRatingStyles } from "./ratingTiers";
 
 describe("getRatingStyles", () => {
   it("returns 'Unrated' for 0", () => {

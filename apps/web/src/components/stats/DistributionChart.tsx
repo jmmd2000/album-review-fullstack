@@ -1,4 +1,4 @@
-import { getRatingStyles } from "@/helpers/getRatingStyles";
+import { getRatingStyles } from "@shared/helpers/ratingTiers";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useMediaQuery } from "react-responsive";
 

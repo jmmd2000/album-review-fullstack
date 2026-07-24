@@ -5,7 +5,7 @@ import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "@/api/services/GenreService";
 import { calculateFavouriteGenres } from "@/helpers/calculateFavouriteGenres";
 import { AlbumGenreModel } from "@/api/models/AlbumGenre";
-import { ratingTiers } from "@/helpers/ratingTiers";
+import { ratingTiers } from "@shared/helpers/ratingTiers";
 import { TrackModel } from "../models/Track";
 
 export class StatsService {
