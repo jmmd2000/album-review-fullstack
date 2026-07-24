@@ -4,11 +4,11 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import TrackList from "@components/track/TrackList";
 import { BestWorstSong } from "@components/album/ReviewDetails";
 import Button from "@components/ui/Button";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import RatingChip from "@components/ui/RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
-import { queryClient } from "@/main";
 import { client, handleVoid } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { ColourPicker } from "@components/form/ColourPicker";
 import ArtistSelector from "@components/form/ArtistSelector";
 import { ReviewContentInput } from "@components/form/ReviewContentInput";
@@ -68,6 +68,7 @@ const isReviewedAlbum = (album: Jsonified<SpotifyAlbum | ReviewedAlbum>): album 
 };
 
 const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedColors }: AlbumReviewFormProps) => {
+  const queryClient = useQueryClient();
   const isEditing = isReviewedAlbum(album);
   const albumArtists =
     "albumArtists" in album && Array.isArray(album.albumArtists) && album.albumArtists.length > 0
@@ -185,7 +186,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isSuccess,
   } = useMutation({
     mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: Jsonified<SpotifyAlbum | ReviewedAlbum> }) => submitReview(formData, album),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
   });
 
   const onSubmit = (formData: CreateReviewFormData) => {

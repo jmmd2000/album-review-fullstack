@@ -1,6 +1,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import BlurryHeader from "@components/layout/BlurryHeader";
 import ErrorComponent from "@components/ui/ErrorComponent";
 import TrackList from "@components/track/TrackList";
@@ -17,7 +18,7 @@ async function fetchAlbumReview(albumSpotifyID: string) {
 
 const reviewQueryOptions = (albumID: string) =>
   queryOptions({
-    queryKey: ["albumReview", albumID],
+    queryKey: queryKeys.albums.detail(albumID),
     queryFn: () => fetchAlbumReview(albumID),
     staleTime: Infinity,
     refetchOnMount: false,

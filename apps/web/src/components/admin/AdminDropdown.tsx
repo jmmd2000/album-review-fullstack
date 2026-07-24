@@ -3,13 +3,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut, ImageIcon } from "lucide-react";
 import type { JSX } from "react";
 import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { InferResponseType } from "hono/client";
 import { useAuth } from "@/auth/useAuth";
-import { queryClient } from "@/main";
-import type { ReviewedAlbum, ReviewedArtist, DisplayTrack, DisplayAlbum, Genre } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@components/ui/Dialog";
 import { client, handleVoid } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
+
+// The exact payloads the album and artist pages cache, inferred from the
+// endpoints that fill them so the shapes can't drift again
+type AlbumDetailPayload = InferResponseType<(typeof client.api.albums)[":albumID"]["$get"]>;
+type ArtistDetailPayload = InferResponseType<(typeof client.api.artists.details)[":artistID"]["$get"]>;
 import { toast } from "sonner";
 
 interface LinkItem {
@@ -38,6 +43,7 @@ const staticLinks: LinkItem[] = [
  * or the admin links (and album edit/delete) when authed
  */
 const AdminDropdown = () => {
+  const queryClient = useQueryClient();
   const { isAdmin, login, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
@@ -57,24 +63,10 @@ const AdminDropdown = () => {
   const artistID = artistMatch?.[1];
 
   // Get cached album data if it exists
-  const albumData = albumID
-    ? (queryClient.getQueryData(["albumReview", albumID]) as {
-        album: ReviewedAlbum;
-        artist: ReviewedArtist;
-        tracks: DisplayTrack[];
-        allGenres: Genre[];
-        albumGenres: Genre[];
-      })
-    : null;
+  const albumData = albumID ? queryClient.getQueryData<AlbumDetailPayload>(queryKeys.albums.detail(albumID)) : null;
 
   // Get cached artist data if it exists
-  const artistData = artistID
-    ? (queryClient.getQueryData(["artistID", artistID]) as {
-        artist: ReviewedArtist;
-        albums: DisplayAlbum[];
-        tracks: DisplayTrack[];
-      })
-    : null;
+  const artistData = artistID ? queryClient.getQueryData<ArtistDetailPayload>(queryKeys.artists.detail(artistID)) : null;
 
   // State for header image update modal
   const [showHeaderModal, setShowHeaderModal] = useState(false);
@@ -85,8 +77,8 @@ const AdminDropdown = () => {
     if (!albumID) return;
     try {
       await handleVoid(client.api.albums[":albumID"].$delete({ param: { albumID } }));
-      queryClient.invalidateQueries({ queryKey: ["artists"] });
-      queryClient.invalidateQueries({ queryKey: ["albums"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.albums.all });
       navigate({ to: "/albums" });
     } catch {
       toast.error("Something went wrong while deleting the album.");
@@ -101,8 +93,8 @@ const AdminDropdown = () => {
     },
     onSuccess: () => {
       if (artistID) {
-        queryClient.invalidateQueries({ queryKey: ["artistID", artistID] });
-        queryClient.invalidateQueries({ queryKey: ["artists"] });
+        // The artists root covers the leaderboard and every artist detail
+        queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
       }
       setShowHeaderModal(false);
       setHeaderImageUrl("");

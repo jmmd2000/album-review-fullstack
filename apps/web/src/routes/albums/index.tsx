@@ -2,7 +2,8 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
@@ -30,7 +31,7 @@ async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
 
 const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   queryOptions({
-    queryKey: ["albums", options],
+    queryKey: queryKeys.albums.list(options),
     queryFn: () => fetchPaginatedAlbums(options),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,

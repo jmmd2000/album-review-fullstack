@@ -1,6 +1,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import { useEffect, useState } from "react";
 import type { DisplayAlbum, ExtractedColor } from "@shared/types";
 import ErrorComponent from "@components/ui/ErrorComponent";
@@ -44,7 +45,7 @@ async function fetchAlbumFromSpotify(albumSpotifyID: string) {
 
 const albumQueryOptions = (albumSpotifyID: string) =>
   queryOptions({
-    queryKey: ["spotifyAlbumCreate", albumSpotifyID],
+    queryKey: queryKeys.albums.create(albumSpotifyID),
     queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
   });
 

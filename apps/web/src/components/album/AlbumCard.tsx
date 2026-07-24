@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client, handleVoid } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 /**
  * The props for the AlbumCard component.
@@ -99,8 +100,8 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
   const addMutation = useMutation({
     mutationFn: () => handleVoid(client.api.bookmarks[":albumID"].add.$post({ param: { albumID: album.spotifyID }, json: album })),
     onSuccess: () => {
-      // Invalidate so useBookmarkStatus refetches
-      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      // Covers the bookmarks list and the status lookups in one go
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
     },
   });
 
@@ -108,7 +109,7 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
   const removeMutation = useMutation({
     mutationFn: () => handleVoid(client.api.bookmarks[":albumID"].remove.$delete({ param: { albumID: album.spotifyID } })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
     },
   });
 

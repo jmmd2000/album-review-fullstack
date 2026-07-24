@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DisplayAlbum } from "@shared/types";
 import { client, handle } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function useAlbumStatus(albums: DisplayAlbum[]) {
   const ids = albums.map(a => a.spotifyID);
@@ -11,7 +12,7 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
     isLoading: isLoadingBookmarks,
     isError: isBookmarksError,
   } = useQuery({
-    queryKey: ["bookmarks", ids],
+    queryKey: queryKeys.bookmarks.status(ids),
     queryFn: () => handle(client.api.bookmarks.status.$get({ query: { ids } })),
     staleTime: 0,
     refetchOnMount: "always",
@@ -24,7 +25,7 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
     isLoading: isLoadingScores,
     isError: isScoresError,
   } = useQuery({
-    queryKey: ["albums", "scores", ids],
+    queryKey: queryKeys.albums.scores(ids),
     queryFn: () => handle(client.api.albums.scores.$get({ query: { ids: ids.join(",") } })),
     // scores rarely change so no need to auto refetch
     staleTime: Infinity,

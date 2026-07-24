@@ -3,19 +3,13 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Mock } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Jsonified, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import AlbumReviewForm from "../form/AlbumReviewForm";
-import { queryClient } from "@/main";
 import { client } from "@/lib/client";
 
-vi.mock("@/main", async () => {
-  const { QueryClient } = await import("@tanstack/react-query");
-  return {
-    queryClient: new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    }),
-  };
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 });
 
 vi.mock("@/lib/client", async importActual => {
