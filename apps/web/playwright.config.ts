@@ -5,6 +5,13 @@ export default defineConfig({
   globalSetup: "./e2e/globalSetup.ts",
   timeout: 30000,
   fullyParallel: false,
+  // Every spec shares one seeded database, so the read-only specs run first
+  // and the mutating specs follow, one file at a time.
+  workers: 1,
+  projects: [
+    { name: "seeded-state", testDir: "./e2e/read" },
+    { name: "mutations", testDir: "./e2e/mutations", dependencies: ["seeded-state"] },
+  ],
   retries: 0,
   reporter: "list",
   use: {
