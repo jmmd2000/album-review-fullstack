@@ -4,10 +4,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CardGridControls from "../ui/CardGridControls";
 
-vi.mock("@/routes/__root", () => ({
-  Route: { useSearch: () => ({}) },
-}));
-
 const pagination = (overrides: Partial<{ prevDisabled: boolean; nextDisabled: boolean }> = {}) => ({
   next: { action: vi.fn(), disabled: overrides.nextDisabled },
   prev: { action: vi.fn(), disabled: overrides.prevDisabled },
@@ -55,7 +51,7 @@ describe("CardGridControls", () => {
   it("selecting a genre reports it and closes the dropdown", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<CardGridControls search={vi.fn()} genreSettings={{ items: [{ name: "Rock", value: "rock" }], onSelect }} />);
+    render(<CardGridControls search={vi.fn()} genreSettings={{ items: [{ name: "Rock", value: "rock" }], selected: [], onSelect }} />);
 
     await user.click(screen.getByText("Select option(s)"));
     await user.click(screen.getByText("Rock"));

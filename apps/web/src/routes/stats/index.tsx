@@ -250,7 +250,7 @@ function RouteComponent() {
                     setIsOpen={setDropdownOpen}
                     onSelect={onSelectGenre}
                     multiple={false}
-                    default={{ name: genre.name, value: genre.slug }}
+                    selected={[genre.slug]}
                   />
                 )}
               </div>

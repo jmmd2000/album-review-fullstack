@@ -193,6 +193,7 @@ function RouteComponent() {
 
   const genreSettings: DropdownControlsProps = {
     items,
+    selected: genreSlugs,
     onSelect: value => {
       navigate({
         search: prev => ({

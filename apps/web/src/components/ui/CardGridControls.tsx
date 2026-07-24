@@ -10,8 +10,8 @@ interface PaginationControls {
 
 export interface DropdownControlsProps {
   items: { name: string; value: string }[];
-  // isOpen: boolean;
-  // setIsOpen: (isOpen: boolean) => void;
+  /** The currently selected values, owned by the page rendering the grid */
+  selected: string[];
   onSelect: (value: string[]) => void;
 }
 
@@ -77,7 +77,9 @@ const CardGridControls = ({ pagination, search, sortSettings, secondarySortSetti
             <div className="flex flex-row flex-nowrap justify-center gap-2 w-full sm:w-auto min-w-0">
               {sortSettings && <SortDropdown {...sortSettings} />}
               {secondarySortSettings && <SortDropdown {...secondarySortSettings} />}
-              {genreSettings && <Dropdown items={genreSettings!.items} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} multiple />}
+              {genreSettings && (
+                <Dropdown items={genreSettings.items} selected={genreSettings.selected} dropdownRef={dropdownRef} isOpen={dropdownOpen} setIsOpen={setDropdownOpen} onSelect={onSelect} multiple />
+              )}
             </div>
           </div>
         )}

@@ -1,17 +1,9 @@
 import "@testing-library/jest-dom";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRef } from "react";
 import { Dropdown, type DropdownProps } from "../ui/Dropdown";
-
-// The dropdown reads the current URL filters through the root route, replace
-// that with a mutable stand-in.
-const { searchState } = vi.hoisted(() => ({ searchState: { genres: undefined as string | undefined } }));
-
-vi.mock("@/routes/__root", () => ({
-  Route: { useSearch: () => searchState },
-}));
 
 const items = [
   { name: "Rock", value: "rock" },
@@ -24,16 +16,30 @@ const Harness = (props: Omit<DropdownProps, "dropdownRef">) => {
   return <Dropdown {...props} dropdownRef={dropdownRef} />;
 };
 
-beforeEach(() => {
-  searchState.genres = undefined;
-});
-
 describe("Dropdown", () => {
+  it("shows the selected item's name on the trigger", () => {
+    render(<Harness items={items} selected={["pop"]} isOpen={false} setIsOpen={vi.fn()} onSelect={vi.fn()} />);
+
+    expect(screen.getByText("Pop")).toBeInTheDocument();
+  });
+
+  it("shows the placeholder when nothing is selected", () => {
+    render(<Harness items={items} selected={[]} placeholder="Pick a genre" isOpen={false} setIsOpen={vi.fn()} onSelect={vi.fn()} />);
+
+    expect(screen.getByText("Pick a genre")).toBeInTheDocument();
+  });
+
+  it("joins the selected names in multiple mode", () => {
+    render(<Harness items={items} selected={["rock", "pop"]} isOpen={false} setIsOpen={vi.fn()} onSelect={vi.fn()} multiple />);
+
+    expect(screen.getByText("Rock, Pop")).toBeInTheDocument();
+  });
+
   it("selecting in single mode reports the value and closes", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const setIsOpen = vi.fn();
-    render(<Harness items={items} isOpen={true} setIsOpen={setIsOpen} onSelect={onSelect} />);
+    render(<Harness items={items} selected={[]} isOpen={true} setIsOpen={setIsOpen} onSelect={onSelect} />);
 
     await user.click(screen.getByText("Pop"));
 
@@ -41,24 +47,21 @@ describe("Dropdown", () => {
     expect(setIsOpen).toHaveBeenCalledWith(false);
   });
 
-  it("selecting in multiple mode accumulates and can deselect", async () => {
+  it("multiple mode reports additions and removals against the controlled selection", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<Harness items={items} isOpen={true} setIsOpen={vi.fn()} onSelect={onSelect} multiple />);
-
-    await user.click(screen.getByText("Rock"));
-    expect(onSelect).toHaveBeenLastCalledWith(["rock"]);
+    render(<Harness items={items} selected={["rock"]} isOpen={true} setIsOpen={vi.fn()} onSelect={onSelect} multiple />);
 
     await user.click(screen.getByText("Jazz"));
     expect(onSelect).toHaveBeenLastCalledWith(["rock", "jazz"]);
 
-    await user.click(screen.getByText("Rock"));
-    expect(onSelect).toHaveBeenLastCalledWith(["jazz"]);
+    await user.click(screen.getAllByText("Rock")[1]);
+    expect(onSelect).toHaveBeenLastCalledWith([]);
   });
 
   it("the search box filters the list", async () => {
     const user = userEvent.setup();
-    render(<Harness items={items} isOpen={true} setIsOpen={vi.fn()} onSelect={vi.fn()} multiple />);
+    render(<Harness items={items} selected={[]} isOpen={true} setIsOpen={vi.fn()} onSelect={vi.fn()} multiple />);
 
     await user.type(screen.getByPlaceholderText("Search..."), "ja");
 
@@ -67,25 +70,9 @@ describe("Dropdown", () => {
     expect(screen.queryByText("Pop")).not.toBeInTheDocument();
   });
 
-  it("preselects from the genres in the URL on mount", () => {
-    searchState.genres = "rock,pop";
-    const onSelect = vi.fn();
-    render(<Harness items={items} isOpen={false} setIsOpen={vi.fn()} onSelect={onSelect} multiple />);
-
-    expect(onSelect).toHaveBeenCalledWith(["rock", "pop"]);
-    expect(screen.getByText("Rock, Pop")).toBeInTheDocument();
-  });
-
-  it("falls back to the default selection on mount", () => {
-    const onSelect = vi.fn();
-    render(<Harness items={items} default={items[0]} isOpen={false} setIsOpen={vi.fn()} onSelect={onSelect} />);
-
-    expect(onSelect).toHaveBeenCalledWith(["rock"]);
-  });
-
   it("clicking outside the open list closes it", () => {
     const setIsOpen = vi.fn();
-    render(<Harness items={items} isOpen={true} setIsOpen={setIsOpen} onSelect={vi.fn()} />);
+    render(<Harness items={items} selected={[]} isOpen={true} setIsOpen={setIsOpen} onSelect={vi.fn()} />);
 
     fireEvent.mouseDown(document.body);
 

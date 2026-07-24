@@ -1,13 +1,13 @@
-import { Route } from "@/routes/__root";
-import type { GetPaginatedAlbumsOptions } from "@shared/types";
 import { AnimatePresence, motion } from "framer-motion";
 import type { RefObject } from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 export interface DropdownProps {
   items: { name: string; value: string }[];
-  /** Optional default selection */
-  default?: { name: string; value: string };
+  /** The currently selected values, owned by whoever renders the dropdown */
+  selected: string[];
+  /** Shown on the trigger when nothing is selected in single mode */
+  placeholder?: string;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   onSelect: (value: string[]) => void;
@@ -15,40 +15,14 @@ export interface DropdownProps {
   multiple?: boolean;
 }
 
-export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSelect, dropdownRef, multiple = false }: DropdownProps) => {
-  // Initialize selectedItems with default if provided
-  const [selectedItems, setSelectedItems] = useState<
-    {
-      name: string;
-      value: string;
-    }[]
-  >(() => (defaultItem && !multiple ? [defaultItem] : defaultItem && multiple ? [defaultItem] : []));
+/**
+ * A controlled dropdown. The parent owns the selection (usually through its
+ * route's search params) and this only reports changes, so it works on any
+ * page without knowing where the state lives.
+ */
+export const Dropdown = ({ items, selected, placeholder, isOpen, setIsOpen, onSelect, dropdownRef, multiple = false }: DropdownProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const initialSync = useRef(true);
-  const options: GetPaginatedAlbumsOptions = Route.useSearch();
-
-  // Sync URL-genres to selectedItems on first mount, or fallback to default
-  useEffect(() => {
-    if (initialSync.current) {
-      const raw = options.genres as string | undefined;
-      const list =
-        raw
-          ?.split(",")
-          .map(s => s.trim())
-          .filter(Boolean) ?? [];
-      const pre = items.filter(i => list.includes(i.value));
-
-      if (pre.length > 0) {
-        setSelectedItems(pre);
-        onSelect(pre.map(i => i.value));
-      } else if (defaultItem) {
-        setSelectedItems([defaultItem]);
-        onSelect([defaultItem.value]);
-      }
-
-      initialSync.current = false;
-    }
-  }, [items, options.genres, defaultItem, onSelect]);
+  const selectedItems = items.filter(item => selected.includes(item.value));
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -63,12 +37,9 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
 
   const handleSelect = (item: { name: string; value: string }) => {
     if (multiple) {
-      const exists = selectedItems.some(i => i.value === item.value);
-      const updated = exists ? selectedItems.filter(i => i.value !== item.value) : [...selectedItems, item];
-      setSelectedItems(updated);
-      onSelect(updated.map(i => i.value));
+      const exists = selected.includes(item.value);
+      onSelect(exists ? selected.filter(value => value !== item.value) : [...selected, item.value]);
     } else {
-      setSelectedItems([item]);
       onSelect([item.value]);
       setSearchTerm("");
       setIsOpen(false);
@@ -93,13 +64,7 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.02 }}
       >
-        {multiple
-          ? selectedItems.length > 0
-            ? selectedItems.map(i => i.name).join(", ")
-            : "Select option(s)"
-          : selectedItems.length > 0
-            ? selectedItems[0].name
-            : (defaultItem?.name ?? "Select an option")}
+        {multiple ? (selectedItems.length > 0 ? selectedItems.map(i => i.name).join(", ") : "Select option(s)") : (selectedItems[0]?.name ?? placeholder ?? "Select an option")}
       </motion.div>
 
       {/* dropdown list */}
@@ -128,7 +93,7 @@ export const Dropdown = ({ items, default: defaultItem, isOpen, setIsOpen, onSel
             {items
               .filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
               .map((item, idx) => {
-                const isSel = selectedItems.some(i => i.value === item.value);
+                const isSel = selected.includes(item.value);
                 return (
                   <motion.li
                     key={item.value}
