@@ -4,7 +4,9 @@ import { secureHeaders } from "hono/secure-headers";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { CORS_ORIGINS } from "@/config/cors";
+import { logger } from "@/config/logger";
 import { AppError } from "@/api/AppError";
+import { requestLogger } from "@/api/middleware/requestLogger";
 import { db, query, type Executor } from "@/db/client";
 
 import auth from "@/api/routes/AuthRoutes";
@@ -17,8 +19,9 @@ import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
 import job from "@/api/routes/JobRoutes";
 
-const base = new Hono<{ Variables: { db: Executor } }>();
+const base = new Hono<{ Variables: { db: Executor; requestID: string } }>();
 
+base.use("*", requestLogger);
 base.use("*", cors({ origin: CORS_ORIGINS, credentials: true }));
 base.use("*", secureHeaders());
 
@@ -53,17 +56,18 @@ export type AppType = typeof app;
 // HTTPExceptions and AppErrors carry their own status and a safe message.
 // Anything else is logged in full and returns a generic 500 so internals never reach the client.
 app.onError((err, c) => {
+  const requestID = c.get("requestID");
   if (err instanceof HTTPException) {
     return c.json({ message: err.message }, err.status);
   }
   if (err instanceof AppError) {
     if (err.status >= 500) {
-      console.error(err);
+      logger.error({ requestID, err }, err.message);
     } else {
-      console.error(`${err.status}: ${err.message}`);
+      logger.warn({ requestID }, `${err.status}: ${err.message}`);
     }
     return c.json({ message: err.message }, err.status as ContentfulStatusCode);
   }
-  console.error(err);
+  logger.error({ requestID, err }, "Unhandled error");
   return c.json({ message: "Internal server error" }, 500);
 });
