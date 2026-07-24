@@ -33,7 +33,9 @@ export class BuildInfoService {
     let postgres: string | null = null;
     try {
       const result = await query("SHOW server_version");
-      postgres = (result.rows[0]?.server_version as string) ?? null;
+      // The raw value carries the distro suffix, "15.13 (Debian 15.13-1...)",
+      // only the number matters here
+      postgres = (result.rows[0]?.server_version as string)?.split(" ")[0] ?? null;
     } catch {
       postgres = null;
     }
