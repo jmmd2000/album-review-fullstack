@@ -109,7 +109,7 @@ describe("AlbumReviewForm create flow", () => {
     await user.selectOptions(selects[0], "10");
     await user.selectOptions(selects[1], "10");
 
-    // Two perfect tracks: base 100, capped final score 100
+    // Two perfect tracks give a base of 100 and the bonuses cap the final score at 100
     await waitFor(() => expect(screen.getByText("100")).toBeInTheDocument());
   });
 

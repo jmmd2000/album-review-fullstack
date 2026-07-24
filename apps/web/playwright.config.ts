@@ -9,8 +9,9 @@ export default defineConfig({
   // and the mutating specs follow, one file at a time.
   workers: 1,
   projects: [
+    { name: "setup", testDir: "./e2e", testMatch: "auth.setup.ts" },
     { name: "seeded-state", testDir: "./e2e/read" },
-    { name: "mutations", testDir: "./e2e/mutations", dependencies: ["seeded-state"] },
+    { name: "mutations", testDir: "./e2e/mutations", dependencies: ["setup", "seeded-state"], use: { storageState: "e2e/.auth/admin.json" } },
   ],
   retries: 0,
   reporter: "list",

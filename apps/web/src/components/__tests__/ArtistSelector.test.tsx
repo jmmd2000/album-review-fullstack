@@ -21,7 +21,7 @@ describe("ArtistSelector", () => {
     const setValue = vi.fn();
     render(<ArtistSelector albumArtists={albumArtists} watchedArtists={["a1", "a2"]} watchedScoreArtists={["a1", "a2"]} setValue={setValue} />);
 
-    // Checkboxes come in pairs per artist: selection first, then score
+    // Checkboxes come in pairs per artist, the selection box first and the score box second
     const checkboxes = screen.getAllByRole("checkbox");
     await user.click(checkboxes[2]);
 

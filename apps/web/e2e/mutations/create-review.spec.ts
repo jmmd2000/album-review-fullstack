@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
 import { calculateAlbumScore } from "../../../../packages/shared/src/helpers/calculateAlbumScore";
 import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
-import { loginAsAdmin } from "../helpers";
 
 const REVIEW_TEXT = "great album, I enjoyed it";
 
@@ -28,8 +27,6 @@ test("create album review flow", async ({ page }) => {
   // The create page fetches the album through the api's spotify proxy. Answer
   // that one call from the fixture so the run never touches spotify.
   await page.route(`**/api/spotify/albums/${album.spotifyID}`, route => route.fulfill({ json: buildSpotifyAlbumResponse(album) }));
-
-  await loginAsAdmin(page);
 
   // The seeded bookmark is the unreviewed entry point
   await page.goto("/bookmarks");
