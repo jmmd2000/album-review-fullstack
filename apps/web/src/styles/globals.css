@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* The shared package carries class names too (the rating tier colours), and
+   the automatic scan doesn't cross package boundaries */
+@source "../../../../packages/shared/src";
+
 @theme {
   --animation-duration-lava0: 220s;
   --animation-duration-lava1: 180s;
