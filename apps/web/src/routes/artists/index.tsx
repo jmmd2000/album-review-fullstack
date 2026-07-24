@@ -1,7 +1,6 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
@@ -61,8 +60,8 @@ export const Route = createFileRoute("/artists/")({
     order: search.order,
     scoreType: search.scoreType,
   }),
-  loader: async ({ deps: { page, search, orderBy, order, scoreType } }: { deps: GetPaginatedArtistsOptions }) => {
-    return queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
+  loader: async ({ deps: { page, search, orderBy, order, scoreType }, context }) => {
+    return context.queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
   },
   component: RouteComponent,
   pendingComponent: () => <Skeleton variant="grid" />,

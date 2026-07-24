@@ -4,7 +4,6 @@ import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { client, handle } from "@/lib/client";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
@@ -34,8 +33,8 @@ export const Route = createFileRoute("/search/")({
     return result;
   },
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { query } }) => {
-    return queryClient.ensureQueryData(searchQueryOptions({ query }));
+  loader: async ({ deps: { query }, context }) => {
+    return context.queryClient.ensureQueryData(searchQueryOptions({ query }));
   },
   component: RouteComponent,
   pendingComponent: () => <Skeleton variant="grid" />,

@@ -3,10 +3,9 @@ import ArtistCard from "@/components/artist/ArtistCard";
 import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/ui/BentoCard";
 import StatBox from "@/components/ui/StatBox";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { GetStatsOptions } from "@shared/types";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Music, Users, Disc, Headphones } from "lucide-react";
@@ -73,12 +72,12 @@ export const Route = createFileRoute("/stats/")({
     slug: search.slug ?? "",
     resource: search.resource ?? "albums",
   }),
-  loader: async ({ deps: { slug, resource } }) =>
+  loader: async ({ deps: { slug, resource }, context }) =>
     Promise.all([
-      queryClient.ensureQueryData(overviewQueryOptions),
-      queryClient.ensureQueryData(genresQueryOptions(slug)),
-      queryClient.ensureQueryData(distributionQueryOptions(resource)),
-      queryClient.ensureQueryData(countQueryOptions),
+      context.queryClient.ensureQueryData(overviewQueryOptions),
+      context.queryClient.ensureQueryData(genresQueryOptions(slug)),
+      context.queryClient.ensureQueryData(distributionQueryOptions(resource)),
+      context.queryClient.ensureQueryData(countQueryOptions),
     ]),
   component: RouteComponent,
   head: () => ({
@@ -89,6 +88,7 @@ export const Route = createFileRoute("/stats/")({
 function RouteComponent() {
   const options: GetStatsOptions = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const queryClient = useQueryClient();
   const { data: favourites } = useQuery(overviewQueryOptions);
   const { data: counts } = useQuery(countQueryOptions);
 

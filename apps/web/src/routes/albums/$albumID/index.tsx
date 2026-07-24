@@ -1,6 +1,5 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import BlurryHeader from "@/components/layout/BlurryHeader";
 import ErrorComponent from "@/components/ui/ErrorComponent";
@@ -26,8 +25,8 @@ const reviewQueryOptions = (albumID: string) =>
   });
 
 export const Route = createFileRoute("/albums/$albumID/")({
-  loader: async ({ params }) => {
-    return queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+  loader: async ({ params, context }) => {
+    return context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
   },
   errorComponent: ErrorComponent,
   component: RouteComponent,

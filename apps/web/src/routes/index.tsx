@@ -1,4 +1,3 @@
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -19,7 +18,7 @@ const statsQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
-  loader: () => queryClient.ensureQueryData(statsQueryOptions),
+  loader: ({ context }) => context.queryClient.ensureQueryData(statsQueryOptions),
   component: Index,
   errorComponent: ErrorComponent,
 });

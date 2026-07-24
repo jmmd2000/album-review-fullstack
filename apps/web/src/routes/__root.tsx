@@ -1,10 +1,15 @@
 import type { ReactNode } from "react";
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/auth/AuthContext";
 import { Navbar } from "@/components/layout/Navbar";
 import appCss from "@/styles/globals.css?url";
 
-export const Route = createRootRoute({
+interface RouterContext {
+  queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [{ charSet: "UTF-8" }, { name: "viewport", content: "width=device-width, initial-scale=1.0" }, { title: "JamesReviewsMusic" }],
     links: [
