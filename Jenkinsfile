@@ -14,6 +14,9 @@ pipeline {
     VPS_USER = "james"
     GITHUB_USER = "jmmd2000"
     IMAGE_TAG = "${params.OVERRIDE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+    // Baked into the images as build args, base64 keeps quotes in a commit message intact
+    GIT_MESSAGE_B64 = sh(script: 'git log -1 --pretty=%s | base64 -w0', returnStdout: true).trim()
+    BUILT_AT = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
     APP_NAME = "album-reviews"
   }
 
@@ -39,10 +42,10 @@ pipeline {
             
             parallel failFast: true,
               "Backend Build": {
-                sh "docker build -f apps/api/Dockerfile -t ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG} ."
+                sh "docker build -f apps/api/Dockerfile --build-arg GIT_SHA=${IMAGE_TAG} --build-arg GIT_MESSAGE_B64=${GIT_MESSAGE_B64} --build-arg BUILT_AT=${BUILT_AT} -t ghcr.io/${GITHUB_USER}/album-api:${IMAGE_TAG} ."
               },
               "Frontend Build": {
-                sh "docker build -f apps/web/Dockerfile -t ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG} ."
+                sh "docker build -f apps/web/Dockerfile --build-arg GIT_SHA=${IMAGE_TAG} --build-arg BUILT_AT=${BUILT_AT} -t ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG} ."
               }
 
             parallel(
