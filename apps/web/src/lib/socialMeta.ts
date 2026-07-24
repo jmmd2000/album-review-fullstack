@@ -13,7 +13,8 @@ interface SocialMetaOptions {
  * defaults, the router dedupes by tag name.
  */
 export function socialMeta({ title, description, image }: SocialMetaOptions) {
-  const fullTitle = `${title} | JamesReviewsMusic`;
+  // The home page passes the site name itself, no point doubling it up
+  const fullTitle = title === "JamesReviewsMusic" ? title : `${title} | JamesReviewsMusic`;
   const tags: Array<Record<string, string>> = [
     { title: fullTitle },
     { name: "description", content: description },

@@ -4,6 +4,7 @@ import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/ui/BentoCard";
 import StatBox from "@/components/ui/StatBox";
 import { queryKeys } from "@/lib/queryKeys";
+import { socialMeta } from "@/lib/socialMeta";
 import type { GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -82,7 +83,10 @@ export const Route = createFileRoute("/stats/")({
     ]),
   component: RouteComponent,
   head: () => ({
-    meta: [{ title: "Stats" }],
+    meta: socialMeta({
+      title: "Stats",
+      description: "Numbers from the whole collection, favourite genres, rating distributions and listening totals.",
+    }),
   }),
 });
 

@@ -1,6 +1,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
+import { socialMeta } from "@/lib/socialMeta";
 import BlurryHeader from "@/components/layout/BlurryHeader";
 import ErrorComponent from "@/components/ui/ErrorComponent";
 import TrackList from "@/components/track/TrackList";
@@ -32,11 +33,13 @@ export const Route = createFileRoute("/albums/$albumID/")({
   errorComponent: ErrorComponent,
   component: RouteComponent,
   head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: loaderData?.album?.name,
-      },
-    ],
+    meta: loaderData
+      ? socialMeta({
+          title: `${loaderData.album.name} by ${loaderData.album.artistName}`,
+          description: `Scored ${loaderData.album.finalScore} out of 100. Released ${loaderData.album.releaseYear}.`,
+          image: loaderData.album.imageURLs[0]?.url,
+        })
+      : [],
   }),
 });
 

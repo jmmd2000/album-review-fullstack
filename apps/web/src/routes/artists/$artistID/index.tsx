@@ -1,5 +1,6 @@
 import ErrorComponent from "@/components/ui/ErrorComponent";
 import { queryKeys } from "@/lib/queryKeys";
+import { socialMeta } from "@/lib/socialMeta";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import HeaderDetails from "@/components/layout/HeaderDetails";
@@ -32,11 +33,13 @@ export const Route = createFileRoute("/artists/$artistID/")({
   errorComponent: ErrorComponent,
   component: RouteComponent,
   head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: loaderData?.artist?.name,
-      },
-    ],
+    meta: loaderData
+      ? socialMeta({
+          title: loaderData.artist.name,
+          description: loaderData.artist.unrated ? "Not yet rated." : `Rank #${loaderData.artist.leaderboardPosition} with a score of ${Math.ceil(loaderData.artist.totalScore)} out of 100.`,
+          image: loaderData.artist.imageURLs?.[0]?.url,
+        })
+      : [],
   }),
 });
 
