@@ -117,8 +117,8 @@ function RouteComponent() {
       { label: "Name", value: "name" },
       { label: "Date Added", value: "createdAt" },
     ],
-    defaultValue: options.orderBy || "totalScore",
-    defaultDirection: options.order || "desc",
+    value: options.orderBy || "totalScore",
+    direction: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
         search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
@@ -141,8 +141,8 @@ function RouteComponent() {
             { label: "Peak", value: "peak" },
             { label: "Latest", value: "latest" },
           ],
-          defaultValue: options.scoreType || "overall",
-          defaultDirection: options.order || "desc",
+          value: options.scoreType || "overall",
+          direction: options.order || "desc",
           onSortChange: (value, direction) => {
             navigate({
               search: (prev: Partial<GetPaginatedArtistsOptions>) => ({

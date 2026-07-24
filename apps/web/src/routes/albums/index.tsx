@@ -126,8 +126,8 @@ function RouteComponent() {
       { label: "Date Added", value: "createdAt" },
       { label: "Year", value: "releaseYear" },
     ],
-    defaultValue: options.orderBy || "createdAt",
-    defaultDirection: options.order || "desc",
+    value: options.orderBy || "createdAt",
+    direction: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
         search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
@@ -151,8 +151,8 @@ function RouteComponent() {
             { label: "Name", value: "name" },
             { label: "Date Added", value: "createdAt" },
           ],
-          defaultValue: options.secondaryOrderBy || "finalScore",
-          defaultDirection: options.secondaryOrder || "desc",
+          value: options.secondaryOrderBy || "finalScore",
+          direction: options.secondaryOrder || "desc",
           onSortChange: (value, direction) => {
             navigate({
               search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
