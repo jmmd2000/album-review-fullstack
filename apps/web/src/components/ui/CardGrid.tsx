@@ -2,10 +2,10 @@
 
 import type React from "react";
 
-import CardGridControls, { type DropdownControlsProps } from "@components/ui/CardGridControls";
+import CardGridControls, { type DropdownControlsProps } from "@/components/ui/CardGridControls";
 import { motion } from "framer-motion";
 import { easeOut } from "framer-motion";
-import type { SortDropdownProps } from "@components/ui/SortDropdown";
+import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
 interface CardGridProps {
   /** The cards to display in the grid */

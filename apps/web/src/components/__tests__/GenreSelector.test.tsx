@@ -4,8 +4,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm, useFieldArray } from "react-hook-form";
 import type { Genre, Jsonified } from "@shared/types";
-import GenreSelector from "../form/GenreSelector";
-import type { CreateReviewFormData } from "../form/AlbumReviewForm";
+import GenreSelector from "@/components/form/GenreSelector";
+import type { CreateReviewFormData } from "@/components/form/AlbumReviewForm";
 
 const knownGenres = [
   { id: 1, name: "Rock", slug: "rock" },

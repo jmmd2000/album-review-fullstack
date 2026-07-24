@@ -3,7 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Mock } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import AlbumCard from "@components/album/AlbumCard";
+import AlbumCard from "@/components/album/AlbumCard";
 import { mockDisplayAlbum, mockUnreviewedAlbum } from "@/__tests__/constants";
 import { client } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";

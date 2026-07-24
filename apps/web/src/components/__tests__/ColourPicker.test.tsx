@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import { ColourPicker } from "@components/form/ColourPicker";
+import { ColourPicker } from "@/components/form/ColourPicker";
 
 describe("ColourPicker", () => {
   it("renders the label", async () => {

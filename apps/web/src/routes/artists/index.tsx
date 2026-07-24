@@ -5,8 +5,8 @@ import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
-import { ListPageLayout } from "@components/layout/ListPageLayout";
-import CardGrid from "@components/ui/CardGrid";
+import { ListPageLayout } from "@/components/layout/ListPageLayout";
+import CardGrid from "@/components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 

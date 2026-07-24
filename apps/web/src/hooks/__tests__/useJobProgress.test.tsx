@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Mock } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useJobProgress } from "../useJobProgress";
+import { useJobProgress } from "@/hooks/useJobProgress";
 import { client } from "@/lib/client";
 
 // Replace the RPC client's job endpoints with mocks, but keep the real handle()

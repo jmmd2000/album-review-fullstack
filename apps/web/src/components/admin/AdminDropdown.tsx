@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { InferResponseType } from "hono/client";
 import { useAuth } from "@/auth/useAuth";
 import { timeAgo } from "@shared/helpers/formatDate";
-import Dialog from "@components/ui/Dialog";
+import Dialog from "@/components/ui/Dialog";
 import { client, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 

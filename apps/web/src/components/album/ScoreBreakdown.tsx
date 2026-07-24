@@ -1,8 +1,8 @@
 import type { ReviewBonuses } from "@shared/types";
 import { motion } from "framer-motion";
 import { Info } from "lucide-react";
-import Button from "@components/ui/Button";
-import Dialog from "@components/ui/Dialog";
+import Button from "@/components/ui/Button";
+import Dialog from "@/components/ui/Dialog";
 
 interface ScoreBreakdownProps {
   baseScore: number;

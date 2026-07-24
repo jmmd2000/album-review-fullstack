@@ -4,8 +4,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import type { DisplayTrack } from "@shared/types";
-import TrackList from "../track/TrackList";
-import type { CreateReviewFormData } from "../form/AlbumReviewForm";
+import TrackList from "@/components/track/TrackList";
+import type { CreateReviewFormData } from "@/components/form/AlbumReviewForm";
 
 const track = (id: string, name: string, rating?: number): DisplayTrack => ({
   spotifyID: id,

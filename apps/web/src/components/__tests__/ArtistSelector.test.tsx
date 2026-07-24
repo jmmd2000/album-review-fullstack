@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ArtistSelector from "../form/ArtistSelector";
+import ArtistSelector from "@/components/form/ArtistSelector";
 
 const albumArtists = [
   { spotifyID: "a1", name: "Drake", imageURLs: [] },

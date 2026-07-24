@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCountUp } from "../useCountUp";
+import { useCountUp } from "@/hooks/useCountUp";
 
 // Fake timers drive both performance.now and requestAnimationFrame, so the
 // animation can be stepped deterministically.

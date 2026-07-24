@@ -1,7 +1,7 @@
 import type { AlbumArtist, Jsonified, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { formatDate } from "@shared/helpers/formatDate";
-import ArtistStack from "@components/artist/ArtistStack";
+import ArtistStack from "@/components/artist/ArtistStack";
 
 /**
  * The props for the AlbumDetails component.

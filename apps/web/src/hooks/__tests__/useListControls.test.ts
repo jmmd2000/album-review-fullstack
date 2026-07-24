@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { useListControls } from "../useListControls";
+import { useListControls } from "@/hooks/useListControls";
 
 type Search = { page?: number; search?: string };
 

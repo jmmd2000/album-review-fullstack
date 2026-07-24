@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import GenrePills from "@components/ui/GenrePills";
+import GenrePills from "@/components/ui/GenrePills";
 import type { Genre, Jsonified } from "@shared/types";
 
 const now = new Date().toISOString();

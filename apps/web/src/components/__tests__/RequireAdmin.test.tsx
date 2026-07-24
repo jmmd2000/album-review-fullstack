@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { RequireAdmin } from "../admin/RequireAdmin";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
 
 const { navigateMock, authState } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
