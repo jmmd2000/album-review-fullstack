@@ -33,7 +33,9 @@ test("editing a review recalculates the score", async ({ page }) => {
   }
 
   await page.getByTestId("album-review-form").getByRole("button", { name: "Submit" }).click();
-  await expect(page.getByText("Review submitted successfully!")).toBeVisible();
+  // Same allowance as the create spec, submits can queue behind another
+  // spec's leaderboard-updating transaction under parallel mutations
+  await expect(page.getByText("Review submitted successfully!")).toBeVisible({ timeout: 15000 });
 
   // The album page now shows the recalculated score
   await page.goto(`/albums/${review.spotifyID}`);
