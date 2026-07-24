@@ -1,4 +1,5 @@
 import { queryKeys } from "@/lib/queryKeys";
+import { socialMeta } from "@/lib/socialMeta";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@/components/ui/ErrorComponent";
@@ -20,6 +21,12 @@ const statsQueryOptions = queryOptions({
 export const Route = createFileRoute("/")({
   ssr: true,
   loader: ({ context }) => context.queryClient.ensureQueryData(statsQueryOptions),
+  head: () => ({
+    meta: socialMeta({
+      title: "JamesReviewsMusic",
+      description: "This is my album review blog, where I share my thoughts on a variety of albums and artists.",
+    }),
+  }),
   component: Index,
   errorComponent: ErrorComponent,
 });

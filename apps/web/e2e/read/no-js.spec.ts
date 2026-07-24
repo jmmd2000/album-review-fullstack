@@ -74,3 +74,24 @@ test("an admin page still serves the navbar shell", async ({ page }) => {
 
   await expect(page.getByRole("link", { name: "Stats" }).first()).toBeVisible();
 });
+
+test("an album page serves its unfurl tags", async ({ page }) => {
+  const review = REVIEWED[0];
+  const album = capturedAlbum(review.spotifyID);
+
+  await page.goto(`/albums/${review.spotifyID}`);
+
+  const ogTitle = await page.locator('meta[property="og:title"]').getAttribute("content");
+  expect(ogTitle).toContain(album.name);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /i\.scdn\.co/);
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+});
+
+test("an artist page and the home page serve their unfurl tags", async ({ page }) => {
+  await page.goto(`/artists/${primaryArtist.spotifyID}`);
+  const ogTitle = await page.locator('meta[property="og:title"]').getAttribute("content");
+  expect(ogTitle).toContain(primaryArtist.name);
+
+  await page.goto("/");
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute("content", /album review blog/);
+});

@@ -14,7 +14,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   // clamps the whole tree. Children still default to client-only via start.ts
   ssr: true,
   head: () => ({
-    meta: [{ charSet: "UTF-8" }, { name: "viewport", content: "width=device-width, initial-scale=1.0" }, { title: "JamesReviewsMusic" }],
+    meta: [
+      { charSet: "UTF-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+      { title: "JamesReviewsMusic" },
+      { name: "description", content: "My album review blog. Scores, rankings and stats for every album I listen to." },
+    ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.ico" },
       { rel: "stylesheet", href: appCss },

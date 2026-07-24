@@ -2,6 +2,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
+import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { ListPageLayout } from "@/components/layout/ListPageLayout";
@@ -74,11 +75,10 @@ export const Route = createFileRoute("/albums/")({
   component: RouteComponent,
   pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
-    meta: [
-      {
-        title: "Albums",
-      },
-    ],
+    meta: socialMeta({
+      title: "Albums",
+      description: "Every album I have reviewed, scored out of 100.",
+    }),
   }),
 });
 

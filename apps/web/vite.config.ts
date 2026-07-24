@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const reactVersion = require("react/package.json").version as string;
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   // Build info for the settings page. Jenkins sets GIT_SHA and BUILT_AT in the
   // image build, local runs fall back to "dev"
   define: {
@@ -37,9 +37,10 @@ export default defineConfig({
     },
   },
   // The production image ships no app dependencies, so the server bundle
-  // must inline everything it imports rather than reaching for node_modules
+  // must inline everything it imports rather than reaching for node_modules.
+  // Builds only, the dev module runner chokes on inlined commonjs
   ssr: {
-    noExternal: true,
+    noExternal: command === "build" ? true : undefined,
   },
   // The ssr pass computes its own hash for the stylesheet it links in the
   // document shell. Emit the file rather than assuming the client pass
@@ -54,4 +55,4 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "../../packages/shared/src"),
     },
   },
-});
+}));
