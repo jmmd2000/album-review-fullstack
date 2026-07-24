@@ -57,11 +57,22 @@ const countQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute("/stats/")({
-  loaderDeps: ({ search }: { search: GetStatsOptions }) => ({
+  validateSearch: (search: Record<string, unknown>): GetStatsOptions => {
+    const result: GetStatsOptions = {
+      slug: (search.slug as string) || "",
+      resource: (search.resource as GetStatsOptions["resource"]) || "albums",
+    };
+
+    if (result.slug === "") delete result.slug;
+    if (result.resource === "albums") delete result.resource;
+
+    return result;
+  },
+  loaderDeps: ({ search }) => ({
     slug: search.slug ?? "",
     resource: search.resource ?? "albums",
   }),
-  loader: async ({ deps: { slug, resource } }: { deps: { slug: string; resource: "albums" | "tracks" | "artists" } }) =>
+  loader: async ({ deps: { slug, resource } }) =>
     Promise.all([
       queryClient.ensureQueryData(overviewQueryOptions),
       queryClient.ensureQueryData(genresQueryOptions(slug)),
@@ -80,22 +91,22 @@ function RouteComponent() {
   const { data: favourites } = useQuery(overviewQueryOptions);
   const { data: counts } = useQuery(countQueryOptions);
 
-  const [selectedResource, setSelectedResource] = useState<"albums" | "tracks" | "artists">("albums");
+  // The URL is the source of truth for both selections
+  const selectedResource = options.resource ?? "albums";
   const { data: distribution } = useQuery(distributionQueryOptions(selectedResource));
 
-  const [selectedGenre, setSelectedGenre] = useState<string>(options.slug || "");
+  // The slug comes from the URL, falling back to the first known genre once
+  // the base query answers. With a slug in the URL both queries share a key,
+  // so nothing extra is fetched
+  const { data: baseGenre } = useQuery(genresQueryOptions(options.slug ?? ""));
+  const selectedGenre = options.slug || baseGenre?.allGenres?.[0]?.slug || "";
   const { data: genre } = useQuery(genresQueryOptions(selectedGenre));
-
-  if (!selectedGenre && genre?.allGenres?.length) {
-    setSelectedGenre(genre.allGenres[0].slug);
-  }
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLUListElement>(null);
 
   const onSelectGenre = (value: string[]) => {
     const newSlug = value[0];
-    setSelectedGenre(newSlug);
     setDropdownOpen(false);
 
     navigate({
@@ -109,7 +120,6 @@ function RouteComponent() {
 
   const onSelectResource = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value as "albums" | "tracks" | "artists";
-    setSelectedResource(value);
 
     navigate({
       search: prev => ({ ...prev, resource: value }),

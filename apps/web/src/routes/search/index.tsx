@@ -23,10 +23,17 @@ const searchQueryOptions = (query: SearchAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/search/")({
-  loaderDeps: ({ search }: { search: SearchAlbumsOptions }) => ({
-    query: search.query,
-  }),
-  loader: async ({ deps: { query } }: { deps: SearchAlbumsOptions }) => {
+  validateSearch: (search: Record<string, unknown>): SearchAlbumsOptions => {
+    const result: SearchAlbumsOptions = {
+      query: (search.query as string) || "",
+    };
+
+    if (result.query === "") delete result.query;
+
+    return result;
+  },
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps: { query } }) => {
     return queryClient.ensureQueryData(searchQueryOptions({ query }));
   },
   component: RouteComponent,

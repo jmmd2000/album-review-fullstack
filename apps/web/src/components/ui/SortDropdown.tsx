@@ -13,20 +13,20 @@ export interface SortDropdownProps {
   options: SortOption[];
   /** Callback function to handle sort changes */
   onSortChange: (value: string, direction: "asc" | "desc") => void;
-  /** Default selected value */
-  defaultValue?: string;
-  /** Default sort direction */
-  defaultDirection?: "asc" | "desc";
+  /** The current sort value, read from the URL by the page */
+  value?: string;
+  /** The current sort direction, read from the URL by the page */
+  direction?: "asc" | "desc";
 }
 
 /**
- * This component creates a dropdown for sorting options.
- * It allows the user to select a sorting option and toggle between ascending and descending order.
+ * A controlled dropdown for sorting options. The page owns the state through
+ * the URL, this only reports changes, so back and forward move it too.
  */
-export default function SortDropdown({ options, onSortChange, defaultValue = "createdAt", defaultDirection = "desc" }: SortDropdownProps) {
+export default function SortDropdown({ options, onSortChange, value, direction = "desc" }: SortDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<SortOption | null>(defaultValue ? options.find(option => option.value === defaultValue) || null : null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultDirection);
+  const selectedOption = value ? options.find(option => option.value === value) || null : null;
+  const sortDirection = direction;
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -46,16 +46,13 @@ export default function SortDropdown({ options, onSortChange, defaultValue = "cr
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleOptionSelect = (option: SortOption) => {
-    setSelectedOption(option);
     setIsOpen(false);
     onSortChange(option.value, sortDirection);
   };
 
   const toggleSortDirection = () => {
-    const newDirection = sortDirection === "asc" ? "desc" : "asc";
-    setSortDirection(newDirection);
     if (selectedOption) {
-      onSortChange(selectedOption.value, newDirection);
+      onSortChange(selectedOption.value, sortDirection === "asc" ? "desc" : "asc");
     }
   };
 

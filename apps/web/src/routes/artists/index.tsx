@@ -47,6 +47,9 @@ export const Route = createFileRoute("/artists/")({
     // Only include non-default values in the URL
     if (result.page === 1) delete result.page;
     if (result.search === "") delete result.search;
+    if (result.orderBy === "totalScore") delete result.orderBy;
+    if (result.order === "desc") delete result.order;
+    if (result.scoreType === "overall") delete result.scoreType;
 
     return result;
   },
@@ -114,8 +117,8 @@ function RouteComponent() {
       { label: "Name", value: "name" },
       { label: "Date Added", value: "createdAt" },
     ],
-    defaultValue: options.orderBy || "totalScore",
-    defaultDirection: options.order || "desc",
+    value: options.orderBy || "totalScore",
+    direction: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
         search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
@@ -138,8 +141,8 @@ function RouteComponent() {
             { label: "Peak", value: "peak" },
             { label: "Latest", value: "latest" },
           ],
-          defaultValue: options.scoreType || "overall",
-          defaultDirection: options.order || "desc",
+          value: options.scoreType || "overall",
+          direction: options.order || "desc",
           onSortChange: (value, direction) => {
             navigate({
               search: (prev: Partial<GetPaginatedArtistsOptions>) => ({

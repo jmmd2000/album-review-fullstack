@@ -21,7 +21,7 @@ async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
         ...(options.order ? { order: options.order } : {}),
         ...(options.orderBy ? { orderBy: options.orderBy } : {}),
         ...(options.search ? { search: options.search } : {}),
-        ...(options.genres ? { genres: Array.isArray(options.genres) ? options.genres.join(",") : options.genres } : {}),
+        ...(options.genres && options.genres.length > 0 ? { genres: options.genres.join(",") } : {}),
         ...(options.secondaryOrderBy ? { secondaryOrderBy: options.secondaryOrderBy } : {}),
         ...(options.secondaryOrder ? { secondaryOrder: options.secondaryOrder } : {}),
       },
@@ -38,25 +38,38 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/albums/")({
-  loaderDeps: ({ search }: { search: GetPaginatedAlbumsOptions }) => ({
-    page: search.page,
-    search: search.search,
-    orderBy: search.orderBy,
-    order: search.order,
-    secondaryOrderBy: search.secondaryOrderBy,
-    secondaryOrder: search.secondaryOrder,
-  }),
-  loader: async ({ deps: { page, search, orderBy, order, secondaryOrderBy, secondaryOrder } }: { deps: GetPaginatedAlbumsOptions }) => {
-    return queryClient.ensureQueryData(
-      albumQueryOptions({
-        page,
-        search,
-        orderBy,
-        order,
-        secondaryOrderBy,
-        secondaryOrder,
-      })
-    );
+  validateSearch: (search: Record<string, unknown>): GetPaginatedAlbumsOptions => {
+    // The genre filter arrives as an array from in-app navigation but old
+    // links may still carry the comma string form
+    const rawGenres = search.genres;
+    const genres = Array.isArray(rawGenres) ? (rawGenres as string[]) : typeof rawGenres === "string" && rawGenres !== "" ? rawGenres.split(",") : [];
+
+    const result: GetPaginatedAlbumsOptions = {
+      page: Number(search.page) || 1,
+      search: (search.search as string) || "",
+      orderBy: (search.orderBy as GetPaginatedAlbumsOptions["orderBy"]) || "createdAt",
+      order: (search.order as GetPaginatedAlbumsOptions["order"]) || "desc",
+      genres,
+      secondaryOrderBy: search.secondaryOrderBy as GetPaginatedAlbumsOptions["secondaryOrderBy"],
+      secondaryOrder: search.secondaryOrder as GetPaginatedAlbumsOptions["secondaryOrder"],
+    };
+
+    // Only include non-default values in the URL
+    if (result.page === 1) delete result.page;
+    if (result.search === "") delete result.search;
+    if (result.orderBy === "createdAt") delete result.orderBy;
+    if (result.order === "desc") delete result.order;
+    if (genres.length === 0) delete result.genres;
+    if (!result.secondaryOrderBy) delete result.secondaryOrderBy;
+    if (!result.secondaryOrder) delete result.secondaryOrder;
+
+    return result;
+  },
+  // The whole search state feeds the loader, so a genre-filtered visit
+  // preloads the filtered list instead of the unfiltered one
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
+    return queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
   head: () => ({
@@ -113,13 +126,13 @@ function RouteComponent() {
       { label: "Date Added", value: "createdAt" },
       { label: "Year", value: "releaseYear" },
     ],
-    defaultValue: options.orderBy || "createdAt",
-    defaultDirection: options.order || "desc",
+    value: options.orderBy || "createdAt",
+    direction: options.order || "desc",
     onSortChange: (value, direction) => {
       navigate({
         search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
           ...prev,
-          orderBy: value,
+          orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
           order: direction,
           // Set default secondary sort when year is selected, clear when not
           secondaryOrderBy: value === "releaseYear" ? prev.secondaryOrderBy || "finalScore" : undefined,
@@ -138,13 +151,13 @@ function RouteComponent() {
             { label: "Name", value: "name" },
             { label: "Date Added", value: "createdAt" },
           ],
-          defaultValue: options.secondaryOrderBy || "finalScore",
-          defaultDirection: options.secondaryOrder || "desc",
+          value: options.secondaryOrderBy || "finalScore",
+          direction: options.secondaryOrder || "desc",
           onSortChange: (value, direction) => {
             navigate({
               search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
                 ...prev,
-                secondaryOrderBy: value,
+                secondaryOrderBy: value as GetPaginatedAlbumsOptions["secondaryOrderBy"],
                 secondaryOrder: direction,
               }),
             });
@@ -154,8 +167,8 @@ function RouteComponent() {
 
   const genres = data?.relatedGenres && data.relatedGenres.length > 0 ? data.relatedGenres : data?.genres || [];
 
-  // Get genre slugs from URL (as string or array)
-  const genreSlugs = options.genres ? (Array.isArray(options.genres) ? options.genres : typeof options.genres === "string" ? (options.genres as string).split(",") : []) : [];
+  // validateSearch always hands genres over as an array
+  const genreSlugs = options.genres ?? [];
 
   // Find corresponding genres in data.genres
   const selectedGenres = data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
@@ -184,7 +197,7 @@ function RouteComponent() {
       navigate({
         search: prev => ({
           ...prev,
-          genres: value.length > 0 ? value.join(",") : undefined,
+          genres: value.length > 0 ? value : undefined,
         }),
       });
     },
