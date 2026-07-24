@@ -2,7 +2,7 @@ import type { DisplayTrack, ExtractedColor, Genre, Jsonified, ReviewBonuses, Rev
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import TrackList from "@components/track/TrackList";
-import { BestWorstSong } from "@components/album/ReviewDetails";
+import { BestWorstSong } from "@/components/album/BestWorstSong";
 import Button from "@components/ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import RatingChip from "@components/ui/RatingChip";
