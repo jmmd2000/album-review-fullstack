@@ -8,6 +8,10 @@ import { useAlbumStatus } from "../useAlbumStatus";
 import { client } from "@/lib/client";
 import type { DisplayAlbum } from "@shared/types";
 
+const { authState } = vi.hoisted(() => ({ authState: { isAdmin: true, isPending: false } }));
+
+vi.mock("@/auth/useAuth", () => ({ useAuth: () => authState }));
+
 // Replace the RPC client's two status endpoints with mocks, but keep the real
 // handle() so the response-unwrapping path is exercised for real.
 vi.mock("@/lib/client", async importActual => {
@@ -68,6 +72,7 @@ describe("useAlbumStatus", () => {
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
+    authState.isAdmin = true;
     vi.clearAllMocks();
   });
 
@@ -132,7 +137,7 @@ describe("useAlbumStatus", () => {
     expect(bookmarksGet).toHaveBeenCalledWith({ query: { ids: ["album-1", "album-2"] } });
   });
 
-  it("surfaces isError when a query fails instead of hiding it", async () => {
+  it("surfaces isError and the error itself when a query fails", async () => {
     bookmarksGet.mockResolvedValue(jsonResponse({}));
     scoresGet.mockRejectedValue(new Error("boom"));
 
@@ -141,5 +146,27 @@ describe("useAlbumStatus", () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
+    expect(result.current.error).toBeInstanceOf(Error);
+  });
+
+  it("never asks about bookmarks when not admin", async () => {
+    authState.isAdmin = false;
+    scoresGet.mockResolvedValue(jsonResponse([{ spotifyID: "album-1", reviewScore: 85 }]));
+
+    const { result } = renderHook(() => useAlbumStatus(mockAlbums), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.data[0].finalScore).toBe(85);
+    });
+    expect(bookmarksGet).not.toHaveBeenCalled();
+    expect(result.current.data[0].bookmarked).toBe(false);
+  });
+
+  it("fires nothing for an empty album list", () => {
+    const { result } = renderHook(() => useAlbumStatus([]), { wrapper });
+
+    expect(bookmarksGet).not.toHaveBeenCalled();
+    expect(scoresGet).not.toHaveBeenCalled();
+    expect(result.current.isLoading).toBe(false);
   });
 });

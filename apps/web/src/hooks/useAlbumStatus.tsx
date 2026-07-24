@@ -1,32 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DisplayAlbum } from "@shared/types";
+import { useAuth } from "@/auth/useAuth";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function useAlbumStatus(albums: DisplayAlbum[]) {
+  const { isAdmin } = useAuth();
   const ids = albums.map(a => a.spotifyID);
 
-  // Bookmark‐status query
+  // Bookmark-status query. The endpoint is admin only, so it never fires for
+  // anonymous visitors, and an empty album list has nothing to ask about
   const {
     data: bookmarkData = {},
     isLoading: isLoadingBookmarks,
     isError: isBookmarksError,
+    error: bookmarksError,
   } = useQuery({
     queryKey: queryKeys.bookmarks.status(ids),
     queryFn: () => handle(client.api.bookmarks.status.$get({ query: { ids } })),
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: "always",
+    enabled: isAdmin && ids.length > 0,
+    staleTime: 30_000,
   });
 
-  // review‐score query
+  // review-score query
   const {
     data: scoreArray = [],
     isLoading: isLoadingScores,
     isError: isScoresError,
+    error: scoresError,
   } = useQuery({
     queryKey: queryKeys.albums.scores(ids),
     queryFn: () => handle(client.api.albums.scores.$get({ query: { ids: ids.join(",") } })),
+    enabled: ids.length > 0,
     // scores rarely change so no need to auto refetch
     staleTime: Infinity,
   });
@@ -49,5 +54,6 @@ export function useAlbumStatus(albums: DisplayAlbum[]) {
     data: enriched,
     isLoading: isLoadingBookmarks || isLoadingScores,
     isError: isBookmarksError || isScoresError,
+    error: bookmarksError ?? scoresError,
   };
 }
