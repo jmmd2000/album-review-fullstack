@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
+import { Skeleton } from "@components/ui/Skeleton";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 
@@ -33,7 +34,6 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   queryOptions({
     queryKey: queryKeys.albums.list(options),
     queryFn: () => fetchPaginatedAlbums(options),
-    placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -72,6 +72,7 @@ export const Route = createFileRoute("/albums/")({
     return queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
+  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -83,7 +84,7 @@ export const Route = createFileRoute("/albums/")({
 
 function RouteComponent() {
   const options: GetPaginatedAlbumsOptions = Route.useSearch();
-  const { data } = useQuery(albumQueryOptions(options));
+  const { data } = useSuspenseQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const handleNextPage = () => {
@@ -204,7 +205,6 @@ function RouteComponent() {
     },
   };
 
-  if (!data || !data.albums) return <div>Loading...</div>;
   return (
     <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <CardGrid

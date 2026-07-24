@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import CardGrid from "@/components/ui/CardGrid";
+import { Skeleton } from "@/components/ui/Skeleton";
 import AlbumCard from "@/components/album/AlbumCard";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
@@ -30,7 +31,6 @@ const albumQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>
   queryOptions({
     queryKey: queryKeys.bookmarks.list(options),
     queryFn: () => fetchPaginatedBookmarkedAlbums(options),
-    placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -56,6 +56,7 @@ export const Route = createFileRoute("/bookmarks/")({
     return queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
+  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -67,7 +68,7 @@ export const Route = createFileRoute("/bookmarks/")({
 
 function RouteComponent() {
   const options: GetPaginatedBookmarkedAlbumsOptions = Route.useSearch();
-  const { data } = useQuery(albumQueryOptions(options));
+  const { data } = useSuspenseQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const handleNextPage = () => {
@@ -119,7 +120,6 @@ function RouteComponent() {
     },
   };
 
-  if (!data || !data.albums) return <div>Loading...</div>;
   return (
     <RequireAdmin>
       <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>

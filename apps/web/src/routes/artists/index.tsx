@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
@@ -11,6 +11,7 @@ import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
 import type { GetPaginatedArtistsOptions } from "@shared/types";
 import { PAGE_SIZE } from "@shared/constants";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
   return handle(
@@ -30,7 +31,6 @@ const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
   queryOptions({
     queryKey: queryKeys.artists.list(options),
     queryFn: () => fetchPaginatedArtists(options),
-    placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -64,6 +64,7 @@ export const Route = createFileRoute("/artists/")({
     return queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
   },
   component: RouteComponent,
+  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -75,7 +76,7 @@ export const Route = createFileRoute("/artists/")({
 
 function RouteComponent() {
   const options: GetPaginatedArtistsOptions = Route.useSearch();
-  const { data } = useQuery(artistQueryOptions(options));
+  const { data } = useSuspenseQuery(artistQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const handleNextPage = () => {
@@ -154,8 +155,6 @@ function RouteComponent() {
           },
         }
       : undefined;
-
-  if (!data || !data.artists) return <div>Loading...</div>;
 
   // Calculate current position for each artist based on sort order
   const artistsWithPosition = data.artists.map((artist, index) => {

@@ -7,10 +7,11 @@ import { client, handle } from "@/lib/client";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 async function searchSpotifyAlbums(query: SearchAlbumsOptions) {
   return handle(client.api.spotify.albums.search.$get({ query: { query: String(query.query) } }));
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/search/")({
     return queryClient.ensureQueryData(searchQueryOptions({ query }));
   },
   component: RouteComponent,
+  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -48,7 +50,7 @@ export const Route = createFileRoute("/search/")({
 
 function RouteComponent() {
   const options: SearchAlbumsOptions = Route.useSearch();
-  const { data } = useQuery(searchQueryOptions(options));
+  const { data } = useSuspenseQuery(searchQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
   const [recentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
   const [pageTitle, setPageTitle] = useState<string>("Search Albums");
@@ -76,7 +78,6 @@ function RouteComponent() {
     });
   };
 
-  if (!data) return <div>Loading...</div>;
   return (
     <>
       <RequireAdmin>
