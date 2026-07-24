@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { SettingsService } from "@/api/services/SettingsService";
+import { BuildInfoService } from "@/api/services/BuildInfoService";
 import { ArtistService } from "@/api/services/ArtistService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
@@ -38,6 +39,9 @@ const settings = new Hono()
     const result = await ArtistService.recalculateAllArtistScores();
     await SettingsService.setLastRun("scores");
     return c.json(result, 200);
+  })
+  .get("/build-info", async c => {
+    return c.json(await BuildInfoService.getBuildInfo(), 200);
   });
 
 export default settings;

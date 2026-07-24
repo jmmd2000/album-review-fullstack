@@ -29,6 +29,15 @@ RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
 # Stage 2: Production stage
 FROM node:22.22.0-alpine AS production
 
+# Build info baked in by Jenkins, served from the settings build-info route.
+# Local builds fall back to "dev"
+ARG GIT_SHA=dev
+ARG GIT_MESSAGE_B64=""
+ARG BUILT_AT=""
+ENV GIT_SHA=$GIT_SHA
+ENV GIT_MESSAGE_B64=$GIT_MESSAGE_B64
+ENV BUILT_AT=$BUILT_AT
+
 WORKDIR /app
 
 # Copy workspace files and package files

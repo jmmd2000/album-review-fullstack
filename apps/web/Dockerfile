@@ -25,6 +25,13 @@ COPY packages/shared ./packages/shared
 # Build the frontend
 WORKDIR /app/apps/web
 
+# Build info baked into the bundle through the vite define, so the web app
+# knows its own sha independently of the api. Local builds fall back to "dev"
+ARG GIT_SHA=dev
+ARG BUILT_AT=""
+ENV GIT_SHA=$GIT_SHA
+ENV BUILT_AT=$BUILT_AT
+
 RUN pnpm run build
 
 # Stage 2: Production stage

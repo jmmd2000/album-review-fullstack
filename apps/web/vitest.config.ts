@@ -4,6 +4,13 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  // The same globals the vite build defines.
+  define: {
+    __GIT_SHA__: JSON.stringify("test-web-sha"),
+    __BUILT_AT__: JSON.stringify(""),
+    __REACT_VERSION__: JSON.stringify("19.0.0-test"),
+    __VITE_VERSION__: JSON.stringify("6.0.0-test"),
+  },
   test: {
     globals: true,
     environment: "jsdom",

@@ -1,4 +1,5 @@
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
+import { BuildInfo } from "@/components/settings/BuildInfo";
 import { createFileRoute } from "@tanstack/react-router";
 import { queryClient } from "@/main";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
@@ -152,6 +153,8 @@ function RouteComponent() {
             )}
             {recalcScoresMut.isError && <div className="text-xs text-red-400">{recalcScoresMut.error?.message ?? "Failed to recalculate scores."}</div>}
           </SettingsCard>
+
+          <BuildInfo />
         </motion.div>
       </div>
     </RequireAdmin>
