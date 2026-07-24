@@ -34,22 +34,27 @@ ENV BUILT_AT=$BUILT_AT
 
 RUN pnpm run build
 
+# Deploy prod deps to a clean directory. The app libraries are all bundled by
+# vite, so this is only the node server's own imports
+WORKDIR /app
+RUN pnpm --filter @album-reviews/web deploy --prod --legacy /deploy
+
 # Stage 2: Production stage
-FROM nginx:1.30.4-alpine AS production
+FROM node:22.22.0-alpine AS production
 
-WORKDIR /usr/share/nginx/html
+WORKDIR /app
 
-# Remove default Nginx static files
-RUN rm -rf ./*
+COPY --from=build /deploy/node_modules ./node_modules
 
-# Copy built frontend from the build stage
-COPY --from=build /app/apps/web/dist .
+# The client assets and the start server bundle, served by server.js
+COPY --from=build /app/apps/web/dist ./dist
+COPY apps/web/server.js .
 
-# Create Nginx config that redirects to index.html for SPA
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+ENV NODE_ENV=production
 
-# Expose port 80
-EXPOSE 80
+# The app only reads its own files, which stay root-owned, the process runs unprivileged
+USER node
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+
+CMD ["node", "server.js"]

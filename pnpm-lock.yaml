@@ -132,12 +132,25 @@ importers:
 
   apps/web:
     dependencies:
+      '@hono/node-server':
+        specifier: ^2.0.11
+        version: 2.0.11(hono@4.12.31)
+      hono:
+        specifier: ^4.12.31
+        version: 4.12.31
+    devDependencies:
+      '@album-reviews/api':
+        specifier: workspace:*
+        version: link:../api
       '@fontsource-variable/anek-kannada':
         specifier: ^5.3.0
         version: 5.3.0
       '@fontsource-variable/cabin':
         specifier: ^5.3.0
         version: 5.3.0
+      '@playwright/test':
+        specifier: ^1.61.1
+        version: 1.61.1
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
@@ -150,46 +163,6 @@ importers:
       '@tanstack/react-start':
         specifier: 1.168.32
         version: 1.168.32(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(rollup@4.57.1)(supports-color@8.1.1)(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      framer-motion:
-        specifier: ^12.42.2
-        version: 12.42.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      hono:
-        specifier: ^4.12.31
-        version: 4.12.31
-      lucide-react:
-        specifier: ^0.476.0
-        version: 0.476.0(react@19.2.7)
-      react:
-        specifier: ^19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: ^19.2.7
-        version: 19.2.7(react@19.2.7)
-      react-hook-form:
-        specifier: ^7.82.0
-        version: 7.82.0(react@19.2.7)
-      react-responsive:
-        specifier: ^10.0.1
-        version: 10.0.1(react@19.2.7)
-      recharts:
-        specifier: ^3.9.2
-        version: 3.9.2(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react-is@18.3.1)(react@19.2.7)(redux@5.0.1)
-      sonner:
-        specifier: ^2.0.3
-        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      tailwindcss:
-        specifier: ^4.3.3
-        version: 4.3.3
-    devDependencies:
-      '@album-reviews/api':
-        specifier: workspace:*
-        version: link:../api
-      '@playwright/test':
-        specifier: ^1.61.1
-        version: 1.61.1
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -217,15 +190,45 @@ importers:
       '@vitest/ui':
         specifier: ^4.1.10
         version: 4.1.10(vitest@4.1.10)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      framer-motion:
+        specifier: ^12.42.2
+        version: 12.42.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       jsdom:
         specifier: ^28.0.0
         version: 28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1)
+      lucide-react:
+        specifier: ^0.476.0
+        version: 0.476.0(react@19.2.7)
       prettier:
         specifier: ^3.9.5
         version: 3.9.5
+      react:
+        specifier: ^19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: ^7.82.0
+        version: 7.82.0(react@19.2.7)
+      react-responsive:
+        specifier: ^10.0.1
+        version: 10.0.1(react@19.2.7)
+      recharts:
+        specifier: ^3.9.2
+        version: 3.9.2(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react-is@18.3.1)(react@19.2.7)(redux@5.0.1)
+      sonner:
+        specifier: ^2.0.3
+        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.19.11)(typescript@6.0.3)
