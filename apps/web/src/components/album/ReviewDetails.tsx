@@ -2,6 +2,7 @@ import type { DisplayTrack, Jsonified, ReviewedAlbum } from "@shared/types";
 import RatingChip from "@/components/ui/RatingChip";
 import { BestWorstSong } from "@/components/album/BestWorstSong";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useMemo } from "react";
 import { parseReviewContent } from "@shared/helpers/parseReviewContent";
 import { FormattedText } from "@/components/ui/FormattedText";
@@ -16,8 +17,8 @@ interface ReviewDetailsProps {
   tracks: DisplayTrack[];
 }
 
-const slideInFromLeft = (delay: number) => ({
-  initial: { y: "10px", opacity: 0 },
+const slideInFromLeft = (delay: number, entrance: boolean) => ({
+  initial: entrance ? { y: "10px", opacity: 0 } : false,
   animate: { y: 0, opacity: 1 },
   transition: { duration: 0.5, delay },
 });
@@ -28,9 +29,10 @@ const slideInFromLeft = (delay: number) => ({
  * @param {DisplayTrack[]} tracks The tracks on the album
  */
 const ReviewDetails = ({ album }: ReviewDetailsProps) => {
+  const hydrated = useHydrated();
   return (
     <div className="flex flex-col items-center justify-evenly w-[90%] md:w-[80ch] 3xl:w-[90ch] mx-auto mb-8">
-      <motion.div {...slideInFromLeft(0.2)}>
+      <motion.div {...slideInFromLeft(0.2, hydrated)}>
         <RatingChip
           rating={album.finalScore}
           options={{
@@ -58,11 +60,12 @@ interface ReviewContentProps {
 }
 
 export const ReviewContent = ({ reviewContent }: ReviewContentProps) => {
+  const hydrated = useHydrated();
   // Parse the content into tokens
   const tokens = useMemo(() => parseReviewContent(reviewContent), [reviewContent]);
 
   return (
-    <motion.div {...slideInFromLeft(0.8)}>
+    <motion.div {...slideInFromLeft(0.8, hydrated)}>
       <div className="w-full mt-6 rounded-lg bg-linear-to-br from-neutral-800 to-neutral-900/40 overflow-hidden">
         <div className="px-5 py-4 border-l-4 border-neutral-800 text-zinc-200 text-sm sm:text-base font-light leading-relaxed">
           <FormattedText tokens={tokens} />

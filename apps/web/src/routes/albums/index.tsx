@@ -1,7 +1,6 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
@@ -38,6 +37,7 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/albums/")({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): GetPaginatedAlbumsOptions => {
     // The genre filter arrives as an array from in-app navigation but old
     // links may still carry the comma string form
@@ -68,8 +68,8 @@ export const Route = createFileRoute("/albums/")({
   // The whole search state feeds the loader, so a genre-filtered visit
   // preloads the filtered list instead of the unfiltered one
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    return queryClient.ensureQueryData(albumQueryOptions(deps));
+  loader: async ({ deps, context }) => {
+    return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
   pendingComponent: () => <Skeleton variant="grid" />,

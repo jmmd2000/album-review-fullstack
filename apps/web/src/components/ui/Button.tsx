@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { easeIn, easeOut } from "framer-motion";
 import { useEffect, useState } from "react";
 import React from "react";
@@ -34,6 +35,7 @@ interface ButtonProps {
  * This component creates a button with a label and an optional click handler.
  */
 const Button = ({ label, onClick, disabled, type, states, stateMessages, size = "default" }: ButtonProps) => {
+  const hydrated = useHydrated();
   const { loading, error, success } = states || {};
   const [displayState, setDisplayState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const toastID = React.useId();
@@ -153,7 +155,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
     switch (displayState) {
       case "loading":
         return (
-          <motion.div key="loader" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+          <motion.div key="loader" variants={contentVariants} initial={hydrated ? "hidden" : false} animate="visible" exit="exit" className="flex items-center justify-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{
@@ -168,7 +170,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
         );
       case "success":
         return (
-          <motion.div key="success" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+          <motion.div key="success" variants={contentVariants} initial={hydrated ? "hidden" : false} animate="visible" exit="exit" className="flex items-center justify-center">
             <CheckCircle className={size === "icon" ? "w-4 h-4" : "w-5 h-5"} />
           </motion.div>
         );
@@ -177,7 +179,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
           <motion.div
             key="error"
             variants={contentVariants}
-            initial="hidden"
+            initial={hydrated ? "hidden" : false}
             animate={{
               ...contentVariants.visible,
               x: [0, -3, 3, -3, 3, 0],
@@ -195,7 +197,7 @@ const Button = ({ label, onClick, disabled, type, states, stateMessages, size = 
         );
       case "idle":
         return (
-          <motion.div key="label" variants={contentVariants} initial="hidden" animate="visible" exit="exit" className="flex items-center justify-center">
+          <motion.div key="label" variants={contentVariants} initial={hydrated ? "hidden" : false} animate="visible" exit="exit" className="flex items-center justify-center">
             {typeof label === "string" ? <span>{label}</span> : label}
           </motion.div>
         );

@@ -2,6 +2,7 @@ import type { DisplayAlbum } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 import RatingChip from "@/components/ui/RatingChip";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useState } from "react";
 import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -34,11 +35,12 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
           .join(", ")
       : album.artistName;
   const largeImageURL = album.imageURLs[0]?.url;
+  const hydrated = useHydrated();
 
   return (
     <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll viewTransition className="block" data-testid="album-card">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={hydrated ? { opacity: 0, y: 10 } : false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         whileHover={{ y: -10 }}

@@ -1,19 +1,31 @@
 import { createRouter } from "@tanstack/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { Toaster } from "sonner";
 import { routeTree } from "./routeTree.gen";
-import { queryClient } from "@/lib/queryClient";
 
-/** Router factory the start plugin wires into its client and server entries. */
+/**
+ * Router factory the start plugin wires into its client and server entries.
+ * Each call gets its own query client, one per request on the server, one
+ * for the lifetime of the tab in the browser. Loaders reach it through
+ * router context rather than a module import.
+ */
 export function getRouter() {
-  return createRouter({
+  const queryClient = new QueryClient();
+  const router = createRouter({
     routeTree,
     defaultPreload: "intent",
+    context: { queryClient },
     Wrap: ({ children }) => (
-      <QueryClientProvider client={queryClient}>
+      <>
         {children}
         <Toaster richColors />
-      </QueryClientProvider>
+      </>
     ),
   });
+  // Streams whatever the server loaders fetched into the client cache so
+  // hydration reuses it instead of refetching. Also wraps the app in the
+  // QueryClientProvider.
+  setupRouterSsrQueryIntegration({ router, queryClient });
+  return router;
 }

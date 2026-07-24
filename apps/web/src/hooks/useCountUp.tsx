@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export const useCountUp = (target: number, duration = 1000) => {
-  const [count, setCount] = useState(0);
+  // Server-rendered pages show the final number straight away, the count-up
+  // only plays on client navigations
+  const shouldAnimate = useHydrated();
+  const [count, setCount] = useState(shouldAnimate ? 0 : target);
 
   useEffect(() => {
+    if (!shouldAnimate) return;
+
     const startTime = performance.now();
 
     let frameID: number;
@@ -21,7 +27,7 @@ export const useCountUp = (target: number, duration = 1000) => {
     frameID = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(frameID);
-  }, [target, duration]);
+  }, [target, duration, shouldAnimate]);
 
   return count;
 };

@@ -4,6 +4,7 @@ import type React from "react";
 
 import CardGridControls, { type DropdownControlsProps } from "@/components/ui/CardGridControls";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { easeOut } from "framer-motion";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
@@ -60,6 +61,7 @@ const itemVariants = {
  */
 const CardGrid = ({ cards, heading, counter, sortedByYear, cardYears, controls }: CardGridProps) => {
   const shouldShowControls = controls?.search || controls?.pagination;
+  const hydrated = useHydrated();
 
   const renderCards = () => {
     if (!sortedByYear || !cardYears || cardYears.length !== cards.length) {
@@ -132,7 +134,7 @@ const CardGrid = ({ cards, heading, counter, sortedByYear, cardYears, controls }
 
       <motion.div
         variants={containerVariants}
-        initial="hidden"
+        initial={hydrated ? "hidden" : false}
         animate="show"
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 3xl:gap-6 max-w-475 3xl:max-w-600 4xl:max-w-750 mx-auto my-8 px-4"
         data-testid="album-grid"

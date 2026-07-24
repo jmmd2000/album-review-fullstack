@@ -1,14 +1,21 @@
 import type { DisplayAlbum } from "@shared/types";
 import { useMemo } from "react";
+import { createSeededRandom, hashString } from "@/lib/seededRandom";
 
 interface AlbumScrollerProps {
   albums: DisplayAlbum[];
 }
 
 const AlbumScroller = ({ albums }: AlbumScrollerProps) => {
-  // Randomize album order once on component mount
+  // Shuffle seeded from the album ids so the server and the client agree
+  // on the order, a real Math.random here would break hydration
   const randomizedAlbums = useMemo(() => {
-    const shuffled = [...albums].sort(() => Math.random() - 0.5);
+    const random = createSeededRandom(hashString(albums.map(album => album.spotifyID).join(",")));
+    const shuffled = [...albums];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     // Create 6 sets of the randomized albums for smooth infinite scroll
     return [...shuffled, ...shuffled, ...shuffled, ...shuffled, ...shuffled, ...shuffled];
   }, [albums]);

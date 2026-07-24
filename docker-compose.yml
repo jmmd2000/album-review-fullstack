@@ -97,6 +97,9 @@ services:
   web:
     image: ghcr.io/${GITHUB_USER}/album-web:${IMAGE_TAG}
     restart: always
+    environment:
+      # Where SSR fetches reach the api, over the internal network
+      API_ORIGIN: http://api:4000
     depends_on:
       api:
         condition: service_healthy

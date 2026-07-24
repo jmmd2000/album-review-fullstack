@@ -1,7 +1,6 @@
 import type { ExtractedColor } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import BlurryHeader from "@/components/layout/BlurryHeader";
 import AlbumReviewForm from "@/components/form/AlbumReviewForm";
@@ -23,7 +22,7 @@ const albumQueryOptions = (albumSpotifyID: string) =>
   });
 
 export const Route = createFileRoute("/albums/$albumID/edit")({
-  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   errorComponent: ErrorComponent,
   component: RouteComponent,
   head: ({ loaderData }) => ({

@@ -1,6 +1,5 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { useEffect, useState } from "react";
 import type { DisplayAlbum, ExtractedColor } from "@shared/types";
@@ -20,7 +19,7 @@ import { client, handle } from "@/lib/client";
 //   queryFn: fetchToken,
 // });
 //# And this would be passed to the loader in createFileRoute() like:
-// loader: () => queryClient.ensureQueryData(tokenQueryOptions),
+// loader: ({ context }) => context.queryClient.ensureQueryData(tokenQueryOptions),
 //# But in this case, the query function needs a parameter, so we need to pass the param to queryOptions directly:
 // const albumQueryOptions = (albumSpotifyID: string) =>
 // queryOptions({
@@ -28,7 +27,7 @@ import { client, handle } from "@/lib/client";
 //   queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
 // });
 //# Then, in the loader:
-// loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+// loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
 //# And then inside the RouteComponent, you need to pass the same options to useQuery:
 // const { albumID } = useParams({ strict: false });
 //   if (!albumID) {
@@ -54,7 +53,7 @@ const MAX_RECENT = 14;
 
 // This page is for creating a new album review
 export const Route = createFileRoute("/albums/$albumID/create")({
-  loader: ({ params }) => queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
   component: RouteComponent,
   errorComponent: ErrorComponent,
   head: ({ loaderData }) => ({

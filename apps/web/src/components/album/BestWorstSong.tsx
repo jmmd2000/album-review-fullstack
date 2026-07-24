@@ -1,9 +1,10 @@
 import type React from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 
-const slideInFromLeft = (delay: number) => ({
-  initial: { y: "10px", opacity: 0 },
+const slideInFromLeft = (delay: number, entrance: boolean) => ({
+  initial: entrance ? { y: "10px", opacity: 0 } : false,
   animate: { y: 0, opacity: 1 },
   transition: { duration: 0.5, delay },
 });
@@ -29,9 +30,10 @@ interface BestWorstSongProps {
  * @param {string} worstSong The worst song on the album
  */
 export const BestWorstSong = ({ bestSong, worstSong, bestInput, worstInput }: BestWorstSongProps) => {
+  const hydrated = useHydrated();
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 my-6 w-3/5 sm:w-full max-w-3xl">
-      <motion.div {...slideInFromLeft(0.4)} className="flex-1 rounded-lg overflow-hidden border-2 border-emerald-500/30 shadow-sm">
+      <motion.div {...slideInFromLeft(0.4, hydrated)} className="flex-1 rounded-lg overflow-hidden border-2 border-emerald-500/30 shadow-sm">
         <div className="bg-emerald-500/20 px-3 py-1.5">
           <p className="text-emerald-400 text-xs font-medium tracking-wider flex items-center">
             <ThumbsUp className="w-4 h-4 mr-2 text-emerald-400" />
@@ -45,7 +47,7 @@ export const BestWorstSong = ({ bestSong, worstSong, bestInput, worstInput }: Be
         )}
       </motion.div>
 
-      <motion.div {...slideInFromLeft(0.6)} className="flex-1 rounded-lg overflow-hidden border-2 border-red-500/30 shadow-sm">
+      <motion.div {...slideInFromLeft(0.6, hydrated)} className="flex-1 rounded-lg overflow-hidden border-2 border-red-500/30 shadow-sm">
         <div className="bg-red-500/20 px-3 py-1.5">
           <p className="text-red-400 text-xs font-medium tracking-wider flex items-center">
             <ThumbsDown className="w-4 h-4 mr-2 text-red-400" />

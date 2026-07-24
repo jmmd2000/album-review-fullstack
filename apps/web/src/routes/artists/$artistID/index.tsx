@@ -1,5 +1,4 @@
 import ErrorComponent from "@/components/ui/ErrorComponent";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
@@ -26,8 +25,9 @@ const artistQueryOptions = (artistID: string) =>
   });
 
 export const Route = createFileRoute("/artists/$artistID/")({
-  loader: async ({ params }) => {
-    return queryClient.ensureQueryData(artistQueryOptions(params.artistID));
+  ssr: true,
+  loader: async ({ params, context }) => {
+    return context.queryClient.ensureQueryData(artistQueryOptions(params.artistID));
   },
   errorComponent: ErrorComponent,
   component: RouteComponent,

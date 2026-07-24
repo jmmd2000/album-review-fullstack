@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { easeIn, easeOut } from "framer-motion";
 
 interface SortOption {
@@ -24,6 +25,7 @@ export interface SortDropdownProps {
  * the URL, this only reports changes, so back and forward move it too.
  */
 export default function SortDropdown({ options, onSortChange, value, direction = "desc" }: SortDropdownProps) {
+  const hydrated = useHydrated();
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = value ? options.find(option => option.value === value) || null : null;
   const sortDirection = direction;
@@ -115,10 +117,7 @@ export default function SortDropdown({ options, onSortChange, value, direction =
               <AnimatePresence mode="wait">
                 <motion.div
                   key={sortDirection}
-                  initial={{
-                    opacity: 0,
-                    y: sortDirection === "asc" ? 10 : -10,
-                  }}
+                  initial={hydrated ? { opacity: 0, y: sortDirection === "asc" ? 10 : -10 } : false}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: sortDirection === "asc" ? -10 : 10 }}
                   transition={{ duration: 0.2 }}

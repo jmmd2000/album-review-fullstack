@@ -2,7 +2,6 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
-import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { useListControls } from "@/hooks/useListControls";
 import { ListPageLayout } from "@/components/layout/ListPageLayout";
@@ -52,8 +51,8 @@ export const Route = createFileRoute("/bookmarks/")({
     return result;
   },
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    return queryClient.ensureQueryData(albumQueryOptions(deps));
+  loader: async ({ deps, context }) => {
+    return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
   pendingComponent: () => <Skeleton variant="grid" />,

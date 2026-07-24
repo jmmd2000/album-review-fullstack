@@ -5,6 +5,7 @@ import ScoreBreakdown from "@/components/album/ScoreBreakdown";
 
 import type { ReviewBonuses } from "@shared/types";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import { Info, StarOff } from "lucide-react";
 import Dialog from "./Dialog";
 
@@ -37,6 +38,7 @@ interface RatingChipProps {
  * of how the score was calculated including bonuses.
  */
 const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingChipProps) => {
+  const hydrated = useHydrated();
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const { label, borderColor, textColor, backgroundColorLighter } = getRatingStyles(rating);
@@ -70,7 +72,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
       <div className="relative group">
         <motion.div
           className={`${textStyles({ small: options?.small ?? false })} ${unratedSizeClass}`}
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={hydrated ? { scale: 0.9, opacity: 0 } : false}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
@@ -104,7 +106,7 @@ const RatingChip = ({ rating, options, scoreBreakdown, tooltipContent }: RatingC
       </div>
 
       {options?.textBelow && (
-        <motion.div className="flex items-center gap-1" initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
+        <motion.div className="flex items-center gap-1" initial={hydrated ? { y: -5, opacity: 0 } : false} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
           {rating > 0 && <p className="uppercase text-center font-medium text-xl">{label}</p>}
 
           {showInfoButton && (
