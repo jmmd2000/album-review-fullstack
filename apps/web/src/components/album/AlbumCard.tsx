@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { client, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -94,42 +95,47 @@ interface BookmarkButtonProps {
 function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
   const queryClient = useQueryClient();
   const [isHovering, setIsHovering] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(bookmarked);
 
-  // Mutation for adding a bookmark
-  const addMutation = useMutation({
-    mutationFn: () => handleVoid(client.api.bookmarks[":albumID"].add.$post({ param: { albumID: album.spotifyID }, json: album })),
-    onSuccess: () => {
-      // Covers the bookmarks list and the status lookups in one go
-      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
+  // Flips this album's flag in every bookmark status cache, so any card fed
+  // by the status query updates instantly
+  const applyStatus = (value: boolean) => {
+    queryClient.setQueriesData<Record<string, boolean>>({ queryKey: queryKeys.bookmarks.statuses }, data => (data ? { ...data, [album.spotifyID]: value } : data));
+  };
+
+  const toggleMutation = useMutation({
+    mutationFn: (next: boolean) =>
+      next
+        ? handleVoid(client.api.bookmarks[":albumID"].add.$post({ param: { albumID: album.spotifyID }, json: album }))
+        : handleVoid(client.api.bookmarks[":albumID"].remove.$delete({ param: { albumID: album.spotifyID } })),
+    onMutate: async next => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.bookmarks.statuses });
+      const snapshot = queryClient.getQueriesData<Record<string, boolean>>({ queryKey: queryKeys.bookmarks.statuses });
+      applyStatus(next);
+      return { snapshot };
+    },
+    onError: (_error, _next, context) => {
+      for (const [key, data] of context?.snapshot ?? []) {
+        queryClient.setQueryData(key, data);
+      }
+      toast.error("Couldn't update the bookmark, try again.");
+    },
+    onSettled: () => {
+      // Only the lists need refetching, the status caches already hold the final value
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.lists });
     },
   });
 
-  // Mutation for removing a bookmark (204 No Content)
-  const removeMutation = useMutation({
-    mutationFn: () => handleVoid(client.api.bookmarks[":albumID"].remove.$delete({ param: { albumID: album.spotifyID } })),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all });
-    },
-  });
-
-  const isLoading = addMutation.isPending || removeMutation.isPending;
-  const isRemoving = isHovering && isBookmarked;
+  const isLoading = toggleMutation.isPending;
+  const isRemoving = isHovering && bookmarked;
   const iconColor = {
-    fill: isRemoving ? "#dc2626" : isBookmarked ? "#22c55e" : "transparent",
-    stroke: isRemoving ? "white" : isBookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
+    fill: isRemoving ? "#dc2626" : bookmarked ? "#22c55e" : "transparent",
+    stroke: isRemoving ? "white" : bookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isBookmarked) {
-      setIsBookmarked(() => !isBookmarked);
-      removeMutation.mutate();
-    } else {
-      setIsBookmarked(() => !isBookmarked);
-      addMutation.mutate();
-    }
+    toggleMutation.mutate(!bookmarked);
   };
 
   return (
@@ -137,14 +143,14 @@ function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
       onClick={handleClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
-      title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      aria-label={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+      title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
       disabled={isLoading}
       data-testid="bookmark-button"
       className="rounded-md bg-neutral-800 bg-opacity-60 p-1 backdrop-blur-md transition-all duration-200 hover:bg-neutral-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 active:scale-95 disabled:opacity-50 cursor-pointer"
     >
       {isLoading ? (
-        <Loader2 size={20} className="animate-spin" stroke={isBookmarked ? "#22c55e" : "#717171"} />
+        <Loader2 size={20} className="animate-spin" stroke={bookmarked ? "#22c55e" : "#717171"} />
       ) : isRemoving ? (
         <BookmarkX size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
       ) : (

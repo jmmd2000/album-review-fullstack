@@ -25,7 +25,9 @@ export const queryKeys = {
   },
   bookmarks: {
     all: ["bookmarks"] as const,
+    lists: ["bookmarks", "list"] as const,
     list: (options: GetPaginatedBookmarkedAlbumsOptions) => ["bookmarks", "list", options] as const,
+    statuses: ["bookmarks", "status"] as const,
     status: (ids: string[]) => ["bookmarks", "status", ids] as const,
   },
   search: (options: SearchAlbumsOptions) => ["search", options] as const,
