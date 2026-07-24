@@ -5,6 +5,7 @@ import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { client, handle } from "@/lib/client";
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -17,7 +18,7 @@ async function searchSpotifyAlbums(query: SearchAlbumsOptions) {
 
 const searchQueryOptions = (query: SearchAlbumsOptions) =>
   queryOptions({
-    queryKey: ["search", query],
+    queryKey: queryKeys.search(query),
     queryFn: () => searchSpotifyAlbums(query),
   });
 

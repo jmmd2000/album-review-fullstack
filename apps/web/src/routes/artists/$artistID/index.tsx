@@ -1,5 +1,6 @@
 import ErrorComponent from "@components/ui/ErrorComponent";
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import HeaderDetails from "@/components/layout/HeaderDetails";
@@ -17,7 +18,7 @@ async function fetchReviewedArtist(artistSpotifyID: string) {
 
 const artistQueryOptions = (artistID: string) =>
   queryOptions({
-    queryKey: ["artistID", artistID],
+    queryKey: queryKeys.artists.detail(artistID),
     queryFn: () => fetchReviewedArtist(artistID),
     staleTime: Infinity,
     refetchOnMount: false,

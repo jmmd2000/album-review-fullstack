@@ -4,6 +4,7 @@ import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import type { GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -30,13 +31,13 @@ async function fetchResourceCounts() {
 }
 
 const overviewQueryOptions = queryOptions({
-  queryKey: ["stats", "overview"],
+  queryKey: queryKeys.stats.overview,
   queryFn: fetchOverview,
 });
 
 const genresQueryOptions = (slug: string) =>
   queryOptions({
-    queryKey: ["stats", "genres", slug],
+    queryKey: queryKeys.stats.genres(slug),
     queryFn: () => fetchGenreStats(slug),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
@@ -44,14 +45,14 @@ const genresQueryOptions = (slug: string) =>
 
 const distributionQueryOptions = (resource: "albums" | "tracks" | "artists") =>
   queryOptions({
-    queryKey: ["stats", "distribution", resource],
+    queryKey: queryKeys.stats.distribution(resource),
     queryFn: () => fetchRatingDistribution(resource),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,
   });
 
 const countQueryOptions = queryOptions({
-  queryKey: ["stats", "counts"],
+  queryKey: queryKeys.stats.counts,
   queryFn: fetchResourceCounts,
 });
 

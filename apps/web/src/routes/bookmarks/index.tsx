@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import CardGrid from "@/components/ui/CardGrid";
 import AlbumCard from "@/components/album/AlbumCard";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
@@ -27,7 +28,7 @@ async function fetchPaginatedBookmarkedAlbums(options: GetPaginatedBookmarkedAlb
 
 const albumQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>
   queryOptions({
-    queryKey: ["bookmarkedAlbums", options],
+    queryKey: queryKeys.bookmarks.list(options),
     queryFn: () => fetchPaginatedBookmarkedAlbums(options),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,

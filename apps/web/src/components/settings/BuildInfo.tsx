@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { GitCommitHorizontal, TriangleAlert } from "lucide-react";
 import { client, handle } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 async function fetchBuildInfo() {
   return handle(client.api.settings["build-info"].$get());
@@ -14,7 +15,7 @@ const formatBuiltAt = (builtAt: string) => new Date(builtAt).toLocaleString();
  */
 export const BuildInfo = () => {
   const { data, isError } = useQuery({
-    queryKey: ["settings", "build-info"],
+    queryKey: queryKeys.settings.buildInfo,
     queryFn: fetchBuildInfo,
     staleTime: Infinity,
   });

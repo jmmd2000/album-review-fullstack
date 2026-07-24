@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import CardGrid from "@components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";
@@ -27,7 +28,7 @@ async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
 
 const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
   queryOptions({
-    queryKey: ["artists", options],
+    queryKey: queryKeys.artists.list(options),
     queryFn: () => fetchPaginatedArtists(options),
     placeholderData: prev => prev,
     staleTime: 1000 * 60 * 10,

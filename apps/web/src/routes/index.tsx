@@ -1,4 +1,5 @@
 import { queryClient } from "@/lib/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@components/ui/ErrorComponent";
@@ -16,7 +17,7 @@ async function fetchAllAlbums() {
 }
 
 const statsQueryOptions = queryOptions({
-  queryKey: ["home"],
+  queryKey: queryKeys.home,
   queryFn: fetchAllAlbums,
 });
 

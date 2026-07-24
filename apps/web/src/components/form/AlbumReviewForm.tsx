@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import RatingChip from "@components/ui/RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { client, handleVoid } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { ColourPicker } from "@components/form/ColourPicker";
 import ArtistSelector from "@components/form/ArtistSelector";
 import { ReviewContentInput } from "@components/form/ReviewContentInput";
@@ -185,7 +186,7 @@ const AlbumReviewForm = ({ album, tracks, genres, setSelectedColors, selectedCol
     isSuccess,
   } = useMutation({
     mutationFn: ({ formData, album }: { formData: CreateReviewFormData; album: Jsonified<SpotifyAlbum | ReviewedAlbum> }) => submitReview(formData, album),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
   });
 
   const onSubmit = (formData: CreateReviewFormData) => {
