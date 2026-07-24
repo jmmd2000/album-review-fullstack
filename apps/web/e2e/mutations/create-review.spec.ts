@@ -1,12 +1,7 @@
 import { test, expect } from "@playwright/test";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import { BOOKMARKED_IDS, capturedAlbum, ratingFor } from "../../api/src/db/fixtures/fixtures";
-import { calculateAlbumScore } from "../../../packages/shared/src/helpers/calculateAlbumScore";
-import { buildSpotifyAlbumResponse } from "./spotifyAlbumMock";
-
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env") });
+import { BOOKMARKED_IDS, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
+import { calculateAlbumScore } from "../../../../packages/shared/src/helpers/calculateAlbumScore";
+import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
 
 const REVIEW_TEXT = "great album, I enjoyed it";
 
@@ -32,13 +27,6 @@ test("create album review flow", async ({ page }) => {
   // The create page fetches the album through the api's spotify proxy. Answer
   // that one call from the fixture so the run never touches spotify.
   await page.route(`**/api/spotify/albums/${album.spotifyID}`, route => route.fulfill({ json: buildSpotifyAlbumResponse(album) }));
-
-  // Log in through the admin dropdown
-  await page.goto("/");
-  await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
-  await page.getByTestId("admin-password-input").fill(process.env.ADMIN_PASSWORD ?? "");
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.getByRole("link", { name: "Search" }).first()).toBeVisible();
 
   // The seeded bookmark is the unreviewed entry point
   await page.goto("/bookmarks");

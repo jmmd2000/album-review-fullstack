@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Client } from "pg";
 
 // Must match maxWorkers in vitest.config.ts
-const WORKER_COUNT = 4;
+const WORKER_COUNT = 8;
 
 /**
  * Creates one copy of the test database per vitest worker, cloned from the
