@@ -83,3 +83,21 @@ test("recalculating scores records the run", async () => {
   const lastRun = await SettingsService.getLastRun("scores");
   expect(lastRun).not.toBeNull();
 });
+
+test("build info requires admin", async () => {
+  const res = await api.get("/api/settings/build-info");
+  expect(res.status).toBe(401);
+});
+
+test("build info reports the running versions", async () => {
+  const res = await api.get("/api/settings/build-info", authCookie);
+  expect(res.status).toBe(200);
+
+  const info = await res.json();
+  // Nothing bakes build args in a test run
+  expect(info.api.sha).toBe("dev");
+  expect(info.versions.node).toBe(process.version);
+  expect(info.versions.postgres).toMatch(/^\d+\./);
+  expect(info.versions.packages.hono).toMatch(/^\d+\./);
+  expect(info.versions.packages["drizzle-orm"]).toMatch(/^\d+\./);
+});
