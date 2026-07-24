@@ -36,6 +36,17 @@ export default defineConfig({
       ],
     },
   },
+  // The production image ships no app dependencies, so the server bundle
+  // must inline everything it imports rather than reaching for node_modules
+  ssr: {
+    noExternal: true,
+  },
+  // The ssr pass computes its own hash for the stylesheet it links in the
+  // document shell. Emit the file rather than assuming the client pass
+  // produced identical bytes, the dockerfile copies it into the public dir
+  build: {
+    ssrEmitAssets: true,
+  },
   plugins: [tanstackStart(), viteReact(), tailwindcss()],
   resolve: {
     alias: {

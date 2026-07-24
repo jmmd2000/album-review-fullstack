@@ -34,6 +34,11 @@ ENV BUILT_AT=$BUILT_AT
 
 RUN pnpm run build
 
+# The ssr pass links the stylesheet by its own hash, which only matches the
+# client's copy while both passes produce identical bytes. Ship the ssr copy
+# so the linked file always exists
+RUN cp -f dist/server/assets/*.css dist/client/assets/
+
 # Deploy prod deps to a clean directory. The app libraries are all bundled by
 # vite, so this is only the node server's own imports
 WORKDIR /app
