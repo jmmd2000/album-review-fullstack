@@ -1,11 +1,11 @@
 import { type ReactNode } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/main";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "@/auth/context";
 import { client, handle, handleVoid } from "@/lib/client";
 
 // Export the Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const { data, isPending } = useQuery({
     queryKey: ["auth", "status"],
     queryFn: () => handle(client.api.auth.status.$get()),

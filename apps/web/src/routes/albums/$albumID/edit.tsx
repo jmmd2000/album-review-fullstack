@@ -1,7 +1,7 @@
 import type { ExtractedColor } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import BlurryHeader from "@components/layout/BlurryHeader";
 import AlbumReviewForm from "@components/form/AlbumReviewForm";
 import { useState } from "react";

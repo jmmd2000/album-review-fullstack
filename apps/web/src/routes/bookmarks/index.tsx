@@ -3,7 +3,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import CardGrid from "@/components/ui/CardGrid";
 import AlbumCard from "@/components/album/AlbumCard";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";

@@ -1,6 +1,6 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import { useEffect, useState } from "react";
 import type { DisplayAlbum, ExtractedColor } from "@shared/types";
 import ErrorComponent from "@components/ui/ErrorComponent";

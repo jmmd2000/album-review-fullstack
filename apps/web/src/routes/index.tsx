@@ -1,4 +1,4 @@
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import ErrorComponent from "@components/ui/ErrorComponent";

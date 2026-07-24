@@ -3,7 +3,7 @@ import ArtistCard from "@/components/artist/ArtistCard";
 import GenrePills from "@/components/ui/GenrePills";
 import BentoCard from "@/components/stats/BentoCard";
 import StatBox from "@/components/stats/StatBox";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import type { GetStatsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";

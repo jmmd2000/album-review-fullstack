@@ -1,6 +1,6 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import BlurryHeader from "@components/layout/BlurryHeader";
 import ErrorComponent from "@components/ui/ErrorComponent";
 import TrackList from "@components/track/TrackList";

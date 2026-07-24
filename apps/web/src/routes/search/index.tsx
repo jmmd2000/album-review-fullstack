@@ -4,7 +4,7 @@ import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { useAlbumStatus } from "@/hooks/useAlbumStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { client, handle } from "@/lib/client";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";

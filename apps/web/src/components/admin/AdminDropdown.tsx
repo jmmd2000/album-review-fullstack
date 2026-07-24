@@ -3,9 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Settings, Search, Lock, LockOpen, Pencil, Trash, LogOut, ImageIcon } from "lucide-react";
 import type { JSX } from "react";
 import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/auth/useAuth";
-import { queryClient } from "@/main";
 import type { ReviewedAlbum, ReviewedArtist, DisplayTrack, DisplayAlbum, Genre } from "@shared/types";
 import { timeAgo } from "@shared/helpers/formatDate";
 import Dialog from "@components/ui/Dialog";
@@ -38,6 +37,7 @@ const staticLinks: LinkItem[] = [
  * or the admin links (and album edit/delete) when authed
  */
 const AdminDropdown = () => {
+  const queryClient = useQueryClient();
   const { isAdmin, login, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");

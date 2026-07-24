@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import { client, handle } from "@/lib/client";
 import CardGrid from "@components/ui/CardGrid";
 import ArtistCard from "@/components/artist/ArtistCard";

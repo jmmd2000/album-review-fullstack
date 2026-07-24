@@ -1,7 +1,7 @@
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { BuildInfo } from "@/components/settings/BuildInfo";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import { queryOptions, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Camera, ImageIcon, RefreshCw, ArrowRightLeft } from "lucide-react";
