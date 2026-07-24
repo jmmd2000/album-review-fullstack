@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useAuth } from "@/auth/useAuth";
 import { useNavigate } from "@tanstack/react-router";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 /**
  * Wrap any page/component that should be admin-only.
@@ -18,6 +19,8 @@ export const RequireAdmin = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, isPending]);
 
-  if (isPending || !isAdmin) return null;
+  // A skeleton while auth resolves, so admin pages stop flashing blank
+  if (isPending) return <Skeleton variant="detail" />;
+  if (!isAdmin) return null;
   return <>{children}</>;
 };
