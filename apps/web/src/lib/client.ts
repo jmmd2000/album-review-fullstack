@@ -12,9 +12,14 @@ export class ApiError extends Error {
   }
 }
 
+// In the browser the api is same-origin, so requests stay relative. During SSR
+// there is no origin to be relative to, so they go straight to the api, the
+// internal docker hostname in production and the local dev server otherwise.
+const baseURL = typeof window === "undefined" ? (process.env.API_ORIGIN ?? "http://localhost:4000") : "/";
+
 // Typed RPC client. Paths, params, bodies and responses are all inferred from
 // the backend's AppType, so a renamed route or changed response is a compile error.
-export const client = hc<AppType>("/", { init: { credentials: "include" } });
+export const client = hc<AppType>(baseURL, { init: { credentials: "include" } });
 
 // hc responses are a union of one ClientResponse per status, the success ones
 // have ok: true, so this picks out the success body.

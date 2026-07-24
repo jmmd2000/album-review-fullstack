@@ -20,7 +20,7 @@
       "@/*": ["./src/*", "../api/src/*"],
       "@shared/*": ["../../packages/shared/src/*"]
     },
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "typeRoots": ["./src", "./node_modules/@types"],
 
     /* Linting */
