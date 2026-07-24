@@ -51,6 +51,8 @@ const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
           srcSet={largeImageURL ? `${largeImageURL} 640w, ${album.imageURLs[1].url} 300w` : undefined}
           sizes="(min-width: 1921px) 640px, 300px"
           alt={album.name}
+          loading="lazy"
+          decoding="async"
           className="w-full aspect-square rounded-lg"
           style={{
             viewTransitionName: `album-image-${album.spotifyID}`,

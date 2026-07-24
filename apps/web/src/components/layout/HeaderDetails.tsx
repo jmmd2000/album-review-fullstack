@@ -42,6 +42,7 @@ const HeaderDetails = ({ name, imageURL, largeImageURL, viewTransitionName, name
           srcSet={largeImageURL ? `${largeImageURL} 640w, ${imageURL} 300w` : undefined}
           sizes="(min-width: 1921px) 640px, 300px"
           alt={name}
+          fetchPriority="high"
           className="rounded-lg h-60 w-60 lg:h-72 lg:w-72 3xl:h-96 3xl:w-96 shadow-2xl border border-neutral-900/30"
           style={{ viewTransitionName: viewTransitionName }}
         />

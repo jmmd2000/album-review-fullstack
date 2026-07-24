@@ -32,6 +32,8 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
             srcSet={largeImageURL ? `${largeImageURL} 640w, ${imageURL} 300w` : undefined}
             sizes="(min-width: 1921px) 640px, 300px"
             alt={artist.name}
+            loading="lazy"
+            decoding="async"
             className="w-full aspect-square rounded-lg"
             style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
           />
