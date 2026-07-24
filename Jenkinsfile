@@ -69,45 +69,46 @@ pipeline {
           echo "🚚 Deploying version ${IMAGE_TAG} to ${params.DEPLOY_ENV}..."
 
           sshagent(['vps-ssh']) {
-            // Clean the directory
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'rm -rf ${targetDir} && mkdir -p ${targetDir}'"
+            // Every file below is a fresh overwrite, so the old deploy stays
+            // intact if any copy fails partway
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'mkdir -p ${targetDir}'"
 
-            sh "scp docker-compose.yml ${VPS_USER}@${VPS_HOST}:${targetDir}/docker-compose.yml"
-            sh "scp backup.sh ${VPS_USER}@${VPS_HOST}:${targetDir}/backup.sh"
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod +x ${targetDir}/backup.sh'"
+            sh "scp -o StrictHostKeyChecking=accept-new docker-compose.yml ${VPS_USER}@${VPS_HOST}:${targetDir}/docker-compose.yml"
+            sh "scp -o StrictHostKeyChecking=accept-new backup.sh ${VPS_USER}@${VPS_HOST}:${targetDir}/backup.sh"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'chmod +x ${targetDir}/backup.sh'"
 
             withCredentials([file(credentialsId: envCredId, variable: 'ENV_FILE')]) {
-              sh "scp ${ENV_FILE} ${VPS_USER}@${VPS_HOST}:${targetDir}/.env"
+              sh "scp -o StrictHostKeyChecking=accept-new ${ENV_FILE} ${VPS_USER}@${VPS_HOST}:${targetDir}/.env"
             }
 
             // Jenkins credential files are scp'd as read-only, make writable so we can append to it
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'chmod 600 ${targetDir}/.env'"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'chmod 600 ${targetDir}/.env'"
 
             // Add dynamic variables to the .env file
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && echo \"IMAGE_TAG=${IMAGE_TAG}\" >> .env && echo \"GITHUB_USER=${GITHUB_USER}\" >> .env && echo \"APP_NAME=${appNameEnv}\" >> .env && echo \"DOMAIN=${domain}\" >> .env'"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && echo \"IMAGE_TAG=${IMAGE_TAG}\" >> .env && echo \"GITHUB_USER=${GITHUB_USER}\" >> .env && echo \"APP_NAME=${appNameEnv}\" >> .env && echo \"DOMAIN=${domain}\" >> .env'"
 
             if (params.TAKE_BACKUP && params.DEPLOY_ENV == 'production') {
               echo "Taking backup of prod before deploying..."
-              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && ./backup.sh || echo \"Backup failed but proceeding...\"'"
+              sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && ./backup.sh || echo \"Backup failed but proceeding...\"'"
             }
 
             // Pull images and bring the database up first (waiting until healthy) so migrations
             // can run before the app starts.
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose pull && docker compose up -d --wait db'"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose pull && docker compose up -d --wait db'"
 
             if (params.DEPLOY_ENV == 'staging') {
               echo "Restoring latest prod backup into staging DB..."
-              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;\"'"
-              sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && cat \$LATEST | docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB'"
+              sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;\"'"
+              sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd /home/james/album-review/staging && source <(grep -E \"^POSTGRES_(USER|DB)=\" .env) && LATEST=\$(ls -t /home/james/backups/album-reviews-production/backup-*.sql | head -n1) && cat \$LATEST | docker exec -i album-reviews-staging-db-1 psql -U \$POSTGRES_USER -d \$POSTGRES_DB'"
             }
 
             // Run migrations as an explicit one-off step. The exit code propagates, so a failed
             // migration aborts the deploy here, before the new app containers come up.
             echo "Running migrations..."
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose run --rm migrate'"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose run --rm migrate'"
 
             // Bring up the app now that the schema is migrated.
-            sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose up -d --remove-orphans'"
+            sh "ssh -o StrictHostKeyChecking=accept-new ${VPS_USER}@${VPS_HOST} 'cd ${targetDir} && docker compose up -d --remove-orphans'"
 
           }
         }
