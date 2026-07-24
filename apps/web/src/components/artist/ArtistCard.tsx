@@ -3,6 +3,7 @@
 import type { DisplayArtist } from "@shared/types";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 import RatingChip from "@/components/ui/RatingChip";
 
 interface ArtistCardProps {
@@ -13,10 +14,11 @@ const ArtistCard = ({ artist }: ArtistCardProps) => {
   const albumCountString = artist.albumCount === 1 ? `${artist.albumCount} album` : `${artist.albumCount} albums`;
   const imageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
   const largeImageURL = artist.imageURLs?.[0]?.url;
+  const hydrated = useHydrated();
   return (
     <Link params={{ artistID: artist.spotifyID }} to={"/artists/$artistID"} resetScroll={true} viewTransition className="block" data-testid="artist-card">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={hydrated ? { opacity: 0, y: 10 } : false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         whileHover={{

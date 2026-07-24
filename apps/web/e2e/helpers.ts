@@ -10,7 +10,12 @@ dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 /** Logs in through the admin dropdown and waits for the admin nav to appear. */
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto("/");
-  await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
+  // The navbar arrives server rendered, so the button is visible before
+  // hydration wires up its handler. Retry the click until the dropdown opens
+  await expect(async () => {
+    await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
+    await expect(page.getByTestId("admin-password-input")).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15000 });
   await page.getByTestId("admin-password-input").fill(process.env.ADMIN_PASSWORD ?? "");
   await page.getByRole("button", { name: "Login" }).click();
   await expect(page.getByRole("link", { name: "Search" }).first()).toBeVisible();

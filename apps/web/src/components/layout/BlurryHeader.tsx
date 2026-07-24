@@ -1,5 +1,6 @@
 import type { ExtractedColor } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
+import { createSeededRandom, hashString } from "@/lib/seededRandom";
 
 /**
  * The props for the BlurryHeader component.
@@ -22,12 +23,9 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
   const mobileQuery = "(max-width: 768px)";
   const ultrawideQuery = "(min-width: 120.5rem)";
 
-  const [tier, setTier] = useState<"mobile" | "desktop" | "ultrawide">(() => {
-    if (typeof window === "undefined") return "desktop";
-    if (window.matchMedia(mobileQuery).matches) return "mobile";
-    if (window.matchMedia(ultrawideQuery).matches) return "ultrawide";
-    return "desktop";
-  });
+  // The server renders the desktop tier, so the first client render must
+  // match it for hydration, the effect corrects the tier straight after
+  const [tier, setTier] = useState<"mobile" | "desktop" | "ultrawide">("desktop");
 
   useEffect(() => {
     const mobile = window.matchMedia(mobileQuery);
@@ -37,6 +35,7 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
       else if (ultrawide.matches) setTier("ultrawide");
       else setTier("desktop");
     };
+    update();
     mobile.addEventListener("change", update);
     ultrawide.addEventListener("change", update);
     return () => {
@@ -50,6 +49,9 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
 
   // Generate blobs with proportional color distribution and better spread
   const blobs = useMemo(() => {
+    // Seeded from the colours so the server and the client compute the same
+    // blob layout, a real Math.random here would break hydration
+    const random = createSeededRandom(hashString(colors.map(colour => colour.hex).join(",") + tier));
     const blobsArray = [];
 
     const columns = tier === "mobile" ? 3 : tier === "ultrawide" ? 7 : 5;
@@ -65,25 +67,25 @@ const BlurryHeader = ({ _colors, children }: BlobBackgroundProps) => {
         const baseLeft = gridCol * (100 / columns) + 100 / columns / 2;
         const baseTop = gridRow * (100 / rows) + 100 / rows / 2;
 
-        const randomOffsetX = (Math.random() - 0.5) * (80 / columns);
-        const randomOffsetY = (Math.random() - 0.5) * (60 / rows);
+        const randomOffsetX = (random() - 0.5) * (80 / columns);
+        const randomOffsetY = (random() - 0.5) * (60 / rows);
 
         const baseSize = tier === "mobile" ? 200 : tier === "ultrawide" ? 350 : 250;
         const randomSize = tier === "mobile" ? 150 : tier === "ultrawide" ? 350 : 250;
         blobsArray.push({
-          size: Math.floor(Math.random() * randomSize) + baseSize,
+          size: Math.floor(random() * randomSize) + baseSize,
           left: Math.max(0, Math.min(100, baseLeft + randomOffsetX)),
           top: Math.max(0, Math.min(100, baseTop + randomOffsetY)),
           color: colors[i].hex,
-          blur: tier === "mobile" ? Math.floor(Math.random() * 40) + 30 : tier === "ultrawide" ? Math.floor(Math.random() * 80) + 50 : Math.floor(Math.random() * 60) + 40,
-          opacity: Math.random() * 0.5 + 0.5,
+          blur: tier === "mobile" ? Math.floor(random() * 40) + 30 : tier === "ultrawide" ? Math.floor(random() * 80) + 50 : Math.floor(random() * 60) + 40,
+          opacity: random() * 0.5 + 0.5,
           animationClass: `animate-lava${j % 3}`,
         });
       }
     }
 
     for (let i = blobsArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(random() * (i + 1));
       [blobsArray[i], blobsArray[j]] = [blobsArray[j], blobsArray[i]];
     }
 

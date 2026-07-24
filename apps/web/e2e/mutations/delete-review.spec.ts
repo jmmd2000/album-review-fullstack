@@ -15,7 +15,12 @@ const targetAlbum = capturedAlbum(target.spotifyID);
 
 test("deleting a review removes the album and its orphaned artist", async ({ page }) => {
   await page.goto(`/albums/${target.spotifyID}`);
-  await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
+  // The album page arrives server rendered, so retry the click until
+  // hydration has wired the dropdown handler
+  await expect(async () => {
+    await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
+    await expect(page.getByRole("button", { name: "Delete Album" })).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15000 });
   await page.getByRole("button", { name: "Delete Album" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
 

@@ -25,6 +25,7 @@ const reviewQueryOptions = (albumID: string) =>
   });
 
 export const Route = createFileRoute("/albums/$albumID/")({
+  ssr: true,
   loader: async ({ params, context }) => {
     return context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
   },

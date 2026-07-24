@@ -35,6 +35,7 @@ const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
   });
 
 export const Route = createFileRoute("/artists/")({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): GetPaginatedArtistsOptions => {
     const result: GetPaginatedArtistsOptions = {
       page: Number(search.page) || 1,

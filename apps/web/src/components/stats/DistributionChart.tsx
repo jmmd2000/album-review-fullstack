@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { getRatingStyles } from "@shared/helpers/ratingTiers";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useMediaQuery } from "react-responsive";
@@ -8,8 +9,13 @@ interface DistributionChartProps {
 }
 
 const DistributionChart = ({ data, resource = "albums" }: DistributionChartProps) => {
-  const isSmall = useMediaQuery({ query: "(max-width: 640px)" });
-  const isUltrawide = useMediaQuery({ query: "(min-width: 120.5rem)" });
+  // The media queries read as false on the server, so the first client
+  // render must too for hydration, they go live once mounted
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isSmall = useMediaQuery({ query: "(max-width: 640px)" }) && mounted;
+  const isUltrawide = useMediaQuery({ query: "(min-width: 120.5rem)" }) && mounted;
 
   const chartHeight = isUltrawide ? 400 : 250;
   const tickFontSize = isUltrawide ? 14 : 11;

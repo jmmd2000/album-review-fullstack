@@ -37,6 +37,7 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/albums/")({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): GetPaginatedAlbumsOptions => {
     // The genre filter arrives as an array from in-app navigation but old
     // links may still carry the comma string form

@@ -1,5 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { Toaster } from "sonner";
 import { routeTree } from "./routeTree.gen";
 
@@ -11,15 +12,20 @@ import { routeTree } from "./routeTree.gen";
  */
 export function getRouter() {
   const queryClient = new QueryClient();
-  return createRouter({
+  const router = createRouter({
     routeTree,
     defaultPreload: "intent",
     context: { queryClient },
     Wrap: ({ children }) => (
-      <QueryClientProvider client={queryClient}>
+      <>
         {children}
         <Toaster richColors />
-      </QueryClientProvider>
+      </>
     ),
   });
+  // Streams whatever the server loaders fetched into the client cache so
+  // hydration reuses it instead of refetching. Also wraps the app in the
+  // QueryClientProvider.
+  setupRouterSsrQueryIntegration({ router, queryClient });
+  return router;
 }

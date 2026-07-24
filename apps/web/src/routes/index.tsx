@@ -18,6 +18,7 @@ const statsQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
+  ssr: true,
   loader: ({ context }) => context.queryClient.ensureQueryData(statsQueryOptions),
   component: Index,
   errorComponent: ErrorComponent,

@@ -57,6 +57,7 @@ const countQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute("/stats/")({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): GetStatsOptions => {
     const result: GetStatsOptions = {
       slug: (search.slug as string) || "",

@@ -25,6 +25,7 @@ const artistQueryOptions = (artistID: string) =>
   });
 
 export const Route = createFileRoute("/artists/$artistID/")({
+  ssr: true,
   loader: async ({ params, context }) => {
     return context.queryClient.ensureQueryData(artistQueryOptions(params.artistID));
   },
