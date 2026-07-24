@@ -2,7 +2,7 @@ import { createRequire } from "module";
 import { defineConfig, version as viteVersion } from "vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import path from "path";
 
 const require = createRequire(import.meta.url);
@@ -36,7 +36,7 @@ export default defineConfig({
       ],
     },
   },
-  plugins: [TanStackRouterVite({ autoCodeSplitting: true }), viteReact(), tailwindcss()],
+  plugins: [tanstackStart(), viteReact(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
