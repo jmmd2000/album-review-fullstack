@@ -1,10 +1,11 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
+import { useListControls } from "@/hooks/useListControls";
+import { ListPageLayout } from "@components/layout/ListPageLayout";
 import AlbumCard from "@components/album/AlbumCard";
 import CardGrid from "@components/ui/CardGrid";
 import { Skeleton } from "@components/ui/Skeleton";
@@ -12,7 +13,6 @@ import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
-import { PAGE_SIZE } from "@shared/constants";
 
 async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
   return handle(
@@ -87,37 +87,7 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const handleNextPage = () => {
-    if (data?.furtherPages) {
-      navigate({
-        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
-          ...prev,
-          page: (prev.page || 1) + 1,
-        }),
-      });
-    }
-  };
-
-  const handlePrevPage = () => {
-    navigate({
-      search: (prev: Partial<GetPaginatedAlbumsOptions>) => {
-        const currentPage = prev.page || 1;
-        if (currentPage > 1) {
-          return { ...prev, page: currentPage - 1 };
-        }
-        return prev;
-      },
-    });
-  };
-
-  const handleSearch = (search: string) => {
-    navigate({
-      search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
-        ...prev,
-        search,
-      }),
-    });
-  };
+  const { search, pagination } = useListControls<GetPaginatedAlbumsOptions>({ page: options.page, data, navigate });
 
   const sortSettings: SortDropdownProps = {
     options: [
@@ -206,32 +176,16 @@ function RouteComponent() {
   };
 
   return (
-    <motion.div key={options.page} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+    <ListPageLayout page={options.page}>
       <CardGrid
         cards={data.albums.map(album => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
         counter={data.totalCount}
-        controls={{
-          search: handleSearch,
-          pagination: {
-            next: { action: handleNextPage, disabled: !data.furtherPages },
-            prev: {
-              action: handlePrevPage,
-              disabled: options.page === 1 || options.page === undefined,
-            },
-            page: {
-              pageNumber: options.page || 1,
-              totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
-            },
-          },
-          sortSettings: sortSettings,
-          secondarySortSettings: secondarySortSettings,
-          genreSettings: genreSettings,
-        }}
+        controls={{ search, pagination, sortSettings, secondarySortSettings, genreSettings }}
         sortedByYear={options.orderBy === "releaseYear"}
         cardYears={data.albums.map(album => album.releaseYear)}
       />
-    </motion.div>
+    </ListPageLayout>
   );
 }
