@@ -1,0 +1,92 @@
+:root {
+  /* type */
+  --font-sans: "Archivo", system-ui, -apple-system, sans-serif;
+  --fw-body: 400;
+  --fw-medium: 600;
+  --fw-label: 700;
+  --fw-display: 900;
+
+  /* score tiers */
+  --tier-perfect: #d946ef; /* 91-100 | track 10 */
+  --tier-amazing: #7c3aed; /* 81-90  | track 9  */
+  --tier-brilliant: #2563eb; /* 71-80  | track 8  */
+  --tier-great: #06b6d4; /* 61-70  | track 7  */
+  --tier-good: #10b981; /* 51-60  | track 6  */
+  --tier-meh: #84cc16; /* 41-50  | track 5  */
+  --tier-ok: #d97706; /* 31-40  | track 4  */
+  --tier-bad: #ea580c; /* 21-30  | track 3  */
+  --tier-awful: #dc2626; /* 11-20  | track 2  */
+  --tier-terrible: #7f1d1d; /* 1-10   | track 1  */
+  --tier-unrated: #64748b; /* 0 or unrated */
+
+  /* neutrals, light theme */
+  --ink: #111111;
+  --paper: #ffffff;
+  --nav-bg: #111111;
+  --on-ink: #ffffff;
+  --muted: #888888;
+  --muted-2: #999999;
+  --muted-3: #777777;
+  --faint: #bbbbbb;
+  --hairline: #eeeeee;
+  --bar-track: #f0f0f0;
+  --disabled-border: #dddddd;
+  --disabled-fg: #cccccc;
+  --reveal-bg: rgba(17, 17, 17, 0.92);
+  /* darkening gradient over hero photos so light text stays readable */
+  --banner-scrim: linear-gradient(180deg, rgba(17, 17, 17, 0.15) 0%, rgba(17, 17, 17, 0.55) 55%, rgba(17, 17, 17, 0.95) 100%);
+
+  /* space, 4px base */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 28px;
+  --sp-8: 32px;
+  --sp-9: 36px;
+  --sp-10: 40px;
+  --sp-11: 44px;
+  --sp-12: 52px;
+  --gutter: 36px;
+  --gutter-mobile: 18px;
+  --nav-height: 56px;
+  --grid-gap: 4px;
+  --column-gap: 52px;
+
+  /* borders. Radius stays 0 by design */
+  --radius: 0;
+  --bw-hairline: 1px;
+  --bw-chip: 2px;
+  --bw-control: 2.5px;
+  --bw-card: 3px;
+  --bw-rule: 4px;
+  --bw-avatar: 5px;
+
+  /* motion */
+  --duration-reveal: 0.2s;
+  --ease: ease;
+
+  /* layers*/
+  --z-nav: 100;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* neutrals, dark theme. Same design with ink and paper swapped */
+[data-theme="dark"] {
+  --ink: #ffffff;
+  --paper: #0d0d0d;
+  --nav-bg: #000000;
+  --on-ink: #111111;
+  --hairline: #222222;
+  --bar-track: #1e1e1e;
+  --muted: #888888;
+  --muted-2: #888888;
+  --muted-3: #999999;
+  --faint: #777777;
+  --disabled-border: #333333;
+  --disabled-fg: #555555;
+}
