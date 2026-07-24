@@ -1,4 +1,8 @@
+@import "./tokens.css";
+@import "./reset.css" layer(base);
 @import "tailwindcss";
+
+/* ---- tailwind configuration ---- */
 
 /* The shared package carries class names too (the rating tier colours), and
    the automatic scan doesn't cross package boundaries */
@@ -13,6 +17,26 @@
   --breakpoint-3xl: 120.5rem;
   --breakpoint-4xl: 137.5rem;
 }
+
+/* ---- base ---- */
+
+@font-face {
+  font-family: "Cabin";
+  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
+}
+
+html {
+  font-size: clamp(1rem, 0.347vw + 0.584rem, 1.25rem);
+  @apply bg-neutral-900;
+  @apply text-white;
+}
+
+body {
+  font-family: "Cabin", sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---- keyframes and their helper classes ---- */
 
 /* Blurry header animations */
 @keyframes lava0 {
@@ -95,24 +119,20 @@
   animation: infinite-scroll var(--animation-duration-infinite-scroll) linear infinite;
 }
 
-body {
-  overflow-x: hidden;
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-16.666%);
+  }
 }
 
-html {
-  font-size: clamp(1rem, 0.347vw + 0.584rem, 1.25rem);
-  @apply bg-neutral-900;
-  @apply text-white;
+.scrolling-container {
+  animation: scrollUp 30s linear infinite;
 }
 
-@font-face {
-  font-family: "Cabin";
-  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
-}
-
-body {
-  font-family: "Cabin", sans-serif;
-}
+/* ---- utilities ---- */
 
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -126,17 +146,4 @@ body {
     /* Firefox */
     scrollbar-width: none;
   }
-}
-
-@keyframes scrollUp {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-16.666%);
-  }
-}
-
-.scrolling-container {
-  animation: scrollUp 30s linear infinite;
 }
