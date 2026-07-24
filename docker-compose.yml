@@ -3,7 +3,7 @@ name: ${APP_NAME}
 
 services:
   db:
-    image: postgres:15
+    image: postgres:15.18
     restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -82,7 +82,7 @@ services:
   # Chromium sidecar for the artist header scraper. The api connects to it over
   # websocket with the token, internal network only, nothing routes through traefik.
   browserless:
-    image: ghcr.io/browserless/chromium:latest
+    image: ghcr.io/browserless/chromium:v2.55.0
     restart: always
     environment:
       TOKEN: ${BROWSERLESS_TOKEN}

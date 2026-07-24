@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:22-alpine AS build
+FROM node:22.22.0-alpine AS build
 
 RUN corepack enable
 
@@ -28,7 +28,7 @@ WORKDIR /app/apps/web
 RUN pnpm run build
 
 # Stage 2: Production stage
-FROM nginx:alpine AS production
+FROM nginx:1.30.4-alpine AS production
 
 WORKDIR /usr/share/nginx/html
 

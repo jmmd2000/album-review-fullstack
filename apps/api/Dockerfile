@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:22 AS build
+FROM node:22.22.0 AS build
 
 RUN corepack enable
 
@@ -27,7 +27,7 @@ WORKDIR /app
 RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
 
 # Stage 2: Production stage
-FROM node:22-alpine AS production
+FROM node:22.22.0-alpine AS production
 
 WORKDIR /app
 
