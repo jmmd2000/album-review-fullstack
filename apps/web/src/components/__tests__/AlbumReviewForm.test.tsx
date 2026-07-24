@@ -5,7 +5,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Jsonified, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
-import AlbumReviewForm from "../form/AlbumReviewForm";
+import AlbumReviewForm from "@/components/form/AlbumReviewForm";
 import { client } from "@/lib/client";
 
 const queryClient = new QueryClient({

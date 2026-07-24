@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import CardGrid from "../ui/CardGrid";
+import CardGrid from "@/components/ui/CardGrid";
 
 const cards = [<div key="1">Card One</div>, <div key="2">Card Two</div>, <div key="3">Card Three</div>];
 

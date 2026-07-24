@@ -1,18 +1,18 @@
 import type { DisplayTrack, ExtractedColor, Genre, Jsonified, ReviewBonuses, ReviewedAlbum, SpotifyAlbum } from "@shared/types";
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
-import TrackList from "@components/track/TrackList";
-import { BestWorstSong } from "@components/album/ReviewDetails";
-import Button from "@components/ui/Button";
+import TrackList from "@/components/track/TrackList";
+import { BestWorstSong } from "@/components/album/BestWorstSong";
+import Button from "@/components/ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import RatingChip from "@components/ui/RatingChip";
+import RatingChip from "@/components/ui/RatingChip";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { client, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { ColourPicker } from "@components/form/ColourPicker";
-import ArtistSelector from "@components/form/ArtistSelector";
-import { ReviewContentInput } from "@components/form/ReviewContentInput";
-import GenreSelector from "@components/form/GenreSelector";
+import { ColourPicker } from "@/components/form/ColourPicker";
+import ArtistSelector from "@/components/form/ArtistSelector";
+import { ReviewContentInput } from "@/components/form/ReviewContentInput";
+import GenreSelector from "@/components/form/GenreSelector";
 
 //# --------------------------------------------------------------------------------------------- #
 //# This form is used for both creating a new review and editing an existing review

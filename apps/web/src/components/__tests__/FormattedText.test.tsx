@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders } from "@/__tests__/test-utils";
-import { FormattedText } from "@components/ui/FormattedText";
+import { FormattedText } from "@/components/ui/FormattedText";
 import type { FormattedToken } from "@shared/helpers/parseReviewContent";
 
 describe("FormattedText", () => {

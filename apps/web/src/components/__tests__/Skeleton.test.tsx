@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Skeleton } from "../ui/Skeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 describe("Skeleton", () => {
   it("renders the grid variant", () => {

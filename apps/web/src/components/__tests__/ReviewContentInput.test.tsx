@@ -4,8 +4,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ReviewContentInput } from "../form/ReviewContentInput";
-import type { CreateReviewFormData } from "../form/AlbumReviewForm";
+import { ReviewContentInput } from "@/components/form/ReviewContentInput";
+import type { CreateReviewFormData } from "@/components/form/AlbumReviewForm";
 
 vi.mock("sonner", () => ({
   toast: { info: vi.fn() },

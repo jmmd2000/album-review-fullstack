@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRef } from "react";
-import { Dropdown, type DropdownProps } from "../ui/Dropdown";
+import { Dropdown, type DropdownProps } from "@/components/ui/Dropdown";
 
 const items = [
   { name: "Rock", value: "rock" },

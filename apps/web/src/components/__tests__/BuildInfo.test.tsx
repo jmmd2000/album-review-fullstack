@@ -4,7 +4,7 @@ import type { Mock } from "vitest";
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BuildInfo } from "../settings/BuildInfo";
+import { BuildInfo } from "@/components/settings/BuildInfo";
 import { client } from "@/lib/client";
 
 vi.mock("@/lib/client", async importActual => {

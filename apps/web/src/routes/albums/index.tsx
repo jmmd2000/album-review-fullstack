@@ -5,10 +5,10 @@ import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
-import { ListPageLayout } from "@components/layout/ListPageLayout";
-import AlbumCard from "@components/album/AlbumCard";
-import CardGrid from "@components/ui/CardGrid";
-import { Skeleton } from "@components/ui/Skeleton";
+import { ListPageLayout } from "@/components/layout/ListPageLayout";
+import AlbumCard from "@/components/album/AlbumCard";
+import CardGrid from "@/components/ui/CardGrid";
+import { Skeleton } from "@/components/ui/Skeleton";
 import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 

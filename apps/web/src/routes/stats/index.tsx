@@ -1,8 +1,8 @@
 import AlbumCard from "@/components/album/AlbumCard";
 import ArtistCard from "@/components/artist/ArtistCard";
 import GenrePills from "@/components/ui/GenrePills";
-import BentoCard from "@/components/stats/BentoCard";
-import StatBox from "@/components/stats/StatBox";
+import BentoCard from "@/components/ui/BentoCard";
+import StatBox from "@/components/ui/StatBox";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { GetStatsOptions } from "@shared/types";
@@ -11,6 +11,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Music, Users, Disc, Headphones } from "lucide-react";
 import DistributionChart from "@/components/stats/DistributionChart";
+import { NoDataFound } from "@/components/ui/NoDataFound";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { client, handle } from "@/lib/client";
 
@@ -304,11 +305,3 @@ function RouteComponent() {
     </div>
   );
 }
-
-interface NoDataFoundProps {
-  message: string;
-}
-
-export const NoDataFound = ({ message }: NoDataFoundProps) => {
-  return <p className="flex items-center text-neutral-400 w-full h-full justify-center">{message}</p>;
-};

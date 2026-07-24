@@ -1,4 +1,4 @@
-import ErrorComponent from "@components/ui/ErrorComponent";
+import ErrorComponent from "@/components/ui/ErrorComponent";
 import { queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import SortDropdown from "../ui/SortDropdown";
+import SortDropdown from "@/components/ui/SortDropdown";
 
 const options = [
   { label: "Name", value: "name" },
