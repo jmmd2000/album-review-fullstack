@@ -18,7 +18,7 @@ const GenrePills = ({ genres }: GenrePillsProps) => {
     <div className="flex flex-wrap gap-1 3xl:gap-2 mx-auto items-center justify-center">
       {genres.map((genre, index) => (
         <Link
-          search={{ genres: genre.slug }}
+          search={{ genres: [genre.slug] }}
           to={"/albums"}
           resetScroll={true}
           key={index}

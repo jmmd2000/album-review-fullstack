@@ -47,6 +47,9 @@ export const Route = createFileRoute("/artists/")({
     // Only include non-default values in the URL
     if (result.page === 1) delete result.page;
     if (result.search === "") delete result.search;
+    if (result.orderBy === "totalScore") delete result.orderBy;
+    if (result.order === "desc") delete result.order;
+    if (result.scoreType === "overall") delete result.scoreType;
 
     return result;
   },

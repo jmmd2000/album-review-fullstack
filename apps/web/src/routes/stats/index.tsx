@@ -57,11 +57,22 @@ const countQueryOptions = queryOptions({
 });
 
 export const Route = createFileRoute("/stats/")({
-  loaderDeps: ({ search }: { search: GetStatsOptions }) => ({
+  validateSearch: (search: Record<string, unknown>): GetStatsOptions => {
+    const result: GetStatsOptions = {
+      slug: (search.slug as string) || "",
+      resource: (search.resource as GetStatsOptions["resource"]) || "albums",
+    };
+
+    if (result.slug === "") delete result.slug;
+    if (result.resource === "albums") delete result.resource;
+
+    return result;
+  },
+  loaderDeps: ({ search }) => ({
     slug: search.slug ?? "",
     resource: search.resource ?? "albums",
   }),
-  loader: async ({ deps: { slug, resource } }: { deps: { slug: string; resource: "albums" | "tracks" | "artists" } }) =>
+  loader: async ({ deps: { slug, resource } }) =>
     Promise.all([
       queryClient.ensureQueryData(overviewQueryOptions),
       queryClient.ensureQueryData(genresQueryOptions(slug)),

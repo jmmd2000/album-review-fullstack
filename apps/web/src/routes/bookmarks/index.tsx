@@ -35,14 +35,25 @@ const albumQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/bookmarks/")({
-  loaderDeps: ({ search }: { search: GetPaginatedBookmarkedAlbumsOptions }) => ({
-    page: search.page,
-    search: search.search,
-    orderBy: search.orderBy,
-    order: search.order,
-  }),
-  loader: async ({ deps: { page, search, orderBy, order } }: { deps: GetPaginatedBookmarkedAlbumsOptions }) => {
-    return queryClient.ensureQueryData(albumQueryOptions({ page, search, orderBy, order }));
+  validateSearch: (search: Record<string, unknown>): GetPaginatedBookmarkedAlbumsOptions => {
+    const result: GetPaginatedBookmarkedAlbumsOptions = {
+      page: Number(search.page) || 1,
+      search: (search.search as string) || "",
+      orderBy: (search.orderBy as GetPaginatedBookmarkedAlbumsOptions["orderBy"]) || "createdAt",
+      order: (search.order as GetPaginatedBookmarkedAlbumsOptions["order"]) || "desc",
+    };
+
+    // Only include non-default values in the URL
+    if (result.page === 1) delete result.page;
+    if (result.search === "") delete result.search;
+    if (result.orderBy === "createdAt") delete result.orderBy;
+    if (result.order === "desc") delete result.order;
+
+    return result;
+  },
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
+    return queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
   head: () => ({
@@ -101,7 +112,7 @@ function RouteComponent() {
       navigate({
         search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({
           ...prev,
-          orderBy: value,
+          orderBy: value as GetPaginatedBookmarkedAlbumsOptions["orderBy"],
           order: direction,
         }),
       });
