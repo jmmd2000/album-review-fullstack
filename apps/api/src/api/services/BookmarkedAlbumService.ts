@@ -2,6 +2,7 @@ import "dotenv/config";
 import type { DisplayAlbum, SpotifyImage, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { AppError } from "@/api/AppError";
+import { PAGE_SIZE } from "@shared/constants";
 
 export class BookmarkedAlbumService {
   static async bookmarkAlbum(album: DisplayAlbum) {
@@ -47,7 +48,7 @@ export class BookmarkedAlbumService {
   static async getPaginatedAlbums(opts: GetPaginatedBookmarkedAlbumsOptions) {
     const albums = await BookmarkedAlbumModel.getPaginatedAlbums(opts);
     const totalCount = await BookmarkedAlbumModel.getBookmarkedAlbumCount();
-    const furtherPages = albums.length > 35;
+    const furtherPages = albums.length > PAGE_SIZE;
     if (furtherPages) albums.pop();
 
     const displayAlbums: DisplayAlbum[] = albums.map(album => ({

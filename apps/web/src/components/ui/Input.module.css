@@ -1,0 +1,19 @@
+.input {
+  height: 42px;
+  background: transparent;
+  border: var(--bw-control) solid var(--ink);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--fw-label);
+  padding: 0 12px;
+  outline: none;
+  transition:
+    background var(--duration-reveal) var(--ease),
+    color var(--duration-reveal) var(--ease);
+
+  &:focus {
+    background: var(--ink);
+    color: var(--paper);
+  }
+}

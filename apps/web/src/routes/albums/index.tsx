@@ -6,7 +6,8 @@ import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { AlbumCard } from "@/components/album/AlbumCard";
-import cardStyles from "@/components/album/AlbumCard.module.css";
+import { CardGrid } from "@/components/ui/CardGrid";
+import { ListControls } from "@/components/ui/ListControls";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
 
@@ -88,29 +89,12 @@ function RouteComponent() {
     <>
       <h1>Albums</h1>
       <p>{data.totalCount} reviewed</p>
-      <form
-        onSubmit={event => {
-          event.preventDefault();
-          search(new FormData(event.currentTarget).get("query")?.toString() ?? "");
-        }}
-      >
-        <input name="query" type="search" defaultValue={options.search ?? ""} aria-label="Search albums" />
-        <button type="submit">Search</button>
-      </form>
-      <div className={cardStyles.grid}>
+      <ListControls searchLabel="Search albums" searchValue={options.search ?? ""} onSearch={search} pagination={pagination} />
+      <CardGrid>
         {data.albums.map(album => (
           <AlbumCard key={album.spotifyID} album={album} />
         ))}
-      </div>
-      <p>
-        <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
-          Previous
-        </button>{" "}
-        Page {pagination.page.pageNumber} of {pagination.page.totalPages}{" "}
-        <button type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
-          Next
-        </button>
-      </p>
+      </CardGrid>
     </>
   );
 }

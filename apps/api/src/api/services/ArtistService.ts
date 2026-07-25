@@ -13,6 +13,7 @@ import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPos
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { AppError } from "@/api/AppError";
 import { db, type Executor } from "@/db/client";
+import { PAGE_SIZE } from "@shared/constants";
 
 export class ArtistService {
   /**
@@ -280,7 +281,7 @@ export class ArtistService {
   static async getPaginatedArtists(opts: GetPaginatedArtistsOptions) {
     const artists = await ArtistModel.getPaginatedArtists(opts);
     const totalArtistCount = await ArtistModel.getArtistCount();
-    const furtherPages = artists.length > 35;
+    const furtherPages = artists.length > PAGE_SIZE;
     if (furtherPages) artists.pop();
 
     const displayArtists: DisplayArtist[] = artists.map(artist => ({

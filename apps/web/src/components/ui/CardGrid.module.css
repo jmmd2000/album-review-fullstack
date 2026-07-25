@@ -1,0 +1,11 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--grid-gap);
+}
+
+@media (width < 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
