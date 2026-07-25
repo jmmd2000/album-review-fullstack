@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { XIcon } from "@phosphor-icons/react";
+import { AdminSheet } from "@/components/layout/AdminSheet";
 import styles from "./Navbar.module.css";
 
 const PRIMARY_LINKS = [
@@ -26,25 +28,31 @@ export function Navbar() {
   }, [menuOpen]);
 
   return (
-    <header className={styles.bar}>
-      <nav className={styles.links} aria-label="Primary">
-        {PRIMARY_LINKS.map(link => (
-          <Link key={link.to} to={link.to} className={styles.link} activeOptions={{ exact: link.to === "/" }}>
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+    <>
+      <header className={styles.bar}>
+        <nav className={styles.links} aria-label="Primary">
+          {PRIMARY_LINKS.map(link => (
+            <Link key={link.to} to={link.to} className={styles.link} activeOptions={{ exact: link.to === "/" }}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-      <button type="button" className={styles.burger} aria-expanded={menuOpen} aria-label="Open menu" onClick={() => setMenuOpen(true)}>
-        <span />
-        <span />
-        <span />
-      </button>
+        <div className={styles.admin}>
+          <AdminSheet />
+        </div>
+
+        <button type="button" className={styles.burger} aria-expanded={menuOpen} aria-label="Open menu" onClick={() => setMenuOpen(true)}>
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
 
       {menuOpen && (
         <div className={styles.takeover}>
           <button type="button" className={styles.close} aria-label="Close menu" onClick={() => setMenuOpen(false)}>
-            x
+            <XIcon weight="bold" size={22} />
           </button>
           <nav className={styles.takeover_links} aria-label="Primary">
             {PRIMARY_LINKS.map(link => (
@@ -55,6 +63,6 @@ export function Navbar() {
           </nav>
         </div>
       )}
-    </header>
+    </>
   );
 }

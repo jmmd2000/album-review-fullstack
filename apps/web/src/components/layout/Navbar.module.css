@@ -1,4 +1,5 @@
 .bar {
+  position: relative;
   height: var(--nav-height);
   background: var(--nav-bg);
   color: #fff;
@@ -15,18 +16,25 @@
 }
 
 .link {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: var(--fw-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fff;
   text-decoration: none;
-  padding: 6px 11px;
+  padding: 6px 12px;
 
   &[data-status="active"] {
     background: #fff;
     color: #111;
   }
+}
+
+.admin {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 14px;
 }
 
 .burger {
@@ -49,7 +57,7 @@
 .takeover {
   position: fixed;
   inset: 0;
-  z-index: var(--z-nav);
+  z-index: var(--z-modal);
   background: var(--nav-bg);
   display: flex;
   flex-direction: column;
@@ -87,7 +95,7 @@
 .takeover_link[data-status="active"] {
   background: #fff;
   color: #111;
-  padding: 0 8px;
+  padding: 0 8px 4px;
 }
 
 @media (width < 900px) {

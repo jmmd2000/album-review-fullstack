@@ -18,6 +18,19 @@
   --tier-awful: #dc2626; /* 11-20  | track 2  */
   --tier-terrible: #7f1d1d; /* 1-10   | track 1  */
   --tier-unrated: #64748b; /* 0 or unrated */
+  --tier-spectrum: linear-gradient(
+    90deg,
+    var(--tier-perfect),
+    var(--tier-amazing),
+    var(--tier-brilliant),
+    var(--tier-great),
+    var(--tier-good),
+    var(--tier-meh),
+    var(--tier-ok),
+    var(--tier-bad),
+    var(--tier-awful),
+    var(--tier-terrible)
+  );
 
   /* neutrals, light theme */
   --ink: #111111;
@@ -90,3 +103,7 @@
   --disabled-border: #333333;
   --disabled-fg: #555555;
 }
+
+/* Breakpoints. css cannot read var() inside a media query
+   mobile:    width < 900px
+   ultrawide: width >= 1920px */

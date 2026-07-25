@@ -1,0 +1,135 @@
+.trigger {
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 2px 7px;
+
+  &:hover {
+    color: #fff;
+  }
+
+  &[data-admin] {
+    color: #fff;
+    background: var(--tier-spectrum) bottom / 100% 3px no-repeat;
+  }
+}
+
+.sheet {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+  background: var(--nav-bg);
+  color: #fff;
+  padding: 18px 30px;
+  border-top: 1px solid #333;
+
+  &[data-admin] {
+    padding: 14px 42px;
+    border-top: 3px solid;
+    border-image: var(--tier-spectrum) 1;
+  }
+}
+
+.section_label {
+  display: block;
+  font-size: 9px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.row {
+  display: flex;
+  max-width: 420px;
+
+  & input {
+    flex: 1;
+    height: 40px;
+    background: transparent;
+    border: var(--bw-control) solid #fff;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: var(--fw-label);
+    padding: 0 12px;
+    outline: none;
+  }
+
+  & button {
+    height: 40px;
+    padding: 0 18px;
+    background: #fff;
+    color: #111;
+    border: 0;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: var(--fw-display);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &:hover {
+      background: #111;
+      color: #fff;
+      border: var(--bw-control) solid #fff;
+      border-left: 0;
+      margin-right: calc(-1 * var(--bw-control));
+    }
+  }
+}
+
+.error {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.links {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.link {
+  font-size: 14px;
+  font-weight: var(--fw-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+}
+
+.logout {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    color: #fff;
+  }
+}
