@@ -1,10 +1,12 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
+import { AlbumCard } from "@/components/album/AlbumCard";
+import cardStyles from "@/components/album/AlbumCard.module.css";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
 
@@ -95,16 +97,11 @@ function RouteComponent() {
         <input name="query" type="search" defaultValue={options.search ?? ""} aria-label="Search albums" />
         <button type="submit">Search</button>
       </form>
-      <ul>
+      <div className={cardStyles.grid}>
         {data.albums.map(album => (
-          <li key={album.spotifyID}>
-            <Link to={album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create"} params={{ albumID: album.spotifyID }}>
-              {album.name}
-            </Link>{" "}
-            {album.artistName} {album.finalScore != null ? album.finalScore : "unreviewed"}
-          </li>
+          <AlbumCard key={album.spotifyID} album={album} />
         ))}
-      </ul>
+      </div>
       <p>
         <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
           Previous

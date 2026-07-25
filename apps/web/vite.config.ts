@@ -27,12 +27,7 @@ export default defineConfig(({ command }) => ({
       },
     },
     fs: {
-      allow: [
-        // Allow local frontend project directory
-        path.resolve(__dirname),
-        // Allow shared directory
-        path.resolve(__dirname, "../../packages/shared"),
-      ],
+      allow: [path.resolve(__dirname, "../..")],
     },
   },
   // The production image ships no app dependencies, so the server bundle
