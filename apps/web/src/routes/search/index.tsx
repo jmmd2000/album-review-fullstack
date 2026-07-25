@@ -1,16 +1,9 @@
-import AlbumCard from "@/components/album/AlbumCard";
-import CardGrid from "@/components/ui/CardGrid";
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { useAlbumStatus } from "@/hooks/useAlbumStatus";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { client, handle } from "@/lib/client";
-import { queryKeys } from "@/lib/queryKeys";
-import type { DisplayAlbum, SearchAlbumsOptions } from "@shared/types";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
+
+import { client, handle } from "@/lib/client";
+import { queryKeys } from "@/lib/queryKeys";
+import type { SearchAlbumsOptions } from "@shared/types";
 
 async function searchSpotifyAlbums(query: SearchAlbumsOptions) {
   return handle(client.api.spotify.albums.search.$get({ query: { query: String(query.query) } }));
@@ -37,7 +30,6 @@ export const Route = createFileRoute("/search/")({
     return context.queryClient.ensureQueryData(searchQueryOptions({ query }));
   },
   component: RouteComponent,
-  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -51,49 +43,27 @@ function RouteComponent() {
   const options: SearchAlbumsOptions = Route.useSearch();
   const { data } = useSuspenseQuery(searchQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
-  const [recentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
-  const [pageTitle, setPageTitle] = useState<string>("Search Albums");
-
-  const { data: recentAlbumsWithStatus } = useAlbumStatus(recentAlbums);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const query = params.get("query");
-    if (query) {
-      setPageTitle(`Search results for "${query}"`);
-    } else {
-      setPageTitle("Search Albums");
-    }
-  }, [options.query]);
-
-  const dataIsEmpty = data?.length === 0;
-  const albumCards = dataIsEmpty ? recentAlbumsWithStatus : data;
-  const gridHeading = dataIsEmpty ? "Recently viewed albums" : `Search results for "${options.query}"`;
-
-  const handleSearch = (query: string) => {
-    setPageTitle(`Search results for "${query}"`);
-    navigate({
-      search: (prev: Partial<SearchAlbumsOptions>) => ({ ...prev, query }),
-    });
-  };
 
   return (
     <>
-      <RequireAdmin>
-        {/* Setting the title via <title> rather than in the head option of createFileRoute()
-        because it was annoying and finnicky to access the search params to update the title.  */}
-        <title>{pageTitle}</title>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-          <CardGrid
-            cards={(albumCards || []).map(album => (
-              <AlbumCard key={album.spotifyID} album={album} bookmarked={album.bookmarked} />
-            ))}
-            heading={gridHeading}
-            counter={albumCards?.length || 0}
-            controls={{ search: handleSearch }}
-          />
-        </motion.div>
-      </RequireAdmin>
+      <h1>Search</h1>
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          const query = new FormData(event.currentTarget).get("query")?.toString() ?? "";
+          navigate({ search: (prev: Partial<SearchAlbumsOptions>) => ({ ...prev, query }) });
+        }}
+      >
+        <input name="query" type="search" defaultValue={options.query ?? ""} aria-label="Search Spotify albums" />
+        <button type="submit">Search</button>
+      </form>
+      <ul>
+        {(data ?? []).map(album => (
+          <li key={album.spotifyID}>
+            {album.name} {album.artistName} {album.finalScore != null ? album.finalScore : "unreviewed"}
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

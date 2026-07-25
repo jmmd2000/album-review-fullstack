@@ -1,16 +1,10 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
-import { ListPageLayout } from "@/components/layout/ListPageLayout";
-import AlbumCard from "@/components/album/AlbumCard";
-import CardGrid from "@/components/ui/CardGrid";
-import { Skeleton } from "@/components/ui/Skeleton";
-import type { SortDropdownProps } from "@/components/ui/SortDropdown";
-import type { DropdownControlsProps } from "@/components/ui/CardGridControls";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
 
@@ -73,7 +67,6 @@ export const Route = createFileRoute("/albums/")({
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
-  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: socialMeta({
       title: "Albums",
@@ -89,103 +82,38 @@ function RouteComponent() {
 
   const { search, pagination } = useListControls<GetPaginatedAlbumsOptions>({ page: options.page, data, navigate });
 
-  const sortSettings: SortDropdownProps = {
-    options: [
-      // { label: "Score", value: "totalScore" },
-      { label: "Score", value: "finalScore" },
-      { label: "Name", value: "name" },
-      { label: "Date Added", value: "createdAt" },
-      { label: "Year", value: "releaseYear" },
-    ],
-    value: options.orderBy || "createdAt",
-    direction: options.order || "desc",
-    onSortChange: (value, direction) => {
-      navigate({
-        search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
-          ...prev,
-          orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
-          order: direction,
-          // Set default secondary sort when year is selected, clear when not
-          secondaryOrderBy: value === "releaseYear" ? prev.secondaryOrderBy || "finalScore" : undefined,
-          secondaryOrder: value === "releaseYear" ? prev.secondaryOrder || "desc" : undefined,
-        }),
-      });
-    },
-  };
-
-  // Secondary sort settings - only show when primary sort is "Year"
-  const secondarySortSettings: SortDropdownProps | undefined =
-    options.orderBy === "releaseYear"
-      ? {
-          options: [
-            { label: "Score", value: "finalScore" },
-            { label: "Name", value: "name" },
-            { label: "Date Added", value: "createdAt" },
-          ],
-          value: options.secondaryOrderBy || "finalScore",
-          direction: options.secondaryOrder || "desc",
-          onSortChange: (value, direction) => {
-            navigate({
-              search: (prev: Partial<GetPaginatedAlbumsOptions>) => ({
-                ...prev,
-                secondaryOrderBy: value as GetPaginatedAlbumsOptions["secondaryOrderBy"],
-                secondaryOrder: direction,
-              }),
-            });
-          },
-        }
-      : undefined;
-
-  const genres = data?.relatedGenres && data.relatedGenres.length > 0 ? data.relatedGenres : data?.genres || [];
-
-  // validateSearch always hands genres over as an array
-  const genreSlugs = options.genres ?? [];
-
-  // Find corresponding genres in data.genres
-  const selectedGenres = data?.genres?.filter(genre => genreSlugs.includes(genre.slug)) || [];
-
-  // Map selected genres to items first
-  const selectedItems = selectedGenres.map(genre => ({
-    name: genre.name,
-    value: genre.slug,
-  }));
-
-  // Map all genres to items, excluding already selected
-  const otherItems =
-    genres
-      ?.filter(genre => !genreSlugs.includes(genre.slug))
-      .map(genre => ({
-        name: genre.name,
-        value: genre.slug,
-      })) || [];
-
-  // Combine and sort by name
-  const items = [...selectedItems, ...otherItems].sort((a, b) => a.name.localeCompare(b.name));
-
-  const genreSettings: DropdownControlsProps = {
-    items,
-    selected: genreSlugs,
-    onSelect: value => {
-      navigate({
-        search: prev => ({
-          ...prev,
-          genres: value.length > 0 ? value : undefined,
-        }),
-      });
-    },
-  };
-
   return (
-    <ListPageLayout page={options.page}>
-      <CardGrid
-        cards={data.albums.map(album => (
-          <AlbumCard key={album.spotifyID} album={album} />
+    <>
+      <h1>Albums</h1>
+      <p>{data.totalCount} reviewed</p>
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          search(new FormData(event.currentTarget).get("query")?.toString() ?? "");
+        }}
+      >
+        <input name="query" type="search" defaultValue={options.search ?? ""} aria-label="Search albums" />
+        <button type="submit">Search</button>
+      </form>
+      <ul>
+        {data.albums.map(album => (
+          <li key={album.spotifyID}>
+            <Link to={album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create"} params={{ albumID: album.spotifyID }}>
+              {album.name}
+            </Link>{" "}
+            {album.artistName} {album.finalScore != null ? album.finalScore : "unreviewed"}
+          </li>
         ))}
-        counter={data.totalCount}
-        controls={{ search, pagination, sortSettings, secondarySortSettings, genreSettings }}
-        sortedByYear={options.orderBy === "releaseYear"}
-        cardYears={data.albums.map(album => album.releaseYear)}
-      />
-    </ListPageLayout>
+      </ul>
+      <p>
+        <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
+          Previous
+        </button>{" "}
+        Page {pagination.page.pageNumber} of {pagination.page.totalPages}{" "}
+        <button type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
+          Next
+        </button>
+      </p>
+    </>
   );
 }

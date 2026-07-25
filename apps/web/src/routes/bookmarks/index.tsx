@@ -1,15 +1,9 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { useListControls } from "@/hooks/useListControls";
-import { ListPageLayout } from "@/components/layout/ListPageLayout";
-import CardGrid from "@/components/ui/CardGrid";
-import { Skeleton } from "@/components/ui/Skeleton";
-import AlbumCard from "@/components/album/AlbumCard";
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 
@@ -55,7 +49,6 @@ export const Route = createFileRoute("/bookmarks/")({
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
-  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: [
       {
@@ -70,39 +63,31 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { search, pagination } = useListControls<GetPaginatedBookmarkedAlbumsOptions>({ page: options.page, data, navigate });
-
-  const sortSettings: SortDropdownProps = {
-    options: [
-      { label: "Artist", value: "artistName" },
-      { label: "Name", value: "name" },
-      { label: "Date Added", value: "createdAt" },
-      { label: "Year", value: "releaseYear" },
-    ],
-    value: options.orderBy || "createdAt",
-    direction: options.order || "desc",
-    onSortChange: (value, direction) => {
-      navigate({
-        search: (prev: Partial<GetPaginatedBookmarkedAlbumsOptions>) => ({
-          ...prev,
-          orderBy: value as GetPaginatedBookmarkedAlbumsOptions["orderBy"],
-          order: direction,
-        }),
-      });
-    },
-  };
+  const { pagination } = useListControls<GetPaginatedBookmarkedAlbumsOptions>({ page: options.page, data, navigate });
 
   return (
-    <RequireAdmin>
-      <ListPageLayout page={options.page}>
-        <CardGrid
-          cards={data.albums.map(album => (
-            <AlbumCard key={album.spotifyID} album={album} bookmarked />
-          ))}
-          counter={data.totalCount}
-          controls={{ search, pagination, sortSettings }}
-        />
-      </ListPageLayout>
-    </RequireAdmin>
+    <>
+      <h1>Bookmarks</h1>
+      <p>{data.totalCount} waiting</p>
+      <ul>
+        {data.albums.map(album => (
+          <li key={album.spotifyID}>
+            <Link to="/albums/$albumID/create" params={{ albumID: album.spotifyID }}>
+              {album.name}
+            </Link>{" "}
+            {album.artistName}
+          </li>
+        ))}
+      </ul>
+      <p>
+        <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
+          Previous
+        </button>{" "}
+        Page {pagination.page.pageNumber} of {pagination.page.totalPages}{" "}
+        <button type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
+          Next
+        </button>
+      </p>
+    </>
   );
 }

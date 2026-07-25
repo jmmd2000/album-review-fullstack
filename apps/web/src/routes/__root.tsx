@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/auth/AuthContext";
-import { Navbar } from "@/components/layout/Navbar";
 import appCss from "@/styles/globals.css?url";
 
 interface RouterContext {
@@ -10,8 +9,6 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  // The root must render on the server for any child to, a parent's false
-  // clamps the whole tree. Children still default to client-only via start.ts
   ssr: true,
   head: () => ({
     meta: [
@@ -51,15 +48,16 @@ function RootDocument({ children }: { children: ReactNode }) {
   );
 }
 
-// The auth provider goes here rather than around the router as
-// the AdminDropdown component needs access to it, which is here in the layout.
 function RootComponent() {
   return (
     <AuthProvider>
-      <Navbar />
-      <div className="[view-transition-name:main-content]">
+      <nav>
+        <Link to="/">Home</Link> <Link to="/albums">Albums</Link> <Link to="/artists">Artists</Link> <Link to="/stats">Stats</Link> <Link to="/bookmarks">Bookmarks</Link>{" "}
+        <Link to="/search">Search</Link>
+      </nav>
+      <main style={{ viewTransitionName: "main-content" }}>
         <Outlet />
-      </div>
+      </main>
     </AuthProvider>
   );
 }

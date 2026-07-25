@@ -1,7 +1,6 @@
 import { createRequire } from "module";
 import { defineConfig, version as viteVersion } from "vite";
 import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import path from "path";
 
@@ -48,7 +47,7 @@ export default defineConfig(({ command }) => ({
   build: {
     ssrEmitAssets: true,
   },
-  plugins: [tanstackStart(), viteReact(), tailwindcss()],
+  plugins: [tanstackStart(), viteReact()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

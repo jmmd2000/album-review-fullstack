@@ -1,18 +1,12 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
-import { ListPageLayout } from "@/components/layout/ListPageLayout";
-import CardGrid from "@/components/ui/CardGrid";
-import ArtistCard from "@/components/artist/ArtistCard";
-import type { SortDropdownProps } from "@/components/ui/SortDropdown";
 
 import type { GetPaginatedArtistsOptions } from "@shared/types";
-import { PAGE_SIZE } from "@shared/constants";
-import { Skeleton } from "@/components/ui/Skeleton";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
   return handle(
@@ -66,7 +60,6 @@ export const Route = createFileRoute("/artists/")({
     return context.queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
   },
   component: RouteComponent,
-  pendingComponent: () => <Skeleton variant="grid" />,
   head: () => ({
     meta: socialMeta({
       title: "Artists",
@@ -82,81 +75,38 @@ function RouteComponent() {
 
   const { search, pagination } = useListControls<GetPaginatedArtistsOptions>({ page: options.page, data, navigate });
 
-  const sortSettings: SortDropdownProps = {
-    options: [
-      { label: "Score", value: "totalScore" },
-      { label: "Review Count", value: "reviewCount" },
-      { label: "Name", value: "name" },
-      { label: "Date Added", value: "createdAt" },
-    ],
-    value: options.orderBy || "totalScore",
-    direction: options.order || "desc",
-    onSortChange: (value, direction) => {
-      navigate({
-        search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
-          ...prev,
-          orderBy: value as GetPaginatedArtistsOptions["orderBy"],
-          order: direction,
-          // Clear scoreType when not sorting by score
-          scoreType: value === "totalScore" ? prev.scoreType || "overall" : undefined,
-        }),
-      });
-    },
-  };
-
-  // Secondary sort settings - only show when primary sort is "Score"
-  const secondarySortSettings: SortDropdownProps | undefined =
-    options.orderBy === "totalScore" || !options.orderBy
-      ? {
-          options: [
-            { label: "Overall", value: "overall" },
-            { label: "Peak", value: "peak" },
-            { label: "Latest", value: "latest" },
-          ],
-          value: options.scoreType || "overall",
-          direction: options.order || "desc",
-          onSortChange: (value, direction) => {
-            navigate({
-              search: (prev: Partial<GetPaginatedArtistsOptions>) => ({
-                ...prev,
-                scoreType: value as "overall" | "peak" | "latest",
-                order: direction,
-              }),
-            });
-          },
-        }
-      : undefined;
-
-  // Calculate current position for each artist based on sort order
-  const artistsWithPosition = data.artists.map((artist, index) => {
-    const currentPosition = (options.page || 1) * PAGE_SIZE - PAGE_SIZE + index + 1;
-
-    // Determine which score to display based on sort type
-    let displayScore = artist.totalScore;
-    if (options.orderBy === "totalScore") {
-      if (options.scoreType === "peak") {
-        displayScore = artist.peakScore;
-      } else if (options.scoreType === "latest") {
-        displayScore = artist.latestScore;
-      }
-    }
-
-    return {
-      ...artist,
-      currentPosition: currentPosition,
-      displayScore: displayScore,
-    };
-  });
-
   return (
-    <ListPageLayout page={options.page}>
-      <CardGrid
-        cards={artistsWithPosition.map(artist => (
-          <ArtistCard key={artist.spotifyID} artist={artist} />
+    <>
+      <h1>Artists</h1>
+      <p>{data.totalCount} reviewed</p>
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          search(new FormData(event.currentTarget).get("query")?.toString() ?? "");
+        }}
+      >
+        <input name="query" type="search" defaultValue={options.search ?? ""} aria-label="Search artists" />
+        <button type="submit">Search</button>
+      </form>
+      <ol>
+        {data.artists.map(artist => (
+          <li key={artist.spotifyID}>
+            <Link to="/artists/$artistID" params={{ artistID: artist.spotifyID }}>
+              {artist.name}
+            </Link>{" "}
+            {artist.unrated ? "unrated" : Math.ceil(artist.displayScore || artist.totalScore)}
+          </li>
         ))}
-        counter={data.totalCount}
-        controls={{ search, pagination, sortSettings, secondarySortSettings }}
-      />
-    </ListPageLayout>
+      </ol>
+      <p>
+        <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
+          Previous
+        </button>{" "}
+        Page {pagination.page.pageNumber} of {pagination.page.totalPages}{" "}
+        <button type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
+          Next
+        </button>
+      </p>
+    </>
   );
 }
