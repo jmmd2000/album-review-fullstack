@@ -1,12 +1,14 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
+import { ArtistCard } from "@/components/artist/ArtistCard";
+import cardStyles from "@/components/artist/ArtistCard.module.css";
 
-import type { GetPaginatedArtistsOptions } from "@shared/types";
+import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
   return handle(
@@ -68,12 +70,35 @@ export const Route = createFileRoute("/artists/")({
   }),
 });
 
+function artistScore(artist: DisplayArtist, scoreType: GetPaginatedArtistsOptions["scoreType"]): number {
+  switch (scoreType) {
+    case "peak":
+      return artist.peakScore;
+    case "latest":
+      return artist.latestScore;
+    default:
+      return artist.totalScore;
+  }
+}
+
+function artistPosition(artist: DisplayArtist, scoreType: GetPaginatedArtistsOptions["scoreType"]): number | null {
+  switch (scoreType) {
+    case "peak":
+      return artist.peakLeaderboardPosition;
+    case "latest":
+      return artist.latestLeaderboardPosition;
+    default:
+      return artist.leaderboardPosition;
+  }
+}
+
 function RouteComponent() {
   const options: GetPaginatedArtistsOptions = Route.useSearch();
   const { data } = useSuspenseQuery(artistQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { search, pagination } = useListControls<GetPaginatedArtistsOptions>({ page: options.page, data, navigate });
+  const scoreType = options.scoreType ?? "overall";
 
   return (
     <>
@@ -88,16 +113,11 @@ function RouteComponent() {
         <input name="query" type="search" defaultValue={options.search ?? ""} aria-label="Search artists" />
         <button type="submit">Search</button>
       </form>
-      <ol>
+      <div className={cardStyles.grid}>
         {data.artists.map(artist => (
-          <li key={artist.spotifyID}>
-            <Link to="/artists/$artistID" params={{ artistID: artist.spotifyID }}>
-              {artist.name}
-            </Link>{" "}
-            {artist.unrated ? "unrated" : Math.ceil(artist.displayScore || artist.totalScore)}
-          </li>
+          <ArtistCard key={artist.spotifyID} artist={artist} position={artistPosition(artist, scoreType)} score={artistScore(artist, scoreType)} />
         ))}
-      </ol>
+      </div>
       <p>
         <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
           Previous

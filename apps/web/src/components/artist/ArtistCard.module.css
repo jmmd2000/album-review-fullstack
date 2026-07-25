@@ -1,0 +1,83 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--grid-gap);
+}
+
+.card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  text-decoration: none;
+
+  & img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  &:hover .reveal,
+  &:focus-visible .reveal {
+    transform: translateY(0);
+  }
+}
+
+.rank {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: var(--nav-bg);
+  color: #fff;
+  font-size: 16px;
+  font-weight: var(--fw-display);
+  padding: 3px 9px;
+}
+
+.chip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: var(--fw-display);
+  padding: 3px 9px;
+}
+
+.reveal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--reveal-bg);
+  color: #fff;
+  padding: 12px 14px;
+  transform: translateY(101%);
+  transition: transform var(--duration-reveal) var(--ease);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: var(--fw-display);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+
+@media (width < 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+  }
+}
