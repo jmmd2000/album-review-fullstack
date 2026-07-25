@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/auth/AuthContext";
 import appCss from "@/styles/globals.css?url";
+import { Navbar } from "@/components/layout/Navbar";
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -51,10 +52,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <nav>
-        <Link to="/">Home</Link> <Link to="/albums">Albums</Link> <Link to="/artists">Artists</Link> <Link to="/stats">Stats</Link> <Link to="/bookmarks">Bookmarks</Link>{" "}
-        <Link to="/search">Search</Link>
-      </nav>
+      <Navbar />
       <main style={{ viewTransitionName: "main-content" }}>
         <Outlet />
       </main>

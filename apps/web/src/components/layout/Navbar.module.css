@@ -1,0 +1,100 @@
+.bar {
+  height: var(--nav-height);
+  background: var(--nav-bg);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.link {
+  font-size: 12px;
+  font-weight: var(--fw-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 11px;
+
+  &[data-status="active"] {
+    background: #fff;
+    color: #111;
+  }
+}
+
+.burger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 6px 0;
+
+  & span {
+    display: block;
+    width: 20px;
+    height: 3px;
+    background: #fff;
+  }
+}
+
+.takeover {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-nav);
+  background: var(--nav-bg);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+}
+
+.close {
+  align-self: flex-end;
+  background: none;
+  border: 0;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.takeover_links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 40px;
+}
+
+.takeover_link {
+  font-size: 44px;
+  font-weight: var(--fw-display);
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.takeover_link[data-status="active"] {
+  background: #fff;
+  color: #111;
+  padding: 0 8px;
+}
+
+@media (width < 900px) {
+  .links {
+    display: none;
+  }
+  .burger {
+    display: flex;
+  }
+}
