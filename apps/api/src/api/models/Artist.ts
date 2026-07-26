@@ -10,30 +10,19 @@ export class ArtistModel {
     return executor.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
   }
 
-  static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "", scoreType = "overall" }: GetPaginatedArtistsOptions) {
+  static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "" }: GetPaginatedArtistsOptions) {
     const validOrderBy = ["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"] as const;
     const validOrder = ["asc", "desc"] as const;
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
 
-    // Determine which score field to use based on orderBy and scoreType
-    let actualSortField = sortField;
-    if (sortField === "totalScore") {
-      if (scoreType === "peak") {
-        actualSortField = "peakScore";
-      } else if (scoreType === "latest") {
-        actualSortField = "latestScore";
-      }
-      // For "overall", use totalScore as is
-    }
-
     const baseQuery = db
       .select()
       .from(reviewedArtists)
       .limit(PAGE_SIZE + 1)
       .offset(OFFSET)
-      .orderBy(sortDirection === "asc" ? asc(reviewedArtists[actualSortField]) : desc(reviewedArtists[actualSortField]));
+      .orderBy(sortDirection === "asc" ? asc(reviewedArtists[sortField]) : desc(reviewedArtists[sortField]));
 
     return search.trim() ? await baseQuery.where(ilike(reviewedArtists.name, `%${search}%`)) : await baseQuery;
   }

@@ -1,0 +1,38 @@
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  margin-block: auto;
+  padding: 96px var(--gutter);
+  border-top: var(--bw-card) solid var(--ink);
+  border-bottom: var(--bw-card) solid var(--ink);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: var(--fw-display);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.detail {
+  font-size: 12px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  max-width: 40ch;
+}
+
+@media (width < 900px) {
+  .state {
+    padding: 64px var(--gutter-mobile);
+  }
+
+  .title {
+    font-size: 22px;
+  }
+}

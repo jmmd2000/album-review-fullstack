@@ -12,3 +12,8 @@ body {
   color: var(--ink);
   overflow-x: hidden;
 }
+
+:where(button, input, select, textarea):focus-visible {
+  outline: var(--bw-card) solid currentColor;
+  outline-offset: 2px;
+}

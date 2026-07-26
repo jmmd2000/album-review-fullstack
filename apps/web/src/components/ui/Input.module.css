@@ -1,7 +1,7 @@
 .input {
   height: 42px;
   background: transparent;
-  border: var(--bw-control) solid var(--ink);
+  border: var(--bw-card) solid var(--ink);
   color: var(--ink);
   font-family: inherit;
   font-size: 14px;
@@ -15,5 +15,11 @@
   &:focus {
     background: var(--ink);
     color: var(--paper);
+  }
+
+  /* currentColor so the hint stays legible through the focus invert */
+  &::placeholder {
+    color: currentColor;
+    opacity: 0.5;
   }
 }

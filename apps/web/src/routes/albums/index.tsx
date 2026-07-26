@@ -7,9 +7,23 @@ import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
-import { ListControls } from "@/components/ui/ListControls";
+import { CardGridSkeleton } from "@/components/ui/CardGridSkeleton";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageState } from "@/components/ui/PageState";
+import { Pagination } from "@/components/ui/Pagination";
+import { SortSelect } from "@/components/ui/SortSelect";
+import { GenreSelect } from "@/components/ui/GenreSelect";
+import { SearchForm } from "@/components/ui/SearchForm";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
+import type { SortOption } from "@/components/ui/SortSelect";
+
+const sortOptions: SortOption[] = [
+  { label: "Date Added", value: "createdAt" },
+  { label: "Score", value: "finalScore" },
+  { label: "Release Year", value: "releaseYear" },
+  { label: "Name", value: "name" },
+];
 
 async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
   return handle(
@@ -37,8 +51,6 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
 export const Route = createFileRoute("/albums/")({
   ssr: true,
   validateSearch: (search: Record<string, unknown>): GetPaginatedAlbumsOptions => {
-    // The genre filter arrives as an array from in-app navigation but old
-    // links may still carry the comma string form
     const rawGenres = search.genres;
     const genres = Array.isArray(rawGenres) ? (rawGenres as string[]) : typeof rawGenres === "string" && rawGenres !== "" ? rawGenres.split(",") : [];
 
@@ -52,7 +64,6 @@ export const Route = createFileRoute("/albums/")({
       secondaryOrder: search.secondaryOrder as GetPaginatedAlbumsOptions["secondaryOrder"],
     };
 
-    // Only include non-default values in the URL
     if (result.page === 1) delete result.page;
     if (result.search === "") delete result.search;
     if (result.orderBy === "createdAt") delete result.orderBy;
@@ -63,13 +74,23 @@ export const Route = createFileRoute("/albums/")({
 
     return result;
   },
-  // The whole search state feeds the loader, so a genre-filtered visit
-  // preloads the filtered list instead of the unfiltered one
   loaderDeps: ({ search }) => search,
   loader: async ({ deps, context }) => {
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
+  pendingComponent: () => (
+    <>
+      <PageHeader title="Albums" />
+      <CardGridSkeleton />
+    </>
+  ),
+  errorComponent: () => (
+    <>
+      <PageHeader title="Albums" />
+      <PageState title="Something went wrong" detail="The albums page could not be loaded. Try refreshing the page." />
+    </>
+  ),
   head: () => ({
     meta: socialMeta({
       title: "Albums",
@@ -85,16 +106,57 @@ function RouteComponent() {
 
   const { search, pagination } = useListControls<GetPaginatedAlbumsOptions>({ page: options.page, data, navigate });
 
+  const orderBy = options.orderBy ?? "createdAt";
+  const order = options.order ?? "desc";
+
   return (
     <>
-      <h1>Albums</h1>
-      <p>{data.totalCount} reviewed</p>
-      <ListControls searchLabel="Search albums" searchValue={options.search ?? ""} onSearch={search} pagination={pagination} />
-      <CardGrid>
-        {data.albums.map(album => (
-          <AlbumCard key={album.spotifyID} album={album} />
-        ))}
-      </CardGrid>
+      <PageHeader title="Albums" eyebrow={`${data.totalCount} reviewed`}>
+        <SearchForm label="Search albums" defaultValue={options.search ?? ""} onSearch={search} />
+        <div style={{ display: "flex", gap: 8 }}>
+          <SortSelect
+            options={sortOptions}
+            value={orderBy}
+            direction={order}
+            onSortChange={(value, direction) => {
+              navigate({
+                search: prev => ({
+                  ...prev,
+                  orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
+                  order: direction,
+                  page: undefined,
+                }),
+              });
+            }}
+          />
+          <GenreSelect
+            genres={data.genres}
+            relatedGenres={data.relatedGenres}
+            selected={options.genres ?? []}
+            onChange={slugs => {
+              navigate({
+                search: prev => ({
+                  ...prev,
+                  genres: slugs.length > 0 ? slugs : undefined,
+                  page: undefined,
+                }),
+              });
+            }}
+          />
+        </div>
+      </PageHeader>
+      {data.albums.length === 0 ? (
+        <PageState title="No albums found" detail="Try a different search, or clear your filters." />
+      ) : (
+        <>
+          <CardGrid>
+            {data.albums.map(album => (
+              <AlbumCard key={album.spotifyID} album={album} />
+            ))}
+          </CardGrid>
+          <Pagination pagination={pagination} />
+        </>
+      )}
     </>
   );
 }

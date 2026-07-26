@@ -1,0 +1,49 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 32px var(--gutter) 24px;
+}
+
+.title {
+  font-size: 80px;
+  font-weight: var(--fw-display);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-top: 10px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+@media (width < 900px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px var(--gutter-mobile) 18px;
+    gap: 18px;
+  }
+
+  .title {
+    font-size: 46px;
+  }
+
+  .controls {
+    align-items: stretch;
+    width: 100%;
+  }
+}

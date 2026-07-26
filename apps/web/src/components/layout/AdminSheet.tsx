@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/auth/useAuth";
 import { ApiError } from "@/lib/client";
+import { useDismiss } from "@/hooks/useDismiss";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import styles from "./AdminSheet.module.css";
 
 const ADMIN_LINKS = [
@@ -14,22 +17,16 @@ const ADMIN_LINKS = [
 export function AdminSheet() {
   const { isAdmin, login, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: (password: string) => login(password),
   });
 
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  useDismiss(wrapperRef, () => setOpen(false));
 
   return (
-    <>
+    <div className={styles.wrapper} ref={wrapperRef}>
       <button type="button" className={styles.trigger} data-admin={isAdmin ? "true" : undefined} aria-expanded={open} onClick={() => setOpen(previous => !previous)}>
         Admin
       </button>
@@ -68,16 +65,16 @@ export function AdminSheet() {
                 Password
               </label>
               <div className={styles.row}>
-                <input id="admin-password" name="password" type="password" autoFocus />
-                <button type="submit" disabled={isPending}>
+                <Input id="admin-password" name="password" type="password" autoFocus />
+                <Button type="submit" disabled={isPending}>
                   Enter
-                </button>
+                </Button>
               </div>
               {isError && <p className={styles.error}>{error instanceof ApiError ? error.message : "Login failed"}</p>}
             </form>
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -22,7 +22,7 @@ interface UseListControlsArgs<TSearch extends { page?: number; search?: string }
  */
 export function useListControls<TSearch extends { page?: number; search?: string }>({ page, data, navigate }: UseListControlsArgs<TSearch>) {
   const search = (value: string) => {
-    navigate({ search: prev => ({ ...prev, search: value }) });
+    navigate({ search: prev => ({ ...prev, search: value, page: undefined }) });
   };
 
   const pagination = {
@@ -51,6 +51,8 @@ export function useListControls<TSearch extends { page?: number; search?: string
     page: {
       pageNumber: page || 1,
       totalPages: Math.ceil(data.totalCount / PAGE_SIZE),
+      totalCount: data.totalCount,
+      pageSize: PAGE_SIZE,
     },
   };
 

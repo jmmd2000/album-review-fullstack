@@ -532,8 +532,6 @@ export interface GetPaginatedArtistsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
-  /** The score type when ordering by score (overall, peak, latest) */
-  scoreType?: "overall" | "peak" | "latest";
 }
 
 /**

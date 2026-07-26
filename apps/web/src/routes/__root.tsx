@@ -4,6 +4,8 @@ import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanst
 import { AuthProvider } from "@/auth/AuthContext";
 import appCss from "@/styles/globals.css?url";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import styles from "./__root.module.css";
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -52,10 +54,13 @@ function RootDocument({ children }: { children: ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Navbar />
-      <main style={{ viewTransitionName: "main-content" }}>
-        <Outlet />
-      </main>
+      <div className={styles.layout}>
+        <Navbar />
+        <main className={styles.main} style={{ viewTransitionName: "main-content" }}>
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
     </AuthProvider>
   );
 }

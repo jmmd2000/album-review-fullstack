@@ -7,9 +7,25 @@ import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { ArtistCard } from "@/components/artist/ArtistCard";
 import { CardGrid } from "@/components/ui/CardGrid";
-import { ListControls } from "@/components/ui/ListControls";
+import { CardGridSkeleton } from "@/components/ui/CardGridSkeleton";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { PageState } from "@/components/ui/PageState";
+import { Pagination } from "@/components/ui/Pagination";
+import { SortSelect } from "@/components/ui/SortSelect";
+import { SearchForm } from "@/components/ui/SearchForm";
 
 import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
+import type { SortOption } from "@/components/ui/SortSelect";
+import { PAGE_SIZE } from "@shared/constants";
+
+const sortOptions: SortOption[] = [
+  { label: "Overall Score", value: "totalScore" },
+  { label: "Peak Score", value: "peakScore" },
+  { label: "Latest Score", value: "latestScore" },
+  { label: "Number of Reviews", value: "reviewCount" },
+  { label: "Name", value: "name" },
+  { label: "Date Added", value: "createdAt" },
+];
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
   return handle(
@@ -19,7 +35,6 @@ async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
         ...(options.order ? { order: options.order } : {}),
         ...(options.orderBy ? { orderBy: options.orderBy } : {}),
         ...(options.search ? { search: options.search } : {}),
-        ...(options.scoreType ? { scoreType: options.scoreType } : {}),
       },
     })
   );
@@ -40,15 +55,12 @@ export const Route = createFileRoute("/artists/")({
       search: (search.search as string) || "",
       orderBy: (search.orderBy as GetPaginatedArtistsOptions["orderBy"]) || "totalScore",
       order: (search.order as GetPaginatedArtistsOptions["order"]) || "desc",
-      scoreType: (search.scoreType as GetPaginatedArtistsOptions["scoreType"]) || "overall",
     };
 
-    // Only include non-default values in the URL
     if (result.page === 1) delete result.page;
     if (result.search === "") delete result.search;
     if (result.orderBy === "totalScore") delete result.orderBy;
     if (result.order === "desc") delete result.order;
-    if (result.scoreType === "overall") delete result.scoreType;
 
     return result;
   },
@@ -57,12 +69,23 @@ export const Route = createFileRoute("/artists/")({
     search: search.search,
     orderBy: search.orderBy,
     order: search.order,
-    scoreType: search.scoreType,
   }),
-  loader: async ({ deps: { page, search, orderBy, order, scoreType }, context }) => {
-    return context.queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order, scoreType }));
+  loader: async ({ deps: { page, search, orderBy, order }, context }) => {
+    return context.queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,
+  pendingComponent: () => (
+    <>
+      <PageHeader title="Artists" />
+      <CardGridSkeleton />
+    </>
+  ),
+  errorComponent: () => (
+    <>
+      <PageHeader title="Artists" />
+      <PageState title="Something went wrong" detail="The artists page could not be loaded. Try refreshing the page." />
+    </>
+  ),
   head: () => ({
     meta: socialMeta({
       title: "Artists",
@@ -71,26 +94,23 @@ export const Route = createFileRoute("/artists/")({
   }),
 });
 
-function artistScore(artist: DisplayArtist, scoreType: GetPaginatedArtistsOptions["scoreType"]): number {
-  switch (scoreType) {
-    case "peak":
+// The score chip follows whichever score dimension the list is ranked by, so a
+// peak or latest sort shows those figures rather than the overall score.
+function artistScore(artist: DisplayArtist, orderBy: GetPaginatedArtistsOptions["orderBy"]): number {
+  switch (orderBy) {
+    case "peakScore":
       return artist.peakScore;
-    case "latest":
+    case "latestScore":
       return artist.latestScore;
     default:
       return artist.totalScore;
   }
 }
 
-function artistPosition(artist: DisplayArtist, scoreType: GetPaginatedArtistsOptions["scoreType"]): number | null {
-  switch (scoreType) {
-    case "peak":
-      return artist.peakLeaderboardPosition;
-    case "latest":
-      return artist.latestLeaderboardPosition;
-    default:
-      return artist.leaderboardPosition;
-  }
+// The card position is the row's place in the current ranking. Name and date
+// sorts are not rankings, so no position is shown for them.
+function isRankingSort(orderBy: GetPaginatedArtistsOptions["orderBy"]): boolean {
+  return orderBy === "totalScore" || orderBy === "peakScore" || orderBy === "latestScore" || orderBy === "reviewCount";
 }
 
 function RouteComponent() {
@@ -99,18 +119,43 @@ function RouteComponent() {
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { search, pagination } = useListControls<GetPaginatedArtistsOptions>({ page: options.page, data, navigate });
-  const scoreType = options.scoreType ?? "overall";
+  const orderBy = options.orderBy ?? "totalScore";
+  const order = options.order ?? "desc";
+  const firstPosition = ((options.page ?? 1) - 1) * PAGE_SIZE;
+  const showPosition = isRankingSort(orderBy);
 
   return (
     <>
-      <h1>Artists</h1>
-      <p>{data.totalCount} reviewed</p>
-      <ListControls searchLabel="Search artists" searchValue={options.search ?? ""} onSearch={search} pagination={pagination} />
-      <CardGrid>
-        {data.artists.map(artist => (
-          <ArtistCard key={artist.spotifyID} artist={artist} position={artistPosition(artist, scoreType)} score={artistScore(artist, scoreType)} />
-        ))}
-      </CardGrid>
+      <PageHeader title="Artists" eyebrow={`${data.totalCount} reviewed`}>
+        <SearchForm label="Search artists" defaultValue={options.search ?? ""} onSearch={search} />
+        <SortSelect
+          options={sortOptions}
+          value={orderBy}
+          direction={order}
+          onSortChange={(value, direction) => {
+            navigate({
+              search: prev => ({
+                ...prev,
+                orderBy: value as GetPaginatedArtistsOptions["orderBy"],
+                order: direction,
+                page: undefined,
+              }),
+            });
+          }}
+        />
+      </PageHeader>
+      {data.artists.length === 0 ? (
+        <PageState title="No artists found" detail="Try a different search." />
+      ) : (
+        <>
+          <CardGrid>
+            {data.artists.map((artist, index) => (
+              <ArtistCard key={artist.spotifyID} artist={artist} position={artist.unrated || !showPosition ? null : firstPosition + index + 1} score={artistScore(artist, orderBy)} />
+            ))}
+          </CardGrid>
+          <Pagination pagination={pagination} />
+        </>
+      )}
     </>
   );
 }
