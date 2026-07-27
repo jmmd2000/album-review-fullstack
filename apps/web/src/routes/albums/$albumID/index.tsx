@@ -1,8 +1,16 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { useAuth } from "@/auth/useAuth";
+import { AlbumHero } from "@/components/album/AlbumHero";
+import { AlbumInfo } from "@/components/album/AlbumInfo";
+import { ReviewContent } from "@/components/album/ReviewContent";
+import { Tracklist } from "@/components/track/Tracklist";
+import { RouteError } from "@/components/ui/RouteError";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import styles from "./index.module.css";
 
 async function fetchAlbumReview(albumSpotifyID: string) {
   return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
@@ -23,6 +31,13 @@ export const Route = createFileRoute("/albums/$albumID/")({
     return context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
   },
   component: RouteComponent,
+  errorComponent: ({ error, reset }) => (
+    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/albums" variant="outlined">
+        Back to albums
+      </ButtonLink>
+    </RouteError>
+  ),
   head: ({ loaderData }) => ({
     meta: loaderData
       ? socialMeta({
@@ -36,39 +51,20 @@ export const Route = createFileRoute("/albums/$albumID/")({
 
 function RouteComponent() {
   const { albumID } = useParams({ strict: false });
-  if (!albumID) {
-    throw new Error("albumID is undefined");
-  }
+  if (!albumID) throw new Error("albumID is undefined");
 
-  const {
-    data: { album, artists, tracks },
-  } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { album, artists, tracks, albumGenres } = data;
+  const { isAdmin } = useAuth();
 
   return (
     <>
-      <h1>{album.name}</h1>
-      <p>
-        {artists.map((artist, index) => (
-          <span key={artist.spotifyID}>
-            {index > 0 && ", "}
-            <Link to="/artists/$artistID" params={{ artistID: artist.spotifyID }}>
-              {artist.name}
-            </Link>
-          </span>
-        ))}{" "}
-        {album.releaseYear}
-      </p>
-      <p>
-        Scored {album.finalScore} out of 100. Favourite song {album.bestSong}, least favourite {album.worstSong}.
-      </p>
-      {album.reviewContent && <p>{album.reviewContent}</p>}
-      <ol>
-        {tracks.map(track => (
-          <li key={track.spotifyID}>
-            {track.name} {track.rating ?? "unrated"}
-          </li>
-        ))}
-      </ol>
+      <AlbumHero album={album} artists={artists} genres={albumGenres ?? []} canEdit={isAdmin} />
+      <AlbumInfo releaseDate={album.releaseDate} runtime={album.runtime} trackCount={tracks.length} reviewed={album.createdAt} affectsArtistScore={album.affectsArtistScore} />
+      <div className={styles.column}>
+        {album.reviewContent && <ReviewContent content={album.reviewContent} />}
+        <Tracklist tracks={tracks} bestSong={album.bestSong} worstSong={album.worstSong} />
+      </div>
     </>
   );
 }

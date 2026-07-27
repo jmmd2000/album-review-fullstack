@@ -3,36 +3,104 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   text-align: center;
   margin-block: auto;
-  padding: 96px var(--gutter);
-  border-top: var(--bw-card) solid var(--ink);
-  border-bottom: var(--bw-card) solid var(--ink);
+  padding: var(--sp-12) var(--gutter);
+}
+
+.spectrum {
+  width: 72px;
+  height: var(--bw-rule);
+  margin-bottom: var(--sp-7);
+  background: var(--tier-spectrum);
+}
+
+.marker {
+  margin-bottom: var(--sp-4);
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .title {
-  font-size: 28px;
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
   font-weight: var(--fw-display);
-  letter-spacing: -0.02em;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .detail {
-  font-size: 12px;
-  font-weight: var(--fw-label);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  max-width: 44ch;
+  margin-top: var(--sp-5);
+  font-size: 1rem;
+  line-height: 1.6;
   color: var(--muted);
-  max-width: 40ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-8);
+}
+
+.spectrum,
+.marker,
+.title,
+.detail,
+.actions {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marker {
+  animation-delay: 0.04s;
+}
+
+.title {
+  animation-delay: 0.06s;
+}
+
+.detail {
+  animation-delay: 0.1s;
+}
+
+.actions {
+  animation-delay: 0.14s;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (width < 900px) {
   .state {
-    padding: 64px var(--gutter-mobile);
+    padding: var(--sp-10) var(--gutter-mobile);
   }
 
   .title {
-    font-size: 22px;
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spectrum,
+  .marker,
+  .title,
+  .detail,
+  .actions {
+    animation: none;
   }
 }

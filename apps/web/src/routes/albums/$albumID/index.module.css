@@ -1,0 +1,11 @@
+.column {
+  max-width: calc(900px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--sp-12) var(--gutter);
+}
+
+@media (width < 900px) {
+  .column {
+    padding: var(--sp-9) var(--gutter-mobile);
+  }
+}

@@ -1,0 +1,225 @@
+.banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  color: var(--on-hero);
+  background-color: var(--nav-bg);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 30%, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+  }
+
+  &[data-ink="true"]::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 30%, transparent 60%, rgba(255, 255, 255, 0.4) 100%);
+  }
+}
+
+.top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-6) var(--gutter) 0;
+}
+
+.back,
+.edit {
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--on-hero);
+  text-decoration: none;
+}
+
+.back {
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.edit {
+  border: var(--bw-chip) solid color-mix(in srgb, var(--on-hero) 55%, transparent);
+  padding: 6px 12px;
+  transition:
+    background var(--duration-reveal) var(--ease),
+    color var(--duration-reveal) var(--ease),
+    border-color var(--duration-reveal) var(--ease);
+
+  &:hover {
+    background: var(--on-hero);
+    color: color-mix(in srgb, var(--on-hero), #808080 90%);
+    border-color: var(--on-hero);
+  }
+}
+
+.content {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-8);
+  padding: var(--sp-9) var(--gutter) var(--sp-10);
+}
+
+.cover {
+  width: 300px;
+  max-width: 35vw;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.identity {
+  min-width: 0;
+}
+
+.title {
+  font-size: clamp(38px, 5vw, 78px);
+  font-weight: var(--fw-display);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.byline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.artist_photo {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.artists {
+  min-width: 0;
+  font-size: 18px;
+  font-weight: var(--fw-medium);
+}
+
+.by {
+  color: color-mix(in srgb, var(--on-hero) 75%, transparent);
+  font-weight: var(--fw-body);
+}
+
+.artist_link {
+  color: var(--on-hero);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+.genre {
+  font-size: 12px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-hero);
+  text-decoration: none;
+  border: var(--bw-chip) solid var(--on-hero);
+  padding: 4px 10px;
+  transition:
+    background var(--duration-reveal) var(--ease),
+    color var(--duration-reveal) var(--ease),
+    border-color var(--duration-reveal) var(--ease);
+
+  &:hover {
+    background: var(--on-hero);
+    color: color-mix(in srgb, var(--on-hero), #808080 90%);
+    border-color: var(--on-hero);
+  }
+}
+
+/* The global focus ring only covers form controls, the hero links are anchors
+   over a coloured background, so match the system's outline in the current colour. */
+.back:focus-visible,
+.edit:focus-visible,
+.artist_link:focus-visible,
+.genre:focus-visible {
+  outline: var(--bw-card) solid currentColor;
+  outline-offset: 2px;
+}
+
+.score_block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.score {
+  min-width: 100px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--sp-4);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+
+  &[data-unrated="true"] {
+    background: var(--tier-unrated);
+  }
+}
+
+.score_value {
+  flex: 1;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  font-size: clamp(48px, 5vw, 72px);
+  font-weight: var(--fw-display);
+  line-height: 1;
+}
+
+.score_tier {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: var(--fw-display);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+@media (width < 900px) {
+  .content {
+    flex-wrap: wrap;
+    gap: var(--sp-6);
+    padding: var(--sp-7) var(--gutter-mobile) var(--sp-8);
+  }
+
+  .cover {
+    width: 160px;
+    max-width: 45vw;
+  }
+
+  .score_block {
+    order: 3;
+    flex-basis: 100%;
+    align-items: flex-start;
+  }
+}

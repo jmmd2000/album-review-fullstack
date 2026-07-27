@@ -7,13 +7,13 @@ import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
-import { CardGridSkeleton } from "@/components/ui/CardGridSkeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortSelect } from "@/components/ui/SortSelect";
 import { GenreSelect } from "@/components/ui/GenreSelect";
 import { SearchForm } from "@/components/ui/SearchForm";
+import { RouteError } from "@/components/ui/RouteError";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
 import type { SortOption } from "@/components/ui/SortSelect";
@@ -79,18 +79,7 @@ export const Route = createFileRoute("/albums/")({
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
   component: RouteComponent,
-  pendingComponent: () => (
-    <>
-      <PageHeader title="Albums" />
-      <CardGridSkeleton />
-    </>
-  ),
-  errorComponent: () => (
-    <>
-      <PageHeader title="Albums" />
-      <PageState title="Something went wrong" detail="The albums page could not be loaded. Try refreshing the page." />
-    </>
-  ),
+  errorComponent: ({ error, reset }) => <RouteError error={error} reset={reset} />,
   head: () => ({
     meta: socialMeta({
       title: "Albums",

@@ -46,8 +46,9 @@
   --disabled-border: #dddddd;
   --disabled-fg: #cccccc;
   --reveal-bg: rgba(17, 17, 17, 0.92);
-  /* darkening gradient over hero photos so light text stays readable */
-  --banner-scrim: linear-gradient(180deg, rgba(17, 17, 17, 0.15) 0%, rgba(17, 17, 17, 0.55) 55%, rgba(17, 17, 17, 0.95) 100%);
+
+  --best-song: #37bf12;
+  --worst-song: #f01e0f;
 
   /* space, 4px base */
   --sp-1: 4px;

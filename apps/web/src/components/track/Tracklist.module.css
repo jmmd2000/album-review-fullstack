@@ -1,0 +1,122 @@
+.label {
+  display: block;
+  margin-bottom: var(--sp-6);
+  font-size: 11px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.list {
+  list-style: none;
+  border-top: var(--bw-hairline) solid var(--hairline);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto minmax(100px, auto);
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-3);
+  border-bottom: var(--bw-hairline) solid var(--hairline);
+  transition: background var(--duration-reveal) var(--ease);
+
+  &:hover {
+    background: color-mix(in srgb, var(--row-tier) 15%, transparent);
+  }
+}
+
+.number {
+  min-width: 2ch;
+  font-size: 16px;
+  font-weight: var(--fw-display);
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.name {
+  font-size: 16px;
+  font-weight: var(--fw-medium);
+}
+
+.features {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.pick {
+  font-size: 10px;
+  font-weight: var(--fw-label);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 4px 8px;
+
+  &[data-kind="best"] {
+    background: var(--best-song);
+  }
+
+  &[data-kind="worst"] {
+    background: var(--worst-song);
+  }
+}
+
+.duration {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tier {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--fw-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &[data-unrated="true"] {
+    background: var(--tier-unrated);
+  }
+}
+
+@media (width < 900px) {
+  /* Narrow rows keep the duration by stacking it under the track name. */
+  .row {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "num name chip"
+      "num dur chip";
+    gap: var(--sp-1) var(--sp-4);
+  }
+
+  .number {
+    grid-area: num;
+  }
+
+  .title {
+    grid-area: name;
+  }
+
+  .duration {
+    grid-area: dur;
+  }
+
+  .tier {
+    grid-area: chip;
+    align-self: center;
+  }
+}

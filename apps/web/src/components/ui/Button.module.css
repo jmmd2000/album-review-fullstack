@@ -10,6 +10,8 @@
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
+  /* ButtonLink renders these classes on an anchor */
+  text-decoration: none;
   transition:
     background var(--duration-reveal) var(--ease),
     color var(--duration-reveal) var(--ease),

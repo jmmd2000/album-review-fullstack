@@ -1,0 +1,19 @@
+.prose {
+  white-space: pre-line;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--ink);
+
+  & strong {
+    font-weight: var(--fw-display);
+  }
+
+  & em {
+    font-style: italic;
+  }
+
+  & u {
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+}

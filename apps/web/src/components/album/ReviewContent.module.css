@@ -1,0 +1,9 @@
+.review {
+  padding-bottom: var(--sp-12);
+}
+
+@media (width < 900px) {
+  .review {
+    padding-bottom: var(--sp-9);
+  }
+}

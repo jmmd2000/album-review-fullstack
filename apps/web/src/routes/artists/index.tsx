@@ -7,12 +7,12 @@ import { client, handle } from "@/lib/client";
 import { useListControls } from "@/hooks/useListControls";
 import { ArtistCard } from "@/components/artist/ArtistCard";
 import { CardGrid } from "@/components/ui/CardGrid";
-import { CardGridSkeleton } from "@/components/ui/CardGridSkeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { Pagination } from "@/components/ui/Pagination";
 import { SortSelect } from "@/components/ui/SortSelect";
 import { SearchForm } from "@/components/ui/SearchForm";
+import { RouteError } from "@/components/ui/RouteError";
 
 import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
 import type { SortOption } from "@/components/ui/SortSelect";
@@ -74,18 +74,7 @@ export const Route = createFileRoute("/artists/")({
     return context.queryClient.ensureQueryData(artistQueryOptions({ page, search, orderBy, order }));
   },
   component: RouteComponent,
-  pendingComponent: () => (
-    <>
-      <PageHeader title="Artists" />
-      <CardGridSkeleton />
-    </>
-  ),
-  errorComponent: () => (
-    <>
-      <PageHeader title="Artists" />
-      <PageState title="Something went wrong" detail="The artists page could not be loaded. Try refreshing the page." />
-    </>
-  ),
+  errorComponent: ({ error, reset }) => <RouteError error={error} reset={reset} />,
   head: () => ({
     meta: socialMeta({
       title: "Artists",
