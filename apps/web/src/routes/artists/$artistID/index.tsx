@@ -6,6 +6,7 @@ import { client, handle } from "@/lib/client";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { ArtistStanding } from "@/components/artist/ArtistStanding";
 import { ScoreTimeline } from "@/components/artist/ScoreTimeline";
+import { TracksByRating } from "@/components/artist/TracksByRating";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -74,6 +75,13 @@ function RouteComponent() {
         <section className={styles.section}>
           <SectionHeader title="Score over time" />
           <ScoreTimeline albums={scoredAlbumsOldestFirst} />
+        </section>
+      )}
+
+      {ratedTrackCount > 0 && (
+        <section className={styles.section}>
+          <SectionHeader title="Tracks sorted by rating" />
+          <TracksByRating tracks={tracks} artistName={artist.name} />
         </section>
       )}
 

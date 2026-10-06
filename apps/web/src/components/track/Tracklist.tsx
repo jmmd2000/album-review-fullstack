@@ -1,7 +1,7 @@
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { formatDuration } from "@shared/helpers/formatDuration";
 import { tierFillVar } from "@/lib/tierColours";
-import { extraFeatures } from "@/lib/trackFeatures";
+import { splitFeatures } from "@/lib/trackFeatures";
 import { PickChip } from "@/components/track/PickChip";
 import styles from "./Tracklist.module.css";
 
@@ -48,14 +48,14 @@ function TrackRow({ track, position, pick }: TrackRowProps) {
   // Track ratings are stored on a 1-10 scale, so scale to 0-100 for the tier.
   const rated = track.rating != null && track.rating > 0;
   const tier = rated ? scoreTier(track.rating! * 10) : "Unrated";
-  const features = extraFeatures(track.name, track.features);
+  const { title, featuring } = splitFeatures(track.name, track.features);
 
   return (
     <li className={styles.row}>
       <span className={styles.number}>{position}</span>
       <span className={styles.name}>
-        {track.name}
-        {features.length > 0 && <span className={styles.features}> feat. {features.map(feature => feature.name).join(", ")}</span>}
+        {title}
+        {featuring.length > 0 && <span className={styles.features}> feat. {featuring.join(", ")}</span>}
         {pick && (
           <>
             {" "}
