@@ -33,6 +33,37 @@
   }
 }
 
+.chipTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease-out);
+
+  & svg {
+    width: 0.85em;
+    height: 0.85em;
+    transition: rotate var(--duration-quick) var(--ease-out);
+  }
+
+  &:hover,
+  &[data-popup-open] {
+    background: var(--colour-panel-strong);
+  }
+
+  &[data-popup-open] svg {
+    rotate: 180deg;
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
 .count {
   display: inline-grid;
   place-items: center;

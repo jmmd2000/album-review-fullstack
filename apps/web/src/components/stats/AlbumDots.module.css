@@ -1,0 +1,130 @@
+.plot {
+  --dot: 13px;
+  --dot-gap: 3px;
+  --column-padding: 3px;
+  position: relative;
+  min-width: 0;
+  padding-top: 24px;
+
+  /* fits three dots across each tier on a phone */
+  @media (width < 560px) {
+    --dot: 9px;
+    --dot-gap: 2px;
+    --column-padding: 1px;
+  }
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  align-items: end;
+}
+
+/* wrap-reverse fills the bottom row first, so each stack grows upwards */
+.column {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: center;
+  gap: var(--dot-gap);
+  padding-inline: var(--column-padding);
+  list-style: none;
+
+  & li {
+    display: flex;
+  }
+}
+
+/*
+ * On load each stack builds from the bottom up, as the dots drop into place one after another.
+ * The tiers start a little apart, from Terrible to Perfect.
+ */
+@keyframes settle {
+  from {
+    opacity: 0;
+    translate: 0 -14px;
+    scale: 0.4;
+  }
+}
+
+.dot {
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  background: var(--tier);
+  /* backwards keeps a dot hidden until its turn. The keyframe has no end, so a faded dot settles at its faded opacity. */
+  animation: settle 0.45s var(--ease-out) backwards;
+  animation-delay: calc(min(var(--order), 60) * 7ms + var(--tier-index) * 25ms);
+  transition:
+    opacity 0.35s var(--ease-out),
+    scale 0.2s var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    position: relative;
+    z-index: 2;
+    scale: 1.7;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--colour-background);
+  }
+}
+
+.dim {
+  opacity: 0.12;
+}
+
+.ruler {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 2px;
+  margin-top: 12px;
+
+  & span {
+    overflow: hidden;
+    padding-top: 8px;
+    border-top: 4px solid var(--tier);
+    color: var(--colour-text-muted);
+    font-size: clamp(0.72rem, 1vw, 0.88rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 260px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--colour-panel-strong);
+  box-shadow: var(--shadow-tooltip);
+  transform: translateY(-100%);
+  pointer-events: none;
+
+  & img {
+    width: 52px;
+    height: 52px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+}
+
+.tooltipText {
+  display: grid;
+  gap: 2px;
+  align-self: center;
+  min-width: 0;
+
+  & b {
+    font-weight: var(--font-weight-label);
+    line-height: 1.2;
+  }
+
+  & span {
+    color: var(--colour-text-muted);
+    font-size: 0.9rem;
+  }
+}
