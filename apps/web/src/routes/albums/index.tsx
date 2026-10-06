@@ -1,9 +1,11 @@
+import { Fragment } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { groupBySeparator, letterSeparator, scoreSeparator, yearSeparator } from "@/lib/separators";
 import { useListControls } from "@/hooks/useListControls";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
@@ -14,9 +16,17 @@ import { SortTabs } from "@/components/ui/SortTabs";
 import { GenreSelect } from "@/components/ui/GenreSelect";
 import { SearchForm } from "@/components/ui/SearchForm";
 import { RouteError } from "@/components/ui/RouteError";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { SeparatorTile } from "@/components/ui/SeparatorTile";
 
-import type { GetPaginatedAlbumsOptions } from "@shared/types";
+import type { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
+import type { Separator } from "@/lib/separators";
 import type { SortOption } from "@/components/ui/SortTabs";
+
+interface AlbumsSearch extends GetPaginatedAlbumsOptions {
+  /** "off" hides the separator tiles. It only changes the page, so it isn't sent to the API */
+  groups?: "off";
+}
 
 const sortOptions: SortOption[] = [
   { label: "Newest", value: "createdAt", direction: "desc" },
@@ -50,11 +60,11 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
 
 export const Route = createFileRoute("/albums/")({
   ssr: true,
-  validateSearch: (search: Record<string, unknown>): GetPaginatedAlbumsOptions => {
+  validateSearch: (search: Record<string, unknown>): AlbumsSearch => {
     const rawGenres = search.genres;
     const genres = Array.isArray(rawGenres) ? (rawGenres as string[]) : typeof rawGenres === "string" && rawGenres !== "" ? rawGenres.split(",") : [];
 
-    const result: GetPaginatedAlbumsOptions = {
+    const result: AlbumsSearch = {
       page: Number(search.page) || 1,
       search: (search.search as string) || "",
       orderBy: (search.orderBy as GetPaginatedAlbumsOptions["orderBy"]) || "createdAt",
@@ -62,6 +72,7 @@ export const Route = createFileRoute("/albums/")({
       genres,
       secondaryOrderBy: search.secondaryOrderBy as GetPaginatedAlbumsOptions["secondaryOrderBy"],
       secondaryOrder: search.secondaryOrder as GetPaginatedAlbumsOptions["secondaryOrder"],
+      groups: search.groups === "off" ? "off" : undefined,
     };
 
     if (result.page === 1) delete result.page;
@@ -71,10 +82,19 @@ export const Route = createFileRoute("/albums/")({
     if (genres.length === 0) delete result.genres;
     if (!result.secondaryOrderBy) delete result.secondaryOrderBy;
     if (!result.secondaryOrder) delete result.secondaryOrder;
+    if (!result.groups) delete result.groups;
 
     return result;
   },
-  loaderDeps: ({ search }) => search,
+  loaderDeps: ({ search }) => ({
+    page: search.page,
+    search: search.search,
+    orderBy: search.orderBy,
+    order: search.order,
+    genres: search.genres,
+    secondaryOrderBy: search.secondaryOrderBy,
+    secondaryOrder: search.secondaryOrder,
+  }),
   loader: async ({ deps, context }) => {
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
   },
@@ -88,15 +108,34 @@ export const Route = createFileRoute("/albums/")({
   }),
 });
 
+// Newest first isn't grouped, since months would break it up every few covers
+function isGroupedSort(orderBy: GetPaginatedAlbumsOptions["orderBy"]): boolean {
+  return orderBy === "finalScore" || orderBy === "releaseYear" || orderBy === "name";
+}
+
+function albumSeparator(album: DisplayAlbum, orderBy: GetPaginatedAlbumsOptions["orderBy"]): Separator | null {
+  switch (orderBy) {
+    case "finalScore":
+      return scoreSeparator(album.finalScore);
+    case "releaseYear":
+      return yearSeparator(album.releaseYear);
+    case "name":
+      return letterSeparator(album.name);
+    default:
+      return null;
+  }
+}
+
 function RouteComponent() {
-  const options: GetPaginatedAlbumsOptions = Route.useSearch();
-  const { data } = useSuspenseQuery(albumQueryOptions(options));
+  const options = Route.useSearch();
+  const { data } = useSuspenseQuery(albumQueryOptions(Route.useLoaderDeps()));
   const navigate = useNavigate({ from: Route.fullPath });
 
   const { search } = useListControls<GetPaginatedAlbumsOptions>({ navigate });
 
   const orderBy = options.orderBy ?? "createdAt";
   const order = options.order ?? "desc";
+  const showTiles = isGroupedSort(orderBy) && options.groups !== "off";
 
   return (
     <>
@@ -117,6 +156,7 @@ function RouteComponent() {
             });
           }}
         />
+        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? undefined : "off" }) })} />}
         <GenreSelect
           genres={data.genres}
           selected={options.genres ?? []}
@@ -136,8 +176,13 @@ function RouteComponent() {
       ) : (
         <>
           <CardGrid>
-            {data.albums.map(album => (
-              <AlbumCard key={album.spotifyID} album={album} />
+            {groupBySeparator(data.albums, album => (showTiles ? albumSeparator(album, orderBy) : null)).map((group, index) => (
+              <Fragment key={index}>
+                {group.separator && <SeparatorTile {...group.separator} />}
+                {group.items.map(album => (
+                  <AlbumCard key={album.spotifyID} album={album} />
+                ))}
+              </Fragment>
             ))}
           </CardGrid>
           <Pagination page={options.page ?? 1} totalCount={data.totalCount} />

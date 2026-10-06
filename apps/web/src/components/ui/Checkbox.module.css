@@ -1,0 +1,53 @@
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+/* The real checkbox stays for keyboards and screen readers, and the box below is drawn in its place */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-tag);
+  box-shadow: inset 0 0 0 1.5px var(--colour-text-faint);
+  color: var(--colour-background);
+
+  & svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+  }
+
+  .input:checked + & {
+    background: var(--colour-foreground);
+    box-shadow: none;
+
+    & svg {
+      opacity: 1;
+    }
+  }
+
+  .input:focus-visible + & {
+    outline: var(--border-thick) solid var(--colour-foreground);
+    outline-offset: 3px;
+  }
+}
