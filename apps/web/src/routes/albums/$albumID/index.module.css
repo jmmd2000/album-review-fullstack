@@ -17,11 +17,17 @@
   justify-content: space-between;
 }
 
+.adminLinks {
+  display: flex;
+  gap: var(--space-4);
+}
+
 .link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: var(--colour-text-muted);
+  cursor: pointer;
 
   &:hover {
     color: var(--colour-foreground);

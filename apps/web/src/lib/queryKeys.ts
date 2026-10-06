@@ -36,6 +36,7 @@ export const queryKeys = {
     buildInfo: ["settings", "buildInfo"] as const,
   },
   stats: {
+    all: ["stats"] as const,
     overview: ["stats", "overview"] as const,
     genres: (slug: string) => ["stats", "genres", slug] as const,
     distribution: (resource: "albums" | "tracks" | "artists") => ["stats", "distribution", resource] as const,

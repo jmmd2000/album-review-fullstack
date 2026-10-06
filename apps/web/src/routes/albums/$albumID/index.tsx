@@ -10,6 +10,7 @@ import { useAuth } from "@/auth/useAuth";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
 import { ReviewContent } from "@/components/album/ReviewContent";
+import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
 import { Tracklist } from "@/components/track/Tracklist";
 import { RouteError } from "@/components/ui/RouteError";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -92,9 +93,12 @@ function RouteComponent() {
           <ArrowLeftIcon weight="bold" aria-hidden="true" /> Albums
         </Link>
         {isAdmin && (
-          <Link to="/albums/$albumID/edit" params={{ albumID: album.spotifyID }} className={styles.link}>
-            Edit
-          </Link>
+          <div className={styles.adminLinks}>
+            <Link to="/albums/$albumID/edit" params={{ albumID: album.spotifyID }} className={styles.link}>
+              Edit
+            </Link>
+            <DeleteReviewDialog albumID={album.spotifyID} albumName={album.name} triggerClassName={styles.link} />
+          </div>
         )}
       </div>
       <section className={styles.showcase}>
