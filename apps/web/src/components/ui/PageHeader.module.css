@@ -1,49 +1,40 @@
 .header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: end;
   justify-content: space-between;
-  align-items: flex-end;
-  padding: 32px var(--page-gutter) 24px;
+  gap: 20px 40px;
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 56px) var(--page-gutter) var(--space-5);
 }
 
 .title {
-  font-size: 80px;
-  font-weight: var(--font-weight-display);
-  line-height: 0.8;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
+  font-size: clamp(2.8rem, 6vw, 4.6rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
 }
 
-.eyebrow {
-  display: block;
-  font-size: 11px;
+/* Raised to the middle of the word, so it reads as a count and not part of the title */
+.count {
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0.3em 0.62em 0.26em;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+  font-size: 0.32em;
   font-weight: var(--font-weight-label);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--colour-text-muted);
-  margin-top: 10px;
+  letter-spacing: 0;
+  line-height: 1;
+  vertical-align: 0.9em;
+  font-variant-numeric: tabular-nums;
 }
 
 .controls {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-@media (width < 900px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 24px var(--page-gutter) 18px;
-    gap: 18px;
-  }
-
-  .title {
-    font-size: 46px;
-  }
-
-  .controls {
-    align-items: stretch;
-    width: 100%;
-  }
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
 }

@@ -1,9 +1,9 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { useListControls } from "@/hooks/useListControls";
+import { Pagination } from "@/components/ui/Pagination";
 
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 
@@ -61,9 +61,6 @@ export const Route = createFileRoute("/bookmarks/")({
 function RouteComponent() {
   const options: GetPaginatedBookmarkedAlbumsOptions = Route.useSearch();
   const { data } = useSuspenseQuery(albumQueryOptions(options));
-  const navigate = useNavigate({ from: Route.fullPath });
-
-  const { pagination } = useListControls<GetPaginatedBookmarkedAlbumsOptions>({ page: options.page, data, navigate });
 
   return (
     <>
@@ -79,15 +76,7 @@ function RouteComponent() {
           </li>
         ))}
       </ul>
-      <p>
-        <button type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
-          Previous
-        </button>{" "}
-        Page {pagination.page.pageNumber} of {pagination.page.totalPages}{" "}
-        <button type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
-          Next
-        </button>
-      </p>
+      <Pagination page={options.page ?? 1} totalCount={data.totalCount} />
     </>
   );
 }

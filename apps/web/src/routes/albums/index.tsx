@@ -10,19 +10,19 @@ import { CardGrid } from "@/components/ui/CardGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { Pagination } from "@/components/ui/Pagination";
-import { SortSelect } from "@/components/ui/SortSelect";
+import { SortTabs } from "@/components/ui/SortTabs";
 import { GenreSelect } from "@/components/ui/GenreSelect";
 import { SearchForm } from "@/components/ui/SearchForm";
 import { RouteError } from "@/components/ui/RouteError";
 
 import type { GetPaginatedAlbumsOptions } from "@shared/types";
-import type { SortOption } from "@/components/ui/SortSelect";
+import type { SortOption } from "@/components/ui/SortTabs";
 
 const sortOptions: SortOption[] = [
-  { label: "Date Added", value: "createdAt" },
-  { label: "Score", value: "finalScore" },
-  { label: "Release Year", value: "releaseYear" },
-  { label: "Name", value: "name" },
+  { label: "Newest", value: "createdAt", direction: "desc" },
+  { label: "Score", value: "finalScore", direction: "desc" },
+  { label: "Released", value: "releaseYear", direction: "desc" },
+  { label: "Name", value: "name", direction: "asc" },
 ];
 
 async function fetchPaginatedAlbums(options: GetPaginatedAlbumsOptions) {
@@ -93,46 +93,44 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(albumQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { search, pagination } = useListControls<GetPaginatedAlbumsOptions>({ page: options.page, data, navigate });
+  const { search } = useListControls<GetPaginatedAlbumsOptions>({ navigate });
 
   const orderBy = options.orderBy ?? "createdAt";
   const order = options.order ?? "desc";
 
   return (
     <>
-      <PageHeader title="Albums" eyebrow={`${data.totalCount} reviewed`}>
+      <PageHeader title="Albums" count={data.totalCount}>
         <SearchForm label="Search albums" defaultValue={options.search ?? ""} onSearch={search} />
-        <div style={{ display: "flex", gap: 8 }}>
-          <SortSelect
-            options={sortOptions}
-            value={orderBy}
-            direction={order}
-            onSortChange={(value, direction) => {
-              navigate({
-                search: prev => ({
-                  ...prev,
-                  orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
-                  order: direction,
-                  page: undefined,
-                }),
-              });
-            }}
-          />
-          <GenreSelect
-            genres={data.genres}
-            relatedGenres={data.relatedGenres}
-            selected={options.genres ?? []}
-            onChange={slugs => {
-              navigate({
-                search: prev => ({
-                  ...prev,
-                  genres: slugs.length > 0 ? slugs : undefined,
-                  page: undefined,
-                }),
-              });
-            }}
-          />
-        </div>
+        <SortTabs
+          options={sortOptions}
+          value={orderBy}
+          direction={order}
+          onSortChange={(value, direction) => {
+            navigate({
+              search: prev => ({
+                ...prev,
+                orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
+                order: direction,
+                page: undefined,
+              }),
+            });
+          }}
+        />
+        <GenreSelect
+          genres={data.genres}
+          relatedGenres={data.relatedGenres}
+          selected={options.genres ?? []}
+          onChange={slugs => {
+            navigate({
+              search: prev => ({
+                ...prev,
+                genres: slugs.length > 0 ? slugs : undefined,
+                page: undefined,
+              }),
+            });
+          }}
+        />
       </PageHeader>
       {data.albums.length === 0 ? (
         <PageState title="No albums found" detail="Try a different search, or clear your filters." />
@@ -143,7 +141,7 @@ function RouteComponent() {
               <AlbumCard key={album.spotifyID} album={album} />
             ))}
           </CardGrid>
-          <Pagination pagination={pagination} />
+          <Pagination page={options.page ?? 1} totalCount={data.totalCount} />
         </>
       )}
     </>

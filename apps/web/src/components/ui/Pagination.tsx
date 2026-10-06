@@ -1,30 +1,48 @@
-import { Button } from "@/components/ui/Button";
+import { Link } from "@tanstack/react-router";
+import { PAGE_SIZE } from "@shared/constants";
+import { pageNumbers } from "@/lib/pageNumbers";
 import styles from "./Pagination.module.css";
 
 interface PaginationProps {
-  pagination: {
-    next: { action: () => void; disabled: boolean };
-    prev: { action: () => void; disabled: boolean };
-    page: { pageNumber: number; totalPages: number; totalCount: number; pageSize: number };
-  };
+  /** The current page, from the route's search params. */
+  page: number;
+  totalCount: number;
 }
 
-export function Pagination({ pagination }: PaginationProps) {
-  const { pageNumber, pageSize, totalCount } = pagination.page;
-  const rangeStart = (pageNumber - 1) * pageSize + 1;
-  const rangeEnd = Math.min(pageNumber * pageSize, totalCount);
+/** Links to the other pages of a list, keeping the rest of the URL's search params. */
+export function Pagination({ page, totalCount }: PaginationProps) {
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  if (totalPages <= 1) return null;
+
+  // Page one is the default, so it has no page param. explicitUndefined below
+  // stops that link counting as the current page on every page
+  const searchFor = (target: number) => (previous: Record<string, unknown>) => ({ ...previous, page: target === 1 ? undefined : target });
 
   return (
-    <nav className={styles.pagination} aria-label="Pagination">
-      <Button variant="outlined" type="button" onClick={pagination.prev.action} disabled={pagination.prev.disabled}>
-        Previous
-      </Button>
-      <span className={styles.page}>
-        {rangeStart}–{rangeEnd} of {totalCount}
+    <nav className={styles.pages} aria-label="Pages">
+      {page > 1 && (
+        <Link to="." search={searchFor(page - 1)} className={styles.step}>
+          Previous page
+        </Link>
+      )}
+      <span className={styles.numbers}>
+        {pageNumbers(page, totalPages).map((entry, index) =>
+          entry === "gap" ? (
+            <span key={`gap-${index}`} aria-hidden="true">
+              …
+            </span>
+          ) : (
+            <Link key={entry} to="." search={searchFor(entry)} activeOptions={{ explicitUndefined: true }} className={styles.number} aria-label={`Page ${entry}`}>
+              {entry}
+            </Link>
+          )
+        )}
       </span>
-      <Button variant="outlined" type="button" onClick={pagination.next.action} disabled={pagination.next.disabled}>
-        Next
-      </Button>
+      {page < totalPages && (
+        <Link to="." search={searchFor(page + 1)} className={styles.step}>
+          Next page
+        </Link>
+      )}
     </nav>
   );
 }

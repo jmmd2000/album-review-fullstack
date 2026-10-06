@@ -27,7 +27,7 @@ export const Route = createFileRoute("/artists/$artistID/")({
   component: RouteComponent,
   errorComponent: ({ error, reset }) => (
     <RouteError error={error} reset={reset} notFoundTitle="Artist not found" notFoundDetail="This artist has not been reviewed, or the link is wrong.">
-      <ButtonLink to="/artists" variant="outlined">
+      <ButtonLink to="/artists" variant="secondary">
         Back to artists
       </ButtonLink>
     </RouteError>

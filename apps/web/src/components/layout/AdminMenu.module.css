@@ -60,6 +60,11 @@
   padding: 6px;
 }
 
+/* the menu is the same colour as an input, so the field sits on the page colour */
+.form input {
+  background: var(--colour-background);
+}
+
 .label {
   color: var(--colour-text-muted);
   font-size: 0.9rem;

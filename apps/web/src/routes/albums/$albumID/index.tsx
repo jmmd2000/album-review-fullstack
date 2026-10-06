@@ -33,7 +33,7 @@ export const Route = createFileRoute("/albums/$albumID/")({
   component: RouteComponent,
   errorComponent: ({ error, reset }) => (
     <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
-      <ButtonLink to="/albums" variant="outlined">
+      <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>
     </RouteError>

@@ -3,18 +3,18 @@ import styles from "./PageHeader.module.css";
 
 interface PageHeaderProps {
   title: string;
-  eyebrow?: string;
+  count?: number;
   children?: ReactNode;
 }
 
-export function PageHeader({ title, eyebrow, children }: PageHeaderProps) {
+export function PageHeader({ title, count, children }: PageHeaderProps) {
   return (
-    <div className={styles.header}>
-      <div>
-        <h1 className={styles.title}>{title}</h1>
-        {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
-      </div>
+    <header className={styles.header}>
+      <h1 className={styles.title}>
+        {title}
+        {count !== undefined && <span className={styles.count}>{count.toLocaleString("en-GB")}</span>}
+      </h1>
       {children && <div className={styles.controls}>{children}</div>}
-    </div>
+    </header>
   );
 }

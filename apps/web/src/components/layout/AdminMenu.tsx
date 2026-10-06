@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { KeyIcon } from "@phosphor-icons/react";
+import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/useAuth";
 import { ApiError } from "@/lib/client";
 import { useDismiss } from "@/hooks/useDismiss";
@@ -16,7 +16,7 @@ const ADMIN_LINKS = [
   { to: "/settings", label: "Settings" },
 ] as const;
 
-/** The key button in the nav: a password field when signed out, the admin links when signed in. */
+/** The lock button in the nav: a password field when signed out, the admin links when signed in. */
 export function AdminMenu() {
   const { isAdmin, login, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export function AdminMenu() {
         data-signed-in={isAdmin ? "true" : undefined}
         onClick={() => setOpen(previous => !previous)}
       >
-        <KeyIcon weight="bold" aria-hidden="true" />
+        {isAdmin ? <LockSimpleOpenIcon weight="bold" aria-hidden="true" /> : <LockSimpleIcon weight="bold" aria-hidden="true" />}
       </IconButton>
 
       {open && (
@@ -82,7 +82,7 @@ export function AdminMenu() {
                 Password
               </label>
               <Input id="admin-password" name="password" type="password" autoFocus />
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" variant="primary" disabled={isPending}>
                 Log in
               </Button>
               {isError && <p className={styles.error}>{error instanceof ApiError ? error.message : "Login failed"}</p>}

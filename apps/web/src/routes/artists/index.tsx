@@ -10,21 +10,20 @@ import { CardGrid } from "@/components/ui/CardGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { Pagination } from "@/components/ui/Pagination";
-import { SortSelect } from "@/components/ui/SortSelect";
+import { SortTabs } from "@/components/ui/SortTabs";
 import { SearchForm } from "@/components/ui/SearchForm";
 import { RouteError } from "@/components/ui/RouteError";
 
 import type { DisplayArtist, GetPaginatedArtistsOptions } from "@shared/types";
-import type { SortOption } from "@/components/ui/SortSelect";
+import type { SortOption } from "@/components/ui/SortTabs";
 import { PAGE_SIZE } from "@shared/constants";
 
 const sortOptions: SortOption[] = [
-  { label: "Overall Score", value: "totalScore" },
-  { label: "Peak Score", value: "peakScore" },
-  { label: "Latest Score", value: "latestScore" },
-  { label: "Number of Reviews", value: "reviewCount" },
-  { label: "Name", value: "name" },
-  { label: "Date Added", value: "createdAt" },
+  { label: "Score", value: "totalScore", direction: "desc" },
+  { label: "Peak", value: "peakScore", direction: "desc" },
+  { label: "Latest", value: "latestScore", direction: "desc" },
+  { label: "Most reviewed", value: "reviewCount", direction: "desc" },
+  { label: "Name", value: "name", direction: "asc" },
 ];
 
 async function fetchPaginatedArtists(options: GetPaginatedArtistsOptions) {
@@ -107,7 +106,7 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(artistQueryOptions(options));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { search, pagination } = useListControls<GetPaginatedArtistsOptions>({ page: options.page, data, navigate });
+  const { search } = useListControls<GetPaginatedArtistsOptions>({ navigate });
   const orderBy = options.orderBy ?? "totalScore";
   const order = options.order ?? "desc";
   const firstPosition = ((options.page ?? 1) - 1) * PAGE_SIZE;
@@ -115,9 +114,9 @@ function RouteComponent() {
 
   return (
     <>
-      <PageHeader title="Artists" eyebrow={`${data.totalCount} reviewed`}>
+      <PageHeader title="Artists" count={data.totalCount}>
         <SearchForm label="Search artists" defaultValue={options.search ?? ""} onSearch={search} />
-        <SortSelect
+        <SortTabs
           options={sortOptions}
           value={orderBy}
           direction={order}
@@ -142,7 +141,7 @@ function RouteComponent() {
               <ArtistCard key={artist.spotifyID} artist={artist} position={artist.unrated || !showPosition ? null : firstPosition + index + 1} score={artistScore(artist, orderBy)} />
             ))}
           </CardGrid>
-          <Pagination pagination={pagination} />
+          <Pagination page={options.page ?? 1} totalCount={data.totalCount} />
         </>
       )}
     </>

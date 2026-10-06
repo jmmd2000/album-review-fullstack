@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import styles from "./SearchForm.module.css";
 
@@ -8,6 +7,7 @@ interface SearchFormProps {
   onSearch: (value: string) => void;
 }
 
+/** A search box that searches on Enter, and clears the search when emptied. */
 export function SearchForm({ label, defaultValue, onSearch }: SearchFormProps) {
   return (
     // Keying on defaultValue remounts the field so back/forward navigation,
@@ -15,13 +15,24 @@ export function SearchForm({ label, defaultValue, onSearch }: SearchFormProps) {
     <form
       key={defaultValue}
       className={styles.form}
+      role="search"
       onSubmit={event => {
         event.preventDefault();
         onSearch(new FormData(event.currentTarget).get("query")?.toString() ?? "");
       }}
     >
-      <Input name="query" type="search" defaultValue={defaultValue} aria-label={label} placeholder={label} className={styles.input} />
-      <Button type="submit">Search</Button>
+      <Input
+        name="query"
+        type="search"
+        defaultValue={defaultValue}
+        aria-label={label}
+        placeholder="Search"
+        className={styles.input}
+        onChange={event => {
+          // The clear button or deleting the text empties the box
+          if (event.currentTarget.value === "" && defaultValue !== "") onSearch("");
+        }}
+      />
     </form>
   );
 }

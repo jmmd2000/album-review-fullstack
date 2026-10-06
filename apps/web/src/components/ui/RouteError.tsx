@@ -15,19 +15,12 @@ interface RouteErrorProps {
  * Error UI for a route's errorComponent.
  */
 export function RouteError({ error, reset, notFoundTitle = "Not found", notFoundDetail = "This page does not exist, or the link may be wrong.", children }: RouteErrorProps) {
-  const apiError = error instanceof ApiError ? error : null;
-  const notFound = apiError?.status === 404;
-  const marker = apiError ? String(apiError.status) : "Error";
+  const notFound = error instanceof ApiError && error.status === 404;
 
   return (
-    <PageState
-      role="alert"
-      marker={marker}
-      title={notFound ? notFoundTitle : "Something went wrong"}
-      detail={notFound ? notFoundDetail : "This page could not be loaded. You can try again, or head back."}
-    >
+    <PageState role="alert" title={notFound ? notFoundTitle : "Something went wrong"} detail={notFound ? notFoundDetail : "This page could not be loaded. You can try again, or head back."}>
       {!notFound && (
-        <Button type="button" onClick={reset}>
+        <Button type="button" variant="primary" onClick={reset}>
           Try again
         </Button>
       )}
