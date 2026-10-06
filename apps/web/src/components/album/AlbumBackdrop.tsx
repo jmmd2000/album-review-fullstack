@@ -10,7 +10,7 @@ interface AlbumBackdropProps {
 
 /**
  * Blobs of the album's cover colours behind the top of the page, read from the
- * --cover-colour-1 to 5 properties its parent sets. It sits behind the nav, the cover
+ * --cover-colour-1 to 5 properties its parent sets. It sits behind the nav, the cover and the panels.
  */
 export function AlbumBackdrop({ until }: AlbumBackdropProps) {
   const [height, setHeight] = useState<number | null>(null);

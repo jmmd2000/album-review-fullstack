@@ -32,8 +32,6 @@ async function createAlbum(id: string, score: number | null, artistID: string) {
     releaseDate: "2020-01-01",
     releaseYear: 2020,
     imageURLs: [],
-    bestSong: "1",
-    worstSong: "1",
     runtime: "00:00",
     reviewContent: "",
     reviewScore: score ?? 0,

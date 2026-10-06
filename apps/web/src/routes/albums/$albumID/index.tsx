@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
-import { usableCoverColours } from "@/lib/coverColours";
+import { coverColourStyle } from "@/lib/coverColours";
 import { useAuth } from "@/auth/useAuth";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
@@ -14,11 +14,8 @@ import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
 import { Tracklist } from "@/components/track/Tracklist";
 import { RouteError } from "@/components/ui/RouteError";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import coverColours from "@/styles/coverColours.module.css";
 import styles from "./index.module.css";
-
-import type { CSSProperties } from "react";
-import type { ExtractedColor } from "@shared/types";
-import type { PageTheme } from "@/lib/coverColours";
 
 async function fetchAlbumReview(albumSpotifyID: string) {
   return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
@@ -57,24 +54,6 @@ export const Route = createFileRoute("/albums/$albumID/")({
   }),
 });
 
-// The backdrop has five pools, one for each colour a cover can store
-const MAXIMUM_COVER_COLOURS = 5;
-
-/**
- * Hands the page its cover colours for each theme, as --cover-light-1 to 5 and --cover-dark-1 to 5,
- * most vivid first. The page's CSS picks the set that matches the theme.
- */
-function coverColourStyle(colours: ExtractedColor[]): CSSProperties {
-  const themes: PageTheme[] = ["light", "dark"];
-  const properties = themes.flatMap(theme => {
-    const usable = usableCoverColours(colours, theme).slice(0, MAXIMUM_COVER_COLOURS);
-    // A single colour fills the second pool too, so the backdrop isn't lopsided
-    if (usable.length === 1) usable.push(usable[0]!);
-    return usable.map((hex, index) => [`--cover-${theme}-${index + 1}`, hex]);
-  });
-  return Object.fromEntries(properties);
-}
-
 function RouteComponent() {
   const { albumID } = useParams({ strict: false });
   if (!albumID) throw new Error("albumID is undefined");
@@ -86,7 +65,7 @@ function RouteComponent() {
   const cover = album.imageURLs[0];
 
   return (
-    <div className={styles.page} style={coverColourStyle(album.colors ?? [])}>
+    <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(album.colors ?? [])}>
       <AlbumBackdrop until={panelsRef} />
       <div className={styles.links}>
         <Link to="/albums" className={styles.link}>
@@ -108,7 +87,7 @@ function RouteComponent() {
             <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} />
             {album.reviewContent && <ReviewContent content={album.reviewContent} />}
           </div>
-          <Tracklist tracks={tracks} bestSong={album.bestSong} worstSong={album.worstSong} />
+          <Tracklist tracks={tracks} />
         </div>
       </section>
     </div>

@@ -67,8 +67,6 @@ export class AlbumService {
           releaseDate,
           releaseYear,
           imageURLs: spotifyAlbum.images,
-          bestSong: data.bestSong,
-          worstSong: data.worstSong,
           runtime,
           reviewContent: data.reviewContent,
           reviewScore: baseScore,
@@ -122,6 +120,7 @@ export class AlbumService {
             duration: t.duration_ms,
             features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
             rating: track.rating!,
+            pick: track.pick ?? null,
           },
           tx
         );
@@ -167,6 +166,7 @@ export class AlbumService {
       spotifyID: track.spotifyID,
       duration: track.duration,
       rating: track.rating,
+      pick: track.pick,
       features: track.features,
     }));
 
@@ -298,8 +298,6 @@ export class AlbumService {
         albumID,
         {
           reviewContent: data.reviewContent,
-          bestSong: data.bestSong,
-          worstSong: data.worstSong,
           genres: data.genres,
           colors: data.colors,
           reviewScore: baseScore,
@@ -343,6 +341,7 @@ export class AlbumService {
               duration: newTrack.duration,
               features: newTrack.features,
               rating: newTrack.rating ?? 0,
+              pick: newTrack.pick ?? null,
             },
             tx
           );
@@ -351,6 +350,10 @@ export class AlbumService {
           if (newTrack.rating !== undefined) {
             await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating, tx);
           }
+        }
+
+        if (oldTrack && oldTrack.pick !== (newTrack.pick ?? null)) {
+          await TrackModel.updateTrackPick(newTrack.spotifyID, newTrack.pick ?? null, tx);
         }
 
         if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {

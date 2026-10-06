@@ -9,30 +9,19 @@ import type { DisplayTrack } from "@shared/types";
 
 interface TracklistProps {
   tracks: DisplayTrack[];
-  bestSong?: string;
-  worstSong?: string;
 }
 
-const asPick = (value?: string): string | null => {
-  const trimmed = value?.trim();
-  return trimmed && trimmed !== "-" ? trimmed.toLowerCase() : null;
-};
-
 /** An album's tracks in album order, one line each, with the rating as a tier word chip. */
-export function Tracklist({ tracks, bestSong, worstSong }: TracklistProps) {
-  const best = asPick(bestSong);
-  const worst = asPick(worstSong);
-
+export function Tracklist({ tracks }: TracklistProps) {
   return (
     <section aria-labelledby="tracklist-heading">
       <h2 id="tracklist-heading" className={styles.heading}>
         {tracks.length} {tracks.length === 1 ? "track" : "tracks"}
       </h2>
       <ol className={styles.list}>
-        {tracks.map((track, index) => {
-          const name = track.name.trim().toLowerCase();
-          return <TrackRow key={track.spotifyID} track={track} position={index + 1} pick={best && name === best ? "best" : worst && name === worst ? "worst" : null} />;
-        })}
+        {tracks.map((track, index) => (
+          <TrackRow key={track.spotifyID} track={track} position={index + 1} />
+        ))}
       </ol>
     </section>
   );
@@ -41,10 +30,9 @@ export function Tracklist({ tracks, bestSong, worstSong }: TracklistProps) {
 interface TrackRowProps {
   track: DisplayTrack;
   position: number;
-  pick: "best" | "worst" | null;
 }
 
-function TrackRow({ track, position, pick }: TrackRowProps) {
+function TrackRow({ track, position }: TrackRowProps) {
   // Track ratings are stored on a 1-10 scale, so scale to 0-100 for the tier.
   const rated = track.rating != null && track.rating > 0;
   const tier = rated ? scoreTier(track.rating! * 10) : "Unrated";
@@ -56,10 +44,10 @@ function TrackRow({ track, position, pick }: TrackRowProps) {
       <span className={styles.name}>
         {title}
         {featuring.length > 0 && <span className={styles.features}> feat. {featuring.join(", ")}</span>}
-        {pick && (
+        {track.pick && (
           <>
             {" "}
-            <PickChip pick={pick} />
+            <PickChip pick={track.pick} />
           </>
         )}
       </span>

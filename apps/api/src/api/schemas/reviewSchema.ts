@@ -24,6 +24,7 @@ const ratedTrackSchema = z.object({
   name: z.string(),
   duration: z.number(),
   rating: z.number().min(0).max(10),
+  pick: z.enum(["best", "worst"]).nullable().optional(),
   features: z.array(featureSchema),
   imageURLs: z.array(spotifyImageSchema).optional(),
 });
@@ -65,8 +66,6 @@ const reviewedAlbumSchema = z.object({
 
 export const reviewDataSchema = z.object({
   ratedTracks: z.array(ratedTrackSchema),
-  bestSong: z.string(),
-  worstSong: z.string(),
   reviewContent: z.string(),
   affectsArtistScore: z.boolean(),
   album: z.union([spotifyAlbumSchema, reviewedAlbumSchema]).optional(),

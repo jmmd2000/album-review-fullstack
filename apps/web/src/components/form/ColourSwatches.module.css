@@ -1,0 +1,66 @@
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch,
+.add {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: var(--border-thin) solid var(--colour-divider);
+  border-radius: var(--radius-tag);
+}
+
+/* the real colour input covers the swatch, so clicking anywhere on it opens the picker */
+.swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--colour-panel-strong);
+  color: var(--colour-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration-quick) var(--ease-out);
+
+  & svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .swatch:hover &,
+  .swatch:focus-within &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @media (pointer: coarse) {
+    opacity: 1;
+  }
+}
+
+.add {
+  background: var(--colour-panel);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--colour-panel-strong);
+    color: var(--colour-foreground);
+  }
+}

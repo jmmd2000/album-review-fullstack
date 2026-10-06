@@ -178,12 +178,6 @@ export interface ReviewedAlbum {
   artistName: string;
   /** Spotify ID of the album. */
   spotifyID: string;
-  // /** The artist who created the album. */
-  // artist: ReviewedArtist;
-  /** The best song from the album as chosen in the review. */
-  bestSong: string;
-  /** The worst song from the album as chosen in the review. */
-  worstSong: string;
   /** The album's name. */
   name: string;
   /** JSON string containing album image URLs. */
@@ -288,6 +282,8 @@ export interface ReviewedTrack {
   duration: number;
   /** Rating of the track. */
   rating?: number;
+  /** Whether the review picks the track as one of the album's best or worst */
+  pick: TrackPick | null;
 }
 
 /**
@@ -357,6 +353,8 @@ export interface DisplayArtist {
 /**
  * Represents the minimum data needed to display a track on a `TrackCard`.
  */
+export type TrackPick = "best" | "worst";
+
 export interface DisplayTrack {
   /** Spotify ID of the track. */
   spotifyID: string;
@@ -370,6 +368,8 @@ export interface DisplayTrack {
   duration: number;
   /** Optional rating of the track. */
   rating?: number;
+  /** Whether the review picks the track as one of the album's best or worst */
+  pick?: TrackPick | null;
   /** Array of names of features */
   features: { id: string; name: string }[];
   /** Optional album images */

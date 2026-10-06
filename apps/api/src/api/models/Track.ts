@@ -2,6 +2,7 @@ import "dotenv/config";
 import { asc, count, eq, gt, sql } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
+import type { TrackPick } from "@shared/types";
 
 export class TrackModel {
   /**
@@ -26,6 +27,10 @@ export class TrackModel {
 
   static async updateTrackRating(spotifyID: string, rating: number, executor: Executor = db) {
     return executor.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
+  }
+
+  static async updateTrackPick(spotifyID: string, pick: TrackPick | null, executor: Executor = db) {
+    return executor.update(reviewedTracks).set({ pick, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
   static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[], executor: Executor = db) {

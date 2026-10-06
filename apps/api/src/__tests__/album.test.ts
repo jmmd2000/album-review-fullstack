@@ -137,3 +137,36 @@ test("POST /api/albums/create - a mid-flight failure rolls the whole review back
 
   spy.mockRestore();
 });
+
+test("a review saves which tracks are its best and worst", async () => {
+  const [first, second, third] = mockReviewData.ratedTracks;
+  const ratedTracks = mockReviewData.ratedTracks.map(track => {
+    if (track === first || track === second) return { ...track, pick: "best" };
+    if (track === third) return { ...track, pick: "worst" };
+    return track;
+  });
+  const create = await api.post("/api/albums/create", { ...mockReviewData, ratedTracks }, authCookie);
+  expect(create.status).toBe(201);
+
+  const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
+  const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
+  expect(picks).toEqual([
+    [first!.spotifyID, "best"],
+    [second!.spotifyID, "best"],
+    [third!.spotifyID, "worst"],
+  ]);
+});
+
+test("editing a review changes and clears track picks", async () => {
+  const [first, second] = mockReviewData.ratedTracks;
+  const ratedTracks = mockReviewData.ratedTracks.map(track => (track === first ? { ...track, pick: "best" } : track));
+  await api.post("/api/albums/create", { ...mockReviewData, ratedTracks }, authCookie);
+
+  const editedTracks = mockReviewData.ratedTracks.map(track => (track === second ? { ...track, pick: "worst" } : track));
+  const edit = await api.put(`/api/albums/${mockReviewData.album.id}/edit`, { ...mockReviewData, ratedTracks: editedTracks }, authCookie);
+  expect(edit.status).toBe(200);
+
+  const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
+  const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
+  expect(picks).toEqual([[second!.spotifyID, "worst"]]);
+});

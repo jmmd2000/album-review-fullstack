@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { ExtractedColor } from "@shared/types";
 
 interface OKLab {
@@ -69,4 +70,22 @@ export function usableCoverColours(colours: ExtractedColor[], theme?: PageTheme)
     .filter(colour => themes.every(pageTheme => showsOn(colour.oklab, pageTheme)));
 
   return usable.sort((first, second) => chroma(second.oklab) - chroma(first.oklab)).map(colour => colour.hex);
+}
+
+/** The backdrop has five pools, one for each colour a cover can store */
+const MAXIMUM_COVER_COLOURS = 5;
+
+/**
+ * Hands a page its cover colours for each theme, as --cover-light-1 to 5 and --cover-dark-1 to 5,
+ * most vivid first. The coverColours class in styles/coverColours.module.css picks the set that matches the theme.
+ */
+export function coverColourStyle(colours: ExtractedColor[]): CSSProperties {
+  const themes: PageTheme[] = ["light", "dark"];
+  const properties = themes.flatMap(theme => {
+    const usable = usableCoverColours(colours, theme).slice(0, MAXIMUM_COVER_COLOURS);
+    // A single colour fills the second pool too, so the backdrop isn't lopsided
+    if (usable.length === 1) usable.push(usable[0]!);
+    return usable.map((hex, index) => [`--cover-${theme}-${index + 1}`, hex]);
+  });
+  return Object.fromEntries(properties);
 }

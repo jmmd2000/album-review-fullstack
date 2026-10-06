@@ -63,10 +63,10 @@ describe("searchAlbums", () => {
 });
 
 describe("getAlbum", () => {
-  test("throws a 400 when the album is already reviewed", async () => {
+  test("throws a 409 when the album is already reviewed", async () => {
     vi.spyOn(AlbumModel, "findBySpotifyID").mockResolvedValue({ spotifyID: "alb" } as never);
 
-    await expect(SpotifyService.getAlbum("alb")).rejects.toMatchObject({ status: 400 });
+    await expect(SpotifyService.getAlbum("alb")).rejects.toMatchObject({ status: 409 });
   });
 
   test("maps artist details onto the album and includes the genre list", async () => {

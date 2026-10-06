@@ -38,7 +38,7 @@ export class SpotifyService {
     genres?: Genre[];
   }> {
     const existing = await AlbumModel.findBySpotifyID(id);
-    if (existing) throw new AppError("Album already exists in the database.", 400);
+    if (existing) throw new AppError("This album has already been reviewed.", 409);
 
     const token = await SpotifyTokenCache.getAccessToken();
     const album = await SpotifyClient.getAlbum(id, token);

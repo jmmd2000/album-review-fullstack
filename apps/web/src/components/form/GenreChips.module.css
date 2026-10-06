@@ -1,0 +1,53 @@
+.genres {
+  display: grid;
+  gap: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border-radius: var(--radius-tag);
+  background: var(--colour-panel);
+  font-size: 0.92rem;
+
+  & button {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    color: var(--colour-text-muted);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--colour-panel-strong);
+      color: var(--colour-foreground);
+    }
+  }
+
+  & svg {
+    width: 11px;
+    height: 11px;
+  }
+}
+
+.input {
+  max-width: 320px;
+  padding: 11px 14px;
+  border-radius: var(--radius-control);
+  background: var(--colour-panel);
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--colour-text-faint);
+  }
+}

@@ -519,8 +519,6 @@ export const mockReviewData = {
     { spotifyID: "4RVwu0g32PAqgUiJoXsdF8", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Happier Than Ever", duration: 298899, rating: 1, features: [] },
     { spotifyID: "4ak9GGe6afmi2HbxEjvhIC", artistSpotifyID: "6qqNVTkY8uBg9cP3Jd7DAH", artistName: "Billie Eilish", name: "Male Fantasy", duration: 194886, rating: 1, features: [] },
   ],
-  bestSong: "2",
-  worstSong: "3",
   reviewContent: "Amazing album with deep emotions.",
   colors: [{ hex: "#f2e0d2" }, { hex: "#8c6d4f" }],
   genres: ["pop", "jazz", "hip-hop"],
@@ -530,8 +528,6 @@ export const mockReviewData = {
 export const mockUpdateData = {
   album: {},
   reviewContent: "Amazing album with deep emotions.",
-  bestSong: "5",
-  worstSong: "6",
   ratedTracks: [
     {
       rating: 9,

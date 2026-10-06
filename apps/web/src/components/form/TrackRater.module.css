@@ -1,0 +1,115 @@
+.list {
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  align-items: center;
+  padding-block: 12px;
+  border-bottom: var(--border-thin) solid var(--colour-divider);
+}
+
+.position {
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.soft {
+  color: var(--colour-text-muted);
+  font-weight: var(--font-weight-body);
+}
+
+.duration {
+  margin-left: 8px;
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.rating {
+  color: var(--tier-colour);
+  font-family: var(--font-display);
+  font-weight: 650;
+  text-align: right;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2 / -1;
+  align-items: center;
+  gap: 8px 18px;
+}
+
+.steps {
+  display: flex;
+  gap: 2px;
+}
+
+.step {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 3px;
+  background: var(--colour-panel);
+  color: var(--colour-text-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
+
+  &:hover {
+    background: var(--colour-panel-strong);
+    color: var(--colour-foreground);
+  }
+
+  &[aria-pressed="true"] {
+    font-weight: var(--font-weight-display);
+    box-shadow: inset 0 0 0 2px var(--colour-foreground);
+  }
+
+  @media (width < 560px) {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+}
+
+.filled,
+.filled:hover {
+  background: var(--tier-fill);
+  color: var(--colour-text-on-tier);
+}
+
+.pick {
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  &[data-pick="best"][aria-pressed="true"] {
+    color: var(--colour-best);
+    font-weight: var(--font-weight-label);
+  }
+
+  &[data-pick="worst"][aria-pressed="true"] {
+    color: var(--colour-worst);
+    font-weight: var(--font-weight-label);
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}

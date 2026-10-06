@@ -45,8 +45,8 @@ const seed = async () => {
       const { baseScore, bonuses, finalScore } = calculateAlbumScore(ratedTracks);
 
       const byRating = [...ratedTracks].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-      const bestSong = byRating[0].name;
-      const worstSong = byRating[byRating.length - 1].name;
+      const bestTrackID = byRating[0].spotifyID;
+      const worstTrackID = byRating[byRating.length - 1].spotifyID;
 
       // Artists start neutral; aggregates are computed once every album is in
       for (const artist of captured.artists) {
@@ -77,8 +77,6 @@ const seed = async () => {
           releaseDate: captured.releaseDate,
           releaseYear: captured.releaseYear,
           imageURLs: captured.imageURLs,
-          bestSong,
-          worstSong,
           runtime: captured.runtime,
           reviewContent: REVIEW_CONTENT,
           reviewScore: baseScore,
@@ -119,6 +117,7 @@ const seed = async () => {
             duration: track.duration,
             features: track.features,
             rating: track.rating!,
+            pick: track.spotifyID === bestTrackID ? "best" : track.spotifyID === worstTrackID ? "worst" : null,
           },
           tx
         );

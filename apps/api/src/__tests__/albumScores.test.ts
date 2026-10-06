@@ -14,8 +14,6 @@ async function seedAlbum(spotifyID: string, name: string, reviewScore: number) {
     releaseDate: "2020-01-01",
     releaseYear: 2020,
     imageURLs: [],
-    bestSong: "1",
-    worstSong: "1",
     runtime: "00:00",
     reviewContent: "",
     reviewScore,

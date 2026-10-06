@@ -1,11 +1,4 @@
-/* The route sets a light and a dark list of cover colours, and light-dark() picks one for the theme */
 .page {
-  --cover-colour-1: light-dark(var(--cover-light-1, transparent), var(--cover-dark-1, transparent));
-  --cover-colour-2: light-dark(var(--cover-light-2, transparent), var(--cover-dark-2, transparent));
-  --cover-colour-3: light-dark(var(--cover-light-3, transparent), var(--cover-dark-3, transparent));
-  --cover-colour-4: light-dark(var(--cover-light-4, transparent), var(--cover-dark-4, transparent));
-  --cover-colour-5: light-dark(var(--cover-light-5, transparent), var(--cover-dark-5, transparent));
-  --cover-accent: light-dark(var(--cover-light-1, var(--colour-text-faint)), var(--cover-dark-1, var(--colour-text-faint)));
   width: 100%;
   max-width: var(--page-width);
   margin-inline: auto;
