@@ -1,8 +1,8 @@
 import { createRouter } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import { Toaster } from "sonner";
 import { routeTree } from "./routeTree.gen";
+import { Toaster } from "@/components/ui/Toaster";
 
 /**
  * Router factory the start plugin wires into its client and server entries.
@@ -19,7 +19,7 @@ export function getRouter() {
     Wrap: ({ children }) => (
       <>
         {children}
-        <Toaster richColors />
+        <Toaster />
       </>
     ),
   });

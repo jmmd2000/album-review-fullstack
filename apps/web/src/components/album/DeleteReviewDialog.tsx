@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { client, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/Button";
 import styles from "./DeleteReviewDialog.module.css";
 
@@ -15,7 +16,7 @@ interface DeleteReviewDialogProps {
 
 /**
  * A Delete button that opens a dialog to confirm the delete. After the delete, it opens
- * the albums list and refreshes the album, artist, stats and home data.
+ * the albums list, shows a toast and refreshes the album, artist, stats and home data.
  */
 export function DeleteReviewDialog({ albumID, albumName, triggerClassName }: DeleteReviewDialogProps) {
   const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ export function DeleteReviewDialog({ albumID, albumName, triggerClassName }: Del
     onSuccess: async () => {
       // Leave the page first. If the page stays open, its query fetches the deleted album and shows "Album not found".
       await navigate({ to: "/albums" });
+      toast.success("Review deleted");
       queryClient.removeQueries({ queryKey: queryKeys.albums.detail(albumID) });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
