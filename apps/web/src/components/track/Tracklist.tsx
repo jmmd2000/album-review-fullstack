@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { formatDuration } from "@shared/helpers/formatDuration";
 import type { DisplayTrack } from "@shared/types";
-import { tierColourVar } from "@/lib/tierColours";
+import { tierColourVar, tierFillVar } from "@/lib/tierColours";
 import styles from "./Tracklist.module.css";
 
 interface TracklistProps {
@@ -60,7 +60,7 @@ function TrackRow({ track, position, pick }: TrackRowProps) {
         )}
       </span>
       <span className={styles.duration}>{formatDuration(track.duration, "short")}</span>
-      <span className={styles.tier} data-unrated={!rated} style={rated ? { backgroundColor: tierVar } : undefined}>
+      <span className={styles.tier} data-unrated={!rated} style={rated ? { backgroundColor: tierFillVar(tier) } : undefined}>
         {tier}
       </span>
     </li>

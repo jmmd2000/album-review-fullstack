@@ -77,6 +77,9 @@
   --shadow-float: 0 24px 60px oklch(0 0 0 / 0.4), 0 0 0 1px var(--colour-divider);
   --shadow-tooltip: 0 16px 40px oklch(0 0 0 / 0.35);
 
+  /* how strongly an album's cover colours show behind its page */
+  --backdrop-strength: 0.5;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-quick: 0.3s;
 
@@ -92,6 +95,13 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --backdrop-strength: 0.65;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --backdrop-strength: 0.65;
+  }
 }
 
 /* Breakpoints. css cannot read var() inside a media query

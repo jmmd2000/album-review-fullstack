@@ -1,0 +1,26 @@
+.lockup {
+  --size: clamp(4.6rem, 7.4vw, 6.8rem);
+  display: inline-grid;
+  justify-items: stretch;
+  font-family: var(--font-display);
+}
+
+.number {
+  font-size: var(--size);
+  font-weight: var(--font-weight-display);
+  line-height: 0.8;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* as wide as the number, so the rule above it underlines the whole score */
+.word {
+  margin-top: 0.5em;
+  padding-top: 0.45em;
+  border-top: var(--border-thick) solid currentColor;
+  font-size: calc(var(--size) * 0.17);
+  font-weight: var(--font-weight-label);
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}

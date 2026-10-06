@@ -26,3 +26,21 @@ describe("usableCoverColours", () => {
     expect(usableCoverColours([{ hex: "#111111" }, { hex: "#f5f5f5" }])).toEqual([]);
   });
 });
+
+describe("usableCoverColours for one theme", () => {
+  it("keeps a colour that only vanishes into the other theme's page", () => {
+    expect(usableCoverColours([{ hex: "#fbe9d0" }], "dark")).toEqual(["#fbe9d0"]);
+    expect(usableCoverColours([{ hex: "#fbe9d0" }], "light")).toEqual([]);
+    expect(usableCoverColours([{ hex: "#3a2010" }], "light")).toEqual(["#3a2010"]);
+    expect(usableCoverColours([{ hex: "#3a2010" }], "dark")).toEqual([]);
+  });
+
+  it("lets a light grey glow on the dark page only", () => {
+    expect(usableCoverColours([{ hex: "#c6c6c6" }], "dark")).toEqual(["#c6c6c6"]);
+    expect(usableCoverColours([{ hex: "#c6c6c6" }], "light")).toEqual([]);
+  });
+
+  it("still drops mid and dark greys on the dark page", () => {
+    expect(usableCoverColours([{ hex: "#808080" }, { hex: "#525252" }], "dark")).toEqual([]);
+  });
+});

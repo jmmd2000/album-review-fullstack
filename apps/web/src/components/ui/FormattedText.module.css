@@ -1,8 +1,6 @@
+/* size and colour come from wherever the text is placed */
 .prose {
   white-space: pre-line;
-  font-size: 18px;
-  line-height: 1.65;
-  color: var(--colour-foreground);
 
   & strong {
     font-weight: var(--font-weight-display);

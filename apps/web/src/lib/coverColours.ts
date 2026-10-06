@@ -6,17 +6,21 @@ interface OKLab {
   b: number;
 }
 
+/** The page a colour has to show up against. Leave it out for a colour that suits both. */
+export type PageTheme = "light" | "dark";
+
 /** Below this an OKLab colour reads as grey, which only shows as haze */
 const MINIMUM_CHROMA = 0.025;
+/** On the dark page a grey this light or lighter glows like white light, so it's kept */
+const MINIMUM_GLOWING_LIGHTNESS = 0.75;
 /** Closer than this to the page and a colour disappears into it */
 const MINIMUM_PAGE_DISTANCE = 0.12;
 
-// The light and dark page colours from tokens.css, in OKLab. Checking against both keeps
-// the result the same in either theme, so the server and browser always agree.
-const pageColours: OKLab[] = [
-  { lightness: 0.965, a: -0.001, b: -0.003 },
-  { lightness: 0.19, a: 0.002, b: 0.006 },
-];
+// The light and dark page colours from tokens.css, in OKLab
+const pageColours: Record<PageTheme, OKLab> = {
+  light: { lightness: 0.965, a: -0.001, b: -0.003 },
+  dark: { lightness: 0.19, a: 0.002, b: 0.006 },
+};
 
 /** Converts a "#rrggbb" colour to OKLab, where distances roughly match how different colours look. */
 function toOKLab(hex: string): OKLab {
@@ -42,20 +46,27 @@ function distance(first: OKLab, second: OKLab): number {
   return Math.hypot(first.lightness - second.lightness, first.a - second.a, first.b - second.b);
 }
 
+function showsOn(colour: OKLab, theme: PageTheme): boolean {
+  if (distance(colour, pageColours[theme]) < MINIMUM_PAGE_DISTANCE) return false;
+  if (chroma(colour) >= MINIMUM_CHROMA) return true;
+  return theme === "dark" && colour.lightness >= MINIMUM_GLOWING_LIGHTNESS;
+}
+
 /**
  * The cover colours that can light the page, most vivid first.
- * Greys are dropped, and so is anything close to the light or dark page colour,
- * so a black-and-white cover gets no colour at all rather than a muddy one.
+ * Greys are dropped, apart from light ones on the dark page, which glow like white light.
+ * So is anything close to the page colour, so a muddy colour never shows.
  *
  * @param colours The colours stored for an album's cover.
+ * @param theme The page they'll sit on. Without one, a colour has to suit both.
  * @returns Hex colours, or an empty list when none stand out.
  */
-export function usableCoverColours(colours: ExtractedColor[]): string[] {
+export function usableCoverColours(colours: ExtractedColor[], theme?: PageTheme): string[] {
+  const themes: PageTheme[] = theme ? [theme] : ["light", "dark"];
   const usable = colours
     .filter(colour => /^#[0-9a-f]{6}$/i.test(colour.hex))
     .map(colour => ({ hex: colour.hex, oklab: toOKLab(colour.hex) }))
-    .filter(colour => chroma(colour.oklab) >= MINIMUM_CHROMA)
-    .filter(colour => pageColours.every(page => distance(colour.oklab, page) >= MINIMUM_PAGE_DISTANCE));
+    .filter(colour => themes.every(pageTheme => showsOn(colour.oklab, pageTheme)));
 
   return usable.sort((first, second) => chroma(second.oklab) - chroma(first.oklab)).map(colour => colour.hex);
 }

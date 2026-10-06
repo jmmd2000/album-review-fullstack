@@ -1,0 +1,14 @@
+/* Positioned against the page itself, so it starts at the very top, behind the nav */
+.backdrop {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: var(--backdrop-height, 900px);
+  opacity: var(--backdrop-strength);
+  background:
+    radial-gradient(48% 62% at 10% 18%, var(--cover-colour-1), transparent 72%), radial-gradient(44% 58% at 92% 8%, var(--cover-colour-2), transparent 72%),
+    radial-gradient(40% 52% at 62% 72%, var(--cover-colour-3), transparent 72%), radial-gradient(36% 48% at 26% 92%, var(--cover-colour-4), transparent 72%),
+    radial-gradient(34% 46% at 80% 52%, var(--cover-colour-5), transparent 72%);
+  mask-image: linear-gradient(to bottom, black 55%, transparent);
+  pointer-events: none;
+}
