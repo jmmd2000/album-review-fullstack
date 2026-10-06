@@ -1,122 +1,67 @@
-.label {
-  display: block;
-  margin-bottom: var(--space-4);
-  font-size: 11px;
+.heading {
+  margin-bottom: var(--space-1);
+  font-size: 1.7rem;
   font-weight: var(--font-weight-label);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--colour-text-muted);
 }
 
 .list {
   list-style: none;
-  border-top: var(--border-thin) solid var(--colour-divider);
 }
 
+/* one line per track, split by dividers. The row itself is never tinted, so the rating is its only colour */
 .row {
   display: grid;
-  grid-template-columns: auto 1fr auto minmax(100px, auto);
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  gap: 14px;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-2);
-  border-bottom: var(--border-thin) solid var(--colour-divider);
-  transition: background var(--duration-quick) var(--ease-out);
+  min-height: 52px;
+  padding-block: 10px;
 
-  &:hover {
-    background: color-mix(in srgb, var(--row-tier) 15%, transparent);
+  & + & {
+    border-top: var(--border-thin) solid var(--colour-divider);
+  }
+
+  @media (width < 560px) {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
   }
 }
 
-.number {
-  min-width: 2ch;
-  font-size: 16px;
-  font-weight: var(--font-weight-display);
-  color: var(--colour-text-faint);
+.number,
+.duration {
+  color: var(--colour-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.title {
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-1);
+.number {
+  font-size: 0.92rem;
 }
 
 .name {
-  font-size: 16px;
+  min-width: 0;
   font-weight: var(--font-weight-medium);
 }
 
 .features {
-  font-size: 14px;
   color: var(--colour-text-muted);
-}
-
-.pick {
-  font-size: 10px;
-  font-weight: var(--font-weight-label);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: #fff;
-  padding: 4px 8px;
-
-  &[data-kind="best"] {
-    background: var(--colour-best-fill);
-  }
-
-  &[data-kind="worst"] {
-    background: var(--colour-worst-fill);
-  }
+  font-weight: var(--font-weight-body);
 }
 
 .duration {
-  font-size: 12px;
-  color: var(--colour-text-muted);
-  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+
+  @media (width < 560px) {
+    display: none;
+  }
 }
 
-.tier {
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* every chip is as wide as the longest word, so the durations line up */
+.rating {
+  min-width: 8em;
   padding: 4px 10px;
   color: var(--colour-text-on-tier);
   font-size: 11px;
   font-weight: var(--font-weight-display);
   letter-spacing: 0.1em;
+  text-align: center;
   text-transform: uppercase;
-
-  &[data-unrated="true"] {
-    background: var(--colour-tier-unrated-fill);
-  }
-}
-
-@media (width < 900px) {
-  /* Narrow rows keep the duration by stacking it under the track name. */
-  .row {
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-      "num name chip"
-      "num dur chip";
-    gap: var(--space-1) var(--space-3);
-  }
-
-  .number {
-    grid-area: num;
-  }
-
-  .title {
-    grid-area: name;
-  }
-
-  .duration {
-    grid-area: dur;
-  }
-
-  .tier {
-    grid-area: chip;
-    align-self: center;
-  }
 }

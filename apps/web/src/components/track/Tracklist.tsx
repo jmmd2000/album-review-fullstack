@@ -1,9 +1,11 @@
-import type { CSSProperties } from "react";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { formatDuration } from "@shared/helpers/formatDuration";
-import type { DisplayTrack } from "@shared/types";
-import { tierColourVar, tierFillVar } from "@/lib/tierColours";
+import { tierFillVar } from "@/lib/tierColours";
+import { extraFeatures } from "@/lib/trackFeatures";
+import { PickChip } from "@/components/track/PickChip";
 import styles from "./Tracklist.module.css";
+
+import type { DisplayTrack } from "@shared/types";
 
 interface TracklistProps {
   tracks: DisplayTrack[];
@@ -16,14 +18,15 @@ const asPick = (value?: string): string | null => {
   return trimmed && trimmed !== "-" ? trimmed.toLowerCase() : null;
 };
 
+/** An album's tracks in album order, one line each, with the rating as a tier word chip. */
 export function Tracklist({ tracks, bestSong, worstSong }: TracklistProps) {
   const best = asPick(bestSong);
   const worst = asPick(worstSong);
 
   return (
     <section aria-labelledby="tracklist-heading">
-      <h2 id="tracklist-heading" className={styles.label}>
-        Tracklist
+      <h2 id="tracklist-heading" className={styles.heading}>
+        {tracks.length} {tracks.length === 1 ? "track" : "tracks"}
       </h2>
       <ol className={styles.list}>
         {tracks.map((track, index) => {
@@ -45,22 +48,23 @@ function TrackRow({ track, position, pick }: TrackRowProps) {
   // Track ratings are stored on a 1-10 scale, so scale to 0-100 for the tier.
   const rated = track.rating != null && track.rating > 0;
   const tier = rated ? scoreTier(track.rating! * 10) : "Unrated";
-  const tierVar = tierColourVar(tier);
+  const features = extraFeatures(track.name, track.features);
 
   return (
-    <li className={styles.row} style={{ "--row-tier": tierVar } as CSSProperties}>
-      <span className={styles.number}>{String(position).padStart(2, "0")}</span>
-      <span className={styles.title}>
-        <span className={styles.name}>{track.name}</span>
-        {track.features.length > 0 && <span className={styles.features}> feat. {track.features.map(feature => feature.name).join(", ")}</span>}
+    <li className={styles.row}>
+      <span className={styles.number}>{position}</span>
+      <span className={styles.name}>
+        {track.name}
+        {features.length > 0 && <span className={styles.features}> feat. {features.map(feature => feature.name).join(", ")}</span>}
         {pick && (
-          <span className={styles.pick} data-kind={pick}>
-            {pick === "best" ? "Best" : "Worst"}
-          </span>
+          <>
+            {" "}
+            <PickChip pick={pick} />
+          </>
         )}
       </span>
       <span className={styles.duration}>{formatDuration(track.duration, "short")}</span>
-      <span className={styles.tier} data-unrated={!rated} style={rated ? { backgroundColor: tierFillVar(tier) } : undefined}>
+      <span className={styles.rating} style={{ backgroundColor: tierFillVar(tier) }}>
         {tier}
       </span>
     </li>
