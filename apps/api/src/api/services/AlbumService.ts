@@ -180,9 +180,7 @@ export class AlbumService {
     return { album, artists, tracks: displayTracks, allGenres, albumGenres };
   }
 
-  static async getAllAlbums(
-    includeCounts = false
-  ): Promise<{
+  static async getAllAlbums(includeCounts = false): Promise<{
     albums: DisplayAlbum[];
     numArtists?: number;
     numAlbums?: number;
@@ -215,13 +213,7 @@ export class AlbumService {
 
   static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
-
-    // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
-
-    const relevantGenres = opts.genres?.length ? await GenreService.getGenresForAlbums(albums.map(a => a.spotifyID)) : [];
-
-    const genres: Genre[] = await GenreModel.getAllGenres();
-    genres.sort((a, b) => a.name.localeCompare(b.name));
+    const genres = await GenreModel.getGenreCounts();
 
     const displayAlbums: DisplayAlbum[] = albums.map(album => ({
       spotifyID: album.spotifyID,
@@ -246,7 +238,6 @@ export class AlbumService {
       furtherPages,
       totalCount,
       genres,
-      relatedGenres: relevantGenres,
     };
   }
 

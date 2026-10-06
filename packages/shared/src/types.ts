@@ -488,7 +488,7 @@ export interface GetPaginatedAlbumsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
-  /** The genre to filter the results by */
+  /** Genre slugs to filter by. An album matches when it has any of them */
   genres?: string[];
   /** Secondary sort field (only used when orderBy is "releaseYear") */
   secondaryOrderBy?: "finalScore" | "name" | "createdAt";
@@ -603,14 +603,19 @@ export interface RelatedGenre {
   updatedAt: Date;
 }
 
+/** A genre and how many reviewed albums have it, for the genre filter */
+export interface GenreCount {
+  name: string;
+  slug: string;
+  albumCount: number;
+}
+
 export interface PaginatedAlbumsResult {
   albums: DisplayAlbum[];
   totalCount: number;
   furtherPages: boolean;
-  /** All genres */
-  genres: Genre[];
-  /** All the genres that are related */
-  relatedGenres?: Genre[];
+  /** Every genre with an album, most common first */
+  genres: GenreCount[];
 }
 
 /** Represents the progress of settings operations */

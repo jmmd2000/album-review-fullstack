@@ -1,11 +1,21 @@
 import { albumGenres, genres, relatedGenres, reviewedAlbums } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
-import type { Genre, ReviewedAlbum } from "@shared/types";
-import { and, count, eq, inArray, or, sql } from "drizzle-orm";
+import type { Genre, GenreCount, ReviewedAlbum } from "@shared/types";
+import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 export class GenreModel {
   static async getAllGenres(): Promise<Genre[]> {
     return db.select().from(genres);
+  }
+
+  /** Every genre that has an album, with how many albums have it, most common first. */
+  static async getGenreCounts(): Promise<GenreCount[]> {
+    return db
+      .select({ name: genres.name, slug: genres.slug, albumCount: count() })
+      .from(genres)
+      .innerJoin(albumGenres, eq(albumGenres.genreID, genres.id))
+      .groupBy(genres.id)
+      .orderBy(desc(count()), asc(genres.name));
   }
 
   static async getGenreCount() {

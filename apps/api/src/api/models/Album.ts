@@ -229,15 +229,13 @@ export class AlbumModel {
   private static async getAlbumIdsByGenres(slugs: string[]): Promise<string[]> {
     if (!slugs.length) return [];
 
-    // join album_genres -> genres, filter slug IN slugs
-    // group by album, require COUNT(*) = slugs.length so we only get albums that matched every slug
+    // An album matches when it has any of the slugs. Grouping lists an album with two of them once.
     const rows = await db
       .select({ id: albumGenres.albumSpotifyID })
       .from(albumGenres)
       .innerJoin(genresTable, eq(genresTable.id, albumGenres.genreID))
       .where(inArray(genresTable.slug, slugs))
-      .groupBy(albumGenres.albumSpotifyID)
-      .having(sql`COUNT(*) = ${slugs.length}`);
+      .groupBy(albumGenres.albumSpotifyID);
 
     return rows.map(r => r.id);
   }

@@ -119,7 +119,6 @@ function RouteComponent() {
         />
         <GenreSelect
           genres={data.genres}
-          relatedGenres={data.relatedGenres}
           selected={options.genres ?? []}
           onChange={slugs => {
             navigate({
