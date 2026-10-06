@@ -1,108 +1,47 @@
-.bar {
+.nav {
   position: relative;
-  height: var(--nav-height);
-  background: var(--colour-background);
-  color: #fff;
+  z-index: var(--z-nav);
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 0 30px;
+  gap: 10px 16px;
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: 20px var(--page-gutter);
+}
+
+.mark {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 650;
 }
 
 .links {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 6px clamp(14px, 2vw, 28px);
+  margin-left: auto;
+  color: var(--colour-text-muted);
 }
 
 .link {
-  font-size: 16px;
-  font-weight: var(--font-weight-display);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
-  text-decoration: none;
-  padding: 6px 12px;
-
+  &:hover,
   &[data-status="active"] {
-    background: #fff;
-    color: #111;
+    color: var(--colour-foreground);
+  }
+
+  @media (pointer: coarse) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 
-.admin {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  margin-right: 14px;
-}
-
-.burger {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: 0;
-  cursor: pointer;
-  padding: 6px 0;
-
-  & span {
-    display: block;
-    width: 20px;
-    height: 3px;
-    background: #fff;
-  }
-}
-
-.takeover {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-modal);
-  background: var(--colour-background);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 22px;
-}
-
-.close {
-  align-self: flex-end;
-  background: none;
-  border: 0;
-  color: #fff;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 4px 8px;
-}
-
-.takeover_links {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 40px;
-}
-
-.takeover_link {
-  font-size: 44px;
-  font-weight: var(--font-weight-display);
-  letter-spacing: -0.03em;
-  line-height: 0.95;
-  text-transform: uppercase;
-  color: #fff;
-  text-decoration: none;
-  width: fit-content;
-}
-
-.takeover_link[data-status="active"] {
-  background: #fff;
-  color: #111;
-  padding: 0 8px 4px;
-}
-
-@media (width < 900px) {
+@media (width < 560px) {
   .links {
-    display: none;
-  }
-  .burger {
-    display: flex;
+    margin-left: 0;
   }
 }

@@ -1,5 +1,5 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
 
   --colour-background: light-dark(oklch(0.965 0.003 250), oklch(0.19 0.006 70));
   --colour-panel: light-dark(oklch(0.93 0.004 250), oklch(0.235 0.007 70));
@@ -61,7 +61,6 @@
 
   --page-width: 1920px;
   --page-gutter: clamp(16px, 3.5vw, 56px);
-  --nav-height: 56px;
 
   --border-thin: 1px;
   --border-thick: 2px;
@@ -85,6 +84,14 @@
   --z-dropdown: 200;
   --z-modal: 300;
   --z-toast: 400;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* Breakpoints. css cannot read var() inside a media query

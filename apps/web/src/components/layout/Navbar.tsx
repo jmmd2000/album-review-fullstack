@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { XIcon } from "@phosphor-icons/react";
-import { AdminSheet } from "@/components/layout/AdminSheet";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { AdminMenu } from "@/components/layout/AdminMenu";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import styles from "./Navbar.module.css";
 
 const PRIMARY_LINKS = [
@@ -12,57 +11,25 @@ const PRIMARY_LINKS = [
 ] as const;
 
 export function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [menuOpen]);
+  // The home page heading is the site name, so the nav leaves it out there
+  const isHome = useRouterState({ select: state => state.location.pathname === "/" });
 
   return (
-    <>
-      <header className={styles.bar}>
-        <nav className={styles.links} aria-label="Primary">
-          {PRIMARY_LINKS.map(link => (
-            <Link key={link.to} to={link.to} className={styles.link} activeOptions={{ exact: link.to === "/" }}>
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className={styles.admin}>
-          <AdminSheet />
-        </div>
-
-        <button type="button" className={styles.burger} aria-expanded={menuOpen} aria-label="Open menu" onClick={() => setMenuOpen(true)}>
-          <span />
-          <span />
-          <span />
-        </button>
-      </header>
-
-      {menuOpen && (
-        <div className={styles.takeover}>
-          <button type="button" className={styles.close} aria-label="Close menu" onClick={() => setMenuOpen(false)}>
-            <XIcon weight="bold" size={22} />
-          </button>
-          <nav className={styles.takeover_links} aria-label="Primary">
-            {PRIMARY_LINKS.map(link => (
-              <Link key={link.to} to={link.to} className={styles.takeover_link} activeOptions={{ exact: link.to === "/" }} onClick={() => setMenuOpen(false)}>
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+    <header className={styles.nav}>
+      {!isHome && (
+        <Link to="/" className={styles.mark}>
+          James Reviews Music
+        </Link>
       )}
-    </>
+      <nav className={styles.links} aria-label="Primary">
+        {PRIMARY_LINKS.map(link => (
+          <Link key={link.to} to={link.to} className={styles.link} activeOptions={{ exact: link.to === "/" }}>
+            {link.label}
+          </Link>
+        ))}
+        <AdminMenu />
+        <ThemeToggle />
+      </nav>
+    </header>
   );
 }

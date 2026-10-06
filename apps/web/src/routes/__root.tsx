@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts, ScriptOnce } from "@tanstack/react-router";
 import funnelDisplayURL from "@fontsource-variable/funnel-display/files/funnel-display-latin-wght-normal.woff2?url";
 import funnelSansURL from "@fontsource-variable/funnel-sans/files/funnel-sans-latin-wght-normal.woff2?url";
 import { AuthProvider } from "@/auth/AuthContext";
 import appCss from "@/styles/globals.css?url";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { themeScript } from "@/lib/theme";
 import styles from "./__root.module.css";
 
 interface RouterContext {
@@ -43,8 +43,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <ScriptOnce>{themeScript}</ScriptOnce>
         <HeadContent />
       </head>
       <body>
@@ -63,7 +64,6 @@ function RootComponent() {
         <main className={styles.main} style={{ viewTransitionName: "main-content" }}>
           <Outlet />
         </main>
-        <Footer />
       </div>
     </AuthProvider>
   );
