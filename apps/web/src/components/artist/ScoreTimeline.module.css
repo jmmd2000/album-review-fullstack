@@ -1,0 +1,106 @@
+.shell {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: 56px var(--page-gutter) 44px;
+}
+
+.chart {
+  position: relative;
+  height: clamp(240px, 26vw, 320px);
+  border-bottom: var(--border-thin) solid var(--colour-divider);
+}
+
+.line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  & polyline {
+    fill: none;
+    stroke: var(--colour-text-faint);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.points {
+  list-style: none;
+}
+
+.point {
+  --cover: clamp(28px, 3.4vw, 46px);
+  --ring: 6px;
+  position: absolute;
+  transform: translate(-50%, 50%);
+
+  & a {
+    position: relative;
+    display: grid;
+    justify-items: center;
+  }
+
+  & img {
+    width: var(--cover);
+    height: var(--cover);
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow:
+      0 0 0 var(--border-thick) var(--tier),
+      0 0 0 var(--ring) var(--colour-background);
+    transition: scale 0.2s var(--ease-out);
+  }
+
+  & a:hover img,
+  & a:focus-visible img {
+    scale: 1.12;
+  }
+
+  @media (width < 560px) {
+    --cover: 22px;
+    --ring: 4px;
+  }
+}
+
+.score {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  color: var(--tier);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  position: absolute;
+  top: calc(100% + 12px);
+  display: none;
+  width: max-content;
+  max-width: 160px;
+  color: var(--colour-text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease-out);
+
+  @media (width >= 1000px) {
+    display: block;
+  }
+}
+
+.point a:hover .name,
+.point a:focus-visible .name {
+  opacity: 1;
+}
+
+.year {
+  position: absolute;
+  bottom: -30px;
+  transform: translateX(-50%);
+  color: var(--colour-text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}

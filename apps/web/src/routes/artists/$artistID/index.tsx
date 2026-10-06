@@ -5,6 +5,7 @@ import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { ArtistStanding } from "@/components/artist/ArtistStanding";
+import { ScoreTimeline } from "@/components/artist/ScoreTimeline";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -49,6 +50,10 @@ export const Route = createFileRoute("/artists/$artistID/")({
   }),
 });
 
+function hasScore<T extends { finalScore: number | null }>(album: T): album is T & { finalScore: number } {
+  return album.finalScore !== null;
+}
+
 function RouteComponent() {
   const { artistID } = useParams({ strict: false });
   if (!artistID) {
@@ -58,11 +63,19 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(artistQueryOptions(artistID));
   const { artist, albums, featuredAlbums, tracks, rankedArtistCount } = data;
   const ratedTrackCount = tracks.filter(track => track.rating != null && track.rating > 0).length;
+  const scoredAlbumsOldestFirst = albums.filter(hasScore).reverse();
 
   return (
     <div className={styles.page}>
       <ArtistHeader name={artist.name} headerImage={artist.headerImage} images={artist.imageURLs} />
       <ArtistStanding artist={artist} rankedArtistCount={rankedArtistCount} albumCount={albums.length} ratedTrackCount={ratedTrackCount} />
+
+      {scoredAlbumsOldestFirst.length > 1 && (
+        <section className={styles.section}>
+          <SectionHeader title="Score over time" />
+          <ScoreTimeline albums={scoredAlbumsOldestFirst} />
+        </section>
+      )}
 
       <section className={styles.section}>
         <SectionHeader title="Albums" aside="Newest first" />
