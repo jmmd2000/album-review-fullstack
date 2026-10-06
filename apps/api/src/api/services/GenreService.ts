@@ -1,5 +1,4 @@
 import { GenreModel } from "@/api/models/Genre";
-import { AppError } from "@/api/AppError";
 import type { Genre, RelatedGenre } from "@shared/types";
 import slugify from "slugify";
 import { db, type Executor } from "@/db/client";
@@ -99,20 +98,5 @@ export class GenreService {
         await GenreModel.deleteGenreByID(genreID, executor);
       }
     }
-  }
-
-  static async getAlbumsByGenre(slug: string) {
-    const genre = await GenreModel.findBySlug(slug);
-    if (!genre) throw new AppError(`Genre with slug "${slug}" not found`, 404);
-
-    const albumGenreRows = await GenreModel.getAlbumsByGenreIDRaw(genre.id);
-    const albumSpotifyIDs = albumGenreRows.map(ag => ag.albumSpotifyID);
-
-    if (albumSpotifyIDs.length === 0) return [];
-
-    const albums = await GenreModel.getAlbumsBySpotifyIDs(albumSpotifyIDs);
-    albums.sort((a, b) => (b.finalScore ?? 0) - (a.finalScore ?? 0));
-
-    return albums;
   }
 }

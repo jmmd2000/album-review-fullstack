@@ -1,6 +1,6 @@
-import { albumGenres, genres, relatedGenres, reviewedAlbums } from "@/db/schema";
+import { albumGenres, genres, relatedGenres } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
-import type { Genre, GenreCount, ReviewedAlbum } from "@shared/types";
+import type { Genre, GenreCount } from "@shared/types";
 import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 export class GenreModel {
@@ -16,13 +16,6 @@ export class GenreModel {
       .innerJoin(albumGenres, eq(albumGenres.genreID, genres.id))
       .groupBy(genres.id)
       .orderBy(desc(count()), asc(genres.name));
-  }
-
-  static async getGenreCount() {
-    return db
-      .select({ count: count() })
-      .from(genres)
-      .then(r => r[0].count);
   }
 
   static async findBySlug(slug: string, executor: Executor = db) {
@@ -153,14 +146,5 @@ export class GenreModel {
 
   static async deleteGenreByID(genreID: number, executor: Executor = db) {
     await executor.delete(genres).where(eq(genres.id, genreID));
-  }
-
-  static async getAlbumsByGenreIDRaw(genreID: number) {
-    return db.select().from(albumGenres).where(eq(albumGenres.genreID, genreID));
-  }
-
-  static async getAlbumsBySpotifyIDs(spotifyIDs: string[]): Promise<ReviewedAlbum[]> {
-    if (spotifyIDs.length === 0) return [];
-    return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, spotifyIDs)) as Promise<ReviewedAlbum[]>;
   }
 }

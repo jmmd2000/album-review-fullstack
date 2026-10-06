@@ -1,8 +1,7 @@
 import "dotenv/config";
-import { count, eq, sql, asc } from "drizzle-orm";
+import { asc, count, eq, gt, sql } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
-import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
   /**
@@ -40,6 +39,14 @@ export class TrackModel {
       .then(r => r[0].count);
   }
 
+  static async getRatedTrackCount() {
+    return db
+      .select({ count: count() })
+      .from(reviewedTracks)
+      .where(gt(reviewedTracks.rating, 0))
+      .then(r => r[0].count);
+  }
+
   /** The artist's tracks, each album's tracks in album order. The albums come in the order they were reviewed. */
   static async getTracksByArtist(artistID: string) {
     const rows = await db
@@ -57,10 +64,6 @@ export class TrackModel {
       .select()
       .from(reviewedTracks)
       .where(sql`${reviewedTracks.features} @> ${filter}::jsonb`);
-  }
-
-  static async getAllTracks(): Promise<ReviewedTrack[]> {
-    return db.select().from(reviewedTracks) as Promise<ReviewedTrack[]>;
   }
 
   static async linkArtistsToTrack(trackSpotifyID: string, artistIDs: string[], executor: Executor = db) {

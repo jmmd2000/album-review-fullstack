@@ -501,16 +501,6 @@ export interface GetPaginatedAlbumsOptions {
 }
 
 /**
- * Represents the parameters passed to the GetStatsOptions method.
- */
-export interface GetStatsOptions {
-  /** The  genre slug to fetch data for. */
-  slug?: string;
-  /** The resource to display distribution data for */
-  resource?: "albums" | "tracks" | "artists";
-}
-
-/**
  * Represents the parameters passed to the GetPaginatedBookmarkedAlbumsOptions method.
  */
 export interface GetPaginatedBookmarkedAlbumsOptions {
@@ -612,6 +602,42 @@ export interface GenreCount {
   name: string;
   slug: string;
   albumCount: number;
+}
+
+/** A scored album on the stats page */
+export interface StatsAlbum {
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  finalScore: number;
+  imageURLs: SpotifyImage[];
+  /** The slugs of the album's genres */
+  genres: string[];
+  /** The Spotify IDs of all the album's artists */
+  artistSpotifyIDs: string[];
+}
+
+/** A rated artist on the stats page */
+export interface StatsArtist {
+  spotifyID: string;
+  name: string;
+  imageURLs: SpotifyImage[];
+  totalScore: number;
+  albumCount: number;
+}
+
+/** Everything the stats page shows. The page filters it itself. */
+export interface StatsOverview {
+  /** Every scored album, lowest score first */
+  albums: StatsAlbum[];
+  /** The rated artists */
+  artists: StatsArtist[];
+  /** Every genre with an album, most common first */
+  genres: GenreCount[];
+  /** The number of reviewed artists, rated or not */
+  artistCount: number;
+  ratedTrackCount: number;
 }
 
 export interface PaginatedAlbumsResult {

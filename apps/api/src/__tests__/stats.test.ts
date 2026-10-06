@@ -7,10 +7,10 @@ import { AlbumModel } from "@/api/models/Album";
 import { GenreModel } from "@/api/models/Genre";
 import { TrackModel } from "@/api/models/Track";
 
-async function createArtist(id: string, name: string, score: number) {
+async function createArtist(id: string, score: number, unrated = false) {
   return ArtistModel.createArtist({
     spotifyID: id,
-    name,
+    name: id,
     imageURLs: [],
     headerImage: null,
     averageScore: score,
@@ -18,17 +18,17 @@ async function createArtist(id: string, name: string, score: number) {
     bonusReason: JSON.stringify([]),
     totalScore: score,
     reviewCount: 1,
-    unrated: false,
+    unrated,
     leaderboardPosition: null,
   });
 }
 
-async function createAlbum(id: string, name: string, score: number, artistId: string, artistName: string, genreNames: string[]) {
+async function createAlbum(id: string, score: number | null, artistID: string) {
   return AlbumModel.createAlbum({
     spotifyID: id,
-    name,
-    artistSpotifyID: artistId,
-    artistName,
+    name: id,
+    artistSpotifyID: artistID,
+    artistName: artistID,
     releaseDate: "2020-01-01",
     releaseYear: 2020,
     imageURLs: [],
@@ -36,7 +36,7 @@ async function createAlbum(id: string, name: string, score: number, artistId: st
     worstSong: "1",
     runtime: "00:00",
     reviewContent: "",
-    reviewScore: score,
+    reviewScore: score ?? 0,
     reviewBonuses: {
       perfectBonus: 0,
       qualityBonus: 0,
@@ -50,57 +50,16 @@ async function createAlbum(id: string, name: string, score: number, artistId: st
     finalScore: score,
     affectsArtistScore: true,
     colors: [],
-    genres: genreNames,
+    genres: [],
   });
 }
 
-async function createTrack(id: string, albumId: string, artistId: string, artistName: string) {
-  return TrackModel.createTrack({
-    spotifyID: id,
-    albumSpotifyID: albumId,
-    artistSpotifyID: artistId,
-    artistName,
-    name: "track",
-    duration: 200,
-    features: [],
-    rating: 10,
-  });
-}
-
-async function setupData() {
-  const g1 = await GenreModel.createGenre({
-    name: "Genre One",
-    slug: "genre1",
-  });
-  const g2 = await GenreModel.createGenre({
-    name: "Genre Two",
-    slug: "genre2",
-  });
-  const g3 = await GenreModel.createGenre({
-    name: "Genre Three",
-    slug: "genre3",
-  });
-
-  const a1 = await createArtist("artist1", "Artist 1", 95);
-  const a2 = await createArtist("artist2", "Artist 2", 45);
-  const a3 = await createArtist("artist3", "Artist 3", 60);
-
-  const alb1 = await createAlbum("album1", "Album 1", 95, a1.spotifyID, a1.name, [g1.slug, g2.slug]);
-  const alb2 = await createAlbum("album2", "Album 2", 45, a2.spotifyID, a2.name, [g2.slug, g3.slug]);
-  const alb3 = await createAlbum("album3", "Album 3", 60, a3.spotifyID, a3.name, [g1.slug, g3.slug]);
-
-  await GenreModel.linkGenresToAlbum(alb1.spotifyID, [g1.id, g2.id]);
-  await GenreModel.linkGenresToAlbum(alb2.spotifyID, [g2.id, g3.id]);
-  await GenreModel.linkGenresToAlbum(alb3.spotifyID, [g1.id, g3.id]);
-
-  await createTrack("t1", alb1.spotifyID, a1.spotifyID, a1.name);
-  await createTrack("t2", alb2.spotifyID, a2.spotifyID, a2.name);
-  await createTrack("t3", alb3.spotifyID, a3.spotifyID, a3.name);
+async function createTrack(id: string, albumID: string, artistID: string, rating: number) {
+  return TrackModel.createTrack({ spotifyID: id, albumSpotifyID: albumID, artistSpotifyID: artistID, artistName: artistID, name: id, duration: 200, features: [], rating });
 }
 
 beforeEach(async () => {
   await resetTables(query);
-  await setupData();
 });
 
 afterEach(async () => {
@@ -111,69 +70,47 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("favourites reflect highest and lowest scores", async () => {
-  const stats = await StatsService.getFavourites();
-  expect(stats.favouriteAlbum?.spotifyID).toBe("album1");
-  expect(stats.leastFavouriteAlbum?.spotifyID).toBe("album2");
-  expect(stats.favouriteArtist?.spotifyID).toBe("artist1");
-  expect(stats.leastFavouriteArtist?.spotifyID).toBe("artist2");
-  expect(stats.favouriteGenre?.slug).toBe("genre1");
-  expect(stats.leastFavouriteGenre?.slug).toBe("genre3");
+test("the overview sends only scored albums, lowest score first", async () => {
+  await createArtist("artist1", 70);
+  await createAlbum("high", 90, "artist1");
+  await createAlbum("unscored", null, "artist1");
+  await createAlbum("low", 40, "artist1");
+
+  const overview = await StatsService.getOverview();
+  expect(overview.albums.map(album => album.spotifyID)).toEqual(["low", "high"]);
 });
 
-test("genre stats for a slug returns correct details", async () => {
-  const stats = await StatsService.getGenreStats("genre1");
-  expect(stats.reviewedAlbumCount).toBe(2);
-  expect(stats.averageScore).toBeCloseTo(77.5, 1);
-  expect(stats.albums?.highestRated.spotifyID).toBe("album1");
-  expect(stats.albums?.lowestRated.spotifyID).toBe("album3");
-  expect(stats.slug).toBe("genre1");
-  expect(stats.name).toBe("Genre One");
-  expect(stats.allGenres.length).toBe(3);
+test("each album carries its genre slugs and all its artists", async () => {
+  await createArtist("artist1", 70);
+  await createArtist("artist2", 60);
+  await createAlbum("album1", 80, "artist1");
+  const pop = await GenreModel.createGenre({ name: "Pop", slug: "pop" });
+  const rock = await GenreModel.createGenre({ name: "Rock", slug: "rock" });
+  await GenreModel.linkGenresToAlbum("album1", [pop.id, rock.id]);
+  await AlbumModel.upsertAlbumArtists("album1", [
+    { artistSpotifyID: "artist1", affectsScore: true },
+    { artistSpotifyID: "artist2", affectsScore: false },
+  ]);
+
+  const [album] = (await StatsService.getOverview()).albums;
+  expect(album!.genres.sort()).toEqual(["pop", "rock"]);
+  expect(album!.artistSpotifyIDs.sort()).toEqual(["artist1", "artist2"]);
 });
 
-test("genre stats without slug returns nulls", async () => {
-  const stats = await StatsService.getGenreStats(undefined);
-  expect(stats.reviewedAlbumCount).toBeNull();
-  expect(stats.averageScore).toBeNull();
-  expect(stats.relatedGenres).toBeNull();
-  expect(stats.albums).toBeNull();
-  expect(stats.name).toBeNull();
-  expect(stats.slug).toBeNull();
-  expect(stats.allGenres.length).toBe(3);
+test("the overview sends only rated artists, but counts every artist", async () => {
+  await createArtist("rated", 70);
+  await createArtist("unrated", 0, true);
+
+  const overview = await StatsService.getOverview();
+  expect(overview.artists.map(artist => artist.spotifyID)).toEqual(["rated"]);
+  expect(overview.artistCount).toBe(2);
 });
 
-test("rating distribution groups albums by tier", async () => {
-  const dist = await StatsService.getRatingDistribution("albums");
-  const perfect = dist.find(d => d.rating === "Perfect");
-  const meh = dist.find(d => d.rating === "Meh");
-  const good = dist.find(d => d.rating === "Good");
-  expect(perfect?.count).toBe(1);
-  expect(meh?.count).toBe(1);
-  expect(good?.count).toBe(1);
-  const total = dist.reduce((sum, d) => sum + d.count, 0);
-  expect(total).toBe(3);
-});
+test("the track total leaves out unrated tracks", async () => {
+  await createArtist("artist1", 70);
+  await createAlbum("album1", 80, "artist1");
+  await createTrack("rated", "album1", "artist1", 7);
+  await createTrack("unrated", "album1", "artist1", 0);
 
-test("rating distribution scales track ratings up to the album tiers", async () => {
-  const dist = await StatsService.getRatingDistribution("tracks");
-  const perfect = dist.find(d => d.rating === "Perfect");
-  expect(perfect?.count).toBe(3);
-  const total = dist.reduce((sum, d) => sum + d.count, 0);
-  expect(total).toBe(3);
-});
-
-test("rating distribution groups artists by total score", async () => {
-  const dist = await StatsService.getRatingDistribution("artists");
-  expect(dist.find(d => d.rating === "Perfect")?.count).toBe(1);
-  expect(dist.find(d => d.rating === "Meh")?.count).toBe(1);
-  expect(dist.find(d => d.rating === "Good")?.count).toBe(1);
-});
-
-test("resource counts summarise totals", async () => {
-  const counts = await StatsService.getResourceCounts();
-  expect(counts.albumCount).toBe(3);
-  expect(counts.artistCount).toBe(3);
-  expect(counts.genreCount).toBe(3);
-  expect(counts.trackCount).toBe(3);
+  expect((await StatsService.getOverview()).ratedTrackCount).toBe(1);
 });
