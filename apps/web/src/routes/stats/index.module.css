@@ -2,7 +2,11 @@
   width: 100%;
   max-width: var(--page-width);
   margin-inline: auto;
-  padding: 0 var(--page-gutter) var(--space-7);
+  padding-inline: var(--page-gutter);
+}
+
+.highs {
+  padding-block: var(--space-section) var(--space-7);
 }
 
 .tally {

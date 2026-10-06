@@ -42,3 +42,31 @@ export function describeSelection(count: number, genreNames: string[], decade: n
   const all = genreNames.length === 0 && decade === null ? "All " : "";
   return `${all}${count} ${what}${when}`;
 }
+
+/**
+ * Names the selection for a heading: "Albums in pop", "Albums in pop and r&b from the 2010s" or "Albums in 3 genres".
+ * Empty when nothing is picked.
+ */
+export function nameSelection(genreNames: string[], decade: number | null): string {
+  if (genreNames.length === 0 && decade === null) return "";
+
+  let name = "Albums";
+  if (genreNames.length === 1) name = `Albums in ${genreNames[0]}`;
+  if (genreNames.length === 2) name = `Albums in ${genreNames[0]} and ${genreNames[1]}`;
+  if (genreNames.length > 2) name = `Albums in ${genreNames.length} genres`;
+
+  return decade !== null ? `${name} from the ${decade}s` : name;
+}
+
+/**
+ * The five highest and five lowest scored items. The lowest list leaves out anything already
+ * in the highest list, so a small selection shows fewer rows instead of the same ones twice.
+ */
+export function highsAndLows<T>(items: T[], scoreOf: (item: T) => number): { highest: T[]; lowest: T[] } {
+  const highest = [...items].sort((a, b) => scoreOf(b) - scoreOf(a)).slice(0, 5);
+  const lowest = [...items]
+    .sort((a, b) => scoreOf(a) - scoreOf(b))
+    .filter(item => !highest.includes(item))
+    .slice(0, 5);
+  return { highest, lowest };
+}

@@ -5,12 +5,14 @@ import { scoreTier } from "@shared/helpers/ratingTiers";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
-import { albumMatches, decadeOf, describeSelection, isFiltered } from "@/lib/statsSelection";
+import { albumMatches, decadeOf, describeSelection, isFiltered, nameSelection } from "@/lib/statsSelection";
 import { tierColourVar } from "@/lib/tierColours";
 import { AlbumDots } from "@/components/stats/AlbumDots";
+import { HighsAndLows } from "@/components/stats/HighsAndLows";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { GenreSelect } from "@/components/ui/GenreSelect";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import styles from "./index.module.css";
 
 import type { StatsFilter } from "@/lib/statsSelection";
@@ -64,6 +66,8 @@ function RouteComponent() {
   const matchingIDs = new Set(selected.map(album => album.spotifyID));
   const decades = [...new Set(data.albums.map(album => decadeOf(album.releaseYear)))].sort();
   const genreNames = filter.genres.map(slug => data.genres.find(genre => genre.slug === slug)?.name ?? slug);
+  const selectedArtistIDs = new Set(selected.flatMap(album => album.artistSpotifyIDs));
+  const selectedArtists = isFiltered(filter) ? data.artists.filter(artist => selectedArtistIDs.has(artist.spotifyID)) : data.artists;
 
   return (
     <>
@@ -96,6 +100,11 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      <section className={styles.highs}>
+        <SectionHeader title="Highs and lows" aside={nameSelection(genreNames, filter.decade)} />
+        <HighsAndLows albums={selected} artists={selectedArtists} />
+      </section>
     </>
   );
 }
