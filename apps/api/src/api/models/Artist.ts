@@ -66,6 +66,15 @@ export class ArtistModel {
       .then(r => r[0].count);
   }
 
+  /** The number of artists with a leaderboard position. Unrated artists have none. */
+  static async getRankedArtistCount() {
+    return db
+      .select({ count: count() })
+      .from(reviewedArtists)
+      .where(eq(reviewedArtists.unrated, false))
+      .then(r => r[0].count);
+  }
+
   static async findAllArtistsSortedByTotalScore() {
     return db.select().from(reviewedArtists).orderBy(desc(reviewedArtists.totalScore));
   }

@@ -374,6 +374,8 @@ export interface DisplayTrack {
   features: { id: string; name: string }[];
   /** Optional album images */
   imageURLs?: SpotifyImage[];
+  /** The name of the track's album. Only the artist details send it. */
+  albumName?: string;
 }
 
 /**

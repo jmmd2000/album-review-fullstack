@@ -5,10 +5,9 @@ import { routeTree } from "./routeTree.gen";
 import { Toaster } from "@/components/ui/Toaster";
 
 /**
- * Router factory the start plugin wires into its client and server entries.
- * Each call gets its own query client, one per request on the server, one
- * for the lifetime of the tab in the browser. Loaders reach it through
- * router context rather than a module import.
+ * Creates the router. TanStack Start calls this from its client and server entries.
+ * Each call makes a new query client: one for each request on the server, and one for the tab in the browser.
+ * Loaders get the query client from the router context.
  */
 export function getRouter() {
   const queryClient = new QueryClient();
@@ -23,9 +22,8 @@ export function getRouter() {
       </>
     ),
   });
-  // Streams whatever the server loaders fetched into the client cache so
-  // hydration reuses it instead of refetching. Also wraps the app in the
-  // QueryClientProvider.
+  // Sends the data from the server loaders to the browser's query cache, so hydration doesn't fetch it again.
+  // This also wraps the app in QueryClientProvider.
   setupRouterSsrQueryIntegration({ router, queryClient });
   return router;
 }

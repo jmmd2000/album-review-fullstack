@@ -1,12 +1,13 @@
-import { closeDatabase, query } from "@/db/client";
+import { closeDatabase, db, query } from "@/db/client";
+import { reviewedArtists } from "@/db/schema";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
-import type { ReviewedArtist } from "@shared/types";
+import type { DisplayTrack, ReviewedArtist } from "@shared/types";
 import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 
-// Mock Puppeteer header fetcher to avoid launch errors
+// Stops the tests from starting the Puppeteer browser that fetches header images
 vi.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
   fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
 }));
@@ -58,4 +59,20 @@ test("GET /api/artists/details/:artistID - should return artist details", async 
   expect(body).toHaveProperty("artist");
   expect(body).toHaveProperty("albums");
   expect(body).toHaveProperty("tracks");
+});
+
+test("artist details give each track the name of its album", async () => {
+  await api.post("/api/albums/create", mockReviewData, authCookie);
+
+  const body = await (await api.get(`/api/artists/details/${artistID}`)).json();
+  expect(body.tracks.length).toBeGreaterThan(0);
+  expect(body.tracks.every((track: DisplayTrack) => track.albumName === mockReviewData.album.name)).toBe(true);
+});
+
+test("artist details count only rated artists as ranked", async () => {
+  await api.post("/api/albums/create", mockReviewData, authCookie);
+  await db.insert(reviewedArtists).values({ name: "Unrated Artist", spotifyID: "unrated-artist", imageURLs: [], averageScore: 0, unrated: true });
+
+  const body = await (await api.get(`/api/artists/details/${artistID}`)).json();
+  expect(body.rankedArtistCount).toBe(1);
 });
