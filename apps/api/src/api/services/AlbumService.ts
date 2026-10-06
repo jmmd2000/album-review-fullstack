@@ -226,6 +226,7 @@ export class AlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       albumArtists: album.albumArtists,
+      colors: album.colors,
     }));
 
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albums.map(a => a.spotifyID));

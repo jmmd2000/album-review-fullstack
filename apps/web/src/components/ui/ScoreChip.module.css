@@ -1,0 +1,15 @@
+.chip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.4em;
+  /* Funnel Display sets its digits 0.07em low in the line, so the extra bottom padding centres them */
+  padding: 0.3em 0.5em 0.37em;
+  border-radius: 0.45em;
+  color: var(--colour-text-on-tier);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}

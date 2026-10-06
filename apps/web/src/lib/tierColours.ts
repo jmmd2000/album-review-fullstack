@@ -8,3 +8,8 @@ import type { TierLabel } from "@shared/helpers/ratingTiers";
 export function tierColourVar(tier: TierLabel): string {
   return `var(--colour-tier-${tier.toLowerCase()})`;
 }
+
+/** The CSS custom property for a tier's fill, which is dark enough for white text on top. */
+export function tierFillVar(tier: TierLabel): string {
+  return `var(--colour-tier-${tier.toLowerCase()}-fill)`;
+}

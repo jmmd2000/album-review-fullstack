@@ -1,29 +1,19 @@
-import { Link } from "@tanstack/react-router";
-import { scoreTier } from "@shared/helpers/ratingTiers";
+import { linkOptions } from "@tanstack/react-router";
+import { Card } from "@/components/ui/Card";
+import { usableCoverColours } from "@/lib/coverColours";
+
 import type { DisplayAlbum } from "@shared/types";
-import styles from "./AlbumCard.module.css";
 
 interface AlbumCardProps {
   album: DisplayAlbum;
 }
 
+/** An album's card. An album without a score links to its review form instead of its page. */
 export function AlbumCard({ album }: AlbumCardProps) {
-  const image = album.imageURLs[1] ?? album.imageURLs[0];
-  const largeImage = album.imageURLs[0];
   const hasScore = album.finalScore !== null;
+  const shade = usableCoverColours(album.colors ?? [])[0];
 
-  return (
-    <Link to={hasScore ? "/albums/$albumID" : "/albums/$albumID/create"} params={{ albumID: album.spotifyID }} className={styles.card}>
-      {image && <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt={`${album.name} by ${album.artistName}`} width={image.width} height={image.height} loading="lazy" />}
-      {hasScore && (
-        <span className={styles.chip} style={{ backgroundColor: `var(--colour-tier-${scoreTier(album.finalScore).toLowerCase()})` }}>
-          {Math.ceil(album.finalScore!)}
-        </span>
-      )}
-      <div className={styles.reveal}>
-        <div className={styles.title}>{album.name}</div>
-        <div className={styles.artist}>{album.artistName}</div>
-      </div>
-    </Link>
-  );
+  const link = hasScore ? linkOptions({ to: "/albums/$albumID", params: { albumID: album.spotifyID } }) : linkOptions({ to: "/albums/$albumID/create", params: { albumID: album.spotifyID } });
+
+  return <Card link={link} title={album.name} subtitle={album.artistName} score={album.finalScore} images={album.imageURLs} shade={shade} />;
 }

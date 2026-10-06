@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react";
+import { LockKeyIcon, LockKeyOpenIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/useAuth";
 import { ApiError } from "@/lib/client";
 import { useDismiss } from "@/hooks/useDismiss";
@@ -38,7 +38,7 @@ export function AdminMenu() {
         data-signed-in={isAdmin ? "true" : undefined}
         onClick={() => setOpen(previous => !previous)}
       >
-        {isAdmin ? <LockSimpleOpenIcon weight="bold" aria-hidden="true" /> : <LockSimpleIcon weight="bold" aria-hidden="true" />}
+        {isAdmin ? <LockKeyOpenIcon weight="bold" aria-hidden="true" /> : <LockKeyIcon weight="bold" aria-hidden="true" />}
       </IconButton>
 
       {open && (
