@@ -2,22 +2,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-3);
-  padding: var(--sp-10) var(--gutter);
+  gap: var(--space-2);
+  padding: var(--space-5) var(--page-gutter);
   margin-block: auto;
 }
 
 .page {
   font-size: 11px;
-  font-weight: var(--fw-label);
+  font-weight: var(--font-weight-label);
   letter-spacing: 0.12em;
   min-width: 60px;
   text-align: center;
-  color: var(--muted);
+  color: var(--colour-text-muted);
 }
 
 @media (width < 900px) {
   .pagination {
-    padding: var(--sp-8) var(--gutter-mobile);
+    padding: var(--space-5) var(--page-gutter);
   }
 }

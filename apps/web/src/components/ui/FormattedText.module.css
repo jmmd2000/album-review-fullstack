@@ -2,10 +2,10 @@
   white-space: pre-line;
   font-size: 18px;
   line-height: 1.65;
-  color: var(--ink);
+  color: var(--colour-foreground);
 
   & strong {
-    font-weight: var(--fw-display);
+    font-weight: var(--font-weight-display);
   }
 
   & em {

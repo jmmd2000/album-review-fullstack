@@ -23,7 +23,7 @@
   bottom: 0;
   color: #fff;
   font-size: 16px;
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
   padding: 3px 9px;
 }
 
@@ -32,21 +32,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--reveal-bg);
+  background: var(--colour-panel-translucent);
   color: #fff;
   padding: 12px 14px;
   transform: translateY(101%);
-  transition: transform var(--duration-reveal) var(--ease);
+  transition: transform var(--duration-quick) var(--ease-out);
 }
 
 .title {
   font-size: 13px;
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
 }
 
 .artist {
   font-size: 11px;
-  color: var(--faint);
+  color: var(--colour-text-faint);
   margin-top: 2px;
 }
 

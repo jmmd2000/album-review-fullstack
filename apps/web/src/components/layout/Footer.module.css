@@ -1,7 +1,7 @@
 .footer {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 18px var(--gutter);
+  background: var(--colour-foreground);
+  color: var(--colour-background);
+  padding: 18px var(--page-gutter);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -9,22 +9,22 @@
 
 .name {
   font-size: 14px;
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .meta {
   font-size: 11px;
-  font-weight: var(--fw-label);
+  font-weight: var(--font-weight-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--colour-text-muted);
 }
 
 @media (width < 900px) {
   .footer {
-    padding: 18px var(--gutter-mobile);
+    padding: 18px var(--page-gutter);
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;

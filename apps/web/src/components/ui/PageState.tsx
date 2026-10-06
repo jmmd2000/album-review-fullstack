@@ -15,7 +15,6 @@ interface PageStateProps {
 export function PageState({ title, detail, marker, role = "status", children }: PageStateProps) {
   return (
     <div className={styles.state} role={role}>
-      <span className={styles.spectrum} aria-hidden="true" />
       {marker && <span className={styles.marker}>{marker}</span>}
       <p className={styles.title}>{title}</p>
       {detail && <p className={styles.detail}>{detail}</p>}

@@ -18,7 +18,7 @@ export function ArtistCard({ artist, position, score }: ArtistCardProps) {
       {image && <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt={artist.name} width={image.width} height={image.height} loading="lazy" />}
       {position !== null && <span className={styles.rank}>{String(position).padStart(2, "0")}</span>}
       {!artist.unrated && (
-        <span className={styles.chip} style={{ backgroundColor: `var(--tier-${scoreTier(score).toLowerCase()})` }}>
+        <span className={styles.chip} style={{ backgroundColor: `var(--colour-tier-${scoreTier(score).toLowerCase()})` }}>
           {Math.ceil(score)}
         </span>
       )}

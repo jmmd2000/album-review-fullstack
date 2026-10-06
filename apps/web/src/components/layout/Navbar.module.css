@@ -1,7 +1,7 @@
 .bar {
   position: relative;
   height: var(--nav-height);
-  background: var(--nav-bg);
+  background: var(--colour-background);
   color: #fff;
   display: flex;
   align-items: center;
@@ -17,7 +17,7 @@
 
 .link {
   font-size: 16px;
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #fff;
@@ -58,7 +58,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  background: var(--nav-bg);
+  background: var(--colour-background);
   display: flex;
   flex-direction: column;
   padding: 20px 22px;
@@ -83,7 +83,7 @@
 
 .takeover_link {
   font-size: 44px;
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
   letter-spacing: -0.03em;
   line-height: 0.95;
   text-transform: uppercase;

@@ -1,7 +1,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: var(--grid-gap);
+  gap: var(--space-grid-row) var(--space-grid-column);
 }
 
 @media (width < 900px) {

@@ -5,29 +5,22 @@
   justify-content: center;
   text-align: center;
   margin-block: auto;
-  padding: var(--sp-12) var(--gutter);
-}
-
-.spectrum {
-  width: 72px;
-  height: var(--bw-rule);
-  margin-bottom: var(--sp-7);
-  background: var(--tier-spectrum);
+  padding: var(--space-6) var(--page-gutter);
 }
 
 .marker {
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--space-3);
   font-size: 11px;
-  font-weight: var(--fw-label);
+  font-weight: var(--font-weight-label);
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--muted-2);
+  color: var(--colour-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .title {
   font-size: clamp(2.25rem, 4vw, 3.25rem);
-  font-weight: var(--fw-display);
+  font-weight: var(--font-weight-display);
   line-height: 0.95;
   letter-spacing: -0.03em;
   text-transform: uppercase;
@@ -36,21 +29,20 @@
 
 .detail {
   max-width: 44ch;
-  margin-top: var(--sp-5);
+  margin-top: var(--space-3);
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--muted);
+  color: var(--colour-text-muted);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--sp-3);
-  margin-top: var(--sp-8);
+  gap: var(--space-2);
+  margin-top: var(--space-5);
 }
 
-.spectrum,
 .marker,
 .title,
 .detail,
@@ -87,7 +79,7 @@
 
 @media (width < 900px) {
   .state {
-    padding: var(--sp-10) var(--gutter-mobile);
+    padding: var(--space-5) var(--page-gutter);
   }
 
   .title {
@@ -96,7 +88,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spectrum,
   .marker,
   .title,
   .detail,

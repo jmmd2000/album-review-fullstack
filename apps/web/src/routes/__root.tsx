@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import funnelDisplayURL from "@fontsource-variable/funnel-display/files/funnel-display-latin-wght-normal.woff2?url";
+import funnelSansURL from "@fontsource-variable/funnel-sans/files/funnel-sans-latin-wght-normal.woff2?url";
 import { AuthProvider } from "@/auth/AuthContext";
 import appCss from "@/styles/globals.css?url";
 import { Navbar } from "@/components/layout/Navbar";
@@ -22,6 +24,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.ico" },
+      { rel: "preload", href: funnelDisplayURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: funnelSansURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [

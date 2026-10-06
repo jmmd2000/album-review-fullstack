@@ -27,5 +27,5 @@ export function heroBackground(colours: ExtractedColor[], ink: string): string {
     const deep = `color-mix(in srgb, ${hex} 35%, #000)`;
     return `linear-gradient(135deg, ${light} 0%, ${hex} 30%, ${dark} 70%, ${deep} 100%)`;
   }
-  return "var(--nav-bg)";
+  return "var(--colour-background)";
 }

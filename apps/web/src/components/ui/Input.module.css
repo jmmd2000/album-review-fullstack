@@ -1,20 +1,20 @@
 .input {
   height: 42px;
   background: transparent;
-  border: var(--bw-card) solid var(--ink);
-  color: var(--ink);
+  border: var(--border-thick) solid var(--colour-foreground);
+  color: var(--colour-foreground);
   font-family: inherit;
   font-size: 14px;
-  font-weight: var(--fw-label);
+  font-weight: var(--font-weight-label);
   padding: 0 12px;
   outline: none;
   transition:
-    background var(--duration-reveal) var(--ease),
-    color var(--duration-reveal) var(--ease);
+    background var(--duration-quick) var(--ease-out),
+    color var(--duration-quick) var(--ease-out);
 
   &:focus {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--colour-foreground);
+    color: var(--colour-background);
   }
 
   /* currentColor so the hint stays legible through the focus invert */

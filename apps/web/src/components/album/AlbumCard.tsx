@@ -16,7 +16,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
     <Link to={hasScore ? "/albums/$albumID" : "/albums/$albumID/create"} params={{ albumID: album.spotifyID }} className={styles.card}>
       {image && <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt={`${album.name} by ${album.artistName}`} width={image.width} height={image.height} loading="lazy" />}
       {hasScore && (
-        <span className={styles.chip} style={{ backgroundColor: `var(--tier-${scoreTier(album.finalScore).toLowerCase()})` }}>
+        <span className={styles.chip} style={{ backgroundColor: `var(--colour-tier-${scoreTier(album.finalScore).toLowerCase()})` }}>
           {Math.ceil(album.finalScore!)}
         </span>
       )}

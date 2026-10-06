@@ -1,4 +1,5 @@
-@import "@fontsource-variable/archivo";
+@import "@fontsource-variable/funnel-display";
+@import "@fontsource-variable/funnel-sans";
 @import "./tokens.css";
 @import "./reset.css";
 
@@ -7,13 +8,27 @@ html {
 }
 
 body {
-  font-family: var(--font-sans);
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--colour-background);
+  color: var(--colour-foreground);
+  font-family: var(--font-body);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-:where(button, input, select, textarea):focus-visible {
-  outline: var(--bw-card) solid currentColor;
-  outline-offset: 2px;
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-display);
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: var(--border-thick) solid var(--colour-foreground);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
