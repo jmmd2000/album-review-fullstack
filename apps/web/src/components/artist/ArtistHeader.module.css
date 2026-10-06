@@ -1,0 +1,50 @@
+.banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  max-height: 70svh;
+  object-fit: cover;
+  object-position: center 30%;
+  mask-image: linear-gradient(to bottom, black 0%, black 74%, rgb(0 0 0 / 0.82) 83%, rgb(0 0 0 / 0.46) 91%, rgb(0 0 0 / 0.14) 97%, transparent 100%);
+}
+
+.head {
+  position: relative;
+  display: flex;
+  align-items: end;
+  gap: clamp(16px, 2.4vw, 32px);
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 56px) var(--page-gutter) 0;
+
+  @media (width < 560px) {
+    align-items: center;
+  }
+}
+
+.overBanner {
+  margin-top: clamp(-180px, -11vw, -56px);
+  padding-top: 0;
+}
+
+.photo {
+  flex: none;
+  width: clamp(96px, 12vw, 190px);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 5px var(--colour-background),
+    0 20px 40px oklch(0 0 0 / 0.4);
+}
+
+.name {
+  min-width: 0;
+  font-size: clamp(3rem, 8.6vw, 8.4rem);
+  font-weight: 650;
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}

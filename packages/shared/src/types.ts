@@ -318,7 +318,7 @@ export interface DisplayAlbum {
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
   scoredTracks?: string;
-  /** Colours picked from the cover. Only the album list sends them, for the card's hover shadow */
+  /** Colours picked from the cover, for the card's hover shadow */
   colors?: ExtractedColor[];
 }
 

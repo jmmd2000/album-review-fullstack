@@ -1,10 +1,16 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { ArtistHeader } from "@/components/artist/ArtistHeader";
+import { ArtistStanding } from "@/components/artist/ArtistStanding";
+import { AlbumCard } from "@/components/album/AlbumCard";
+import { CardGrid } from "@/components/ui/CardGrid";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { RouteError } from "@/components/ui/RouteError";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import styles from "./index.module.css";
 
 async function fetchReviewedArtist(artistSpotifyID: string) {
   return handle(client.api.artists.details[":artistID"].$get({ param: { artistID: artistSpotifyID } }));
@@ -50,25 +56,33 @@ function RouteComponent() {
   }
 
   const { data } = useSuspenseQuery(artistQueryOptions(artistID));
-  const { artist, albums, tracks } = data;
+  const { artist, albums, featuredAlbums, tracks, rankedArtistCount } = data;
+  const ratedTrackCount = tracks.filter(track => track.rating != null && track.rating > 0).length;
 
   return (
-    <>
-      <h1>{artist.name}</h1>
-      <p>
-        {artist.unrated ? "Unrated" : `Rank #${artist.leaderboardPosition}, scored ${Math.ceil(artist.totalScore)} out of 100`}. {albums.length} {albums.length === 1 ? "album" : "albums"},{" "}
-        {tracks.length} tracks rated.
-      </p>
-      <ul>
-        {albums.map(album => (
-          <li key={album.spotifyID}>
-            <Link to={album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create"} params={{ albumID: album.spotifyID }}>
-              {album.name}
-            </Link>{" "}
-            {album.finalScore != null ? album.finalScore : "unreviewed"}
-          </li>
-        ))}
-      </ul>
-    </>
+    <div className={styles.page}>
+      <ArtistHeader name={artist.name} headerImage={artist.headerImage} images={artist.imageURLs} />
+      <ArtistStanding artist={artist} rankedArtistCount={rankedArtistCount} albumCount={albums.length} ratedTrackCount={ratedTrackCount} />
+
+      <section className={styles.section}>
+        <SectionHeader title="Albums" aside="Newest first" />
+        <CardGrid>
+          {albums.map(album => (
+            <AlbumCard key={album.spotifyID} album={album} subtitle={String(album.releaseYear)} />
+          ))}
+        </CardGrid>
+      </section>
+
+      {featuredAlbums.length > 0 && (
+        <section className={styles.section}>
+          <SectionHeader title="Featured on" />
+          <CardGrid>
+            {featuredAlbums.map(album => (
+              <AlbumCard key={album.spotifyID} album={album} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
+    </div>
   );
 }

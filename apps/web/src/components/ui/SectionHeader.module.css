@@ -1,0 +1,26 @@
+.shell {
+  width: 100%;
+  max-width: var(--page-width);
+  margin: 0 auto 28px;
+  padding-inline: var(--page-gutter);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+  padding-bottom: 14px;
+  border-bottom: var(--border-thin) solid var(--colour-divider);
+}
+
+.title {
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+  font-weight: var(--font-weight-label);
+  letter-spacing: -0.015em;
+}
+
+.aside {
+  color: var(--colour-text-muted);
+}
