@@ -329,8 +329,13 @@ export class ArtistService {
       artistSpotifyIDs: artistIDMap.get(album.spotifyID) ?? [],
     }));
 
-    const tracks = await TrackModel.getTracksByArtist(artistID);
-    const albumsByID = new Map([...albumsWithArtists, ...featuredWithArtists].map(album => [album.spotifyID, album]));
+    const allAlbumsNewestFirst = [...albumsWithArtists, ...featuredWithArtists].sort(sortByDateDesc);
+    const albumsByID = new Map(allAlbumsNewestFirst.map(album => [album.spotifyID, album]));
+    const albumPositions = new Map(allAlbumsNewestFirst.map((album, index) => [album.spotifyID, index]));
+    const albumPosition = (albumSpotifyID: string) => albumPositions.get(albumSpotifyID) ?? albumPositions.size;
+
+    // The sort is stable, so each album's tracks stay in album order
+    const tracks = (await TrackModel.getTracksByArtist(artistID)).sort((a, b) => albumPosition(a.albumSpotifyID) - albumPosition(b.albumSpotifyID));
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
       spotifyID: track.spotifyID,

@@ -5,8 +5,12 @@ import { db, type Executor } from "@/db/client";
 import type { ReviewedTrack } from "@shared/types";
 
 export class TrackModel {
+  /**
+   * The album's tracks in album order. A review saves its tracks in album order, so the IDs follow it.
+   * The created times can't: tracks saved in one transaction all get the same time.
+   */
   static async getTracksByAlbumID(albumID: string) {
-    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.createdAt));
+    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.id));
   }
 
   static async deleteTracksByAlbumID(albumID: string, executor: Executor = db) {
@@ -36,13 +40,18 @@ export class TrackModel {
       .then(r => r[0].count);
   }
 
+  /** The artist's tracks, each album's tracks in album order. The albums come in the order they were reviewed. */
   static async getTracksByArtist(artistID: string) {
-    const rows = await db.select().from(reviewedTracks).innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)).where(eq(trackArtists.artistSpotifyID, artistID));
+    const rows = await db
+      .select()
+      .from(reviewedTracks)
+      .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
+      .where(eq(trackArtists.artistSpotifyID, artistID))
+      .orderBy(asc(reviewedTracks.id));
     return rows.map(r => r.reviewed_tracks);
   }
 
   static async getTracksFeaturingArtist(artistID: string) {
-    // Match tracks where features array contains the artist ID
     const filter = JSON.stringify([{ id: artistID }]);
     return db
       .select()

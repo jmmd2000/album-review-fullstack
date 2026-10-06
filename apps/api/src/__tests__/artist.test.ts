@@ -76,3 +76,27 @@ test("artist details count only rated artists as ranked", async () => {
   const body = await (await api.get(`/api/artists/details/${artistID}`)).json();
   expect(body.rankedArtistCount).toBe(1);
 });
+
+test("artist details list tracks newest album first, each album in album order", async () => {
+  await api.post("/api/albums/create", mockReviewData, authCookie);
+
+  // A newer album with its own track IDs, created second so the save order isn't the release order
+  const newerTrackID = (id: string) => `${id}-newer`;
+  const newerAlbum = {
+    ...mockReviewData,
+    album: {
+      ...mockReviewData.album,
+      id: "7fRrTyKvE4Skh93v97gtcU",
+      name: "Newer Album",
+      release_date: "2024-05-17",
+      tracks: { ...mockReviewData.album.tracks, items: mockReviewData.album.tracks.items.map(item => ({ ...item, id: newerTrackID(item.id) })) },
+    },
+    ratedTracks: mockReviewData.ratedTracks.map(track => ({ ...track, spotifyID: newerTrackID(track.spotifyID) })),
+  };
+  const create = await api.post("/api/albums/create", newerAlbum, authCookie);
+  expect(create.status).toBe(201);
+
+  const body = await (await api.get(`/api/artists/details/${artistID}`)).json();
+  const expected = [...newerAlbum.ratedTracks, ...mockReviewData.ratedTracks].map(track => track.spotifyID);
+  expect(body.tracks.map((track: DisplayTrack) => track.spotifyID)).toEqual(expected);
+});
