@@ -18,11 +18,11 @@ export function SearchForm({ label, defaultValue, onSearch }: SearchFormProps) {
       role="search"
       onSubmit={event => {
         event.preventDefault();
-        onSearch(new FormData(event.currentTarget).get("query")?.toString() ?? "");
+        onSearch(new FormData(event.currentTarget).get("search")?.toString() ?? "");
       }}
     >
       <Input
-        name="query"
+        name="search"
         type="search"
         defaultValue={defaultValue}
         aria-label={label}

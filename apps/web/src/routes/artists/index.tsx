@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
@@ -23,10 +24,18 @@ import type { SortOption } from "@/components/ui/SortTabs";
 import type { Separator } from "@/lib/separators";
 import { PAGE_SIZE } from "@shared/constants";
 
-interface ArtistsSearch extends GetPaginatedArtistsOptions {
-  /** "off" hides the separator tiles. It only changes the page, so it isn't sent to the API */
-  groups?: "off";
-}
+// Values left at these stay out of the URL
+const defaultSearch = { page: 1, search: "", orderBy: "totalScore", order: "desc", groups: "on" } as const;
+
+/** The URL's search params. */
+const artistsSearchSchema = z.object({
+  page: z.coerce.number().int().positive().default(defaultSearch.page).catch(defaultSearch.page),
+  search: z.coerce.string().default(defaultSearch.search).catch(defaultSearch.search),
+  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
+  order: z.enum(["asc", "desc"]).default(defaultSearch.order).catch(defaultSearch.order),
+  // "off" hides the separator tiles. It only changes the page, so it isn't sent to the API
+  groups: z.enum(["on", "off"]).default(defaultSearch.groups).catch(defaultSearch.groups),
+});
 
 const sortOptions: SortOption[] = [
   { label: "Score", value: "totalScore", direction: "desc" },
@@ -58,24 +67,9 @@ const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
 
 export const Route = createFileRoute("/artists/")({
   ssr: true,
-  validateSearch: (search: Record<string, unknown>): ArtistsSearch => {
-    const result: ArtistsSearch = {
-      page: Number(search.page) || 1,
-      search: (search.search as string) || "",
-      orderBy: (search.orderBy as GetPaginatedArtistsOptions["orderBy"]) || "totalScore",
-      order: (search.order as GetPaginatedArtistsOptions["order"]) || "desc",
-      groups: search.groups === "off" ? "off" : undefined,
-    };
-
-    if (result.page === 1) delete result.page;
-    if (result.search === "") delete result.search;
-    if (result.orderBy === "totalScore") delete result.orderBy;
-    if (result.order === "desc") delete result.order;
-    if (!result.groups) delete result.groups;
-
-    return result;
-  },
-  loaderDeps: ({ search }: { search: ArtistsSearch }) => ({
+  validateSearch: artistsSearchSchema,
+  search: { middlewares: [stripSearchParams(defaultSearch)] },
+  loaderDeps: ({ search }) => ({
     page: search.page,
     search: search.search,
     orderBy: search.orderBy,
@@ -136,17 +130,16 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(artistQueryOptions(Route.useLoaderDeps()));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { search } = useListControls<GetPaginatedArtistsOptions>({ navigate });
-  const orderBy = options.orderBy ?? "totalScore";
-  const order = options.order ?? "desc";
-  const firstPosition = ((options.page ?? 1) - 1) * PAGE_SIZE;
+  const { search } = useListControls({ navigate });
+  const { orderBy, order } = options;
+  const firstPosition = (options.page - 1) * PAGE_SIZE;
   const showPosition = isRankingSort(orderBy);
-  const showTiles = isGroupedSort(orderBy) && options.groups !== "off";
+  const showTiles = isGroupedSort(orderBy) && options.groups === "on";
 
   return (
     <>
       <PageHeader title="Artists" count={data.totalCount}>
-        <SearchForm label="Search artists" defaultValue={options.search ?? ""} onSearch={search} />
+        <SearchForm label="Search artists" defaultValue={options.search} onSearch={search} />
         <SortTabs
           options={sortOptions}
           value={orderBy}
@@ -155,14 +148,14 @@ function RouteComponent() {
             navigate({
               search: prev => ({
                 ...prev,
-                orderBy: value as GetPaginatedArtistsOptions["orderBy"],
+                orderBy: value as typeof orderBy,
                 order: direction,
                 page: undefined,
               }),
             });
           }}
         />
-        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? undefined : "off" }) })} />}
+        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
       </PageHeader>
       {data.artists.length === 0 ? (
         <PageState title="No artists found" detail="Try a different search." />
@@ -183,7 +176,7 @@ function RouteComponent() {
               </Fragment>
             ))}
           </CardGrid>
-          <Pagination page={options.page ?? 1} totalCount={data.totalCount} />
+          <Pagination page={options.page} totalCount={data.totalCount} />
         </>
       )}
     </>

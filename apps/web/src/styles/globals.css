@@ -3,10 +3,6 @@
 @import "./tokens.css";
 @import "./reset.css";
 
-html {
-  font-size: clamp(1rem, 0.347vw + 0.584rem, 1.25rem);
-}
-
 body {
   background: var(--colour-background);
   color: var(--colour-foreground);

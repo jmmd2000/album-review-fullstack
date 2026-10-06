@@ -69,7 +69,7 @@ export function AlbumHero({ album, artists, genres, canEdit }: AlbumHeroProps) {
           {genres.length > 0 && (
             <div className={styles.genres}>
               {genres.map(genre => (
-                <Link key={genre.slug} to="/albums" search={{ genres: [genre.slug] }} className={styles.genre}>
+                <Link key={genre.slug} to="/albums" search={{ genres: genre.slug }} className={styles.genre}>
                   {genre.name}
                 </Link>
               ))}

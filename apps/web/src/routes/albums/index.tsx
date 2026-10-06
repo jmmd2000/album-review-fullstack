@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
@@ -23,10 +24,23 @@ import type { DisplayAlbum, GetPaginatedAlbumsOptions } from "@shared/types";
 import type { Separator } from "@/lib/separators";
 import type { SortOption } from "@/components/ui/SortTabs";
 
-interface AlbumsSearch extends GetPaginatedAlbumsOptions {
-  /** "off" hides the separator tiles. It only changes the page, so it isn't sent to the API */
-  groups?: "off";
-}
+// Values left at these stay out of the URL
+const defaultSearch = { page: 1, search: "", orderBy: "createdAt", order: "desc", genres: "", groups: "on" } as const;
+
+/** The URL's search params. A missing or invalid value falls back to its default rather than reaching the API */
+const albumsSearchSchema = z.object({
+  page: z.coerce.number().int().positive().default(defaultSearch.page).catch(defaultSearch.page),
+  search: z.coerce.string().default(defaultSearch.search).catch(defaultSearch.search),
+  orderBy: z.enum(["createdAt", "finalScore", "releaseYear", "name"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
+  order: z.enum(["asc", "desc"]).default(defaultSearch.order).catch(defaultSearch.order),
+  // Genre slugs joined with commas. Older links wrote them as an array, so that's read too
+  genres: z
+    .preprocess(value => (Array.isArray(value) ? value.join(",") : value), z.string())
+    .default(defaultSearch.genres)
+    .catch(defaultSearch.genres),
+  // "off" hides the separator tiles. It only changes the page, so it isn't sent to the API
+  groups: z.enum(["on", "off"]).default(defaultSearch.groups).catch(defaultSearch.groups),
+});
 
 const sortOptions: SortOption[] = [
   { label: "Newest", value: "createdAt", direction: "desc" },
@@ -60,40 +74,14 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
 
 export const Route = createFileRoute("/albums/")({
   ssr: true,
-  validateSearch: (search: Record<string, unknown>): AlbumsSearch => {
-    const rawGenres = search.genres;
-    const genres = Array.isArray(rawGenres) ? (rawGenres as string[]) : typeof rawGenres === "string" && rawGenres !== "" ? rawGenres.split(",") : [];
-
-    const result: AlbumsSearch = {
-      page: Number(search.page) || 1,
-      search: (search.search as string) || "",
-      orderBy: (search.orderBy as GetPaginatedAlbumsOptions["orderBy"]) || "createdAt",
-      order: (search.order as GetPaginatedAlbumsOptions["order"]) || "desc",
-      genres,
-      secondaryOrderBy: search.secondaryOrderBy as GetPaginatedAlbumsOptions["secondaryOrderBy"],
-      secondaryOrder: search.secondaryOrder as GetPaginatedAlbumsOptions["secondaryOrder"],
-      groups: search.groups === "off" ? "off" : undefined,
-    };
-
-    if (result.page === 1) delete result.page;
-    if (result.search === "") delete result.search;
-    if (result.orderBy === "createdAt") delete result.orderBy;
-    if (result.order === "desc") delete result.order;
-    if (genres.length === 0) delete result.genres;
-    if (!result.secondaryOrderBy) delete result.secondaryOrderBy;
-    if (!result.secondaryOrder) delete result.secondaryOrder;
-    if (!result.groups) delete result.groups;
-
-    return result;
-  },
+  validateSearch: albumsSearchSchema,
+  search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => ({
     page: search.page,
     search: search.search,
     orderBy: search.orderBy,
     order: search.order,
-    genres: search.genres,
-    secondaryOrderBy: search.secondaryOrderBy,
-    secondaryOrder: search.secondaryOrder,
+    genres: search.genres === "" ? [] : search.genres.split(","),
   }),
   loader: async ({ deps, context }) => {
     return context.queryClient.ensureQueryData(albumQueryOptions(deps));
@@ -128,19 +116,19 @@ function albumSeparator(album: DisplayAlbum, orderBy: GetPaginatedAlbumsOptions[
 
 function RouteComponent() {
   const options = Route.useSearch();
-  const { data } = useSuspenseQuery(albumQueryOptions(Route.useLoaderDeps()));
+  const deps = Route.useLoaderDeps();
+  const { data } = useSuspenseQuery(albumQueryOptions(deps));
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const { search } = useListControls<GetPaginatedAlbumsOptions>({ navigate });
+  const { search } = useListControls({ navigate });
 
-  const orderBy = options.orderBy ?? "createdAt";
-  const order = options.order ?? "desc";
-  const showTiles = isGroupedSort(orderBy) && options.groups !== "off";
+  const { orderBy, order } = options;
+  const showTiles = isGroupedSort(orderBy) && options.groups === "on";
 
   return (
     <>
       <PageHeader title="Albums" count={data.totalCount}>
-        <SearchForm label="Search albums" defaultValue={options.search ?? ""} onSearch={search} />
+        <SearchForm label="Search albums" defaultValue={options.search} onSearch={search} />
         <SortTabs
           options={sortOptions}
           value={orderBy}
@@ -149,22 +137,22 @@ function RouteComponent() {
             navigate({
               search: prev => ({
                 ...prev,
-                orderBy: value as GetPaginatedAlbumsOptions["orderBy"],
+                orderBy: value as typeof orderBy,
                 order: direction,
                 page: undefined,
               }),
             });
           }}
         />
-        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? undefined : "off" }) })} />}
+        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
         <GenreSelect
           genres={data.genres}
-          selected={options.genres ?? []}
+          selected={deps.genres}
           onChange={slugs => {
             navigate({
               search: prev => ({
                 ...prev,
-                genres: slugs.length > 0 ? slugs : undefined,
+                genres: slugs.join(","),
                 page: undefined,
               }),
             });
@@ -185,7 +173,7 @@ function RouteComponent() {
               </Fragment>
             ))}
           </CardGrid>
-          <Pagination page={options.page ?? 1} totalCount={data.totalCount} />
+          <Pagination page={options.page} totalCount={data.totalCount} />
         </>
       )}
     </>
