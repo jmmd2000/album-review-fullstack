@@ -55,6 +55,7 @@ services:
       CLIENT_ORIGIN: ${CLIENT_ORIGIN}
       BROWSERLESS_URL: ws://browserless:3000
       BROWSERLESS_TOKEN: ${BROWSERLESS_TOKEN}
+      SCHEDULED_REFRESH: ${SCHEDULED_REFRESH:-false}
       NODE_ENV: production
     depends_on:
       db:

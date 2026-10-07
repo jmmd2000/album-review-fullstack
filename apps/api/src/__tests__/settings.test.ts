@@ -101,3 +101,18 @@ test("build info reports the running versions", async () => {
   expect(info.versions.packages.hono).toMatch(/^\d+\./);
   expect(info.versions.packages["drizzle-orm"]).toMatch(/^\d+\./);
 });
+
+test("the refresh interval is 7 days until one is saved, and a bad stored value falls back to 7", async () => {
+  expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+
+  await SettingsService.set("artist_refresh_interval_days", "14");
+  expect(await SettingsService.getRefreshIntervalDays()).toBe(14);
+
+  await SettingsService.set("artist_refresh_interval_days", "0");
+  expect(await SettingsService.getRefreshIntervalDays()).toBe(0);
+
+  for (const bad of ["soon", "-3", "2.5"]) {
+    await SettingsService.set("artist_refresh_interval_days", bad);
+    expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+  }
+});

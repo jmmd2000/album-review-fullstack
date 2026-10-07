@@ -1,6 +1,9 @@
 import { SettingsModel } from "@/api/models/Settings";
 import { AppError } from "@/api/AppError";
 
+const REFRESH_INTERVAL_KEY = "artist_refresh_interval_days";
+const DEFAULT_REFRESH_INTERVAL_DAYS = 7;
+
 export class SettingsService {
   static async get(key: string): Promise<string | null> {
     const result = await SettingsModel.findByKey(key);
@@ -18,6 +21,14 @@ export class SettingsService {
     }
     const result = await this.get(`artist_${type}_last_run`);
     return result ? new Date(result) : null;
+  }
+
+  /** Gets how many days the scheduled artist refresh waits between runs. 0 means the schedule is off. */
+  static async getRefreshIntervalDays(): Promise<number> {
+    const stored = await this.get(REFRESH_INTERVAL_KEY);
+    if (stored === null) return DEFAULT_REFRESH_INTERVAL_DAYS;
+    const days = Number(stored);
+    return Number.isInteger(days) && days >= 0 ? days : DEFAULT_REFRESH_INTERVAL_DAYS;
   }
 
   static async getAllLastRuns(): Promise<Record<string, Date | null>> {
