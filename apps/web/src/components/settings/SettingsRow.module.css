@@ -37,7 +37,9 @@
   text-wrap: pretty;
 }
 
-.lastRun {
+.details {
+  display: grid;
+  gap: 2px;
   margin-top: 4px;
   color: var(--colour-text-muted);
   font-size: 0.875rem;

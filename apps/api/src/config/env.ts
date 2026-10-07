@@ -16,6 +16,13 @@ function requireSecret(key: string, minLength: number): string {
   return value;
 }
 
+function optionalFlag(key: string): boolean {
+  const value = process.env[key];
+  if (value === undefined || value === "" || value === "false") return false;
+  if (value === "true") return true;
+  throw new Error(`Environment variable ${key} must be "true" or "false"`);
+}
+
 export const env = {
   DATABASE_URL: requireEnv("DATABASE_URL"),
   ADMIN_PASSWORD_HASH: requireEnv("ADMIN_PASSWORD_HASH"),
@@ -27,4 +34,6 @@ export const env = {
   // Browserless sidecar for the header scraper.
   BROWSERLESS_URL: process.env.BROWSERLESS_URL ?? "ws://localhost:3000",
   BROWSERLESS_TOKEN: process.env.BROWSERLESS_TOKEN ?? "dev-token",
+  // Only production sets this. Staging restores the production database, so the settings table can't keep it off there.
+  SCHEDULED_REFRESH: optionalFlag("SCHEDULED_REFRESH"),
 };

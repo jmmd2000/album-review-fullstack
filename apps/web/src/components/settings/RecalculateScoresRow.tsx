@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { describeLastRun } from "@/lib/jobStatus";
+import { Button } from "@/components/ui/Button";
 import { SettingsRow } from "@/components/settings/SettingsRow";
 import { ResultDetails } from "@/components/settings/ResultDetails";
 import styles from "./RecalculateScoresRow.module.css";
@@ -50,10 +52,12 @@ export function RecalculateScoresRow({ lastRun }: { lastRun: string | null }) {
     <SettingsRow
       title="Artist scores"
       description="Works out every artist's scores and ranks again from their reviews."
-      lastRun={lastRun}
-      actionLabel="Recalculate"
-      onAction={() => recalculation.mutate()}
-      isRunning={recalculation.isPending}
+      details={[describeLastRun(lastRun, recalculation.isPending)]}
+      action={
+        <Button onClick={() => recalculation.mutate()} disabled={recalculation.isPending}>
+          {recalculation.isPending ? "Running…" : "Recalculate"}
+        </Button>
+      }
     >
       {recalculation.isError && (
         <p className={styles.error} role="alert">

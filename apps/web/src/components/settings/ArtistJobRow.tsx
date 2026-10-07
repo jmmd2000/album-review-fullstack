@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import { summariseArtistJob, useArtistJob } from "@/hooks/useArtistJob";
+import { describeJobResult, describeLastRun } from "@/lib/jobStatus";
+import { Button } from "@/components/ui/Button";
 import { SettingsRow } from "@/components/settings/SettingsRow";
 import { ResultDetails } from "@/components/settings/ResultDetails";
 import styles from "./ArtistJobRow.module.css";
 
 import type { Progress } from "@shared/types";
 import type { ArtistJob, ArtistJobState } from "@/hooks/useArtistJob";
+import type { ArtistJobResult } from "@/lib/jobStatus";
 
 interface ArtistJobRowProps {
   job: ArtistJob;
@@ -14,14 +17,28 @@ interface ArtistJobRowProps {
   description: string;
   actionLabel: string;
   lastRun: string | null;
+  /** How the latest run went, or null if the api has no record of one */
+  result: ArtistJobResult | null;
 }
 
 /** A settings row for a job that goes through every artist, with live progress and then the results. */
-export function ArtistJobRow({ job, title, description, actionLabel, lastRun }: ArtistJobRowProps) {
+export function ArtistJobRow({ job, title, description, actionLabel, lastRun, result }: ArtistJobRowProps) {
   const { state, start } = useArtistJob(job);
+  const isRunning = state.status === "running";
+  const details = [describeLastRun(lastRun, isRunning)];
+  if (result && !isRunning) details.push(describeJobResult(result));
 
   return (
-    <SettingsRow title={title} description={description} lastRun={lastRun} actionLabel={actionLabel} onAction={start} isRunning={state.status === "running"}>
+    <SettingsRow
+      title={title}
+      description={description}
+      details={details}
+      action={
+        <Button onClick={start} disabled={isRunning}>
+          {isRunning ? "Running…" : actionLabel}
+        </Button>
+      }
+    >
       {state.status === "running" && <JobProgress current={state.current} />}
       {state.status === "finished" && <JobResults state={state} imageKind={job === "artist-images" ? "photo" : "header"} />}
     </SettingsRow>
