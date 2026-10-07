@@ -51,47 +51,52 @@ describe("Artist Leaderboard Position Updates", () => {
     artist1Data.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist1", name: "Artist 1" }];
     artist1Data.ratedTracks = artist1Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_lb_1_${index}`,
+      spotifyID: `unique_track_lb_1_${index}`,
       rating: 9,
     })); // High scores
-    // Also update the tracks.items array
-    artist1Data.album.tracks.items = artist1Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_lb_1_${index}`,
-    }));
+    artist1Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_lb_1_${index}`,
+      })),
+    };
 
     const artist2Data = { ...mockReviewData, affectsArtistScore: true };
     artist2Data.album = { ...mockReviewData.album, id: "unique_album_lb_2" };
     artist2Data.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist2", name: "Artist 2" }];
     artist2Data.ratedTracks = artist2Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_lb_2_${index}`,
+      spotifyID: `unique_track_lb_2_${index}`,
       rating: 7,
     })); // Medium scores
-    // Also update the tracks.items array
-    artist2Data.album.tracks.items = artist2Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_lb_2_${index}`,
-    }));
+    artist2Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_lb_2_${index}`,
+      })),
+    };
 
     const artist3Data = { ...mockReviewData, affectsArtistScore: true };
     artist3Data.album = { ...mockReviewData.album, id: "unique_album_lb_3" };
     artist3Data.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist3", name: "Artist 3" }];
     artist3Data.ratedTracks = artist3Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_lb_3_${index}`,
+      spotifyID: `unique_track_lb_3_${index}`,
       rating: 5,
     })); // Low scores
-    // Also update the tracks.items array
-    artist3Data.album.tracks.items = artist3Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_lb_3_${index}`,
-    }));
+    artist3Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_lb_3_${index}`,
+      })),
+    };
 
-    // Create the artists
-    await api.post("/api/albums/create", artist1Data, authCookie);
-    await api.post("/api/albums/create", artist2Data, authCookie);
-    await api.post("/api/albums/create", artist3Data, authCookie);
+    for (const albumData of [artist1Data, artist2Data, artist3Data]) {
+      expect((await api.post("/api/albums/create", albumData, authCookie)).status).toBe(201);
+    }
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -124,32 +129,36 @@ describe("Artist Leaderboard Position Updates", () => {
     artist1Data.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist1", name: "Artist 1" }];
     artist1Data.ratedTracks = artist1Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_tie_1_${index}`,
+      spotifyID: `unique_track_tie_1_${index}`,
       rating: 8,
     }));
-    // Also update the tracks.items array
-    artist1Data.album.tracks.items = artist1Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_tie_1_${index}`,
-    }));
+    artist1Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_tie_1_${index}`,
+      })),
+    };
 
     const artist2Data = { ...mockReviewData, affectsArtistScore: true };
     artist2Data.album = { ...mockReviewData.album, id: "unique_album_tie_2" };
     artist2Data.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist2", name: "Artist 2" }];
     artist2Data.ratedTracks = artist2Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_tie_2_${index}`,
+      spotifyID: `unique_track_tie_2_${index}`,
       rating: 8,
     }));
-    // Also update the tracks.items array
-    artist2Data.album.tracks.items = artist2Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_tie_2_${index}`,
-    }));
+    artist2Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_tie_2_${index}`,
+      })),
+    };
 
-    // Create the artists
-    await api.post("/api/albums/create", artist1Data, authCookie);
-    await api.post("/api/albums/create", artist2Data, authCookie);
+    for (const albumData of [artist1Data, artist2Data]) {
+      expect((await api.post("/api/albums/create", albumData, authCookie)).status).toBe(201);
+    }
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -181,14 +190,16 @@ describe("Artist Leaderboard Position Updates", () => {
     ];
     ratedArtistData.ratedTracks = ratedArtistData.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_rated_${index}`,
+      spotifyID: `unique_track_rated_${index}`,
       rating: 8,
     }));
-    // Also update the tracks.items array
-    ratedArtistData.album.tracks.items = ratedArtistData.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_rated_${index}`,
-    }));
+    ratedArtistData.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_rated_${index}`,
+      })),
+    };
 
     const unratedArtistData = { ...mockReviewData, affectsArtistScore: false };
     unratedArtistData.album = {
@@ -204,18 +215,20 @@ describe("Artist Leaderboard Position Updates", () => {
     ];
     unratedArtistData.ratedTracks = unratedArtistData.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_unrated_${index}`,
+      spotifyID: `unique_track_unrated_${index}`,
       rating: 0,
     })); // Unrated
-    // Also update the tracks.items array
-    unratedArtistData.album.tracks.items = unratedArtistData.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_unrated_${index}`,
-    }));
+    unratedArtistData.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_unrated_${index}`,
+      })),
+    };
 
-    // Create the artists
-    await api.post("/api/albums/create", ratedArtistData, authCookie);
-    await api.post("/api/albums/create", unratedArtistData, authCookie);
+    for (const albumData of [ratedArtistData, unratedArtistData]) {
+      expect((await api.post("/api/albums/create", albumData, authCookie)).status).toBe(201);
+    }
 
     // Update all leaderboard positions
     await ArtistService.updateAllLeaderboardPositions();
@@ -269,13 +282,16 @@ describe("Artist Score Calculation Integration", () => {
     album1Data.album.release_date = "2020-01-01";
     album1Data.ratedTracks = album1Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_integration_1_${index}`,
+      spotifyID: `unique_track_integration_1_${index}`,
       rating: 9,
     })); // High scores
-    album1Data.album.tracks.items = album1Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_integration_1_${index}`,
-    }));
+    album1Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_integration_1_${index}`,
+      })),
+    };
 
     const album2Data = { ...mockReviewData, affectsArtistScore: true };
     album2Data.album = {
@@ -293,13 +309,16 @@ describe("Artist Score Calculation Integration", () => {
     album2Data.album.release_date = "2021-01-01";
     album2Data.ratedTracks = album2Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_integration_2_${index}`,
+      spotifyID: `unique_track_integration_2_${index}`,
       rating: 7,
     })); // Medium scores
-    album2Data.album.tracks.items = album2Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_integration_2_${index}`,
-    }));
+    album2Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_integration_2_${index}`,
+      })),
+    };
 
     const album3Data = { ...mockReviewData, affectsArtistScore: true };
     album3Data.album = {
@@ -317,13 +336,16 @@ describe("Artist Score Calculation Integration", () => {
     album3Data.album.release_date = "2022-01-01";
     album3Data.ratedTracks = album3Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_integration_3_${index}`,
+      spotifyID: `unique_track_integration_3_${index}`,
       rating: 5,
     })); // Low scores
-    album3Data.album.tracks.items = album3Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_integration_3_${index}`,
-    }));
+    album3Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_integration_3_${index}`,
+      })),
+    };
 
     // Add a 4th album to make peak and latest scores different
     const album4Data = { ...mockReviewData, affectsArtistScore: true };
@@ -342,79 +364,30 @@ describe("Artist Score Calculation Integration", () => {
     album4Data.album.release_date = "2019-01-01"; // Older than others
     album4Data.ratedTracks = album4Data.ratedTracks.map((track, index) => ({
       ...track,
-      id: `unique_track_integration_4_${index}`,
+      spotifyID: `unique_track_integration_4_${index}`,
       rating: 8, // High score but older
     }));
-    album4Data.album.tracks.items = album4Data.album.tracks.items.map((track, index) => ({
-      ...track,
-      id: `unique_track_integration_4_${index}`,
-    }));
+    album4Data.album.tracks = {
+      ...mockReviewData.album.tracks,
+      items: mockReviewData.album.tracks.items.map((track, index) => ({
+        ...track,
+        id: `unique_track_integration_4_${index}`,
+      })),
+    };
 
-    // Create the albums
-    await api.post("/api/albums/create", album1Data, authCookie);
-    await api.post("/api/albums/create", album2Data, authCookie);
-    await api.post("/api/albums/create", album3Data, authCookie);
-    await api.post("/api/albums/create", album4Data, authCookie);
+    for (const albumData of [album1Data, album2Data, album3Data, album4Data]) {
+      expect((await api.post("/api/albums/create", albumData, authCookie)).status).toBe(201);
+    }
 
     // Get the artist details
     const response = await api.get("/api/artists/test_artist");
     const artist: ReviewedArtist = await response.json();
 
     expect(response.status).toBe(200);
-    expect(artist.peakScore).toBeGreaterThan(0);
-    expect(artist.latestScore).toBeGreaterThan(0);
-    expect(artist.totalScore).toBeGreaterThan(0);
-
-    // Peak score should be higher than latest score (top 3 vs latest 3)
-    expect(artist.peakScore).toBeGreaterThan(artist.latestScore);
-  });
-
-  test("should have identical scores for artist with exactly 3 albums", async () => {
-    // Create an artist with exactly 3 albums
-    const album1Data = { ...mockReviewData };
-    album1Data.album.artists[0].id = "three_album_artist";
-    album1Data.album.artists[0].name = "Three Album Artist";
-    album1Data.album.name = "Album 1";
-    album1Data.album.release_date = "2020-01-01";
-    album1Data.ratedTracks = album1Data.ratedTracks.map(track => ({
-      ...track,
-      rating: 8,
-    }));
-
-    const album2Data = { ...mockReviewData };
-    album2Data.album.artists[0].id = "three_album_artist";
-    album2Data.album.artists[0].name = "Three Album Artist";
-    album2Data.album.name = "Album 2";
-    album2Data.album.release_date = "2021-01-01";
-    album2Data.ratedTracks = album2Data.ratedTracks.map(track => ({
-      ...track,
-      rating: 7,
-    }));
-
-    const album3Data = { ...mockReviewData };
-    album3Data.album.artists[0].id = "three_album_artist";
-    album3Data.album.artists[0].name = "Three Album Artist";
-    album3Data.album.name = "Album 3";
-    album3Data.album.release_date = "2022-01-01";
-    album3Data.ratedTracks = album3Data.ratedTracks.map(track => ({
-      ...track,
-      rating: 6,
-    }));
-
-    // Create the albums
-    await api.post("/api/albums/create", album1Data, authCookie);
-    await api.post("/api/albums/create", album2Data, authCookie);
-    await api.post("/api/albums/create", album3Data, authCookie);
-
-    // Get the artist details
-    const response = await api.get("/api/artists/three_album_artist");
-    const artist: ReviewedArtist = await response.json();
-
-    expect(response.status).toBe(200);
-
-    // For exactly 3 albums, all scores should be identical
-    expect(artist.totalScore).toBe(artist.peakScore);
-    expect(artist.peakScore).toBe(artist.latestScore);
-    expect(artist.latestScore).toBe(artist.totalScore);
+    // Best first, every album the same length: (90 + 80 x 0.6 + 70 x 0.36 + 50 x 0.216) / 2.176
+    expect(artist.totalScore).toBeCloseTo(79.96, 1);
+    expect(artist.peakScore).toBe(90);
+    // The latest three are 2022 (50), 2021 (70) and 2020 (90)
+    expect(artist.latestScore).toBeCloseTo(70);
   });
 });

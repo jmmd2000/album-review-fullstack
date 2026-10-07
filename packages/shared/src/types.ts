@@ -240,17 +240,11 @@ export interface ReviewedArtist {
   latestLeaderboardPosition: number | null;
   /** List of albums associated with the artist. */
   albums?: DisplayAlbum[];
-  /** Average review score of the artist's albums. */
-  averageScore: number;
-  /** Bonus points awarded to the artist. */
-  bonusPoints: number;
-  /** Reason for bonus points, if applicable. */
-  bonusReason: string | null;
-  /** Total calculated score of the artist. */
+  /** The artist's score: the mean of their releases, best first, each counting 0.6 as much as the one above it. */
   totalScore: number;
-  /** Peak score calculated from top 3 highest rated albums. */
+  /** The score of the artist's best release. */
   peakScore: number;
-  /** Latest score calculated from latest 3 albums. */
+  /** The mean score of the artist's latest 3 releases, weighted by rated tracks. */
   latestScore: number;
   /** Number of albums reviewed by the artist. */
   reviewCount: number;

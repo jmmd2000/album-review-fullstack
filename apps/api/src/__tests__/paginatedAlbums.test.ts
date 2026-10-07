@@ -14,7 +14,7 @@ const authCookie = adminCookie();
 // full review-create flow for every row. Scores descend so the default
 // finalScore ordering is deterministic.
 async function seedAlbums(count: number, overrides: (index: number) => Partial<typeof reviewedAlbums.$inferInsert> = () => ({})) {
-  await db.insert(reviewedArtists).values({ name: "Seed Artist", spotifyID: "seed-artist", imageURLs: [], averageScore: 0 }).onConflictDoNothing();
+  await db.insert(reviewedArtists).values({ name: "Seed Artist", spotifyID: "seed-artist", imageURLs: [] }).onConflictDoNothing();
 
   const rows: (typeof reviewedAlbums.$inferInsert)[] = Array.from({ length: count }, (_, index) => ({
     artistSpotifyID: "seed-artist",

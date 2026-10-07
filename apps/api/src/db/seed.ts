@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
-import type { DisplayTrack, ReviewedAlbum } from "@shared/types";
-import { calculateArtistScore } from "@/helpers/calculateArtistScore";
+import type { DisplayTrack } from "@shared/types";
 import { db, closeDatabase } from "@/db/client";
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
@@ -23,7 +22,6 @@ const seed = async () => {
 
   await db.transaction(async tx => {
     const createdArtistIDs = new Set<string>();
-    const albumRowsByArtist = new Map<string, { row: ReviewedAlbum; contributes: boolean }[]>();
 
     for (const review of REVIEWED) {
       const captured = capturedAlbum(review.spotifyID);
@@ -57,10 +55,7 @@ const seed = async () => {
             spotifyID: artist.spotifyID,
             imageURLs: artist.imageURLs,
             headerImage: null,
-            averageScore: 0,
-            bonusPoints: 0,
             totalScore: 0,
-            bonusReason: JSON.stringify([]),
             reviewCount: 0,
             unrated: true,
             leaderboardPosition: null,
@@ -70,7 +65,7 @@ const seed = async () => {
         createdArtistIDs.add(artist.spotifyID);
       }
 
-      const albumRow = (await AlbumModel.createAlbum(
+      await AlbumModel.createAlbum(
         {
           name: captured.name,
           spotifyID: captured.spotifyID,
@@ -90,7 +85,7 @@ const seed = async () => {
           albumArtists: captured.artists.map(artist => ({ spotifyID: artist.spotifyID, name: artist.name, imageURLs: artist.imageURLs })),
         },
         tx
-      )) as ReviewedAlbum;
+      );
 
       // Genres, links and related strengths through the same code the app uses
       const genreIDs: number[] = [];
@@ -125,40 +120,13 @@ const seed = async () => {
         await TrackModel.linkArtistsToTrack(track.spotifyID, trackArtistIDs, tx);
       }
 
-      // Remember each artist's albums for the aggregate pass
-      for (const artistID of albumArtistIDs) {
-        const rows = albumRowsByArtist.get(artistID) ?? [];
-        rows.push({ row: albumRow, contributes: scoreArtistIDs.includes(artistID) });
-        albumRowsByArtist.set(artistID, rows);
-      }
-
       console.log(`Seed: reviewed ${captured.name} (final score ${finalScore})`);
     }
 
-    // Aggregate pass, same maths as the app's artist refresh, unrated artists keep their zeros
-    for (const [artistID, links] of albumRowsByArtist) {
-      const contributing = links.filter(link => link.contributes).map(link => link.row);
-      if (contributing.length === 0) {
-        // Mirror the app's unrated branch, the linked reviews still count, the scores stay zero
-        await ArtistModel.updateArtist(artistID, { reviewCount: links.length }, tx);
-        continue;
-      }
-
-      const { newAverageScore, newBonusPoints, totalScore, peakScore, latestScore, bonusReasons } = calculateArtistScore(contributing);
-      await ArtistModel.updateArtist(
-        artistID,
-        {
-          averageScore: newAverageScore,
-          bonusPoints: newBonusPoints,
-          totalScore,
-          peakScore,
-          latestScore,
-          bonusReason: JSON.stringify(bonusReasons),
-          reviewCount: links.length,
-          unrated: false,
-        },
-        tx
-      );
+    // Aggregate pass through the app's own artist scoring
+    const scores = await ArtistService.calculateScores([...createdArtistIDs], tx);
+    for (const [artistID, fields] of scores) {
+      await ArtistModel.updateArtist(artistID, fields, tx);
     }
 
     await ArtistService.updateAllLeaderboardPositions(tx);

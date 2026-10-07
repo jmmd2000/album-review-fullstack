@@ -71,7 +71,7 @@ test("artist details give each track the name of its album", async () => {
 
 test("artist details count only rated artists as ranked", async () => {
   await api.post("/api/albums/create", mockReviewData, authCookie);
-  await db.insert(reviewedArtists).values({ name: "Unrated Artist", spotifyID: "unrated-artist", imageURLs: [], averageScore: 0, unrated: true });
+  await db.insert(reviewedArtists).values({ name: "Unrated Artist", spotifyID: "unrated-artist", imageURLs: [], unrated: true });
 
   const body = await (await api.get(`/api/artists/details/${artistID}`)).json();
   expect(body.rankedArtistCount).toBe(1);

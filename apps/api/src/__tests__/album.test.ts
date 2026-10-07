@@ -46,7 +46,7 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 
   expect(returned.album).toHaveProperty("spotifyID");
   expect(returned.album).toHaveProperty("name");
-  expect(returned.artists[0]).toHaveProperty("averageScore");
+  expect(returned.artists[0]).toHaveProperty("totalScore");
   expect(returned.tracks[0]).toHaveProperty("rating");
 });
 
