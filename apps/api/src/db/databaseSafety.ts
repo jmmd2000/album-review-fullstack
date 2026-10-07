@@ -39,7 +39,7 @@ export function assertSafeToWipe(databaseURL: string): void {
  * @param databaseURL The connection URL the tests will use, such as DATABASE_URL_TEST.
  * @throws If NODE_ENV isn't "test", the URL is missing, or the database isn't a local one whose name ends in _test or _test_e2e.
  */
-export function assertTestDatabase(databaseURL: string | undefined): void {
+export function assertTestDatabase(databaseURL: string | undefined): asserts databaseURL is string {
   if (process.env.NODE_ENV !== "test") {
     throw new Error(`Refusing to wipe for tests: NODE_ENV is "${process.env.NODE_ENV ?? "undefined"}", not "test"`);
   }
