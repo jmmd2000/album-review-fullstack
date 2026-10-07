@@ -134,7 +134,7 @@ function RouteComponent() {
           value={orderBy}
           direction={order}
           onSortChange={(value, direction) => {
-            navigate({
+            void navigate({
               search: prev => ({
                 ...prev,
                 orderBy: value as typeof orderBy,
@@ -144,12 +144,12 @@ function RouteComponent() {
             });
           }}
         />
-        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
+        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => void navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
         <GenreSelect
           genres={data.genres}
           selected={deps.genres}
           onChange={slugs => {
-            navigate({
+            void navigate({
               search: prev => ({
                 ...prev,
                 genres: slugs.join(","),

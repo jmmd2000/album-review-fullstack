@@ -70,13 +70,12 @@ export class ArtistImageService {
   }
 
   private static async refreshHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
-    if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
-
     let artists;
     if (all) {
       artists = await ArtistModel.getAllArtists();
     } else {
-      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
+      if (!spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
+      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID);
       if (!artist) throw new AppError("Artist not found", 404);
       artists = [artist];
     }
@@ -193,13 +192,12 @@ export class ArtistImageService {
   }
 
   private static async refreshImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
-    if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
-
     let artists;
     if (all) {
       artists = await ArtistModel.getAllArtists();
     } else {
-      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
+      if (!spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
+      const artist = await ArtistModel.getArtistBySpotifyID(spotifyID);
       if (!artist) throw new AppError("Artist not found", 404);
       artists = [artist];
     }

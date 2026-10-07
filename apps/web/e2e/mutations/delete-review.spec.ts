@@ -11,7 +11,8 @@ for (const spotifyID of [...REVIEWED.map(review => review.spotifyID), ...BOOKMAR
     artistAlbumCounts.set(artist.spotifyID, (artistAlbumCounts.get(artist.spotifyID) ?? 0) + 1);
   }
 }
-const target = REVIEWED.find(review => capturedAlbum(review.spotifyID).artists.every(artist => artistAlbumCounts.get(artist.spotifyID) === 1))!;
+const target = REVIEWED.find(review => capturedAlbum(review.spotifyID).artists.every(artist => artistAlbumCounts.get(artist.spotifyID) === 1));
+if (!target) throw new Error("No seeded review has artists with only that one album");
 const targetAlbum = capturedAlbum(target.spotifyID);
 
 test("deleting a review removes the album and its orphaned artist", async ({ page }) => {

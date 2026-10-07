@@ -16,14 +16,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation<void, Error, string>({
     mutationFn: password => handleVoid(client.api.auth.login.$post({ json: { password } })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.status });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.status });
     },
   });
 
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: () => handleVoid(client.api.auth.logout.$post()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.status });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.status });
     },
   });
 

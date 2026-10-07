@@ -12,4 +12,7 @@ const wipe = async () => {
   await closeDatabase();
 };
 
-wipe();
+wipe().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

@@ -68,10 +68,10 @@ test("keeps a score-excluded artist unrated", async () => {
   runSeed();
 
   const review = REVIEWED.find(candidate => candidate.scoreExcludedArtistIndexes?.length);
-  expect(review).toBeDefined();
+  if (!review?.scoreExcludedArtistIndexes) throw new Error("No seeded review leaves an artist out of the score");
 
-  const excludedIndex = review!.scoreExcludedArtistIndexes![0];
-  const excludedID = capturedAlbum(review!.spotifyID).artists[excludedIndex].spotifyID;
+  const excludedIndex = review.scoreExcludedArtistIndexes[0];
+  const excludedID = capturedAlbum(review.spotifyID).artists[excludedIndex].spotifyID;
   const artist = await ArtistModel.getArtistBySpotifyID(excludedID);
 
   expect(artist.unrated).toBe(true);

@@ -197,9 +197,9 @@ test("a review saves which tracks are its best and worst", async () => {
   const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
   const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
   expect(picks).toEqual([
-    [first!.spotifyID, "best"],
-    [second!.spotifyID, "best"],
-    [third!.spotifyID, "worst"],
+    [first.spotifyID, "best"],
+    [second.spotifyID, "best"],
+    [third.spotifyID, "worst"],
   ]);
 });
 
@@ -214,5 +214,5 @@ test("editing a review changes and clears track picks", async () => {
 
   const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
   const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
-  expect(picks).toEqual([[second!.spotifyID, "worst"]]);
+  expect(picks).toEqual([[second.spotifyID, "worst"]]);
 });

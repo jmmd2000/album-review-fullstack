@@ -5,8 +5,11 @@ export interface ArtistLeaderboardData {
   name: string;
   /** The artist's score */
   score: number;
-  /** The artist's position in the leaderboard */
-  position?: number;
+}
+
+export interface RankedArtist extends ArtistLeaderboardData {
+  /** The artist's position in the leaderboard. Artists with the same score share a position. */
+  position: number;
 }
 
 /**
@@ -15,10 +18,10 @@ export interface ArtistLeaderboardData {
  * by their names.
  *
  * @param {ArtistLeaderboardData[]} artists - An array of ArtistLeaderboardData objects
- * @returns A new array of artist objects sorted by score in descending order, and by name
+ * @returns A new array of new artist objects sorted by score in descending order, and by name
  * alphabetically if scores are equal, with position numbers assigned.
  */
-export function calculateLeaderboardPositions(artists: ArtistLeaderboardData[]): ArtistLeaderboardData[] {
+export function calculateLeaderboardPositions(artists: ArtistLeaderboardData[]): RankedArtist[] {
   const sortedArtists = [...artists].sort((a, b) => {
     if (b.score !== a.score) {
       // sort by score in descending order
@@ -30,12 +33,10 @@ export function calculateLeaderboardPositions(artists: ArtistLeaderboardData[]):
 
   // Assign positions, handling ties correctly
   let currentPosition = 1;
-  for (let i = 0; i < sortedArtists.length; i++) {
-    if (i > 0 && sortedArtists[i].score !== sortedArtists[i - 1].score) {
-      currentPosition = i + 1;
+  return sortedArtists.map((artist, index) => {
+    if (index > 0 && artist.score !== sortedArtists[index - 1].score) {
+      currentPosition = index + 1;
     }
-    sortedArtists[i].position = currentPosition;
-  }
-
-  return sortedArtists;
+    return { ...artist, position: currentPosition };
+  });
 }

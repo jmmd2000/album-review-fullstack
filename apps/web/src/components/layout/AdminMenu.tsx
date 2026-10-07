@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { LockKeyIcon, LockKeyOpenIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/auth/useAuth";
 import { ApiError } from "@/lib/client";
+import { toast } from "@/lib/toast";
 import { useDismiss } from "@/hooks/useDismiss";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
@@ -59,7 +60,7 @@ export function AdminMenu() {
                   type="button"
                   className={styles.logout}
                   onClick={() => {
-                    logout();
+                    logout().catch(() => toast.error("You couldn't be logged out. Try again."));
                     setOpen(false);
                   }}
                 >

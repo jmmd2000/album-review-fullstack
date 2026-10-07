@@ -70,4 +70,7 @@ const capture = async () => {
   console.log(`Wrote ${albums.length} albums to albums.ts`);
 };
 
-capture();
+capture().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

@@ -80,8 +80,8 @@ function CreateReview() {
   const initialValues: ReviewFormValues = {
     tracks: album.tracks.items.map(track => ({
       spotifyID: track.id,
-      artistSpotifyID: track.artists[0]?.id ?? album.artists[0]!.id,
-      artistName: track.artists[0]?.name ?? album.artists[0]!.name,
+      artistSpotifyID: track.artists[0]?.id ?? album.artists[0].id,
+      artistName: track.artists[0]?.name ?? album.artists[0].name,
       name: track.name,
       duration: track.duration_ms,
       features: track.artists.slice(1).map(artist => ({ id: artist.id, name: artist.name })),
@@ -107,7 +107,13 @@ function CreateReview() {
       initialValues={initialValues}
       genreSuggestions={(data.genres ?? []).map(genre => genre.name)}
       onSave={values => save.mutateAsync(values)}
-      onCancel={() => (canGoBack ? router.history.back() : navigate({ to: "/albums" }))}
+      onCancel={() => {
+        if (canGoBack) {
+          router.history.back();
+          return;
+        }
+        void navigate({ to: "/albums" });
+      }}
     />
   );
 }

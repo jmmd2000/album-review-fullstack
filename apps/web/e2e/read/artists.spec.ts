@@ -19,8 +19,9 @@ test("the leaderboard lists every seeded artist, best first", async ({ page }) =
 });
 
 test("a score-excluded artist shows as unrated", async ({ page }) => {
-  const review = REVIEWED.find(candidate => candidate.scoreExcludedArtistIndexes?.length)!;
-  const excluded = capturedAlbum(review.spotifyID).artists[review.scoreExcludedArtistIndexes![0]];
+  const review = REVIEWED.find(candidate => candidate.scoreExcludedArtistIndexes?.length);
+  if (!review?.scoreExcludedArtistIndexes) throw new Error("No seeded review leaves an artist out of the score");
+  const excluded = capturedAlbum(review.spotifyID).artists[review.scoreExcludedArtistIndexes[0]];
 
   await page.goto("/artists");
 
@@ -39,7 +40,9 @@ test("an artist page lists all their reviewed albums", async ({ page }) => {
     entry.albums.push(captured.name);
     byPrimary.set(primary.spotifyID, entry);
   }
-  const [artistID, artist] = [...byPrimary.entries()].find(([, entry]) => entry.albums.length > 1)!;
+  const artistWithAlbums = [...byPrimary.entries()].find(([, entry]) => entry.albums.length > 1);
+  if (!artistWithAlbums) throw new Error("No seeded artist has more than one album");
+  const [artistID, artist] = artistWithAlbums;
 
   await page.goto(`/artists/${artistID}`);
 

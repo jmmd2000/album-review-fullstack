@@ -34,8 +34,8 @@ interface TrackRowProps {
 
 function TrackRow({ track, position }: TrackRowProps) {
   // Track ratings are stored on a 1-10 scale, so scale to 0-100 for the tier.
-  const rated = track.rating != null && track.rating > 0;
-  const tier = rated ? scoreTier(track.rating! * 10) : "Unrated";
+  const rating = track.rating ?? 0;
+  const tier = rating > 0 ? scoreTier(rating * 10) : "Unrated";
   const { title, featuring } = splitFeatures(track.name, track.features);
 
   return (

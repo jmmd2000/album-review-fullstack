@@ -47,14 +47,11 @@ export const renderWithProviders = async (
   await router.load();
 
   // act() lets React finish all its internal updates before we start asserting
-  let renderResult: ReturnType<typeof render>;
-  await act(async () => {
-    renderResult = render(<RouterProvider router={router} />, renderOptions);
-  });
+  const renderResult = await act(async () => render(<RouterProvider router={router} />, renderOptions));
 
   return {
     user: userEvent.setup(),
-    ...renderResult!,
+    ...renderResult,
     router,
     queryClient,
   };

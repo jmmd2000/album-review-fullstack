@@ -29,6 +29,6 @@ export function timelinePoints(releases: TimelineRelease[]): TimelinePoint[] {
   return releases.map((release, index) => ({
     x: start + index * step,
     y: 6 + ((release.score - lowest) / (100 - lowest)) * 80,
-    showYear: index === 0 || releases[index - 1]!.year !== release.year,
+    showYear: index === 0 || releases[index - 1].year !== release.year,
   }));
 }

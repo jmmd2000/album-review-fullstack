@@ -26,7 +26,7 @@ function dealColumns(albums: HomeAlbum[]): HomeAlbum[][] {
   for (let columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex++) {
     const column: HomeAlbum[] = [];
     for (let row = 0; row < COVERS_PER_COLUMN; row++) {
-      column.push(albums[(row * COLUMN_COUNT + columnIndex) % albums.length]!);
+      column.push(albums[(row * COLUMN_COUNT + columnIndex) % albums.length]);
     }
     columns.push(column);
   }

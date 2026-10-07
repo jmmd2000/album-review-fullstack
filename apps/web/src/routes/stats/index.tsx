@@ -59,7 +59,7 @@ function RouteComponent() {
   const filter: StatsFilter = { genres: search.genres ? search.genres.split(",") : [], decade: search.decade ?? null };
   const setFilter = (next: Partial<StatsFilter>) => {
     const { genres, decade } = { ...filter, ...next };
-    navigate({ search: { genres: genres.join(","), decade: decade ?? undefined }, replace: true, resetScroll: false });
+    void navigate({ search: { genres: genres.join(","), decade: decade ?? undefined }, replace: true, resetScroll: false });
   };
 
   const selected = data.albums.filter(album => albumMatches(album, filter));

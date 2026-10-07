@@ -34,7 +34,7 @@ export function ArtistJobRow({ job, title, description, actionLabel, lastRun, re
       description={description}
       details={details}
       action={
-        <Button onClick={start} disabled={isRunning}>
+        <Button onClick={() => void start()} disabled={isRunning}>
           {isRunning ? "Running…" : actionLabel}
         </Button>
       }

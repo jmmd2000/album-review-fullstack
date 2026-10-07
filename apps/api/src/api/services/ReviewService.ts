@@ -49,9 +49,9 @@ export class ReviewService {
     const runtime = getTotalDuration(spotifyAlbum);
     const image = spotifyAlbum.images[0]?.url ?? null;
     let colors: ExtractedColor[] = data.colors || [];
-    if (!colors.length) {
+    if (!colors.length && image) {
       try {
-        colors = await getImageColors(image!);
+        colors = await getImageColors(image);
       } catch (err) {
         console.error("Color extraction failed:", err);
       }
@@ -106,7 +106,7 @@ export class ReviewService {
             spotifyID: t.id,
             duration: t.duration_ms,
             features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
-            rating: track.rating!,
+            rating: track.rating ?? 0,
             pick: track.pick ?? null,
           },
           tx

@@ -1,6 +1,6 @@
 interface UseListControlsArgs<TSearch extends { page?: number; search?: string }> {
   /** The route's navigate, kept typed through the generic */
-  navigate: (options: { search: (prev: TSearch) => TSearch }) => void;
+  navigate: (options: { search: (prev: TSearch) => TSearch }) => Promise<void>;
 }
 
 /**
@@ -8,7 +8,7 @@ interface UseListControlsArgs<TSearch extends { page?: number; search?: string }
  */
 export function useListControls<TSearch extends { page?: number; search?: string }>({ navigate }: UseListControlsArgs<TSearch>) {
   const search = (value: string) => {
-    navigate({ search: prev => ({ ...prev, search: value === "" ? undefined : value, page: undefined }) });
+    void navigate({ search: prev => ({ ...prev, search: value === "" ? undefined : value, page: undefined }) });
   };
 
   return { search };

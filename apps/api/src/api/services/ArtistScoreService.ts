@@ -159,15 +159,15 @@ export class ArtistScoreService {
     const latestPositions = calculateLeaderboardPositions(latestData);
 
     for (const artist of overallPositions) {
-      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!, executor);
+      await ArtistModel.updateLeaderboardPosition(artist.id, artist.position, executor);
     }
 
     for (const artist of peakPositions) {
-      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!, executor);
+      await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position, executor);
     }
 
     for (const artist of latestPositions) {
-      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!, executor);
+      await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position, executor);
     }
   }
 }

@@ -79,9 +79,9 @@ export function useArtistJob(job: ArtistJob) {
         } else {
           toast.success(`${JOB_LABELS[job]}: ${summariseArtistJob(latest)}`);
         }
-        queryClient.invalidateQueries({ queryKey: queryKeys.settings.lastRuns });
-        queryClient.invalidateQueries({ queryKey: queryKeys.settings.jobResults });
-        queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.settings.lastRuns });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.settings.jobResults });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
       });
 
       // EventSource retries a dropped connection by itself, and the server resumes after the last event.
