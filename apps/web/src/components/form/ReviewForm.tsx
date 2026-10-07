@@ -3,6 +3,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { coverColourStyle } from "@/lib/coverColours";
+import { morphProps } from "@/lib/coverMorph";
 import { tierColourVar } from "@/lib/tierColours";
 import { formatBonus } from "@/lib/reviewForm";
 import { toast } from "@/lib/toast";
@@ -23,6 +24,8 @@ import type { AlbumArtist, DisplayTrack, SpotifyImage } from "@shared/types";
 import type { ReviewFormValues } from "@/lib/reviewForm";
 
 interface ReviewFormProps {
+  /** The album's Spotify ID, so its cover can transition in from the album page and back */
+  albumID: string;
   albumName: string;
   artistName: string;
   /** The official 640px cover */
@@ -42,7 +45,7 @@ interface ReviewFormProps {
  * then the track ratings, the review text, the cover colours, the genres and the artist options.
  * The page glows in the cover colours as they change.
  */
-export function ReviewForm({ albumName, artistName, cover, albumArtists, initialValues, genreSuggestions, onSave, onCancel }: ReviewFormProps) {
+export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreSuggestions, onSave, onCancel }: ReviewFormProps) {
   const [values, setValues] = useState(initialValues);
   const [saving, setSaving] = useState(false);
   const headRef = useRef<HTMLDivElement>(null);
@@ -70,7 +73,7 @@ export function ReviewForm({ albumName, artistName, cover, albumArtists, initial
       <AlbumBackdrop until={headRef} />
       <form className={styles.split} onSubmit={handleSubmit}>
         <div className={styles.aside}>
-          {cover && <img className={styles.cover} src={cover.url} alt={`${albumName} cover`} width={cover.width} height={cover.height} />}
+          {cover && <img className={styles.cover} src={cover.url} alt={`${albumName} cover`} width={cover.width} height={cover.height} {...morphProps("album", albumID)} />}
           <LiveScore tracks={values.tracks} bonus={values.bonus} ratedCount={ratedCount} />
         </div>
 

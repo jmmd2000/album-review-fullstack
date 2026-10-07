@@ -88,6 +88,7 @@ function EditReview() {
 
   return (
     <ReviewForm
+      albumID={albumID}
       albumName={album.name}
       artistName={album.artistName}
       cover={album.imageURLs[0]}

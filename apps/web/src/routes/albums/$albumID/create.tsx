@@ -99,6 +99,7 @@ function CreateReview() {
 
   return (
     <ReviewForm
+      albumID={albumID}
       albumName={album.name}
       artistName={album.artists.map(artist => artist.name).join(", ")}
       cover={album.images[0]}
