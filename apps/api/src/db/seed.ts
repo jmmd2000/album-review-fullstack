@@ -1,7 +1,9 @@
 import "dotenv/config";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import type { DisplayTrack } from "@shared/types";
+import { resolveDatabaseURL } from "@/config/database";
 import { db, closeDatabase } from "@/db/client";
+import { assertSafeToWipe } from "@/db/databaseSafety";
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
 import { TrackModel } from "@/api/models/Track";
@@ -15,6 +17,8 @@ import { BOOKMARKED_IDS, REVIEW_CONTENT, REVIEWED, capturedAlbum, ratingFor } fr
 // no network, and the same scores every run. Scores come from the same pure
 // helpers the app uses, so seeded numbers track the real scoring logic.
 const seed = async () => {
+  assertSafeToWipe(resolveDatabaseURL());
+
   const existing = await AlbumModel.getAllAlbums();
   if (existing.length > 0) {
     throw new Error(`Seed: the database already has ${existing.length} reviewed albums, run db:wipe first`);
