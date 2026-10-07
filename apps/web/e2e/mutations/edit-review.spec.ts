@@ -1,16 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { REVIEWED, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
-import { calculateAlbumScore } from "../../../../packages/shared/src/helpers/calculateAlbumScore";
+import { rateTracks, shownScoreOf } from "../helpers";
 
 // This spec owns the second reviewed album. No other spec touches it, so it
 // arrives here exactly as the seeder wrote it.
 const review = REVIEWED[1];
 const album = capturedAlbum(review.spotifyID);
 
-// Re-rate every track three steps further along the rating pattern. The score
-// only depends on the set of ratings, so the form's track order doesn't matter.
+// Re-rate every track three steps further along the rating pattern
 const newRatings = album.tracks.map((track, index) => ratingFor(index, review.offset + 3));
-const { finalScore: newScore } = calculateAlbumScore(
+const newScore = shownScoreOf(
   album.tracks.map((track, index) => ({
     spotifyID: track.spotifyID,
     name: track.name,
@@ -24,20 +23,14 @@ const { finalScore: newScore } = calculateAlbumScore(
 
 test("editing a review recalculates the score", async ({ page }) => {
   await page.goto(`/albums/${review.spotifyID}/edit`);
-  await expect(page.getByTestId("album-review-form")).toBeVisible();
+  await expect(page.getByRole("heading", { name: album.name, level: 1 })).toBeVisible();
 
-  const ratingSelects = page.getByTestId("track-rating-select");
-  await expect(ratingSelects).toHaveCount(album.tracks.length);
-  for (let index = 0; index < album.tracks.length; index++) {
-    await ratingSelects.nth(index).selectOption(String(newRatings[index]));
-  }
+  await rateTracks(page, newRatings);
+  await page.getByRole("button", { name: "Save review" }).click();
 
-  await page.getByTestId("album-review-form").getByRole("button", { name: "Submit" }).click();
-  // Same allowance as the create spec, submits can queue behind another
-  // spec's leaderboard-updating transaction under parallel mutations
-  await expect(page.getByText("Review submitted successfully!")).toBeVisible({ timeout: 15000 });
-
-  // The album page now shows the recalculated score
-  await page.goto(`/albums/${review.spotifyID}`);
-  await expect(page.getByText(String(newScore)).first()).toBeVisible();
+  // Saving opens the album page with the recalculated score. Same allowance as
+  // the create spec, saves can queue behind another spec's transaction
+  await expect(page).toHaveURL(new RegExp(`/albums/${review.spotifyID}$`), { timeout: 15000 });
+  await expect(page.getByText("Review saved")).toBeVisible();
+  await expect(page.getByText(String(newScore), { exact: true }).first()).toBeVisible();
 });

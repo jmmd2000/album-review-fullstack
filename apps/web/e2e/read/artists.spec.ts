@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { REVIEWED, capturedAlbum } from "../../../api/src/db/fixtures/fixtures";
+import { cardFor, cardLinks } from "../helpers";
 
 const allArtists = new Map<string, string>();
 for (const review of REVIEWED) {
@@ -12,9 +13,9 @@ test("the leaderboard lists every seeded artist, best first", async ({ page }) =
   await page.goto("/artists");
 
   for (const name of allArtists.values()) {
-    await expect(page.getByTestId("artist-card").filter({ hasText: name }).first()).toBeVisible();
+    await expect(cardFor(page, name)).toBeVisible();
   }
-  await expect(page.getByTestId("artist-card").first()).toContainText("#1");
+  await expect(cardLinks(page).first()).toContainText("#1");
 });
 
 test("a score-excluded artist shows as unrated", async ({ page }) => {
@@ -23,8 +24,10 @@ test("a score-excluded artist shows as unrated", async ({ page }) => {
 
   await page.goto("/artists");
 
-  const card = page.getByTestId("artist-card").filter({ hasText: excluded.name }).first();
-  await expect(card).toContainText("UNRATED");
+  // An unrated artist has no rank, and its score chip is the Unrated dash
+  const card = cardFor(page, excluded.name);
+  await expect(card.getByTitle("Unrated")).toHaveText("-");
+  await expect(card).not.toContainText("#");
 });
 
 test("an artist page lists all their reviewed albums", async ({ page }) => {
@@ -40,7 +43,7 @@ test("an artist page lists all their reviewed albums", async ({ page }) => {
 
   await page.goto(`/artists/${artistID}`);
 
-  await expect(page.getByText(artist.name).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: artist.name, level: 1 })).toBeVisible();
   for (const albumName of artist.albums) {
     await expect(page.getByText(albumName).first()).toBeVisible();
   }

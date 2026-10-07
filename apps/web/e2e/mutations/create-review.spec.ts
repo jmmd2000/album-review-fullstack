@@ -1,17 +1,18 @@
 import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
-import { calculateAlbumScore } from "../../../../packages/shared/src/helpers/calculateAlbumScore";
 import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
+import { cardFor, rateTracks, shownScoreOf } from "../helpers";
 
 const REVIEW_TEXT = "great album, I enjoyed it";
 
 // channel ORANGE, seeded as a bookmark and never reviewed
 const album = capturedAlbum(BOOKMARKED_IDS[0]);
+const artist = album.artists[0];
 
 // The same rating pattern the seeder uses, so the score this review will get
 // is known before the test runs
 const ratings = album.tracks.map((track, index) => ratingFor(index, 0));
-const { finalScore } = calculateAlbumScore(
+const score = shownScoreOf(
   album.tracks.map((track, index) => ({
     spotifyID: track.spotifyID,
     name: track.name,
@@ -30,59 +31,52 @@ test("create album review flow", async ({ page }) => {
 
   // The seeded bookmark is the unreviewed entry point
   await page.goto("/bookmarks");
-  const bookmarkCard = page.getByTestId("album-card").filter({ hasText: album.name });
-  await expect(bookmarkCard).toBeVisible();
-  await bookmarkCard.click();
+  await cardFor(page, album.name).getByRole("link").click();
 
   await expect(page).toHaveURL(new RegExp(`/albums/${album.spotifyID}/create`));
-  await expect(page.getByTestId("album-review-form")).toBeVisible();
+  await expect(page.getByRole("heading", { name: album.name, level: 1 })).toBeVisible();
 
-  // Fill the review
-  await page.getByPlaceholder("Best song...").fill(album.tracks[0].name);
-  await page.getByPlaceholder("Worst song...").fill(album.tracks[1].name);
-  await page.getByTestId("review-content-textarea").fill(REVIEW_TEXT);
+  await rateTracks(page, ratings);
+  const trackRows = page.getByRole("list", { name: "Rate each track" }).getByRole("listitem");
+  await trackRows.nth(0).getByRole("button", { name: "Best" }).click();
+  await trackRows.nth(1).getByRole("button", { name: "Worst" }).click();
 
-  await page.getByRole("button", { name: /add genre/i }).click();
-  await page.getByPlaceholder("Enter genre").fill("r&b");
-  await page.getByRole("button", { name: /add genre/i }).click();
-  await page.getByPlaceholder("Enter genre").nth(1).fill("soul");
+  await page.getByLabel("Review", { exact: true }).fill(REVIEW_TEXT);
 
-  await page.getByTestId("color-picker-button").first().click();
-  await page.locator("#aasToggle").check();
+  const genre = page.getByLabel("Add a genre");
+  await genre.fill("r&b");
+  await genre.press("Enter");
+  await genre.fill("soul");
+  await genre.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove soul" })).toBeVisible();
 
-  // Deterministic ratings on every track
-  const ratingSelects = page.getByTestId("track-rating-select");
-  await expect(ratingSelects).toHaveCount(album.tracks.length);
-  for (let index = 0; index < album.tracks.length; index++) {
-    await ratingSelects.nth(index).selectOption(String(ratings[index]));
-  }
+  await page.getByRole("button", { name: "Add a colour" }).click();
+  await expect(page.getByRole("checkbox", { name: "Counts towards the artist's score" })).toBeChecked();
 
-  await page.getByTestId("album-review-form").getByRole("button", { name: "Submit" }).click();
-  // Under parallel mutations the submit can queue behind another spec's
-  // leaderboard-updating transaction, so give it room beyond the default
-  await expect(page.getByText("Review submitted successfully!")).toBeVisible({ timeout: 15000 });
+  await page.getByRole("button", { name: "Save review" }).click();
 
-  // The album page shows the review with the score we predicted
-  await page.goto("/albums");
-  await page.getByTestId("search-input").fill(album.name);
-  const reviewedCard = page.getByTestId("album-card").filter({ hasText: album.name });
-  await expect(reviewedCard).toBeVisible();
-  await reviewedCard.click();
-
-  await expect(page).toHaveURL(new RegExp(`/albums/${album.spotifyID}$`));
+  // Saving opens the album page. Under parallel mutations the save can queue
+  // behind another spec's leaderboard-updating transaction, so give it room
+  await expect(page).toHaveURL(new RegExp(`/albums/${album.spotifyID}$`), { timeout: 15000 });
+  await expect(page.getByText("Review saved")).toBeVisible();
   await expect(page.getByText(REVIEW_TEXT)).toBeVisible();
-  await expect(page.getByText(String(finalScore)).first()).toBeVisible();
+  await expect(page.getByText(String(score), { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "soul", exact: true })).toBeVisible();
+
+  const tracklist = page.getByRole("region", { name: `${album.tracks.length} tracks` }).getByRole("listitem");
+  await expect(tracklist.nth(0)).toContainText("Best");
+  await expect(tracklist.nth(1)).toContainText("Worst");
 
   // Through to the artist page
-  await page.locator("a[href*='/artists/']").first().click();
-  await expect(page).toHaveURL(/\/artists\//);
-  await expect(page.getByText(album.artists[0].name).first()).toBeVisible();
+  await page.getByRole("link", { name: artist.name, exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/artists/${artist.spotifyID}`));
+  await expect(page.getByRole("heading", { name: artist.name, level: 1 })).toBeVisible();
 
-  // And the artist appears in the leaderboard list
+  // And the artist appears in the leaderboard
   await page.goto("/artists");
-  await page.getByTestId("search-input").fill(album.artists[0].name);
-  const artistCard = page.getByTestId("artist-card").filter({ hasText: album.artists[0].name });
-  await expect(artistCard).toBeVisible();
-  await artistCard.click();
-  await expect(page).toHaveURL(new RegExp(`/artists/${album.artists[0].spotifyID}`));
+  const search = page.getByRole("searchbox", { name: "Search artists" });
+  await search.fill(artist.name);
+  await search.press("Enter");
+  await cardFor(page, artist.name).getByRole("link").click();
+  await expect(page).toHaveURL(new RegExp(`/artists/${artist.spotifyID}`));
 });
