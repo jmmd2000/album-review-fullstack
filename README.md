@@ -28,18 +28,34 @@ pnpm --filter @album-reviews/web dev # http://localhost:5173
 
 ## Database
 
+The dev Postgres container holds three databases. It creates them the first time it starts on an empty volume.
+
+- `albums_dev`: the dev servers use it, through `DATABASE_URL`.
+- `albums_test`: the unit and integration tests use it, through `DATABASE_URL_TEST`. The test run brings it up to date with the migrations and gives each worker its own copy.
+- `albums_test_e2e`: e2e uses it, through `DATABASE_URL_TEST_E2E`. Each e2e run migrates, wipes and seeds it.
+
+Wipe and seed only run against a local database whose name ends in `_dev`, `_test` or `_test_e2e`. Tests also need `NODE_ENV=test` and a test database.
+
+Schema changes go through migrations. Never use `drizzle-kit push`.
+
 ```bash
 cd apps/api
 
-# Push db changes
-pnpm db:push
+# Make a migration from changes to src/db/schema.ts
+pnpm db:generate
 
-# Seed with sample data
+# Apply the migrations to the dev database
+pnpm db:migrate
+
+# Apply the migrations, wipe the review data and seed the sample library
+pnpm db:reset
+
+# Seed or wipe on their own
 pnpm db:seed
-
-# Wipe current data
 pnpm db:wipe
 ```
+
+The tests and e2e reset their own databases, so they never need these commands.
 
 ## Testing
 
@@ -50,6 +66,8 @@ pnpm test
 # Run the Playwright e2e suite
 pnpm e2e
 ```
+
+e2e starts its own API on port 4100 and its own web server on port 5180, both on the e2e database. It never uses the dev servers or the dev database, so it can run while they're up.
 
 ## Other root commands
 
