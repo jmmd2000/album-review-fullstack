@@ -1,5 +1,5 @@
 {
-  "version": "1.35.10",
+  "version": "1.35.11",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.5.1",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "5.0.3",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "5.2.0",
@@ -37,6 +37,6 @@
     "lint-staged": "17.6.0",
     "prettier": "3.9.9",
     "typescript-eslint": "8.71.1",
-    "vitest": "4.1.10"
+    "vitest": "5.0.3"
   }
 }

@@ -1,6 +1,26 @@
+import path from "path";
 import { configDefaults, coverageConfigDefaults, defineConfig } from "vitest/config";
 
+const API_ROOT = path.resolve(import.meta.dirname, "apps/api");
 const API_INTEGRATION_TESTS = "src/__tests__/**/*.integration.test.ts";
+
+/** The settings the API's unit and integration projects share. The API package is CommonJS, so they live here and not in an ESM config inside it. */
+const apiProject = {
+  root: API_ROOT,
+  resolve: {
+    alias: {
+      "@": path.resolve(API_ROOT, "src"),
+      "@shared": path.resolve(import.meta.dirname, "packages/shared/src"),
+    },
+  },
+};
+
+const apiTest = {
+  expect: { requireAssertions: true },
+  environment: "node",
+  testTimeout: 30000,
+  setupFiles: ["./src/__tests__/vitest.setup.ts"],
+};
 
 /**
  * Runs every package's tests as projects of one run, so each suite prints one summary.
@@ -10,24 +30,26 @@ export default defineConfig({
   test: {
     // Passing tests print as dots, and failures print in full
     reporters: ["dot"],
+    // Turns off the tips about faster settings that Vitest adds to the summary
+    experimental: { diagnostics: { environment: false, import: false, isolate: false, transform: false } },
     // Each integration worker gets its own copy of the test database, and apps/api/src/__tests__/globalSetup.ts makes 8
     maxWorkers: 8,
     projects: [
       "packages/shared/vitest.config.ts",
       "apps/web/vitest.config.ts",
       {
-        extends: "./apps/api/vitest.config.ts",
-        root: "./apps/api",
+        ...apiProject,
         test: {
+          ...apiTest,
           name: "api-unit",
           include: ["src/__tests__/**/*.test.ts"],
           exclude: [...configDefaults.exclude, API_INTEGRATION_TESTS],
         },
       },
       {
-        extends: "./apps/api/vitest.config.ts",
-        root: "./apps/api",
+        ...apiProject,
         test: {
+          ...apiTest,
           name: "api-integration",
           include: [API_INTEGRATION_TESTS],
           globalSetup: ["./src/__tests__/globalSetup.ts"],
