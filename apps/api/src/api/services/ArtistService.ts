@@ -1,4 +1,4 @@
-import type { DisplayArtist, GetPaginatedArtistsOptions, DisplayTrack, SpotifyImage, ReviewedArtist } from "@shared/types";
+import type { DisplayArtist, GetPaginatedArtistsOptions, DisplayTrack, SpotifyImage } from "@shared/types";
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -289,22 +289,17 @@ export class ArtistService {
   static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
-    let dbArtists;
+    let artists;
     if (all) {
-      dbArtists = await ArtistModel.getAllArtists();
+      artists = await ArtistModel.getAllArtists();
     } else {
       const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
       if (!artist) throw new AppError("Artist not found", 404);
-      dbArtists = [artist];
+      artists = [artist];
     }
 
     const FAKE = false;
     const BATCH_SIZE = 6;
-
-    const artists: ReviewedArtist[] = dbArtists.map(a => ({
-      ...a,
-      leaderboardPosition: a.leaderboardPosition ?? 0,
-    }));
 
     const total = artists.length;
 
@@ -419,19 +414,14 @@ export class ArtistService {
   static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
-    let dbArtists;
+    let artists;
     if (all) {
-      dbArtists = await ArtistModel.getAllArtists();
+      artists = await ArtistModel.getAllArtists();
     } else {
       const artist = await ArtistModel.getArtistBySpotifyID(spotifyID!);
       if (!artist) throw new AppError("Artist not found", 404);
-      dbArtists = [artist];
+      artists = [artist];
     }
-
-    const artists: ReviewedArtist[] = dbArtists.map(a => ({
-      ...a,
-      leaderboardPosition: a.leaderboardPosition ?? 0,
-    }));
 
     const total = artists.length;
 

@@ -7,7 +7,7 @@ import { PAGE_SIZE } from "@/config/constants";
 
 export class ArtistModel {
   static async getAllArtists(executor: Executor = db): Promise<ReviewedArtist[]> {
-    return executor.select().from(reviewedArtists) as Promise<ReviewedArtist[]>;
+    return executor.select().from(reviewedArtists);
   }
 
   static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "" }: GetPaginatedArtistsOptions) {
@@ -34,7 +34,7 @@ export class ArtistModel {
       .from(reviewedArtists)
       .where(ilike(reviewedArtists.name, `%${query}%`))
       .orderBy(desc(ilike(reviewedArtists.name, `${query}%`)), desc(reviewedArtists.totalScore))
-      .limit(limit) as Promise<ReviewedArtist[]>;
+      .limit(limit);
   }
 
   static async getArtistBySpotifyID(artistID: string) {

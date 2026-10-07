@@ -153,7 +153,7 @@ export class AlbumService {
     if (!row) throw new AppError("Album not found", 404);
     const artistLinks = await AlbumModel.getAlbumArtistLinks(row.spotifyID);
     const artistIDs = artistLinks.map(link => link.artistSpotifyID);
-    const artists = (await ArtistModel.getArtistsBySpotifyIDs(artistIDs)) as ReviewedArtist[];
+    const artists = await ArtistModel.getArtistsBySpotifyIDs(artistIDs);
     const album: ReviewedAlbum = {
       ...row,
       artistSpotifyIDs: artistIDs,
