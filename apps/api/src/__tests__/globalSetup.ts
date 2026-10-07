@@ -18,10 +18,10 @@ export default async function globalSetup() {
   const templateURL = process.env.DATABASE_URL_TEST;
   assertTestDatabase(templateURL);
 
-  // drizzle.config.ts picks DATABASE_URL_TEST when NODE_ENV is test and no worker ID is set
+  // The database resolver picks DATABASE_URL_TEST when NODE_ENV is test and no worker ID is set
   const migrateEnvironment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "test" };
   delete migrateEnvironment.VITEST_POOL_ID;
-  execSync("pnpm exec drizzle-kit migrate", { cwd: API_ROOT, env: migrateEnvironment, stdio: "pipe" });
+  execSync("pnpm run db:migrate", { cwd: API_ROOT, env: migrateEnvironment, stdio: "pipe" });
 
   const templateName = new URL(templateURL).pathname.slice(1);
 

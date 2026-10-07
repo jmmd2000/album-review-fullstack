@@ -1,1 +1,1 @@
-pnpm exec lint-staged --fail-on-changes && pnpm typecheck && pnpm test
+pnpm exec lint-staged --fail-on-changes && pnpm typecheck && pnpm test:unit
