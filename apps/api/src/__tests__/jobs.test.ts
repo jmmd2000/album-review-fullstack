@@ -3,7 +3,7 @@ import { closeDatabase } from "@/db/client";
 import { app } from "@/app";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
-import { ArtistService } from "@/api/services/ArtistService";
+import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { JobService } from "@/api/services/JobService";
 
 const authCookie = adminCookie();
@@ -18,7 +18,7 @@ test("job routes require admin", async () => {
 });
 
 test("spawning a header job streams its progress and completion", async () => {
-  const spy = vi.spyOn(ArtistService, "updateArtistHeaders").mockImplementation(async (_all, _spotifyID, emit) => {
+  const spy = vi.spyOn(ArtistImageService, "updateArtistHeaders").mockImplementation(async (_all, _spotifyID, emit) => {
     emit("progress", { done: 1, total: 2 });
     emit("progress", { done: 2, total: 2 });
   });
@@ -41,7 +41,7 @@ test("spawning a header job streams its progress and completion", async () => {
 });
 
 test("spawning an image job streams the same way", async () => {
-  const spy = vi.spyOn(ArtistService, "updateArtistImages").mockImplementation(async (_all, _spotifyID, emit) => {
+  const spy = vi.spyOn(ArtistImageService, "updateArtistImages").mockImplementation(async (_all, _spotifyID, emit) => {
     emit("progress", { done: 1, total: 1 });
   });
 
@@ -57,7 +57,7 @@ test("spawning an image job streams the same way", async () => {
 });
 
 test("a job that throws surfaces a fatal event before finishing", async () => {
-  const spy = vi.spyOn(ArtistService, "updateArtistHeaders").mockRejectedValue(new Error("boom"));
+  const spy = vi.spyOn(ArtistImageService, "updateArtistHeaders").mockRejectedValue(new Error("boom"));
 
   const created = await api.post("/api/jobs/artist-headers", undefined, authCookie);
   const { jobID } = await created.json();

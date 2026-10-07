@@ -1,18 +1,18 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { JobService } from "@/api/services/JobService";
-import { ArtistService } from "@/api/services/ArtistService";
+import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 
 // admin only
 const job = new Hono()
   .use(requireAdmin)
   .post("/artist-headers", c => {
-    const jobID = JobService.create(emit => ArtistService.updateArtistHeaders(true, undefined, emit));
+    const jobID = JobService.create(emit => ArtistImageService.updateArtistHeaders(true, undefined, emit));
     return c.json({ jobID }, 202);
   })
   .post("/artist-images", c => {
-    const jobID = JobService.create(emit => ArtistService.updateArtistImages(true, undefined, emit));
+    const jobID = JobService.create(emit => ArtistImageService.updateArtistImages(true, undefined, emit));
     return c.json({ jobID }, 202);
   })
   .get("/:id/events", c => {
