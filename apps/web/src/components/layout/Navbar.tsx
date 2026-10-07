@@ -10,6 +10,7 @@ const PRIMARY_LINKS = [
   { to: "/stats", label: "Stats" },
 ] as const;
 
+/** The site header. On a phone, the site name and the buttons share the top row, and the links spread across the row below. */
 export function Navbar() {
   // The home page heading is the site name, so the nav leaves it out there
   const isHome = useRouterState({ select: state => state.location.pathname === "/" });
@@ -27,9 +28,11 @@ export function Navbar() {
             {link.label}
           </Link>
         ))}
+      </nav>
+      <div className={styles.tools}>
         <AdminMenu />
         <ThemeToggle />
-      </nav>
+      </div>
     </header>
   );
 }

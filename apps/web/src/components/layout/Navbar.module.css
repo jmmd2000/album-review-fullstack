@@ -1,30 +1,42 @@
 .nav {
   position: relative;
   z-index: var(--z-nav);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px 16px;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-areas: "mark . links tools";
+  align-items: center;
+  gap: 4px clamp(14px, 2vw, 28px);
   width: 100%;
   max-width: var(--page-width);
   margin-inline: auto;
   padding: 20px var(--page-gutter);
+
+  @media (width < 560px) {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "mark tools"
+      "links links";
+    padding-block: 12px;
+  }
 }
 
 .mark {
+  grid-area: mark;
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 650;
 }
 
 .links {
+  grid-area: links;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 6px clamp(14px, 2vw, 28px);
-  margin-left: auto;
+  gap: clamp(14px, 2vw, 28px);
   color: var(--colour-text-muted);
+
+  @media (width < 560px) {
+    justify-content: space-between;
+  }
 }
 
 .link {
@@ -40,8 +52,9 @@
   }
 }
 
-@media (width < 560px) {
-  .links {
-    margin-left: 0;
-  }
+.tools {
+  grid-area: tools;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 16px);
 }
