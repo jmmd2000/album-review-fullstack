@@ -2,9 +2,23 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
+import { z } from "zod";
 import start from "./dist/server/server.js";
 
-const port = Number(process.env.PORT ?? 3000);
+const environmentSchema = z.object({
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  // Server rendering reaches the api here, so a missing one would send every request to localhost
+  API_ORIGIN: z.url(),
+});
+
+const parsedEnvironment = environmentSchema.safeParse(process.env);
+
+if (!parsedEnvironment.success) {
+  console.error("Invalid environment variables:", z.flattenError(parsedEnvironment.error).fieldErrors);
+  process.exit(1);
+}
+
+const port = parsedEnvironment.data.PORT;
 
 const app = new Hono();
 
