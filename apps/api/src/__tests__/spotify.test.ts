@@ -5,6 +5,7 @@ import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
 import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
+import { SpotifyService } from "../api/services/SpotifyService";
 
 // Async factory so the mock can import its fixture without fighting vi.mock hoisting
 vi.mock("../api/services/SpotifyService", async () => {
@@ -69,4 +70,18 @@ test("GET /api/spotify/albums/:albumID - Should return album", async () => {
   const data: SpotifyAlbum = await response.json();
   expect(data).toHaveProperty("id", mockReviewData.album.id);
   expect(data).toHaveProperty("name", mockReviewData.album.name);
+});
+
+test("GET /api/spotify/albums/:albumID - A malformed id gets a 404 and never reaches Spotify", async () => {
+  vi.mocked(SpotifyService.getAlbum).mockClear();
+  for (const albumID of ["..%2F..%2Fme%3Fx%3D1", "short", "7aJuG4TFXa2hmE4z1yxc3n-"]) {
+    const response = await api.get(`/api/spotify/albums/${albumID}`, authCookie);
+    expect(response.status).toBe(404);
+  }
+  expect(SpotifyService.getAlbum).not.toHaveBeenCalled();
+});
+
+test("GET /api/spotify/albums/:albumID - includeGenres must be true or false", async () => {
+  const response = await api.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=yes", authCookie);
+  expect(response.status).toBe(400);
 });
