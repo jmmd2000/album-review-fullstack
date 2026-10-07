@@ -10,6 +10,8 @@
   --colour-text-faint: light-dark(oklch(0.2 0.01 260 / 0.14), oklch(0.94 0.008 85 / 0.16));
   --colour-divider: light-dark(oklch(0.2 0.01 260 / 0.1), oklch(0.94 0.008 85 / 0.1));
   --colour-text-on-tier: oklch(0.985 0.003 250);
+  /* The red review text has always used for album names */
+  --colour-album-mention: #fb2c36;
 
   --colour-best: light-dark(oklch(0.48 0.13 150), oklch(0.8 0.15 150));
   --colour-best-fill: light-dark(oklch(0.48 0.13 150), oklch(0.62 0.15 150));

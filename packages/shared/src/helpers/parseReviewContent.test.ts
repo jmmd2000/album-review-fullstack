@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { parseReviewContent } from "./parseReviewContent";
+import { findLinkedAlbumIDs, parseReviewContent } from "./parseReviewContent";
 
 describe("parseReviewContent", () => {
   it("returns an empty array for empty input", () => {
@@ -53,5 +53,25 @@ describe("parseReviewContent", () => {
 
   it("rejects colour values that are not six hex digits", () => {
     expect(parseReviewContent("{color:#f00}short{color}")).toEqual([{ type: "text", content: "{color:#f00}short{color}" }]);
+  });
+
+  it("parses an album link", () => {
+    expect(parseReviewContent("better than {album:3mH6qwIy9crq0I9YQbOuDf}Blonde{album} by a mile")).toEqual([
+      { type: "text", content: "better than " },
+      { type: "album", content: "Blonde", spotifyID: "3mH6qwIy9crq0I9YQbOuDf" },
+      { type: "text", content: " by a mile" },
+    ]);
+  });
+
+  it("leaves an album link with an ID that isn't a Spotify ID as plain text", () => {
+    expect(parseReviewContent("{album:not-an-id}Blonde{album}")).toEqual([{ type: "text", content: "{album:not-an-id}Blonde{album}" }]);
+  });
+});
+
+describe("findLinkedAlbumIDs", () => {
+  it("gives each linked album once, in order, and ignores other marks", () => {
+    const text =
+      "{album:3mH6qwIy9crq0I9YQbOuDf}Blonde{album}, {color:#fb2c36}a quote{color}, {album:392p3shh2jkxUxY2VHvlH8}Channel Orange{album} and {album:3mH6qwIy9crq0I9YQbOuDf}Blonde{album} again";
+    expect(findLinkedAlbumIDs(text)).toEqual(["3mH6qwIy9crq0I9YQbOuDf", "392p3shh2jkxUxY2VHvlH8"]);
   });
 });

@@ -130,6 +130,19 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
   expect(links.rows.every((row: any) => row.affects_score === false)).toBe(true);
 });
 
+test("GET /api/albums/:albumID - returns the reviewed albums the review links to, and skips links to albums that aren't reviewed", async () => {
+  const reviewContent = "Better than {album:0JGOiO34nwfUdDrD612dOp}itself{album}, unlike {album:unreviewedAlbumNumber1}that one{album}.";
+  await api.post("/api/albums/create", { ...mockReviewData, reviewContent }, authCookie);
+
+  const res = await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie);
+  const { linkedAlbums } = await res.json();
+
+  expect(linkedAlbums).toHaveLength(1);
+  expect(linkedAlbums[0]).toMatchObject({ spotifyID: "0JGOiO34nwfUdDrD612dOp", name: mockReviewData.album.name });
+  expect(linkedAlbums[0]).toHaveProperty("finalScore");
+  expect(linkedAlbums[0]).toHaveProperty("imageURLs");
+});
+
 test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
   const res = await api.get("/api/albums/unknownAlbumSpotifyID1", authCookie);
   expect(res.status).toBe(404);

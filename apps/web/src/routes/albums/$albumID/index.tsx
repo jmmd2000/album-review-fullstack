@@ -62,7 +62,7 @@ function RouteComponent() {
   if (!albumID) throw new Error("albumID is undefined");
 
   const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
-  const { album, artists, tracks, albumGenres } = data;
+  const { album, artists, tracks, albumGenres, linkedAlbums } = data;
   const { isAdmin } = useAuth();
   const panelsRef = useRef<HTMLDivElement>(null);
   const cover = album.imageURLs[0];
@@ -88,7 +88,7 @@ function RouteComponent() {
         <div className={styles.column}>
           <div ref={panelsRef} className={styles.panels}>
             <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} />
-            {album.reviewContent && <ReviewContent content={album.reviewContent} />}
+            {album.reviewContent && <ReviewContent content={album.reviewContent} linkedAlbums={linkedAlbums} />}
           </div>
           <Tracklist tracks={tracks} />
         </div>

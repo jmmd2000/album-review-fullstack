@@ -2,13 +2,14 @@ import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ratingTiers, scoreTier } from "@shared/helpers/ratingTiers";
 import { tierColourVar } from "@/lib/tierColours";
-import { ScoreChip } from "@/components/ui/ScoreChip";
+import { AlbumHoverCard } from "@/components/album/AlbumHoverCard";
 import styles from "./AlbumDots.module.css";
 
 import type { CSSProperties } from "react";
 import type { TierLabel } from "@shared/helpers/ratingTiers";
 import type { StatsAlbum } from "@shared/types";
 
+/** The hovercard's width, from AlbumHoverCard.module.css */
 const TOOLTIP_WIDTH = 300;
 
 /** Terrible to Perfect, one tenth of the chart each */
@@ -81,28 +82,15 @@ export function AlbumDots({ albums, matchingIDs }: AlbumDotsProps) {
         ))}
       </div>
 
-      {tooltip && <AlbumTooltip {...tooltip} />}
+      {tooltip && (
+        <div className={styles.tooltip} style={{ left: tooltip.left, top: tooltip.top }} aria-hidden="true">
+          <AlbumHoverCard album={tooltip.album} />
+        </div>
+      )}
     </div>
   );
 }
 
 function tierStyle(tier: TierLabel): CSSProperties {
   return { "--tier": tierColourVar(tier) } as CSSProperties;
-}
-
-function AlbumTooltip({ album, left, top }: Tooltip) {
-  const cover = album.imageURLs[1] ?? album.imageURLs[0];
-
-  return (
-    <div className={styles.tooltip} style={{ left, top }} aria-hidden="true">
-      {cover ? <img src={cover.url} alt="" width={52} height={52} /> : <span />}
-      <div className={styles.tooltipText}>
-        <b>{album.name}</b>
-        <span>
-          {album.artistName}, {album.releaseYear}
-        </span>
-      </div>
-      <ScoreChip score={album.finalScore} />
-    </div>
-  );
 }

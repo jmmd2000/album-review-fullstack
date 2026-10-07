@@ -1,5 +1,6 @@
 import "dotenv/config";
-import type { DisplayAlbum, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre } from "@shared/types";
+import type { DisplayAlbum, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre, LinkedAlbum } from "@shared/types";
+import { findLinkedAlbumIDs } from "@shared/helpers/parseReviewContent";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
@@ -15,6 +16,8 @@ export class AlbumService {
     album: ReviewedAlbum;
     artists: ReviewedArtist[];
     tracks: DisplayTrack[];
+    /** The reviewed albums the review text links to */
+    linkedAlbums: LinkedAlbum[];
     allGenres?: Genre[];
     albumGenres?: Genre[];
   }> {
@@ -41,14 +44,28 @@ export class AlbumService {
       features: track.features,
     }));
 
+    const linkedAlbums = await this.getLinkedAlbums(row.reviewContent);
+
     if (!includeGenres) {
-      return { album, artists, tracks: displayTracks };
+      return { album, artists, tracks: displayTracks, linkedAlbums };
     }
 
     const albumGenres = await GenreService.getGenresForAlbums([album.spotifyID]);
     const allGenres = await GenreModel.getAllGenres();
 
-    return { album, artists, tracks: displayTracks, allGenres, albumGenres };
+    return { album, artists, tracks: displayTracks, linkedAlbums, allGenres, albumGenres };
+  }
+
+  private static async getLinkedAlbums(reviewContent: string | null): Promise<LinkedAlbum[]> {
+    const albums = await AlbumModel.getAlbumsBySpotifyIDs(findLinkedAlbumIDs(reviewContent ?? ""));
+    return albums.map(album => ({
+      spotifyID: album.spotifyID,
+      name: album.name,
+      artistName: album.artistName,
+      releaseYear: album.releaseYear,
+      finalScore: album.finalScore,
+      imageURLs: album.imageURLs,
+    }));
   }
 
   static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
