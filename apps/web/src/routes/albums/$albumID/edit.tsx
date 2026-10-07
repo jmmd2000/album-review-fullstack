@@ -11,7 +11,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { ReviewFormValues } from "@/lib/reviewForm";
 
 async function fetchAlbumReview(albumSpotifyID: string) {
-  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
+  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID }, query: {} }));
 }
 
 const reviewQueryOptions = (albumID: string) =>

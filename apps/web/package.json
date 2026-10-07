@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b --noEmit --force",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "e2e": "playwright test",

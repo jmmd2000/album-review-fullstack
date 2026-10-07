@@ -19,7 +19,7 @@ import coverColours from "@/styles/coverColours.module.css";
 import styles from "./index.module.css";
 
 async function fetchAlbumReview(albumSpotifyID: string) {
-  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
+  return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID }, query: {} }));
 }
 
 const reviewQueryOptions = (albumID: string) =>
