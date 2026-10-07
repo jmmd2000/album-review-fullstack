@@ -41,8 +41,8 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          // The web vitest config sits outside the web tsconfigs
-          allowDefaultProject: ["apps/web/vitest.config.ts"],
+          // These vitest configs sit outside every tsconfig
+          allowDefaultProject: ["vitest.config.ts", "apps/web/vitest.config.ts"],
         },
         tsconfigRootDir: import.meta.dirname,
       },

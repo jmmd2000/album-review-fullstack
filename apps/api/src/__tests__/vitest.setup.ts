@@ -1,5 +1,5 @@
 import "@/config/loadEnvironment";
-import { beforeAll, afterAll, vi } from "vitest";
+import { beforeEach, afterAll, vi } from "vitest";
 
 vi.mock("@/helpers/fetchArtistHeaderFromSpotify", () => ({
   fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
@@ -10,8 +10,9 @@ vi.mock("@/helpers/fetchArtistHeaderFromSpotify", () => ({
 // resolver and the resetTables guard both treat this unambiguously as a test run.
 process.env.NODE_ENV = "test";
 
-// Silence console for 4xx/5xx as the error handler logs each one
-beforeAll(() => {
+// Silence console for 4xx/5xx as the error handler logs each one.
+// Before each test, because a test's own vi.restoreAllMocks() also undoes these.
+beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });

@@ -1,23 +1,13 @@
-import { coverageConfigDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 import path from "path";
 
+/** The settings the API's unit and integration projects share. The root vitest.config.ts picks each project's tests. */
 export default defineConfig({
   test: {
     expect: { requireAssertions: true },
     environment: "node",
     testTimeout: 30000,
-    include: ["src/__tests__/**/*.test.ts"],
     setupFiles: ["./src/__tests__/vitest.setup.ts"],
-    globalSetup: ["./src/__tests__/globalSetup.ts"],
-    // Each worker has a private copy of the test database, see globalSetup.ts
-    maxWorkers: 8,
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      // Report every source file, not just the ones the tests import
-      include: ["src/**/*.ts"],
-      exclude: [...coverageConfigDefaults.exclude, "src/db/fixtures/**"],
-    },
   },
   resolve: {
     alias: {

@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env") });
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env"), quiet: true });
 
 const environmentSchema = z.object({
   DATABASE_URL_TEST_E2E: z.url().refine(url => new URL(url).pathname.endsWith("_test_e2e"), "must point at a database whose name ends in _test_e2e"),

@@ -33,7 +33,7 @@ pnpm --filter @album-reviews/web dev # http://localhost:5173
 The dev Postgres container holds three databases. It creates them the first time it starts on an empty volume.
 
 - `albums_dev`: the dev servers use it, through `DATABASE_URL`.
-- `albums_test`: the unit and integration tests use it, through `DATABASE_URL_TEST`. The test run brings it up to date with the migrations and gives each worker its own copy.
+- `albums_test`: the integration tests use it, through `DATABASE_URL_TEST`. The test run brings it up to date with the migrations and gives each worker its own copy.
 - `albums_test_e2e`: e2e uses it, through `DATABASE_URL_TEST_E2E`. Each e2e run migrates, wipes and seeds it.
 
 Wipe and seed only run against a local database whose name ends in `_dev`, `_test` or `_test_e2e`. Tests also need `NODE_ENV=test` and a test database.
@@ -62,14 +62,23 @@ The tests and e2e reset their own databases, so they never need these commands.
 ## Testing
 
 ```bash
-# Run the unit and integration suites in every package
-pnpm test
+# Unit tests: shared, web and the API's pure tests. They need nothing running.
+pnpm test:unit
 
-# Run the Playwright e2e suite
-pnpm e2e
+# Integration tests: the API tests that use the test database. They need the dev Postgres container.
+pnpm test:integration
+
+# e2e: Playwright in a real browser, against its own servers and database
+pnpm test:e2e
+
+# All three, in that order
+pnpm test
 ```
 
-e2e starts its own API on port 4100 and its own web server on port 5180, both on the e2e database. It never uses the dev servers or the dev database, so it can run while they're up.
+- The pre-commit hook runs `test:unit` only, so committing doesn't need Docker. Run `pnpm test` before you push.
+- An API test that uses the database ends in `.integration.test.ts`. Every other test is a unit test.
+- One Vitest config at the repo root runs every package as a project. Passing tests print as dots, and failures print in full.
+- e2e starts its own API on port 4100 and its own web server on port 5180, both on the e2e database. The API resets that database before it starts. e2e never uses the dev servers or the dev database, so it can run while they're up.
 
 ## Other root commands
 

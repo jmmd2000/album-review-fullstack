@@ -5,7 +5,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { calculateAlbumScore } from "../../../packages/shared/src/helpers/calculateAlbumScore";
 import { capturedAlbum, ratingFor, type ReviewFixture } from "../../api/src/db/fixtures/fixtures";
 
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env") });
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env"), quiet: true });
 
 /** Opens the lock menu in the nav, retrying until hydration has wired up the button. */
 export async function openAdminMenu(page: Page, expected: Locator): Promise<void> {

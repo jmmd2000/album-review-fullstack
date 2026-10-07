@@ -7,7 +7,7 @@ import { AlbumModel } from "@/api/models/Album";
 import { GenreModel } from "@/api/models/Genre";
 import { TrackModel } from "@/api/models/Track";
 
-// stats.test.ts covers the stats logic. This file checks the route with one review.
+// stats.integration.test.ts covers the stats logic. This file checks the route with one review.
 async function seedOneReview() {
   const genre = await GenreModel.createGenre({ name: "Genre One", slug: "genre1" });
 
