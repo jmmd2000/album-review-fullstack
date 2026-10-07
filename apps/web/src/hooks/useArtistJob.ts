@@ -4,7 +4,7 @@ import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
 
-import type { Progress } from "@shared/types";
+import type { JobEventMap, Progress } from "@shared/types";
 
 export type ArtistJob = "artist-images" | "artist-headers";
 
@@ -14,7 +14,7 @@ export interface ArtistJobState {
   current: Progress | null;
   changed: Progress[];
   unchangedCount: number;
-  failed: Progress[];
+  failed: JobEventMap["failed"][];
   /** Why the job stopped early or didn't start, as a sentence to show */
   error: string | null;
 }
@@ -33,8 +33,9 @@ export function summariseArtistJob(state: ArtistJobState) {
   return parts.join(", ");
 }
 
-function readProgress(event: Event) {
-  return JSON.parse((event as MessageEvent<string>).data) as Progress;
+/** Listens for one job event and hands the handler its parsed payload. */
+function listen<Name extends keyof JobEventMap>(source: EventSource, name: Name, handler: (data: JobEventMap[Name]) => void) {
+  source.addEventListener(name, event => handler(JSON.parse((event as MessageEvent<string>).data) as JobEventMap[Name]));
 }
 
 /**
@@ -62,17 +63,14 @@ export function useArtistJob(job: ArtistJob) {
       };
       update({});
 
-      source.addEventListener("fetching", event => update({ current: readProgress(event) }));
-      source.addEventListener("progress", event => update({ current: readProgress(event) }));
-      source.addEventListener("same", () => update({ unchangedCount: latest.unchangedCount + 1 }));
-      source.addEventListener("changed", event => update({ changed: [...latest.changed, readProgress(event)] }));
-      source.addEventListener("failed", event => update({ failed: [...latest.failed, readProgress(event)] }));
-      source.addEventListener("fatal", event => {
-        const { message } = JSON.parse((event as MessageEvent<string>).data) as { message: string };
-        update({ error: `The job stopped early: ${message}` });
-      });
+      listen(source, "fetching", progress => update({ current: progress }));
+      listen(source, "progress", progress => update({ current: progress }));
+      listen(source, "same", () => update({ unchangedCount: latest.unchangedCount + 1 }));
+      listen(source, "changed", progress => update({ changed: [...latest.changed, progress] }));
+      listen(source, "failed", failure => update({ failed: [...latest.failed, failure] }));
+      listen(source, "fatal", ({ message }) => update({ error: `The job stopped early: ${message}` }));
 
-      source.addEventListener("done", () => {
+      listen(source, "done", () => {
         source.close();
         localStorage.removeItem(storageKey);
         update({ status: "finished", current: null });

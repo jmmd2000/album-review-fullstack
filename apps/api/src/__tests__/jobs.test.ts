@@ -1,4 +1,5 @@
 import { afterAll, test, expect, vi } from "vitest";
+import type { Progress } from "@shared/types";
 import { closeDatabase } from "@/db/client";
 import { app } from "@/app";
 import { api } from "./apiRequest";
@@ -7,6 +8,8 @@ import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { JobService } from "@/api/services/JobService";
 
 const authCookie = adminCookie();
+
+const progress = (index: number, total: number): Progress => ({ index, total, spotifyID: "jobTestArtistSpotify01", artistName: "Artist" });
 
 afterAll(async () => {
   await closeDatabase();
@@ -19,8 +22,8 @@ test("job routes require admin", async () => {
 
 test("spawning a header job streams its progress and completion", async () => {
   const spy = vi.spyOn(ArtistImageService, "updateArtistHeaders").mockImplementation(async (_all, _spotifyID, emit) => {
-    emit("progress", { done: 1, total: 2 });
-    emit("progress", { done: 2, total: 2 });
+    emit("progress", progress(1, 2));
+    emit("progress", progress(2, 2));
   });
 
   const created = await api.post("/api/jobs/artist-headers", undefined, authCookie);
@@ -33,8 +36,8 @@ test("spawning a header job streams its progress and completion", async () => {
 
   const text = await events.text();
   expect(text).toContain("event: progress");
-  expect(text).toContain('"done":1');
-  expect(text).toContain('"done":2');
+  expect(text).toContain('"index":1');
+  expect(text).toContain('"index":2');
   expect(text).toContain("event: done");
 
   spy.mockRestore();
@@ -42,7 +45,7 @@ test("spawning a header job streams its progress and completion", async () => {
 
 test("spawning an image job streams the same way", async () => {
   const spy = vi.spyOn(ArtistImageService, "updateArtistImages").mockImplementation(async (_all, _spotifyID, emit) => {
-    emit("progress", { done: 1, total: 1 });
+    emit("progress", progress(1, 1));
   });
 
   const created = await api.post("/api/jobs/artist-images", undefined, authCookie);
@@ -77,8 +80,8 @@ test("unknown job ids return 404", async () => {
 
 test("reconnecting with a last event id resumes after it", async () => {
   const jobID = JobService.create(async emit => {
-    emit("first");
-    emit("second");
+    emit("fetching", progress(1, 1));
+    emit("progress", progress(1, 1));
   });
 
   const res = await app.request(`/api/jobs/${jobID}/events`, {
@@ -86,7 +89,7 @@ test("reconnecting with a last event id resumes after it", async () => {
   });
   const text = await res.text();
 
-  expect(text).not.toContain("event: first");
-  expect(text).toContain("event: second");
+  expect(text).not.toContain("event: fetching");
+  expect(text).toContain("event: progress");
   expect(text).toContain("event: done");
 });

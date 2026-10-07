@@ -1,5 +1,8 @@
 import { test, expect } from "vitest";
+import type { Progress } from "@shared/types";
 import { JobService, type JobEvent } from "@/api/services/JobService";
+
+const progress = (index: number): Progress => ({ index, total: 2, spotifyID: "jobTestArtistSpotify01", artistName: "Artist" });
 
 const collect = async (stream: AsyncGenerator<JobEvent>): Promise<JobEvent[]> => {
   const events: JobEvent[] = [];
@@ -9,8 +12,8 @@ const collect = async (stream: AsyncGenerator<JobEvent>): Promise<JobEvent[]> =>
 
 test("replays buffered events then ends with a done event", async () => {
   const id = JobService.create(async emit => {
-    emit("progress", { index: 1 });
-    emit("progress", { index: 2 });
+    emit("progress", progress(1));
+    emit("progress", progress(2));
   });
 
   const events = await collect(JobService.get(id)!.stream(-1));
@@ -21,8 +24,8 @@ test("replays buffered events then ends with a done event", async () => {
 
 test("resumes after a given event id, so a reconnect gets no duplicates", async () => {
   const id = JobService.create(async emit => {
-    emit("progress", { index: 1 });
-    emit("progress", { index: 2 });
+    emit("progress", progress(1));
+    emit("progress", progress(2));
   });
 
   const events = await collect(JobService.get(id)!.stream(0));

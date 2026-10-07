@@ -94,7 +94,7 @@ export class ArtistImageService {
               spotifyID: id,
               artistName: name,
               artistImage,
-              headerImage: current,
+              headerImage: current ?? undefined,
             });
           } else {
             emit("changed", {
@@ -103,7 +103,7 @@ export class ArtistImageService {
               spotifyID: id,
               artistName: name,
               artistImage,
-              headerImage: current,
+              headerImage: current ?? undefined,
               newHeaderImage: newHeaderImage,
             });
 
@@ -120,7 +120,7 @@ export class ArtistImageService {
                 total,
                 artistName: name,
                 artistImage,
-                headerImage: current,
+                headerImage: current ?? undefined,
                 message: (err as Error).message,
               });
             }
@@ -132,7 +132,6 @@ export class ArtistImageService {
             index: processedCount,
             artistName: FAKE ? `[FAKE] ${name}` : name,
             artistImage,
-            headerImage: null,
             message: FAKE ? "[FAKE] Failed to fetch header image" : "Failed to fetch header image",
           });
         }
@@ -206,6 +205,8 @@ export class ArtistImageService {
         } catch (err) {
           console.error(`Image update failed for ${id}:`, err);
           emit("failed", {
+            index: i + 1,
+            total,
             spotifyID: id,
             artistName: name,
             artistImage: currentArtistImage,

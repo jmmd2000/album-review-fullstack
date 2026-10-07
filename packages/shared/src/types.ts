@@ -428,3 +428,20 @@ export type Progress = {
   headerImage?: string;
   newHeaderImage?: string;
 };
+
+/**
+ * The payload of each event an artist job sends over SSE, by event name.
+ * The api emits these and the web reads them, so both sides use this map.
+ */
+export interface JobEventMap {
+  /** The header scrape has started on an artist */
+  fetching: Progress;
+  /** The job has moved on to the next artist */
+  progress: Progress;
+  same: Progress;
+  changed: Progress;
+  failed: Progress & { message: string };
+  /** The job threw and stopped early */
+  fatal: { message: string };
+  done: null;
+}
