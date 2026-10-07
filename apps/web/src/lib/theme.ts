@@ -20,6 +20,8 @@ export function currentTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+const pickListeners = new Set<() => void>();
+
 /** Shows a theme and remembers it for the next visit. */
 export function pickTheme(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
@@ -28,4 +30,20 @@ export function pickTheme(theme: Theme): void {
   } catch {
     // Storage can be blocked, the theme still applies until the page closes
   }
+  for (const listener of pickListeners) listener();
+}
+
+/**
+ * Calls onChange whenever the theme on screen changes: a theme is picked, or the system theme changes.
+ *
+ * @returns A function that stops the calls.
+ */
+export function subscribeToTheme(onChange: () => void): () => void {
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+  pickListeners.add(onChange);
+  systemDark.addEventListener("change", onChange);
+  return () => {
+    pickListeners.delete(onChange);
+    systemDark.removeEventListener("change", onChange);
+  };
 }

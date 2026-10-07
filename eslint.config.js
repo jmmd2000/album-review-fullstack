@@ -1,16 +1,16 @@
+import path from "node:path";
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import { defineConfig, includeIgnoreFile } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
-  // Global ignores
-  {
-    // docs/ is gitignored and holds local notes and design handoffs
-    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "apps/web/src/routeTree.gen.ts", "docs/**"],
-  },
+export default defineConfig(
+  includeIgnoreFile(path.resolve(import.meta.dirname, ".gitignore")),
+  // The generated route tree is committed, so .gitignore doesn't cover it
+  { ignores: ["apps/web/src/routeTree.gen.ts"] },
 
   // Base TS rules
   {
@@ -73,7 +73,16 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // createLink wraps a component, the same way memo does
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true, extraHOCs: ["createLink"] }],
+    },
+  },
+
+  // A route file exports its Route and keeps its components to itself. TanStack Router's Vite plugin handles hot reload for these files.
+  {
+    files: ["apps/web/src/routes/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 

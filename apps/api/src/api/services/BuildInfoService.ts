@@ -40,7 +40,7 @@ export class BuildInfoService {
    * read from the installed modules.
    */
   static async getBuildInfo() {
-    let postgres: string | null = null;
+    let postgres: string | null;
     try {
       const result = await query("SHOW server_version");
       // The raw value carries the distro suffix, "15.13 (Debian 15.13-1...)",

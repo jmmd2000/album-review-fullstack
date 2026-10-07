@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import type { RefObject } from "react";
 
 /**
@@ -10,17 +10,16 @@ import type { RefObject } from "react";
  * @param onDismiss Called when a click lands outside the wrapper or Escape is pressed.
  */
 export function useDismiss(ref: RefObject<HTMLElement | null>, onDismiss: () => void) {
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
+  const dismiss = useEffectEvent(onDismiss);
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        onDismissRef.current();
+        dismiss();
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onDismissRef.current();
+      if (event.key === "Escape") dismiss();
     };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
