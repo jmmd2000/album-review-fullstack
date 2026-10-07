@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { client, handle } from "@/lib/client";
+import { ApiError, client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
 
@@ -107,8 +107,9 @@ export function useArtistJob(job: ArtistJob) {
       const { jobID } = await handle(client.api.jobs[job].$post());
       localStorage.setItem(storageKey, jobID);
       follow(jobID);
-    } catch {
-      setState({ ...IDLE, status: "finished", error: "The job couldn't start. Try again." });
+    } catch (error) {
+      const message = error instanceof ApiError && error.status === 409 ? error.message : "The job couldn't start. Try again.";
+      setState({ ...IDLE, status: "finished", error: message });
     }
   }, [job, storageKey, follow]);
 

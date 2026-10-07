@@ -6,6 +6,7 @@ import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { JobService } from "@/api/services/JobService";
+import { ArtistModel } from "@/api/models/Artist";
 
 const authCookie = adminCookie();
 
@@ -92,4 +93,30 @@ test("reconnecting with a last event id resumes after it", async () => {
   expect(text).not.toContain("event: fetching");
   expect(text).toContain("event: progress");
   expect(text).toContain("event: done");
+});
+
+test("a second run of a job that is still going gets a 409 and doesn't start", async () => {
+  // Both jobs wait on this list, so they stay running until the test releases it
+  let releaseArtists: (artists: Awaited<ReturnType<typeof ArtistModel.getAllArtists>>) => void = () => {};
+  const spy = vi.spyOn(ArtistModel, "getAllArtists").mockReturnValue(new Promise(resolve => (releaseArtists = resolve)));
+
+  const first = await api.post("/api/jobs/artist-images", undefined, authCookie);
+  expect(first.status).toBe(202);
+  const { jobID } = await first.json();
+
+  const second = await api.post("/api/jobs/artist-images", undefined, authCookie);
+  expect(second.status).toBe(409);
+  expect((await second.json()).message).toBe("The artist photos are already updating. Try again when that run finishes.");
+
+  const otherJob = await api.post("/api/jobs/artist-headers", undefined, authCookie);
+  expect(otherJob.status).toBe(202);
+  const { jobID: otherJobID } = await otherJob.json();
+
+  releaseArtists([]);
+  await (await api.get(`/api/jobs/${jobID}/events`, authCookie)).text();
+  await (await api.get(`/api/jobs/${otherJobID}/events`, authCookie)).text();
+  expect(ArtistImageService.isRunning("images")).toBe(false);
+  expect(ArtistImageService.isRunning("headers")).toBe(false);
+
+  spy.mockRestore();
 });

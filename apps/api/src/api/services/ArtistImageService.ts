@@ -6,8 +6,43 @@ import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseS
 import { SettingsService } from "./SettingsService";
 import { AppError } from "@/api/AppError";
 
+export type ArtistImageJob = "images" | "headers";
+
+const runningJobs = new Set<ArtistImageJob>();
+
 /** Updates artist photos and header images, one at a time or as a batch job that reports its progress. */
 export class ArtistImageService {
+  /** Tells whether a run of the job is going now. */
+  static isRunning(job: ArtistImageJob): boolean {
+    return runningJobs.has(job);
+  }
+
+  /**
+   * Gets each artist's header from their Spotify page and saves the ones that changed.
+   * Only one run goes at a time. A second run throws a 409 AppError.
+   */
+  static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
+    return this.runAlone("headers", () => this.refreshHeaders(all, spotifyID, emit));
+  }
+
+  /**
+   * Gets each artist's photos from Spotify and saves the ones that changed.
+   * Only one run goes at a time. A second run throws a 409 AppError.
+   */
+  static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
+    return this.runAlone("images", () => this.refreshImages(all, spotifyID, emit));
+  }
+
+  private static async runAlone(job: ArtistImageJob, run: () => Promise<void>): Promise<void> {
+    if (runningJobs.has(job)) throw new AppError("This job is already running.", 409);
+    runningJobs.add(job);
+    try {
+      await run();
+    } finally {
+      runningJobs.delete(job);
+    }
+  }
+
   static async updateSingleArtistHeader(spotifyID: string, headerImage: string | null): Promise<void> {
     const artist = await ArtistModel.getArtistBySpotifyID(spotifyID);
     if (!artist) throw new AppError("Artist not found.", 404);
@@ -17,7 +52,7 @@ export class ArtistImageService {
     });
   }
 
-  static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
+  private static async refreshHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     let artists;
@@ -141,7 +176,7 @@ export class ArtistImageService {
     await SettingsService.setLastRun("headers", new Date());
   }
 
-  static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
+  private static async refreshImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
     let artists;
