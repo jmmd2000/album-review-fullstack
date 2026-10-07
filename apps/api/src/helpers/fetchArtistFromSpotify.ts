@@ -1,24 +1,14 @@
-import type { SpotifyArtist, SpotifyImage } from "@shared/types";
 import { SpotifyService } from "@/api/services/SpotifyService";
+import { artistResponseSchema } from "@/api/schemas/spotifySchema";
+import type { SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
+import { logger } from "@/config/logger";
 
 /**
- * Represents an artist's data from Spotify.
- */
-export interface ArtistData {
-  /** The artist's name */
-  name: string;
-  /** The artist's Spotify ID */
-  spotifyID: string;
-  /** Array of image URLs */
-  imageURLs: SpotifyImage[];
-}
-
-/**
- * Fetches an artist's data from Spotify.
+ * Fetches an artist's name and photos from Spotify.
  * @param id The artist's Spotify ID.
- * @returns A promise resolving to the artist if found, otherwise `null`.
+ * @returns The artist, or null when Spotify can't find them or sends a reply the app can't read. An unreadable reply is logged as a warning.
  */
-export const fetchArtistFromSpotify = async (id: string): Promise<SpotifyArtist | null> => {
+export const fetchArtistFromSpotify = async (id: string): Promise<SpotifyArtistResponse | null> => {
   const token = await SpotifyService.getAccessToken();
   const searchParameters = {
     method: "GET",
@@ -32,6 +22,10 @@ export const fetchArtistFromSpotify = async (id: string): Promise<SpotifyArtist 
 
   if (!response.ok) return null;
 
-  const artist = (await response.json()) as SpotifyArtist;
-  return artist;
+  const result = artistResponseSchema.safeParse(await response.json());
+  if (!result.success) {
+    logger.warn({ spotifyID: id, issues: result.error.issues }, "Spotify sent an artist the app can't read");
+    return null;
+  }
+  return result.data;
 };

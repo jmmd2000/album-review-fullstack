@@ -1,4 +1,3 @@
-import type { SpotifyImage } from "@shared/types";
 import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeadersFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
@@ -173,10 +172,10 @@ export class ArtistImageService {
       const artistData = await fetchArtistFromSpotify(id);
       if (!artistData) continue;
 
-      const newArtistImage = artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;
+      const newArtistImage = artistData.images.length > 0 ? artistData.images[0].url : undefined;
 
       const currentUrls = (imageURLs || []).map(img => img.url).sort();
-      const fetchedUrls = (artistData.images as SpotifyImage[]).map(img => img.url).sort();
+      const fetchedUrls = artistData.images.map(img => img.url).sort();
 
       const same = areImageUrlsSame(currentUrls, fetchedUrls);
 
@@ -201,7 +200,7 @@ export class ArtistImageService {
 
         try {
           await ArtistModel.updateArtist(id, {
-            imageURLs: artistData.images as SpotifyImage[],
+            imageURLs: artistData.images,
             imageUpdatedAt: new Date(),
           });
         } catch (err) {

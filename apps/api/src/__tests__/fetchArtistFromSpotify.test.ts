@@ -24,6 +24,12 @@ describe("fetchArtistFromSpotify", () => {
     expect(mockFetch).toHaveBeenCalledWith("https://api.spotify.com/v1/artists/abc", expect.anything());
   });
 
+  it("returns null for a reply it can't read, so a batch job skips the artist", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ id: "odd", name: "Odd Artist" }) });
+
+    expect(await fetchArtistFromSpotify("odd")).toBeNull();
+  });
+
   it("returns null when Spotify responds with an error status", async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 404, json: async () => ({ error: "not found" }) });
 
