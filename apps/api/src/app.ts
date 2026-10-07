@@ -15,6 +15,7 @@ import track from "@/api/routes/TrackRoutes";
 import artist from "@/api/routes/ArtistRoutes";
 import bookmark from "@/api/routes/BookmarkedAlbumRoutes";
 import stats from "@/api/routes/StatsRoutes";
+import home from "@/api/routes/HomeRoutes";
 import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
 import job from "@/api/routes/JobRoutes";
@@ -47,6 +48,7 @@ export const app = base
   .route("/api/artists", artist)
   .route("/api/bookmarks", bookmark)
   .route("/api/stats", stats)
+  .route("/api/home", home)
   .route("/api/settings", settings)
   .route("/api/spotify", spotify)
   .route("/api/jobs", job);

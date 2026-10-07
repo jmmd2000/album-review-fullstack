@@ -59,6 +59,17 @@ test("a header image can be cleared with null", async () => {
   expect(artist.headerImage).toBeNull();
 });
 
+test("a header image that isn't a web link is rejected", async () => {
+  for (const headerImage of ["not a link", "javascript:alert(1)"]) {
+    const res = await api.put("/api/artists/artist1/headerImage", { headerImage }, authCookie);
+    expect(res.status).toBe(400);
+    expect((await res.json()).message).toBe("The header image must be a web link.");
+  }
+
+  const artist = await ArtistModel.getArtistBySpotifyID("artist1");
+  expect(artist.headerImage).toBeNull();
+});
+
 test("updating the header of an unknown artist returns 404", async () => {
   const res = await api.put("/api/artists/nope/headerImage", { headerImage: null }, authCookie);
   expect(res.status).toBe(404);

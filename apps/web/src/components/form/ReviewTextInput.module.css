@@ -1,0 +1,45 @@
+.writer {
+  display: grid;
+  gap: 10px;
+}
+
+.label {
+  font-weight: var(--font-weight-label);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  & button {
+    padding: 6px 12px;
+    border-radius: var(--radius-tag);
+    background: var(--colour-panel);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--colour-panel-strong);
+    }
+  }
+}
+
+.colour {
+  color: #fb2c36;
+}
+
+.text {
+  width: 100%;
+  min-height: 220px;
+  padding: 18px;
+  border-radius: 6px;
+  background: var(--colour-panel);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--colour-text-faint);
+  }
+}

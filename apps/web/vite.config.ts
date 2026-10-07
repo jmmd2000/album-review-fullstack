@@ -1,12 +1,12 @@
 import { createRequire } from "module";
 import { defineConfig, version as viteVersion } from "vite";
 import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import path from "path";
 
 const require = createRequire(import.meta.url);
 const reactVersion = require("react/package.json").version as string;
+const siteVersion = require("../../package.json").version as string;
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
@@ -17,6 +17,7 @@ export default defineConfig(({ command }) => ({
     __BUILT_AT__: JSON.stringify(process.env.BUILT_AT ?? ""),
     __REACT_VERSION__: JSON.stringify(reactVersion),
     __VITE_VERSION__: JSON.stringify(viteVersion),
+    __SITE_VERSION__: JSON.stringify(siteVersion),
   },
   server: {
     host: "0.0.0.0",
@@ -28,12 +29,7 @@ export default defineConfig(({ command }) => ({
       },
     },
     fs: {
-      allow: [
-        // Allow local frontend project directory
-        path.resolve(__dirname),
-        // Allow shared directory
-        path.resolve(__dirname, "../../packages/shared"),
-      ],
+      allow: [path.resolve(__dirname, "../..")],
     },
   },
   // The production image ships no app dependencies, so the server bundle
@@ -48,7 +44,7 @@ export default defineConfig(({ command }) => ({
   build: {
     ssrEmitAssets: true,
   },
-  plugins: [tanstackStart(), viteReact(), tailwindcss()],
+  plugins: [tanstackStart(), viteReact()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

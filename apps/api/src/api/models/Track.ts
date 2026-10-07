@@ -1,12 +1,16 @@
 import "dotenv/config";
-import { count, eq, sql, asc } from "drizzle-orm";
+import { asc, count, eq, gt, sql } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
-import type { ReviewedTrack } from "@shared/types";
+import type { TrackPick } from "@shared/types";
 
 export class TrackModel {
+  /**
+   * The album's tracks in album order. A review saves its tracks in album order, so the IDs follow it.
+   * The created times can't: tracks saved in one transaction all get the same time.
+   */
   static async getTracksByAlbumID(albumID: string) {
-    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.createdAt));
+    return db.select().from(reviewedTracks).where(eq(reviewedTracks.albumSpotifyID, albumID)).orderBy(asc(reviewedTracks.id));
   }
 
   static async deleteTracksByAlbumID(albumID: string, executor: Executor = db) {
@@ -25,33 +29,39 @@ export class TrackModel {
     return executor.update(reviewedTracks).set({ rating, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
+  static async updateTrackPick(spotifyID: string, pick: TrackPick | null, executor: Executor = db) {
+    return executor.update(reviewedTracks).set({ pick, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
+  }
+
   static async updateTrackFeatures(spotifyID: string, features: { id: string; name: string }[], executor: Executor = db) {
     return executor.update(reviewedTracks).set({ features, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
-  static async getTrackCount() {
+  static async getRatedTrackCount() {
     return db
       .select({ count: count() })
       .from(reviewedTracks)
+      .where(gt(reviewedTracks.rating, 0))
       .then(r => r[0].count);
   }
 
+  /** The artist's tracks, each album's tracks in album order. The albums come in the order they were reviewed. */
   static async getTracksByArtist(artistID: string) {
-    const rows = await db.select().from(reviewedTracks).innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID)).where(eq(trackArtists.artistSpotifyID, artistID));
+    const rows = await db
+      .select()
+      .from(reviewedTracks)
+      .innerJoin(trackArtists, eq(reviewedTracks.spotifyID, trackArtists.trackSpotifyID))
+      .where(eq(trackArtists.artistSpotifyID, artistID))
+      .orderBy(asc(reviewedTracks.id));
     return rows.map(r => r.reviewed_tracks);
   }
 
   static async getTracksFeaturingArtist(artistID: string) {
-    // Match tracks where features array contains the artist ID
     const filter = JSON.stringify([{ id: artistID }]);
     return db
       .select()
       .from(reviewedTracks)
       .where(sql`${reviewedTracks.features} @> ${filter}::jsonb`);
-  }
-
-  static async getAllTracks(): Promise<ReviewedTrack[]> {
-    return db.select().from(reviewedTracks) as Promise<ReviewedTrack[]>;
   }
 
   static async linkArtistsToTrack(trackSpotifyID: string, artistIDs: string[], executor: Executor = db) {

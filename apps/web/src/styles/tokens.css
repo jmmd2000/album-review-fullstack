@@ -1,92 +1,110 @@
 :root {
-  /* type */
-  --font-sans: "Archivo", system-ui, -apple-system, sans-serif;
-  --fw-body: 400;
-  --fw-medium: 600;
-  --fw-label: 700;
-  --fw-display: 900;
+  color-scheme: light dark;
 
-  /* score tiers */
-  --tier-perfect: #d946ef; /* 91-100 | track 10 */
-  --tier-amazing: #7c3aed; /* 81-90  | track 9  */
-  --tier-brilliant: #2563eb; /* 71-80  | track 8  */
-  --tier-great: #06b6d4; /* 61-70  | track 7  */
-  --tier-good: #10b981; /* 51-60  | track 6  */
-  --tier-meh: #84cc16; /* 41-50  | track 5  */
-  --tier-ok: #d97706; /* 31-40  | track 4  */
-  --tier-bad: #ea580c; /* 21-30  | track 3  */
-  --tier-awful: #dc2626; /* 11-20  | track 2  */
-  --tier-terrible: #7f1d1d; /* 1-10   | track 1  */
-  --tier-unrated: #64748b; /* 0 or unrated */
+  --colour-background: light-dark(oklch(0.965 0.003 250), oklch(0.19 0.006 70));
+  --colour-panel: light-dark(oklch(0.93 0.004 250), oklch(0.235 0.007 70));
+  --colour-panel-strong: light-dark(oklch(0.89 0.005 250), oklch(0.28 0.008 70));
+  --colour-panel-translucent: light-dark(oklch(0.99 0.002 250 / 0.66), oklch(0.235 0.007 70 / 0.7));
+  --colour-foreground: light-dark(oklch(0.2 0.01 260), oklch(0.94 0.008 85));
+  --colour-text-muted: light-dark(oklch(0.2 0.01 260 / 0.62), oklch(0.94 0.008 85 / 0.6));
+  --colour-text-faint: light-dark(oklch(0.2 0.01 260 / 0.14), oklch(0.94 0.008 85 / 0.16));
+  --colour-divider: light-dark(oklch(0.2 0.01 260 / 0.1), oklch(0.94 0.008 85 / 0.1));
+  --colour-text-on-tier: oklch(0.985 0.003 250);
 
-  /* neutrals, light theme */
-  --ink: #111111;
-  --paper: #ffffff;
-  --nav-bg: #111111;
-  --on-ink: #ffffff;
-  --muted: #888888;
-  --muted-2: #999999;
-  --muted-3: #777777;
-  --faint: #bbbbbb;
-  --hairline: #eeeeee;
-  --bar-track: #f0f0f0;
-  --disabled-border: #dddddd;
-  --disabled-fg: #cccccc;
-  --reveal-bg: rgba(17, 17, 17, 0.92);
-  /* darkening gradient over hero photos so light text stays readable */
-  --banner-scrim: linear-gradient(180deg, rgba(17, 17, 17, 0.15) 0%, rgba(17, 17, 17, 0.55) 55%, rgba(17, 17, 17, 0.95) 100%);
+  --colour-best: light-dark(oklch(0.48 0.13 150), oklch(0.8 0.15 150));
+  --colour-best-fill: light-dark(oklch(0.48 0.13 150), oklch(0.62 0.15 150));
+  --colour-worst: light-dark(oklch(0.5 0.2 25), oklch(0.72 0.17 25));
+  --colour-worst-fill: light-dark(oklch(0.5 0.2 25), oklch(0.62 0.17 25));
 
-  /* space, 4px base */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 20px;
-  --sp-6: 24px;
-  --sp-7: 28px;
-  --sp-8: 32px;
-  --sp-9: 36px;
-  --sp-10: 40px;
-  --sp-11: 44px;
-  --sp-12: 52px;
-  --gutter: 36px;
-  --gutter-mobile: 18px;
-  --nav-height: 56px;
-  --grid-gap: 4px;
-  --column-gap: 52px;
+  --colour-tier-perfect: light-dark(oklch(0.58 0.24 345), oklch(0.76 0.19 345)); /* 91-100 | track 10 */
+  --colour-tier-perfect-fill: light-dark(oklch(0.58 0.24 345), oklch(0.62 0.19 345));
+  --colour-tier-amazing: light-dark(oklch(0.54 0.22 298), oklch(0.72 0.17 298)); /* 81-90  | track 9  */
+  --colour-tier-amazing-fill: light-dark(oklch(0.54 0.22 298), oklch(0.62 0.17 298));
+  --colour-tier-brilliant: light-dark(oklch(0.56 0.19 258), oklch(0.74 0.14 258)); /* 71-80  | track 8  */
+  --colour-tier-brilliant-fill: light-dark(oklch(0.56 0.19 258), oklch(0.62 0.14 258));
+  --colour-tier-great: light-dark(oklch(0.6 0.13 220), oklch(0.8 0.12 215)); /* 61-70  | track 7  */
+  --colour-tier-great-fill: light-dark(oklch(0.6 0.13 220), oklch(0.62 0.12 215));
+  --colour-tier-good: light-dark(oklch(0.6 0.15 158), oklch(0.79 0.15 160)); /* 51-60  | track 6  */
+  --colour-tier-good-fill: light-dark(oklch(0.6 0.15 158), oklch(0.62 0.15 160));
+  --colour-tier-meh: light-dark(oklch(0.7 0.18 128), oklch(0.85 0.16 125)); /* 41-50  | track 5  */
+  --colour-tier-meh-fill: light-dark(oklch(0.62 0.18 128), oklch(0.62 0.16 125));
+  --colour-tier-ok: light-dark(oklch(0.74 0.15 78), oklch(0.83 0.14 85)); /* 31-40  | track 4  */
+  --colour-tier-ok-fill: light-dark(oklch(0.62 0.15 78), oklch(0.62 0.14 85));
+  --colour-tier-bad: light-dark(oklch(0.66 0.18 52), oklch(0.76 0.16 55)); /* 21-30  | track 3  */
+  --colour-tier-bad-fill: light-dark(oklch(0.62 0.18 52), oklch(0.62 0.16 55));
+  --colour-tier-awful: light-dark(oklch(0.58 0.21 27), oklch(0.68 0.19 27)); /* 11-20  | track 2  */
+  --colour-tier-awful-fill: light-dark(oklch(0.58 0.21 27), oklch(0.62 0.19 27));
+  --colour-tier-terrible: light-dark(oklch(0.44 0.15 20), oklch(0.63 0.14 18)); /* 1-10   | track 1  */
+  --colour-tier-terrible-fill: light-dark(oklch(0.44 0.15 20), oklch(0.62 0.14 18));
+  --colour-tier-unrated: light-dark(oklch(0.58 0.01 70), oklch(0.6 0.01 70)); /* 0 or unrated */
+  --colour-tier-unrated-fill: light-dark(oklch(0.58 0.01 70), oklch(0.6 0.01 70));
 
-  /* borders. Radius stays 0 by design */
-  --radius: 0;
-  --bw-hairline: 1px;
-  --bw-chip: 2px;
-  --bw-control: 2.5px;
-  --bw-card: 3px;
-  --bw-rule: 4px;
-  --bw-avatar: 5px;
+  --font-display: "Funnel Display Variable", system-ui, sans-serif;
+  --font-body: "Funnel Sans Variable", system-ui, sans-serif;
+  --font-weight-body: 400;
+  --font-weight-medium: 550;
+  --font-weight-label: 600;
+  --font-weight-display: 700;
 
-  /* motion */
-  --duration-reveal: 0.2s;
-  --ease: ease;
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+  --space-7: 4.5rem;
+  --space-8: 6rem;
+  --space-panel: clamp(22px, 2.6vw, 36px);
+  --space-section: clamp(44px, 5vw, 80px);
+  --space-grid-row: clamp(32px, 3.6vw, 56px);
+  --space-grid-column: clamp(14px, 1.8vw, 28px);
 
-  /* layers*/
+  --page-width: 1920px;
+  --page-gutter: clamp(16px, 3.5vw, 56px);
+
+  --border-thin: 1px;
+  --border-thick: 2px;
+
+  --radius-tag: 4px;
+  --radius-control: 8px;
+  --radius-row: 10px;
+  --radius-menu: 14px;
+  --radius-panel: 18px;
+  --radius-cover: 3%;
+  --radius-pill: 999px;
+
+  /* only for things that float above the page */
+  --shadow-float: 0 24px 60px oklch(0 0 0 / 0.4), 0 0 0 1px var(--colour-divider);
+  --shadow-tooltip: 0 16px 40px oklch(0 0 0 / 0.35);
+
+  /* how strongly an album's cover colours show behind its page */
+  --backdrop-strength: 0.5;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-quick: 0.3s;
+
   --z-nav: 100;
   --z-dropdown: 200;
   --z-modal: 300;
   --z-toast: 400;
 }
 
-/* neutrals, dark theme. Same design with ink and paper swapped */
-[data-theme="dark"] {
-  --ink: #ffffff;
-  --paper: #0d0d0d;
-  --nav-bg: #000000;
-  --on-ink: #111111;
-  --hairline: #222222;
-  --bar-track: #1e1e1e;
-  --muted: #888888;
-  --muted-2: #888888;
-  --muted-3: #999999;
-  --faint: #777777;
-  --disabled-border: #333333;
-  --disabled-fg: #555555;
+:root[data-theme="light"] {
+  color-scheme: light;
 }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --backdrop-strength: 0.65;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --backdrop-strength: 0.65;
+  }
+}
+
+/* Breakpoints. css cannot read var() inside a media query
+   phone:       width < 560px
+   stacked:     width < 900px, two-column layouts become one
+   grid steps:  2 columns, then 3 at 640px, 4 at 960px, 5 at 1240px, 6 at 1560px */

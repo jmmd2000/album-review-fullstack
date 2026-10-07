@@ -1,72 +1,100 @@
-import type { ExtractedColor } from "@shared/types";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { client, handle, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import BlurryHeader from "@/components/layout/BlurryHeader";
-import AlbumReviewForm from "@/components/form/AlbumReviewForm";
-import { useState } from "react";
-import ErrorComponent from "@/components/ui/ErrorComponent";
-import HeaderDetails from "@/components/layout/HeaderDetails";
-import AlbumDetails from "@/components/album/AlbumDetails";
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { client, handle } from "@/lib/client";
+import { toReviewPayload } from "@/lib/reviewForm";
+import { AdminOnly } from "@/components/admin/AdminOnly";
+import { ReviewForm } from "@/components/form/ReviewForm";
+import { RouteError } from "@/components/ui/RouteError";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 
-async function fetchAlbumFromDB(albumSpotifyID: string) {
+import type { ReviewFormValues } from "@/lib/reviewForm";
+
+async function fetchAlbumReview(albumSpotifyID: string) {
   return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
 }
 
-const albumQueryOptions = (albumSpotifyID: string) =>
+const reviewQueryOptions = (albumID: string) =>
   queryOptions({
-    queryKey: queryKeys.albums.edit(albumSpotifyID),
-    queryFn: () => fetchAlbumFromDB(albumSpotifyID),
+    queryKey: queryKeys.albums.edit(albumID),
+    queryFn: () => fetchAlbumReview(albumID),
   });
 
 export const Route = createFileRoute("/albums/$albumID/edit")({
-  loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
-  errorComponent: ErrorComponent,
+  ssr: false,
+  loader: ({ params, context }) => context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID)),
   component: RouteComponent,
+  errorComponent: ({ error, reset }) => (
+    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </RouteError>
+  ),
   head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: `Edit: ${loaderData?.album?.name ?? "Edit Album Review"}`,
-      },
-    ],
+    meta: [{ title: loaderData ? `Edit ${loaderData.album.name}` : "Edit review" }],
   }),
 });
 
 function RouteComponent() {
-  // Get the album ID from the URL
-  const { albumID } = useParams({ strict: false });
+  return (
+    <AdminOnly>
+      <EditReview />
+    </AdminOnly>
+  );
+}
 
-  // If the album ID is undefined, throw an error
-  if (!albumID) {
-    throw new Error("albumID is undefined");
-  }
+function EditReview() {
+  const { albumID } = Route.useParams();
+  const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { album, artists, tracks } = data;
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
 
-  // Fetch the album data
-  const { data } = useSuspenseQuery(albumQueryOptions(albumID));
+  const albumArtists = album.albumArtists.length > 0 ? album.albumArtists : artists.map(artist => ({ spotifyID: artist.spotifyID, name: artist.name, imageURLs: artist.imageURLs }));
 
-  const initialColors = data.album.colors;
-  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(initialColors);
+  const save = useMutation({
+    mutationFn: (values: ReviewFormValues) =>
+      handleVoid(
+        client.api.albums[":albumID"].edit.$put({
+          param: { albumID },
+          json: { ...toReviewPayload(values), album: { spotifyID: album.spotifyID, artistSpotifyID: album.artistSpotifyID, albumArtists } },
+        })
+      ),
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: queryKeys.albums.edit(albumID) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.stats.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
+      ]);
+      await navigate({ to: "/albums/$albumID", params: { albumID } });
+    },
+  });
+
+  const initialValues: ReviewFormValues = {
+    tracks,
+    reviewContent: album.reviewContent ?? "",
+    colours: album.colors,
+    genres: data.albumGenres?.map(genre => genre.name) ?? album.genres,
+    affectsArtistScore: album.affectsArtistScore,
+    creditedArtistIDs: album.artistSpotifyIDs?.length ? album.artistSpotifyIDs : albumArtists.map(artist => artist.spotifyID),
+    scoreArtistIDs: album.artistScoreIDs ?? [],
+  };
 
   return (
-    <>
-      <RequireAdmin>
-        <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails name={data.album.name} imageURL={data.album.imageURLs[1].url} largeImageURL={data.album.imageURLs[0]?.url} />
-          <AlbumDetails
-            album={data.album}
-            trackCount={data.tracks.length}
-            artists={data.artists.map(artist => ({
-              spotifyID: artist.spotifyID,
-              name: artist.name,
-              imageURLs: artist.imageURLs,
-            }))}
-          />
-        </BlurryHeader>
-
-        <AlbumReviewForm album={data.album} tracks={data.tracks} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.allGenres ?? []} />
-      </RequireAdmin>
-    </>
+    <ReviewForm
+      albumName={album.name}
+      artistName={album.artistName}
+      cover={album.imageURLs[0]}
+      albumArtists={albumArtists}
+      initialValues={initialValues}
+      genreSuggestions={(data.allGenres ?? []).map(genre => genre.name)}
+      onSave={values => save.mutateAsync(values)}
+      onCancel={() => (canGoBack ? router.history.back() : navigate({ to: "/albums/$albumID", params: { albumID } }))}
+    />
   );
 }

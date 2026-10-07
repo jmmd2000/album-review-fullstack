@@ -24,8 +24,6 @@ async function seedAlbums(count: number, overrides: (index: number) => Partial<t
     releaseDate: "2020-01-01",
     releaseYear: 2020,
     imageURLs: [],
-    bestSong: "Best",
-    worstSong: "Worst",
     runtime: "40:00",
     reviewScore: 80,
     finalScore: 100 - index,

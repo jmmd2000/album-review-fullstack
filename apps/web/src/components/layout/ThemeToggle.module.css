@@ -1,0 +1,30 @@
+.toggle {
+  color: var(--colour-foreground);
+}
+
+/* The icon is the theme a click switches to: the sun in dark mode, the moon in light */
+.sun {
+  display: none;
+}
+
+:global(:root[data-theme="dark"]) {
+  & .sun {
+    display: block;
+  }
+
+  & .moon {
+    display: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) {
+    & .sun {
+      display: block;
+    }
+
+    & .moon {
+      display: none;
+    }
+  }
+}

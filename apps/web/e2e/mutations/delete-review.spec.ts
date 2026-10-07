@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, REVIEWED, capturedAlbum } from "../../../api/src/db/fixtures/fixtures";
+import { cardFor } from "../helpers";
 
 // Count how often each artist appears across the whole fixture set, bookmarks
 // included, then pick an album whose artists appear nowhere else. Deleting it
@@ -16,23 +17,23 @@ const targetAlbum = capturedAlbum(target.spotifyID);
 test("deleting a review removes the album and its orphaned artist", async ({ page }) => {
   await page.goto(`/albums/${target.spotifyID}`);
   // The album page arrives server rendered, so retry the click until
-  // hydration has wired the dropdown handler
+  // hydration has wired up the Delete button
   await expect(async () => {
-    await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
-    await expect(page.getByRole("button", { name: "Delete Album" })).toBeVisible({ timeout: 1000 });
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.getByRole("alertdialog", { name: "Delete this review?" })).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 15000 });
-  await page.getByRole("button", { name: "Delete Album" }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await page.getByRole("button", { name: "Delete review" }).click();
 
-  // Deleting navigates back to the library, where the album is gone. The
-  // delete can queue behind another spec's transaction, hence the allowance
+  // Deleting opens the library, where the album is gone. The delete can
+  // queue behind another spec's transaction, hence the allowance
   await expect(page).toHaveURL(/\/albums$/, { timeout: 15000 });
-  await expect(page.getByTestId("album-card").filter({ hasText: targetAlbum.name })).toHaveCount(0);
+  await expect(page.getByText("Review deleted")).toBeVisible();
+  await expect(cardFor(page, targetAlbum.name)).toHaveCount(0);
 
   // The artist had no other reviews, so they leave the leaderboard too
   await page.goto("/artists");
-  await expect(page.getByTestId("artist-card").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Artists", level: 1 })).toBeVisible();
   for (const artist of targetAlbum.artists) {
-    await expect(page.getByTestId("artist-card").filter({ hasText: artist.name })).toHaveCount(0);
+    await expect(cardFor(page, artist.name)).toHaveCount(0);
   }
 });

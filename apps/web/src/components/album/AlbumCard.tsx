@@ -1,165 +1,35 @@
+import { linkOptions } from "@tanstack/react-router";
+import { Card } from "@/components/ui/Card";
+import { usableCoverColours } from "@/lib/coverColours";
+
+import type { ReactNode } from "react";
 import type { DisplayAlbum } from "@shared/types";
-import { Link } from "@tanstack/react-router";
-import RatingChip from "@/components/ui/RatingChip";
-import { motion } from "framer-motion";
-import { useHydrated } from "@/hooks/useHydrated";
-import { useState } from "react";
-import { Bookmark, BookmarkX, Loader2, StarOff } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { client, handleVoid } from "@/lib/client";
-import { queryKeys } from "@/lib/queryKeys";
 
-/**
- * The props for the AlbumCard component.
- */
 interface AlbumCardProps {
-  /** The album to display */
   album: DisplayAlbum;
-  /** Whether the album is bookmarked, default false */
-  bookmarked?: boolean;
+  /** Replaces the artist name under the title */
+  subtitle?: string;
+  /** A button in the cover's corner, such as the bookmark button */
+  action?: ReactNode;
 }
 
-/**
- * This component creates a card for an album with an image, name, artist, and review score.
- * @param {DisplayAlbum} album The album to display
- * @param {boolean} bookmarked Whether or not the album is bookmarked
- */
-const AlbumCard = ({ album, bookmarked = false }: AlbumCardProps) => {
-  const toURL = album.finalScore != null ? "/albums/$albumID" : "/albums/$albumID/create";
-  const artistNames =
-    album.albumArtists && album.artistSpotifyIDs
-      ? album.albumArtists
-          .filter(artist => album.artistSpotifyIDs?.includes(artist.spotifyID))
-          .map(artist => artist.name)
-          .join(", ")
-      : album.artistName;
-  const largeImageURL = album.imageURLs[0]?.url;
-  const hydrated = useHydrated();
+/** An album's card. An album without a score links to its review form instead of its page. */
+export function AlbumCard({ album, subtitle, action }: AlbumCardProps) {
+  const hasScore = album.finalScore !== null;
+  const shade = usableCoverColours(album.colors ?? [])[0];
+
+  const link = hasScore ? linkOptions({ to: "/albums/$albumID", params: { albumID: album.spotifyID } }) : linkOptions({ to: "/albums/$albumID/create", params: { albumID: album.spotifyID } });
 
   return (
-    <Link params={{ albumID: album.spotifyID }} to={toURL} resetScroll viewTransition className="block" data-testid="album-card">
-      <motion.div
-        initial={hydrated ? { opacity: 0, y: 10 } : false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        whileHover={{ y: -10 }}
-        className="flex flex-col rounded-xl items-center w-full max-w-60 3xl:max-w-none"
-      >
-        <img
-          src={album.imageURLs[1].url}
-          srcSet={largeImageURL ? `${largeImageURL} 640w, ${album.imageURLs[1].url} 300w` : undefined}
-          sizes="(min-width: 1921px) 640px, 300px"
-          alt={album.name}
-          loading="lazy"
-          decoding="async"
-          className="w-full aspect-square rounded-lg"
-          style={{
-            viewTransitionName: `album-image-${album.spotifyID}`,
-          }}
-        />
-
-        <div className="flex justify-between w-full">
-          <div className="flex flex-col px-0 py-1 w-[90%] relative">
-            <h2 className="w-full max-w-30 md:max-w-40 3xl:max-w-none text-sm font-medium truncate">{album.name}</h2>
-            <p className="text-xs text-gray-500 truncate">{artistNames}</p>
-          </div>
-
-          {album.finalScore != null ? (
-            album.affectsArtistScore ? (
-              <div className="grid place-items-center">
-                <RatingChip rating={album.finalScore} options={{ small: true }} />
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <StarOff className="w-3 h-3 text-yellow-900" aria-label="Does not affect artist score" />
-                <RatingChip rating={album.finalScore} options={{ small: true }} />
-              </div>
-            )
-          ) : (
-            <div className="grid place-items-center">
-              <BookmarkButton album={album} bookmarked={bookmarked} />
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </Link>
-  );
-};
-
-export default AlbumCard;
-
-interface BookmarkButtonProps {
-  /** The album to bookmark/unbookmark */
-  album: DisplayAlbum;
-  /** Current bookmark state */
-  bookmarked: boolean;
-}
-
-function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
-  const queryClient = useQueryClient();
-  const [isHovering, setIsHovering] = useState(false);
-
-  // Flips this album's flag in every bookmark status cache, so any card fed
-  // by the status query updates instantly
-  const applyStatus = (value: boolean) => {
-    queryClient.setQueriesData<Record<string, boolean>>({ queryKey: queryKeys.bookmarks.statuses }, data => (data ? { ...data, [album.spotifyID]: value } : data));
-  };
-
-  const toggleMutation = useMutation({
-    mutationFn: (next: boolean) =>
-      next
-        ? handleVoid(client.api.bookmarks[":albumID"].add.$post({ param: { albumID: album.spotifyID }, json: album }))
-        : handleVoid(client.api.bookmarks[":albumID"].remove.$delete({ param: { albumID: album.spotifyID } })),
-    onMutate: async next => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.bookmarks.statuses });
-      const snapshot = queryClient.getQueriesData<Record<string, boolean>>({ queryKey: queryKeys.bookmarks.statuses });
-      applyStatus(next);
-      return { snapshot };
-    },
-    onError: (_error, _next, context) => {
-      for (const [key, data] of context?.snapshot ?? []) {
-        queryClient.setQueryData(key, data);
-      }
-      toast.error("Couldn't update the bookmark, try again.");
-    },
-    onSettled: () => {
-      // Only the lists need refetching, the status caches already hold the final value
-      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.lists });
-    },
-  });
-
-  const isLoading = toggleMutation.isPending;
-  const isRemoving = isHovering && bookmarked;
-  const iconColor = {
-    fill: isRemoving ? "#dc2626" : bookmarked ? "#22c55e" : "transparent",
-    stroke: isRemoving ? "white" : bookmarked ? "#22c55e" : isHovering ? "#22c55e" : "#717171",
-  };
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleMutation.mutate(!bookmarked);
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      aria-label={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
-      title={bookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
-      disabled={isLoading}
-      data-testid="bookmark-button"
-      className="rounded-md bg-neutral-800 bg-opacity-60 p-1 backdrop-blur-md transition-all duration-200 hover:bg-neutral-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 active:scale-95 disabled:opacity-50 cursor-pointer"
-    >
-      {isLoading ? (
-        <Loader2 size={20} className="animate-spin" stroke={bookmarked ? "#22c55e" : "#717171"} />
-      ) : isRemoving ? (
-        <BookmarkX size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
-      ) : (
-        <Bookmark size={20} fill={iconColor.fill} stroke={iconColor.stroke} />
-      )}
-    </button>
+    <Card
+      link={link}
+      title={album.name}
+      subtitle={subtitle ?? album.artistName}
+      score={album.finalScore}
+      images={album.imageURLs}
+      shade={shade}
+      action={action}
+      morph={{ kind: "album", spotifyID: album.spotifyID }}
+    />
   );
 }

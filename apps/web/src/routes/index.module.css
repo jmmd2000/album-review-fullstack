@@ -1,0 +1,92 @@
+.home {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+
+  @media (width < 900px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(240px, 1fr);
+  }
+}
+
+/* Fixed behind the whole screen, nav included, and washed with the hovered cover's colour */
+.tint {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in oklab, var(--tint, transparent) 18%, var(--colour-background));
+  opacity: 0;
+  transition:
+    opacity 0.6s var(--ease-out),
+    background-color 0.6s var(--ease-out);
+  pointer-events: none;
+
+  &[data-lit] {
+    opacity: 1;
+  }
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-5);
+  min-width: 0;
+  padding: clamp(16px, 4vw, 56px) var(--page-gutter);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* The vh limit keeps all three lines on a short laptop screen */
+.title {
+  font-size: clamp(3.4rem, min(8.4vw, 14vh), 8.6rem);
+  font-weight: 650;
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+}
+
+.now {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 3em;
+  max-width: 38ch;
+  color: var(--colour-text-muted);
+  font-size: 1.125rem;
+
+  /* nothing hovers on a touch screen, so the line would only ever be empty */
+  @media (hover: none) {
+    display: none;
+  }
+}
+
+.nowName {
+  display: block;
+  color: var(--colour-foreground);
+  font-weight: var(--font-weight-label);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 460px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* The columns fill this box without adding to its height, so the page is never taller than the intro needs */
+.wall {
+  position: relative;
+}

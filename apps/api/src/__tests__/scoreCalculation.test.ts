@@ -388,8 +388,6 @@ function createMockAlbum(finalScore: number, releaseYear: number, affectsArtistS
     reviewCount: 1,
     averageScore: finalScore,
     totalScore: finalScore,
-    bestSong: "1",
-    worstSong: "2",
     reviewContent: "Test review",
     colors: [],
     genres: [],

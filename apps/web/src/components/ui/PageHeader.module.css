@@ -1,0 +1,40 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px 40px;
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: clamp(24px, 5vw, 56px) var(--page-gutter) var(--space-5);
+}
+
+.title {
+  font-size: clamp(2.8rem, 6vw, 4.6rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+/* Raised to the middle of the word, so it reads as a count and not part of the title */
+.count {
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0.3em 0.62em 0.26em;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+  font-size: 0.32em;
+  font-weight: var(--font-weight-label);
+  letter-spacing: 0;
+  line-height: 1;
+  vertical-align: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}

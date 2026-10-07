@@ -3,6 +3,7 @@ import { resetTables } from "./testUtils";
 import { beforeEach, afterEach, afterAll, test, expect } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
+import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
 
 const mockAlbum = {
   spotifyID: "1",
@@ -38,12 +39,20 @@ test("bookmark album and fetch", async () => {
   expect(await fetched.json()).toHaveProperty("spotifyID", "1");
 });
 
-test("bookmark statuses", async () => {
+test("finds which of the given albums are bookmarked", async () => {
   await api.post("/api/bookmarks/1/add", mockAlbum, authCookie);
 
-  const statusRes = await api.get("/api/bookmarks/status?ids=1,2", authCookie);
-  expect(statusRes.status).toBe(200);
-  expect(await statusRes.json()).toEqual({ "1": true, "2": false });
+  expect(await BookmarkedAlbumModel.getBookmarkedByIds(["1", "2"])).toEqual(["1"]);
+});
+
+test("a search counts only the bookmarks it matches", async () => {
+  await api.post("/api/bookmarks/1/add", mockAlbum, authCookie);
+  await api.post("/api/bookmarks/2/add", { ...mockAlbum, spotifyID: "2", name: "Other Record", artistName: "Someone Else" }, authCookie);
+
+  const res = await api.get("/api/bookmarks?search=other", authCookie);
+  const body = await res.json();
+  expect(body.albums.map((album: { spotifyID: string }) => album.spotifyID)).toEqual(["2"]);
+  expect(body.totalCount).toBe(1);
 });
 
 test("remove bookmarked album", async () => {

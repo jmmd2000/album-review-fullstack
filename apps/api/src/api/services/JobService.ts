@@ -1,11 +1,9 @@
 import { randomUUID } from "crypto";
 
 export type JobEvent = {
-  /**Monotonic id, used as the SSE event id so a reconnecting client can resume */
+  /** Counts up from 0. It is also the SSE event id, so a client that reconnects can resume. */
   id: number;
-  /** Event name */
   event: string;
-  /**Optional payload */
   data?: unknown;
 };
 
@@ -14,24 +12,23 @@ export type JobEmit = (event: string, data?: unknown) => void;
 
 type JobRunner = (emit: JobEmit) => Promise<void>;
 
-// A finished job hangs around this long so a client that reconnects
-// can still replay it's final result before it's dropped.
+// A finished job stays this long, so a client that reconnects can still replay its result
 const DONE_TTL_MS = 5 * 60 * 1000;
 
-/**A single background job, an append-only buffer of progress events */
+/** One background job: a buffer of its progress events, added to and never changed. */
 class Job {
   private readonly events: JobEvent[] = [];
   private done = false;
   private nextID = 0;
   private waiters: (() => void)[] = [];
 
-  /** Append an event and wake any streams waiting. */
+  /** Adds an event and wakes the streams that wait for one. */
   push(event: string, data?: unknown): void {
     this.events.push({ id: this.nextID++, event, data });
     this.wake();
   }
 
-  /** Emit a final "done", mark the job finished, and wake streams */
+  /** Adds the final "done" event and marks the job finished. */
   finish(): void {
     this.push("done");
     this.done = true;
@@ -69,10 +66,10 @@ const jobs = new Map<string, Job>();
  */
 export const JobService = {
   /**
-   * Start `runner` in the background and return its job id immediately. The
-   * runner reports progress via the `emit` it is passed, a thrown error is
-   * surfaced as a final "error" event. The job is dropped a few minutes after it
-   * finishes.
+   * Starts `runner` in the background and returns its job id at once. The runner
+   * reports progress through `emit`. If it throws, the job sends a "fatal" event
+   * with the error message before "done". The job is removed a few minutes after
+   * it finishes.
    *
    * @param runner The work to run, detached from any request.
    * @returns The new job's id.
@@ -86,7 +83,8 @@ export const JobService = {
       try {
         await runner((event, data) => job.push(event, data));
       } catch (error) {
-        job.push("error", { message: (error as Error).message });
+        // Not "error": EventSource uses that name for its own connection errors
+        job.push("fatal", { message: (error as Error).message });
       } finally {
         job.finish();
         setTimeout(() => jobs.delete(id), DONE_TTL_MS).unref();
@@ -96,7 +94,7 @@ export const JobService = {
     return id;
   },
 
-  /** Get a job by id, or undefined if it never existed or has been dropped */
+  /** Gets a job by id. Gives undefined if the job never existed or was removed. */
   get(id: string): Job | undefined {
     return jobs.get(id);
   },

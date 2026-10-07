@@ -15,25 +15,7 @@ const paginatedSchema = z.object({
   secondaryOrder: z.enum(["asc", "desc"]).optional(),
 });
 
-const idsSchema = z.object({
-  ids: z.string().min(1, "ids parameter is required"),
-});
-
-const allAlbumsSchema = z.object({
-  includeCounts: z.enum(["true", "false"]).optional(),
-});
-
-// Static paths are registered before /:albumID so "all"/"scores" aren't matched as an id.
 const album = new Hono()
-  .get("/all", validate("query", allAlbumsSchema), async c => {
-    const albums = await AlbumService.getAllAlbums(c.req.valid("query").includeCounts === "true");
-    return c.json(albums, 200);
-  })
-  .get("/scores", validate("query", idsSchema), async c => {
-    const { ids } = c.req.valid("query");
-    const idList = ids.includes(",") ? ids.split(",").map(s => s.trim()) : [ids];
-    return c.json(await AlbumService.getReviewScoresByIds(idList), 200);
-  })
   .get("/:albumID", async c => {
     const data = await AlbumService.getAlbumByID(c.req.param("albumID"), c.req.query("includeGenres") !== "false");
     return c.json(data, 200);

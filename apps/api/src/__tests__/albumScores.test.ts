@@ -1,11 +1,10 @@
 import { beforeEach, afterEach, afterAll, test, expect } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
-import { api } from "./apiRequest";
 import { ArtistModel } from "@/api/models/Artist";
 import { AlbumModel } from "@/api/models/Album";
 
-async function seedAlbum(spotifyID: string, name: string, reviewScore: number) {
+async function seedAlbum(spotifyID: string, name: string, reviewScore: number, finalScore: number) {
   await AlbumModel.createAlbum({
     spotifyID,
     name,
@@ -14,8 +13,6 @@ async function seedAlbum(spotifyID: string, name: string, reviewScore: number) {
     releaseDate: "2020-01-01",
     releaseYear: 2020,
     imageURLs: [],
-    bestSong: "1",
-    worstSong: "1",
     runtime: "00:00",
     reviewContent: "",
     reviewScore,
@@ -29,7 +26,7 @@ async function seedAlbum(spotifyID: string, name: string, reviewScore: number) {
       noStrongPenalty: 0,
       totalBonus: 0,
     },
-    finalScore: reviewScore,
+    finalScore,
     affectsArtistScore: true,
     colors: [],
     genres: [],
@@ -51,8 +48,8 @@ beforeEach(async () => {
     unrated: false,
     leaderboardPosition: null,
   });
-  await seedAlbum("album1", "Album 1", 95);
-  await seedAlbum("album2", "Album 2", 45);
+  await seedAlbum("album1", "Album 1", 93, 95);
+  await seedAlbum("album2", "Album 2", 47, 45);
 });
 
 afterEach(async () => {
@@ -63,31 +60,18 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("returns the review scores for the requested ids", async () => {
-  const res = await api.get("/api/albums/scores?ids=album1,album2");
-  expect(res.status).toBe(200);
+test("gives the final scores of the reviewed albums, not their base scores", async () => {
+  const scores = await AlbumModel.getFinalScoresByIds(["album1", "album2"]);
 
-  const scores = await res.json();
   expect(scores).toHaveLength(2);
   expect(scores).toEqual(
     expect.arrayContaining([
-      { spotifyID: "album1", reviewScore: 95 },
-      { spotifyID: "album2", reviewScore: 45 },
+      { spotifyID: "album1", finalScore: 95 },
+      { spotifyID: "album2", finalScore: 45 },
     ])
   );
 });
 
-test("a single id works without a comma", async () => {
-  const res = await api.get("/api/albums/scores?ids=album1");
-  expect(await res.json()).toEqual([{ spotifyID: "album1", reviewScore: 95 }]);
-});
-
-test("unknown ids come back empty", async () => {
-  const res = await api.get("/api/albums/scores?ids=nope");
-  expect(await res.json()).toEqual([]);
-});
-
-test("a missing ids parameter is rejected", async () => {
-  const res = await api.get("/api/albums/scores");
-  expect(res.status).toBe(400);
+test("leaves out albums that aren't reviewed", async () => {
+  expect(await AlbumModel.getFinalScoresByIds(["album1", "nope"])).toEqual([{ spotifyID: "album1", finalScore: 95 }]);
 });

@@ -1,12 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { loginAsAdmin } from "../helpers";
+import { loginAsAdmin, openAdminMenu } from "../helpers";
 
-test("admin nav and pages are locked when logged out", async ({ page }) => {
+test("admin links and pages are locked when logged out", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Search" })).toHaveCount(0);
+  await openAdminMenu(page, page.getByLabel("Password"));
+  await expect(page.getByRole("link", { name: "Review an album" })).toHaveCount(0);
 
-  // The settings loader needs admin, so the page content never appears
   await page.goto("/settings");
+  await expect(page.getByText("Log in to see this page")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Settings" })).toHaveCount(0);
 });
 
@@ -14,12 +15,12 @@ test("logging in unlocks the admin area and logging out locks it again", async (
   await loginAsAdmin(page);
 
   await page.goto("/settings");
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 
-  await page.getByTestId("admin-dropdown-desktop").getByTestId("admin-dropdown-button").click();
-  await page.getByRole("button", { name: "Logout" }).click();
-  await expect(page.getByRole("link", { name: "Search" })).toHaveCount(0);
+  await openAdminMenu(page, page.getByRole("button", { name: "Log out" }));
+  await page.getByRole("button", { name: "Log out" }).click();
 
+  await expect(page.getByText("Log in to see this page")).toBeVisible();
   await page.goto("/settings");
-  await expect(page.getByRole("heading", { name: "Settings" })).toHaveCount(0);
+  await expect(page.getByText("Log in to see this page")).toBeVisible();
 });

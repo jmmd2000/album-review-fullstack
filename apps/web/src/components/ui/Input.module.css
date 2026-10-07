@@ -1,0 +1,38 @@
+.input {
+  min-width: 0;
+  padding: 11px 14px;
+  border-radius: var(--radius-control);
+  background: var(--colour-panel);
+  color: var(--colour-foreground);
+  transition: box-shadow var(--duration-quick) var(--ease-out);
+
+  &::placeholder {
+    color: var(--colour-text-muted);
+  }
+
+  /* a soft ring instead of the global outline, so the field doesn't jump */
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--border-thick) var(--colour-text-faint);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* The browser draws its own clear button on search fields, so it's redrawn as Phosphor's X in our colours */
+  &::-webkit-search-cancel-button {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--colour-text-muted);
+    mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z'/></svg>")
+      center / contain no-repeat;
+    cursor: pointer;
+  }
+
+  &::-webkit-search-cancel-button:hover {
+    background: var(--colour-foreground);
+  }
+}

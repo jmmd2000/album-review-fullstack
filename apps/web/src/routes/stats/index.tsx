@@ -1,312 +1,132 @@
-import AlbumCard from "@/components/album/AlbumCard";
-import ArtistCard from "@/components/artist/ArtistCard";
-import GenrePills from "@/components/ui/GenrePills";
-import BentoCard from "@/components/ui/BentoCard";
-import StatBox from "@/components/ui/StatBox";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
+import { scoreTier } from "@shared/helpers/ratingTiers";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
-import type { GetStatsOptions } from "@shared/types";
-import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { Music, Users, Disc, Headphones } from "lucide-react";
-import DistributionChart from "@/components/stats/DistributionChart";
-import { NoDataFound } from "@/components/ui/NoDataFound";
-import { Dropdown } from "@/components/ui/Dropdown";
 import { client, handle } from "@/lib/client";
+import { albumMatches, decadeOf, describeSelection, isFiltered, nameSelection } from "@/lib/statsSelection";
+import { tierColourVar } from "@/lib/tierColours";
+import { AlbumDots } from "@/components/stats/AlbumDots";
+import { HighsAndLows } from "@/components/stats/HighsAndLows";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { GenreSelect } from "@/components/ui/GenreSelect";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import styles from "./index.module.css";
 
-async function fetchOverview() {
-  return handle(client.api.stats.favourites.$get());
+import type { StatsFilter } from "@/lib/statsSelection";
+
+async function fetchStats() {
+  return handle(client.api.stats.$get());
 }
 
-async function fetchGenreStats(slug: string) {
-  return handle(client.api.stats.genres.$get({ query: { slug } }));
-}
-
-async function fetchRatingDistribution(resource: "albums" | "tracks" | "artists") {
-  return handle(client.api.stats.distribution.$get({ query: { resource } }));
-}
-
-async function fetchResourceCounts() {
-  return handle(client.api.stats.counts.$get());
-}
-
-const overviewQueryOptions = queryOptions({
+const statsQueryOptions = queryOptions({
   queryKey: queryKeys.stats.overview,
-  queryFn: fetchOverview,
+  queryFn: fetchStats,
 });
 
-const genresQueryOptions = (slug: string) =>
-  queryOptions({
-    queryKey: queryKeys.stats.genres(slug),
-    queryFn: () => fetchGenreStats(slug),
-    placeholderData: prev => prev,
-    staleTime: 1000 * 60 * 10,
-  });
+const defaultSearch = { genres: "" } as const;
 
-const distributionQueryOptions = (resource: "albums" | "tracks" | "artists") =>
-  queryOptions({
-    queryKey: queryKeys.stats.distribution(resource),
-    queryFn: () => fetchRatingDistribution(resource),
-    placeholderData: prev => prev,
-    staleTime: 1000 * 60 * 10,
-  });
-
-const countQueryOptions = queryOptions({
-  queryKey: queryKeys.stats.counts,
-  queryFn: fetchResourceCounts,
+const statsSearchSchema = z.object({
+  // A comma-separated list of genre slugs
+  genres: z
+    .preprocess(value => (Array.isArray(value) ? value.join(",") : value), z.string())
+    .default(defaultSearch.genres)
+    .catch(defaultSearch.genres),
+  decade: z.coerce.number().int().multipleOf(10).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/stats/")({
   ssr: true,
-  validateSearch: (search: Record<string, unknown>): GetStatsOptions => {
-    const result: GetStatsOptions = {
-      slug: (search.slug as string) || "",
-      resource: (search.resource as GetStatsOptions["resource"]) || "albums",
-    };
-
-    if (result.slug === "") delete result.slug;
-    if (result.resource === "albums") delete result.resource;
-
-    return result;
-  },
-  loaderDeps: ({ search }) => ({
-    slug: search.slug ?? "",
-    resource: search.resource ?? "albums",
-  }),
-  loader: async ({ deps: { slug, resource }, context }) =>
-    Promise.all([
-      context.queryClient.ensureQueryData(overviewQueryOptions),
-      context.queryClient.ensureQueryData(genresQueryOptions(slug)),
-      context.queryClient.ensureQueryData(distributionQueryOptions(resource)),
-      context.queryClient.ensureQueryData(countQueryOptions),
-    ]),
+  validateSearch: statsSearchSchema,
+  search: { middlewares: [stripSearchParams(defaultSearch)] },
+  loader: ({ context }) => context.queryClient.ensureQueryData(statsQueryOptions),
   component: RouteComponent,
   head: () => ({
     meta: socialMeta({
       title: "Stats",
-      description: "Numbers from the whole collection, favourite genres, rating distributions and listening totals.",
+      description: "Every album I've reviewed on one chart, with the best and worst albums and artists.",
     }),
   }),
 });
 
 function RouteComponent() {
-  const options: GetStatsOptions = Route.useSearch();
+  const { data } = useSuspenseQuery(statsQueryOptions);
+  const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const queryClient = useQueryClient();
-  const { data: favourites } = useQuery(overviewQueryOptions);
-  const { data: counts } = useQuery(countQueryOptions);
 
-  // The URL is the source of truth for both selections
-  const selectedResource = options.resource ?? "albums";
-  const { data: distribution } = useQuery(distributionQueryOptions(selectedResource));
-
-  // The slug comes from the URL, falling back to the first known genre once
-  // the base query answers. With a slug in the URL both queries share a key,
-  // so nothing extra is fetched
-  const { data: baseGenre } = useQuery(genresQueryOptions(options.slug ?? ""));
-  const selectedGenre = options.slug || baseGenre?.allGenres?.[0]?.slug || "";
-  const { data: genre } = useQuery(genresQueryOptions(selectedGenre));
-
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLUListElement>(null);
-
-  const onSelectGenre = (value: string[]) => {
-    const newSlug = value[0];
-    setDropdownOpen(false);
-
-    navigate({
-      search: prev => ({ ...prev, slug: newSlug }),
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: genresQueryOptions(newSlug).queryKey,
-    });
+  const filter: StatsFilter = { genres: search.genres ? search.genres.split(",") : [], decade: search.decade ?? null };
+  const setFilter = (next: Partial<StatsFilter>) => {
+    const { genres, decade } = { ...filter, ...next };
+    navigate({ search: { genres: genres.join(","), decade: decade ?? undefined }, replace: true, resetScroll: false });
   };
 
-  const onSelectResource = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value as "albums" | "tracks" | "artists";
-
-    navigate({
-      search: prev => ({ ...prev, resource: value }),
-    });
-    queryClient.invalidateQueries({
-      queryKey: distributionQueryOptions(value).queryKey,
-    });
-  };
+  const selected = data.albums.filter(album => albumMatches(album, filter));
+  const matchingIDs = new Set(selected.map(album => album.spotifyID));
+  const decades = [...new Set(data.albums.map(album => decadeOf(album.releaseYear)))].sort();
+  const genreNames = filter.genres.map(slug => data.genres.find(genre => genre.slug === slug)?.name ?? slug);
+  const selectedArtistIDs = new Set(selected.flatMap(album => album.artistSpotifyIDs));
+  const selectedArtists = isFiltered(filter) ? data.artists.filter(artist => selectedArtistIDs.has(artist.spotifyID)) : data.artists;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-6 3xl:grid-cols-10 grid-flow-row lg:grid-rows-5 3xl:grid-rows-[repeat(5,1fr)] gap-4 3xl:gap-5 max-w-9/10 lg:max-w-400 3xl:max-w-none 3xl:w-full 3xl:px-4 mx-auto h-[calc(100vh-120px)] lg:h-[calc(100vh-140px)] 3xl:py-8">
-      {/* Row 1: Stat boxes across full width */}
-      <BentoCard className="3xl:col-start-1 3xl:col-span-2 3xl:row-start-1">
-        {counts?.albumCount ? (
-          <StatBox label="Albums" value={counts.albumCount} icon={<Disc className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-blue-500" />} />
-        ) : (
-          <NoDataFound message="Couldn't get data." />
-        )}
-      </BentoCard>
-      <BentoCard className="3xl:col-start-3 3xl:col-span-2 3xl:row-start-1">
-        {counts?.artistCount ? (
-          <StatBox label="Artists" value={counts.artistCount} icon={<Users className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-green-500" />} />
-        ) : (
-          <NoDataFound message="Couldn't get data." />
-        )}
-      </BentoCard>
-      <BentoCard className="col-start-1 row-start-2 lg:col-start-3 lg:row-start-1 3xl:col-start-5 3xl:col-span-2 3xl:row-start-1">
-        {counts?.trackCount ? (
-          <StatBox label="Tracks" value={counts.trackCount} icon={<Music className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-orange-500" />} />
-        ) : (
-          <NoDataFound message="Couldn't get data." />
-        )}
-      </BentoCard>
-      <BentoCard className="col-start-2 row-start-2 lg:col-start-4 lg:row-start-1 3xl:col-start-7 3xl:col-span-2 3xl:row-start-1">
-        {counts?.genreCount ? (
-          <StatBox label="Genres" value={counts.genreCount} icon={<Headphones className="w-6 h-6 lg:w-10 lg:h-10 3xl:w-12 3xl:h-12 opacity-80 text-purple-500" />} />
-        ) : (
-          <NoDataFound message="Couldn't get data." />
-        )}
-      </BentoCard>
-      <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-8 lg:row-start-1 3xl:col-start-9 3xl:col-span-2 3xl:row-start-1">
-        <div className="flex justify-evenly items-center h-full">
-          {favourites?.favouriteGenre ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm 3xl:text-base text-green-400 my-1 text-center bg-green-400/40 rounded-lg border-green-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">Favourite Genre</p>
-              <GenrePills genres={[favourites?.favouriteGenre]} />
-            </div>
-          ) : (
-            <NoDataFound message="No data for favourite genre." />
-          )}
-          {favourites?.leastFavouriteGenre ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm 3xl:text-base text-red-400 my-1 text-center bg-red-400/40 rounded-lg border-red-500 border px-2 py-1 3xl:px-3 3xl:py-1.5">Least Favourite Genre</p>
-              <GenrePills genres={[favourites?.leastFavouriteGenre]} />
-            </div>
-          ) : (
-            <NoDataFound message="No data for least favourite genre." />
-          )}
-        </div>
-      </BentoCard>
+    <>
+      <PageHeader title="Stats" />
+      <div className={styles.body}>
+        <p className={styles.tally}>
+          <b>{data.albums.length}</b> albums from <b>{data.artistCount}</b> artists across <b>{data.genres.length}</b> genres, with <b>{data.ratedTrackCount.toLocaleString("en-GB")}</b> tracks rated.
+        </p>
 
-      {/* Row 2-3: Favourites (left 6 cols) + Genre Stats (right 4 cols) */}
-      <BentoCard className="col-span-2 lg:col-span-4 row-span-4 lg:row-span-2 col-start-1 row-start-3 lg:row-start-2 3xl:col-start-1 3xl:col-span-6 3xl:row-start-2 3xl:row-span-2">
-        <div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 content-center gap-8 3xl:gap-10 items-center mx-auto place-items-center 3xl:justify-items-stretch">
-            {favourites?.favouriteAlbum && (
-              <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Favourite Album</p>
-                <AlbumCard album={favourites.favouriteAlbum} />
-              </div>
-            )}
-            {favourites?.favouriteArtist && (
-              <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Favourite Artist</p>
-                <ArtistCard artist={favourites.favouriteArtist} />
-              </div>
-            )}
-            {favourites?.leastFavouriteAlbum && (
-              <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Least Favourite Album</p>
-                <AlbumCard album={favourites.leastFavouriteAlbum} />
-              </div>
-            )}
-            {favourites?.leastFavouriteArtist && (
-              <div className="flex flex-col gap-2 max-w-50 3xl:max-w-[320px] 3xl:mx-auto">
-                <p className="text-xs 3xl:text-sm text-gray-400 my-1 text-center">Least Favourite Artist</p>
-                <ArtistCard artist={favourites.leastFavouriteArtist} />
-              </div>
-            )}
+        <div className={styles.explorer}>
+          <AlbumDots albums={data.albums} matchingIDs={matchingIDs} />
+          <div className={styles.side}>
+            <div aria-live="polite">
+              <Summary count={selected.length} average={averageScore(selected)} genreNames={genreNames} filter={filter} />
+            </div>
+            <div className={styles.filters}>
+              <GenreSelect variant="chip" genres={data.genres} selected={filter.genres} onChange={genres => setFilter({ genres })} />
+              <span className={styles.divider} aria-hidden="true" />
+              <FilterChip label="All" pressed={filter.decade === null} onClick={() => setFilter({ decade: null })} />
+              {decades.map(decade => (
+                <FilterChip
+                  key={decade}
+                  label={`${decade}s`}
+                  count={data.albums.filter(album => decadeOf(album.releaseYear) === decade).length}
+                  pressed={filter.decade === decade}
+                  onClick={() => setFilter({ decade })}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </BentoCard>
+      </div>
 
-      {/* Row 4-5: Distribution Chart (left 6 cols) */}
-      <BentoCard className="col-span-2 lg:col-span-4 row-span-1 lg:row-span-2 col-start-1 row-start-7 3xl:col-start-1 3xl:col-span-6 3xl:row-start-4 3xl:row-span-2">
-        {distribution ? (
-          <div>
-            <div className="flex flex-row justify-start items-center px-4 3xl:px-6 gap-2 3xl:gap-3">
-              <select className="bg-neutral-800 text-white font-semibold border border-gray-600 rounded 3xl:text-lg 3xl:px-2 3xl:py-1" value={selectedResource} onChange={onSelectResource}>
-                <option value="albums">Album</option>
-                <option value="tracks">Track</option>
-                <option value="artists">Artist</option>
-              </select>
-              <p className="text-lg 3xl:text-xl font-semibold tracking-wide"> Rating Distribution</p>
-            </div>
-            <DistributionChart data={distribution} resource={selectedResource} />
-          </div>
-        ) : (
-          <NoDataFound message="No data available for rating distribution." />
-        )}
-      </BentoCard>
+      <section className={styles.highs}>
+        <SectionHeader title="Highs and lows" aside={nameSelection(genreNames, filter.decade)} />
+        <HighsAndLows albums={selected} artists={selectedArtists} />
+      </section>
+    </>
+  );
+}
 
-      {/* Right column: Genre Stats */}
-      <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-8 lg:row-start-2 3xl:col-start-7 3xl:col-span-4 3xl:row-start-2 z-50">
-        {genre && genre.slug && genre.name ? (
-          <div>
-            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 3xl:mb-4 font-semibold tracking-wide">Genre Stats</p>
-            <div className="flex justify-evenly items-center px-4 3xl:px-6">
-              <div className="flex-4/5">
-                {genre.allGenres && (
-                  <Dropdown
-                    items={genre.allGenres.map(g => ({
-                      name: g.name,
-                      value: g.slug,
-                    }))}
-                    dropdownRef={dropdownRef}
-                    isOpen={dropdownOpen}
-                    setIsOpen={setDropdownOpen}
-                    onSelect={onSelectGenre}
-                    multiple={false}
-                    selected={[genre.slug]}
-                  />
-                )}
-              </div>
-              <div className="flex flex-2/3 gap-2 mb-4 justify-evenly">
-                <div>
-                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">{genre.reviewedAlbumCount}</p>
-                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">Reviews</p>
-                </div>
+function averageScore(albums: { finalScore: number }[]): number {
+  if (albums.length === 0) return 0;
+  return Math.round(albums.reduce((total, album) => total + album.finalScore, 0) / albums.length);
+}
 
-                <div>
-                  <p className="text-2xl lg:text-4xl 3xl:text-5xl font-bold text-white">{genre.averageScore?.toFixed(0)}</p>
-                  <p className="text-xs 3xl:text-sm text-gray-400 uppercase tracking-wide">Average score</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <NoDataFound message="No data available for genre stats." />
-        )}
-      </BentoCard>
+interface SummaryProps {
+  count: number;
+  average: number;
+  genreNames: string[];
+  filter: StatsFilter;
+}
 
-      {/* Right column: Genre Albums */}
-      <BentoCard className="col-span-2 row-span-2 col-start-1 lg:col-start-5 row-start-9 lg:row-start-3 3xl:col-start-7 3xl:col-span-4 3xl:row-start-3 3xl:row-span-2">
-        <div className="flex flex-row justify-evenly gap-8 3xl:gap-12 mb-2 max-w-[80%] 3xl:max-w-none m-auto">
-          {genre?.albums?.highestRated && (
-            <div className="flex flex-col gap-2 max-w-50 3xl:max-w-70">
-              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">Favourite Album in Genre</p>
-              <AlbumCard album={genre.albums.highestRated} />
-            </div>
-          )}
-          {genre?.albums?.lowestRated && (
-            <div className="flex flex-col gap-2 max-w-50 3xl:max-w-70">
-              <p className="text-xs 3xl:text-sm text-gray-400 mt-2 text-center">Least Favourite Album in Genre</p>
-              <AlbumCard album={genre.albums.lowestRated} />
-            </div>
-          )}
-        </div>
-      </BentoCard>
+function Summary({ count, average, genreNames, filter }: SummaryProps) {
+  if (count === 0) return <p className={styles.says}>{isFiltered(filter) ? "Nothing matches. Try another genre or decade." : "No albums reviewed yet."}</p>;
 
-      {/* Right column: Related Genres */}
-      <BentoCard className="col-span-2 col-start-1 lg:col-start-5 row-start-12 lg:row-start-5 3xl:col-start-7 3xl:col-span-4 3xl:row-start-5 mb-8 lg:mb-0">
-        {genre?.relatedGenres && genre.relatedGenres.length > 0 ? (
-          <div className="mb-4 3xl:mb-6 flex flex-col gap-4 3xl:gap-6 items-start">
-            <p className="text-lg 3xl:text-xl px-4 3xl:px-6 mb-2 font-semibold tracking-wide">Top Related Genres</p>
-            <GenrePills genres={genre.relatedGenres || []} />
-          </div>
-        ) : (
-          <NoDataFound message="No related genres found." />
-        )}
-      </BentoCard>
-    </div>
+  return (
+    <p className={styles.says}>
+      {describeSelection(count, genreNames, filter.decade)}, averaging <b style={{ color: tierColourVar(scoreTier(average)) }}>{average}</b>.
+    </p>
   );
 }

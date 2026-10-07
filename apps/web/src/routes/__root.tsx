@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts, ScriptOnce } from "@tanstack/react-router";
+import funnelDisplayURL from "@fontsource-variable/funnel-display/files/funnel-display-latin-wght-normal.woff2?url";
+import funnelSansURL from "@fontsource-variable/funnel-sans/files/funnel-sans-latin-wght-normal.woff2?url";
 import { AuthProvider } from "@/auth/AuthContext";
-import { Navbar } from "@/components/layout/Navbar";
 import appCss from "@/styles/globals.css?url";
+import { Navbar } from "@/components/layout/Navbar";
+import { themeScript } from "@/lib/theme";
+import styles from "./__root.module.css";
 
 interface RouterContext {
   queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  // The root must render on the server for any child to, a parent's false
-  // clamps the whole tree. Children still default to client-only via start.ts
   ssr: true,
   head: () => ({
     meta: [
@@ -22,6 +24,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.ico" },
+      { rel: "preload", href: funnelDisplayURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: funnelSansURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [
@@ -39,8 +43,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <ScriptOnce>{themeScript}</ScriptOnce>
         <HeadContent />
       </head>
       <body>
@@ -51,14 +56,14 @@ function RootDocument({ children }: { children: ReactNode }) {
   );
 }
 
-// The auth provider goes here rather than around the router as
-// the AdminDropdown component needs access to it, which is here in the layout.
 function RootComponent() {
   return (
     <AuthProvider>
-      <Navbar />
-      <div className="[view-transition-name:main-content]">
-        <Outlet />
+      <div className={styles.layout}>
+        <Navbar />
+        <main className={styles.main}>
+          <Outlet />
+        </main>
       </div>
     </AuthProvider>
   );

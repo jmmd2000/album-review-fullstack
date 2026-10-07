@@ -1,0 +1,51 @@
+.standing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px clamp(28px, 4vw, 64px);
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: clamp(28px, 3.4vw, 44px) var(--page-gutter);
+}
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--border-thin);
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--colour-divider);
+
+  /* The cells grow to fill each row, so the gap between them shows only as one-pixel rules */
+  & div {
+    flex: 1 1 auto;
+    display: grid;
+    gap: 4px;
+    padding: 16px clamp(18px, 2vw, 28px);
+    background: var(--colour-panel);
+  }
+
+  & dt {
+    color: var(--colour-text-muted);
+    font-size: 0.88rem;
+  }
+
+  & dd {
+    color: var(--tier, var(--colour-foreground));
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    font-weight: 650;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  & small {
+    margin-left: 6px;
+    color: var(--colour-text-muted);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 450;
+  }
+}

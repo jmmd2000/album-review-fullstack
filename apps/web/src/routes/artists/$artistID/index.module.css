@@ -1,0 +1,7 @@
+.page {
+  padding-bottom: var(--space-7);
+}
+
+.section {
+  padding-top: var(--space-section);
+}

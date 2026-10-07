@@ -42,20 +42,20 @@ describe("searchAlbums", () => {
   test("enriches search hits with review and bookmark status", async () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
     vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [rawAlbum("a1", "First"), rawAlbum("a2", "Second")] } });
-    vi.spyOn(AlbumModel, "getReviewScoresByIds").mockResolvedValue([{ spotifyID: "a1", reviewScore: 82 }]);
+    vi.spyOn(AlbumModel, "getFinalScoresByIds").mockResolvedValue([{ spotifyID: "a1", finalScore: 82 }]);
     vi.spyOn(BookmarkedAlbumModel, "getBookmarkedByIds").mockResolvedValue(["a2"]);
 
     const results = await SpotifyService.searchAlbums({ query: "anything" });
 
     expect(results).toHaveLength(2);
-    expect(results[0]).toMatchObject({ spotifyID: "a1", reviewScore: 82, bookmarked: false });
-    expect(results[1]).toMatchObject({ spotifyID: "a2", reviewScore: undefined, bookmarked: true });
+    expect(results[0]).toMatchObject({ spotifyID: "a1", finalScore: 82, bookmarked: false });
+    expect(results[1]).toMatchObject({ spotifyID: "a2", finalScore: null, bookmarked: true });
   });
 
   test("skips the database reads when spotify returns nothing", async () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
     vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [] } });
-    const scoresSpy = vi.spyOn(AlbumModel, "getReviewScoresByIds");
+    const scoresSpy = vi.spyOn(AlbumModel, "getFinalScoresByIds");
 
     expect(await SpotifyService.searchAlbums({ query: "anything" })).toEqual([]);
     expect(scoresSpy).not.toHaveBeenCalled();
@@ -63,10 +63,10 @@ describe("searchAlbums", () => {
 });
 
 describe("getAlbum", () => {
-  test("throws a 400 when the album is already reviewed", async () => {
+  test("throws a 409 when the album is already reviewed", async () => {
     vi.spyOn(AlbumModel, "findBySpotifyID").mockResolvedValue({ spotifyID: "alb" } as never);
 
-    await expect(SpotifyService.getAlbum("alb")).rejects.toMatchObject({ status: 400 });
+    await expect(SpotifyService.getAlbum("alb")).rejects.toMatchObject({ status: 409 });
   });
 
   test("maps artist details onto the album and includes the genre list", async () => {

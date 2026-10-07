@@ -1,16 +1,22 @@
+import { useRef } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
-import BlurryHeader from "@/components/layout/BlurryHeader";
-import ErrorComponent from "@/components/ui/ErrorComponent";
-import TrackList from "@/components/track/TrackList";
-import AlbumDetails from "@/components/album/AlbumDetails";
-import ReviewDetails from "@/components/album/ReviewDetails";
-import GenrePills from "@/components/ui/GenrePills";
-import HeaderDetails from "@/components/layout/HeaderDetails";
-import { useEffect } from "react";
 import { client, handle } from "@/lib/client";
+import { coverColourStyle } from "@/lib/coverColours";
+import { morphProps, preloadImage } from "@/lib/coverMorph";
+import { useAuth } from "@/auth/useAuth";
+import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
+import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
+import { ReviewContent } from "@/components/album/ReviewContent";
+import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
+import { Tracklist } from "@/components/track/Tracklist";
+import { RouteError } from "@/components/ui/RouteError";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import coverColours from "@/styles/coverColours.module.css";
+import styles from "./index.module.css";
 
 async function fetchAlbumReview(albumSpotifyID: string) {
   return handle(client.api.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
@@ -28,10 +34,18 @@ const reviewQueryOptions = (albumID: string) =>
 export const Route = createFileRoute("/albums/$albumID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    return context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+    const review = await context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+    await preloadImage(review.album.imageURLs[0]?.url);
+    return review;
   },
-  errorComponent: ErrorComponent,
   component: RouteComponent,
+  errorComponent: ({ error, reset }) => (
+    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </RouteError>
+  ),
   head: ({ loaderData }) => ({
     meta: loaderData
       ? socialMeta({
@@ -43,41 +57,42 @@ export const Route = createFileRoute("/albums/$albumID/")({
   }),
 });
 
-/**
- *  This is the album detail page
- *  It displays an album reviews contents along with the rated tracks in TrackCards
- */
 function RouteComponent() {
-  useEffect(() => {
-    window.scrollTo({ top: 0 });
-  }, []);
-
   const { albumID } = useParams({ strict: false });
-  if (!albumID) {
-    throw new Error("albumID is undefined");
-  }
+  if (!albumID) throw new Error("albumID is undefined");
 
-  const {
-    data: { album, artists, tracks, albumGenres },
-  } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
+  const { album, artists, tracks, albumGenres } = data;
+  const { isAdmin } = useAuth();
+  const panelsRef = useRef<HTMLDivElement>(null);
+  const cover = album.imageURLs[0];
 
   return (
-    <>
-      <BlurryHeader _colors={album.colors}>
-        <HeaderDetails name={album.name} imageURL={album.imageURLs[1].url} largeImageURL={album.imageURLs[0]?.url} viewTransitionName={`album-image-${album.spotifyID}`} />
-        <AlbumDetails
-          album={album}
-          trackCount={tracks.length}
-          artists={artists.map(artist => ({
-            spotifyID: artist.spotifyID,
-            name: artist.name,
-            imageURLs: artist.imageURLs,
-          }))}
-        />
-        <div className="3xl:mt-8 pb-10">{album.genres && <GenrePills genres={albumGenres ?? []} />}</div>
-      </BlurryHeader>
-      <ReviewDetails album={album} tracks={tracks} />
-      <TrackList tracks={tracks} />
-    </>
+    <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(album.colors ?? [])}>
+      <AlbumBackdrop until={panelsRef} />
+      <div className={styles.links}>
+        <Link to="/albums" className={styles.link}>
+          <ArrowLeftIcon weight="bold" aria-hidden="true" /> Albums
+        </Link>
+        {isAdmin && (
+          <div className={styles.adminLinks}>
+            <Link to="/albums/$albumID/edit" params={{ albumID: album.spotifyID }} className={styles.link}>
+              Edit
+            </Link>
+            <DeleteReviewDialog albumID={album.spotifyID} albumName={album.name} triggerClassName={styles.link} />
+          </div>
+        )}
+      </div>
+      <section className={styles.showcase}>
+        {cover && <img className={styles.cover} src={cover.url} alt={`${album.name} cover`} width={cover.width} height={cover.height} {...morphProps("album", album.spotifyID)} />}
+        <div className={styles.column}>
+          <div ref={panelsRef} className={styles.panels}>
+            <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} />
+            {album.reviewContent && <ReviewContent content={album.reviewContent} />}
+          </div>
+          <Tracklist tracks={tracks} />
+        </div>
+      </section>
+    </div>
   );
 }

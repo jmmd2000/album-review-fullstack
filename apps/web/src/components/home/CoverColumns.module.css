@@ -1,0 +1,102 @@
+.columns {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 12px;
+  padding-right: var(--page-gutter);
+
+  @media (width < 900px) {
+    padding-left: var(--page-gutter);
+  }
+
+  @media (width < 560px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Clipped top and bottom only, so a hovered cover's shadow shows at the sides.
+   Unlike hidden, clip can't be scrolled, so focusing a cover never shifts the column. */
+.column {
+  overflow: visible clip;
+
+  &:nth-child(1) {
+    --duration: 90s;
+  }
+
+  &:nth-child(2) {
+    --duration: 115s;
+    --head-start: -30s;
+  }
+
+  &:nth-child(3) {
+    --duration: 100s;
+    --head-start: -45s;
+  }
+
+  &:nth-child(4) {
+    --duration: 125s;
+    --head-start: -70s;
+
+    @media (width < 560px) {
+      display: none;
+    }
+  }
+
+  &:nth-child(even) .track {
+    animation-direction: reverse;
+  }
+}
+
+/* A negative delay starts each column part way through, so the covers don't line up when the page opens */
+.track {
+  display: flex;
+  flex-direction: column;
+  animation: drift var(--duration) linear var(--head-start, 0s) infinite;
+  will-change: transform;
+}
+
+@keyframes drift {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.cover {
+  position: relative;
+  display: block;
+  /* Each cover carries its own gap, so the track's two sets are exactly equal and the loop doesn't jump */
+  margin-bottom: 12px;
+  transition:
+    transform var(--duration-quick) var(--ease-out),
+    filter var(--duration-quick) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.03);
+    filter: drop-shadow(0 10px 22px var(--shade, rgb(0 0 0 / 0.3)));
+  }
+
+  & img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-cover);
+    background: var(--colour-panel);
+  }
+}
+
+.missing {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--radius-cover);
+  background: var(--colour-panel);
+  color: var(--colour-text-faint);
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: var(--font-weight-display);
+}

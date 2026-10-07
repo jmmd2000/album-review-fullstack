@@ -1,0 +1,136 @@
+.viewport {
+  position: fixed;
+  right: var(--page-gutter);
+  bottom: var(--space-4);
+  z-index: var(--z-toast);
+  width: min(22rem, calc(100vw - 2 * var(--page-gutter)));
+}
+
+/* Base UI sets the --toast-* properties. They stack the toasts and move them during a swipe. */
+.toast {
+  --gap: var(--space-1);
+  --peek: var(--space-1);
+  --scale: max(0, 1 - var(--toast-index) * 0.1);
+  --shrink: calc(1 - var(--scale));
+  --height: var(--toast-frontmost-height, var(--toast-height));
+  --offset-y: calc(var(--toast-offset-y) * -1 - var(--toast-index) * var(--gap) + var(--toast-swipe-movement-y));
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: calc(1000 - var(--toast-index));
+  width: 100%;
+  height: var(--height);
+  border-radius: var(--radius-menu);
+  background: var(--colour-panel);
+  box-shadow: var(--shadow-float);
+  transform-origin: bottom center;
+  transform: translateX(var(--toast-swipe-movement-x)) translateY(calc(var(--toast-swipe-movement-y) - var(--toast-index) * var(--peek) - var(--shrink) * var(--height))) scale(var(--scale));
+  transition:
+    transform 0.5s var(--ease-out),
+    opacity 0.5s var(--ease-out),
+    height 0.15s var(--ease-out);
+
+  &[data-expanded] {
+    height: var(--toast-height);
+    transform: translateX(var(--toast-swipe-movement-x)) translateY(var(--offset-y));
+  }
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    transform: translateY(150%);
+  }
+
+  &[data-ending-style] {
+    opacity: 0;
+
+    &[data-swipe-direction="right"] {
+      transform: translateX(calc(var(--toast-swipe-movement-x) + 150%)) translateY(var(--offset-y));
+    }
+
+    &[data-swipe-direction="down"] {
+      transform: translateY(calc(var(--toast-swipe-movement-y) + 150%));
+    }
+  }
+
+  &[data-limited] {
+    opacity: 0;
+  }
+
+  /* Fills the gap between toasts, so the stack stays open while the pointer moves across it */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: calc(var(--gap) + 1px);
+  }
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 14px var(--space-2) 14px var(--space-3);
+  overflow: hidden;
+  transition: opacity 0.25s var(--ease-out);
+
+  &[data-behind] {
+    opacity: 0;
+  }
+
+  &[data-expanded] {
+    opacity: 1;
+  }
+
+  & svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.icon {
+  color: var(--colour-text-muted);
+}
+
+.error {
+  color: var(--colour-worst);
+}
+
+.spinner {
+  color: var(--colour-text-muted);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--colour-panel-strong);
+    color: var(--colour-foreground);
+  }
+
+  & svg {
+    width: 14px;
+    height: 14px;
+  }
+}

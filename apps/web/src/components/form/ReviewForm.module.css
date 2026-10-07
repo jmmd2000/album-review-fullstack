@@ -1,0 +1,146 @@
+.page {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: var(--space-3) var(--page-gutter) var(--space-7);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+  grid-template-areas:
+    "aside head"
+    "aside body";
+  gap: 0 clamp(28px, 5vw, 80px);
+  align-items: start;
+
+  @media (width < 900px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "aside"
+      "body";
+  }
+}
+
+.aside {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  grid-area: aside;
+  gap: 20px;
+
+  @media (width < 900px) {
+    position: static;
+    margin-top: var(--space-4);
+  }
+}
+
+.cover {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--radius-row);
+  object-fit: cover;
+  box-shadow: 0 40px 80px -30px color-mix(in oklab, var(--cover-colour-1) 60%, oklch(0 0 0 / 0.6));
+
+  @media (width < 900px) {
+    max-width: 420px;
+  }
+}
+
+.live {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 5rem;
+  font-weight: var(--font-weight-display);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.word {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: var(--font-weight-label);
+}
+
+.sum {
+  margin-top: 4px;
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+}
+
+.head {
+  grid-area: head;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  & svg {
+    width: 0.85em;
+    height: 0.85em;
+  }
+}
+
+.title {
+  margin-top: 20px;
+  font-size: clamp(2.4rem, 4.4vw, 4.2rem);
+  font-weight: var(--font-weight-label);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  margin-top: var(--space-3);
+  font-size: 1.15rem;
+  font-weight: var(--font-weight-medium);
+
+  & span {
+    color: var(--colour-text-muted);
+    font-size: 1rem;
+    font-weight: var(--font-weight-body);
+  }
+}
+
+.body {
+  display: grid;
+  grid-area: body;
+  gap: 28px;
+  padding-top: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: var(--border-thin) solid var(--colour-divider);
+}
+
+.label {
+  font-weight: var(--font-weight-label);
+}
+
+.actions {
+  display: flex;
+}

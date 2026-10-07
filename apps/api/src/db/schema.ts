@@ -1,6 +1,6 @@
 import type { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, real, serial, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const reviewedAlbums = pgTable(
   "reviewed_albums",
@@ -22,8 +22,6 @@ export const reviewedAlbums = pgTable(
     releaseYear: integer("release_year").notNull(),
     imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     // scoredTracks: text("scored_tracks").notNull(), // JSON string
-    bestSong: varchar("best_song", { length: 255 }).notNull(),
-    worstSong: varchar("worst_song", { length: 255 }).notNull(),
     runtime: varchar("runtime", { length: 50 }).notNull(),
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
@@ -64,6 +62,9 @@ export const albumArtists = pgTable(
   ]
 );
 
+/** A track picked as one of its album's best or worst */
+export const trackPick = pgEnum("track_pick", ["best", "worst"]);
+
 export const reviewedTracks = pgTable(
   "reviewed_tracks",
   {
@@ -80,6 +81,7 @@ export const reviewedTracks = pgTable(
     features: jsonb("features").$type<{ id: string; name: string }[]>().notNull(),
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
+    pick: trackPick("pick"),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .default(sql`now()`)

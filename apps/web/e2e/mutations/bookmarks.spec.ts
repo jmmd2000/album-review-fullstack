@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, capturedAlbum } from "../../../api/src/db/fixtures/fixtures";
+import { cardFor } from "../helpers";
 
 // This spec owns the second seeded bookmark. The create spec owns the first.
 const reserved = capturedAlbum(BOOKMARKED_IDS[1]);
@@ -17,23 +18,21 @@ const fakeAlbum = {
     { url: "https://example.com/cover-64.jpg", height: 64, width: 64 },
   ],
   finalScore: null,
+  bookmarked: false,
   affectsArtistScore: true,
 };
 
 test("a seeded bookmark can be removed", async ({ page }) => {
   await page.goto("/bookmarks");
-  const card = page.getByTestId("album-card").filter({ hasText: reserved.name });
-  await expect(card).toBeVisible();
+  const button = cardFor(page, reserved.name).getByRole("button", { name: `Bookmark ${reserved.name}` });
+  await expect(button).toHaveAttribute("aria-pressed", "true");
 
-  // The card's entrance animation can drift a coordinate click onto the card
-  // link, so dispatch the click straight to the button, and wait for the
-  // remove request to land before reloading
-  await Promise.all([page.waitForResponse(response => response.url().includes("/remove") && response.ok()), card.getByTestId("bookmark-button").dispatchEvent("click")]);
+  await Promise.all([page.waitForResponse(response => response.url().includes("/remove") && response.ok()), button.click()]);
 
   // Reload rather than trusting the cache, the list must really have lost it
   await page.reload();
-  await expect(page.getByTestId("album-card").first()).toBeVisible();
-  await expect(page.getByTestId("album-card").filter({ hasText: reserved.name })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Bookmarks", level: 1 })).toBeVisible();
+  await expect(cardFor(page, reserved.name)).toHaveCount(0);
 });
 
 test("an album can be bookmarked from search", async ({ page }) => {
@@ -42,14 +41,15 @@ test("an album can be bookmarked from search", async ({ page }) => {
   await page.route("**/api/spotify/albums/search**", route => route.fulfill({ json: [fakeAlbum] }));
 
   await page.goto("/search");
-  await page.getByTestId("search-input").fill(fakeAlbum.name);
-  await page.getByTestId("search-input").press("Enter");
+  const search = page.getByRole("searchbox", { name: "Search Spotify albums" });
+  await search.fill(fakeAlbum.name);
+  await search.press("Enter");
 
-  const result = page.getByTestId("album-card").filter({ hasText: fakeAlbum.name });
-  await expect(result).toBeVisible();
-
-  await Promise.all([page.waitForResponse(response => response.url().includes("/add") && response.ok()), result.getByTestId("bookmark-button").dispatchEvent("click")]);
+  const button = cardFor(page, fakeAlbum.name).getByRole("button", { name: `Bookmark ${fakeAlbum.name}` });
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+  await Promise.all([page.waitForResponse(response => response.url().includes("/add") && response.ok()), button.click()]);
+  await expect(button).toHaveAttribute("aria-pressed", "true");
 
   await page.goto("/bookmarks");
-  await expect(page.getByTestId("album-card").filter({ hasText: fakeAlbum.name })).toBeVisible();
+  await expect(cardFor(page, fakeAlbum.name)).toBeVisible();
 });

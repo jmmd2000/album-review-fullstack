@@ -37,3 +37,4 @@ apps/web/e2e/.auth
 .tanstack
 
 docs/
+.claude/

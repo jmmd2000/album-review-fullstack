@@ -9,11 +9,10 @@ const paginatedSchema = z.object({
   orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
   search: z.string().optional(),
-  scoreType: z.enum(["overall", "peak", "latest"]).optional(),
 });
 
 const headerImageSchema = z.object({
-  headerImage: z.string().nullable(),
+  headerImage: z.url({ protocol: /^https?$/, error: "The header image must be a web link." }).nullable(),
 });
 
 // Static paths are registered before /:artistID so they aren't matched as an id.

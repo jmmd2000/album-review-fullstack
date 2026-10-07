@@ -51,14 +51,16 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 });
 
 test("GET /api/albums - should return all album reviews", async () => {
-  await api.post("/api/albums/create", mockReviewData, authCookie);
-  await api.post("/api/albums/create", { ...mockReviewData, album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" } }, authCookie);
+  expect((await api.post("/api/albums/create", mockReviewData, authCookie)).status).toBe(201);
+  // Track IDs are unique, so the second album rates no tracks rather than reusing the first album's
+  const second = await api.post("/api/albums/create", { ...mockReviewData, album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" }, ratedTracks: [] }, authCookie);
+  expect(second.status).toBe(201);
 
   const res = await api.get("/api/albums", authCookie);
   expect(res.status).toBe(200);
 
   const { albums }: { albums: DisplayAlbum[] } = await res.json();
-  expect(albums[0]).toHaveProperty("spotifyID");
+  expect(albums.map(album => album.spotifyID).sort()).toEqual(["0JGOiO34nwfUdDrD612dOp", "7fRrTyKvE4Skh93v97gtcU"]);
   expect(Array.isArray(albums[0].imageURLs)).toBe(true);
 });
 
@@ -136,4 +138,37 @@ test("POST /api/albums/create - a mid-flight failure rolls the whole review back
   // stays outside it), so it is intentionally not rolled back.
 
   spy.mockRestore();
+});
+
+test("a review saves which tracks are its best and worst", async () => {
+  const [first, second, third] = mockReviewData.ratedTracks;
+  const ratedTracks = mockReviewData.ratedTracks.map(track => {
+    if (track === first || track === second) return { ...track, pick: "best" };
+    if (track === third) return { ...track, pick: "worst" };
+    return track;
+  });
+  const create = await api.post("/api/albums/create", { ...mockReviewData, ratedTracks }, authCookie);
+  expect(create.status).toBe(201);
+
+  const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
+  const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
+  expect(picks).toEqual([
+    [first!.spotifyID, "best"],
+    [second!.spotifyID, "best"],
+    [third!.spotifyID, "worst"],
+  ]);
+});
+
+test("editing a review changes and clears track picks", async () => {
+  const [first, second] = mockReviewData.ratedTracks;
+  const ratedTracks = mockReviewData.ratedTracks.map(track => (track === first ? { ...track, pick: "best" } : track));
+  await api.post("/api/albums/create", { ...mockReviewData, ratedTracks }, authCookie);
+
+  const editedTracks = mockReviewData.ratedTracks.map(track => (track === second ? { ...track, pick: "worst" } : track));
+  const edit = await api.put(`/api/albums/${mockReviewData.album.id}/edit`, { ...mockReviewData, ratedTracks: editedTracks }, authCookie);
+  expect(edit.status).toBe(200);
+
+  const { tracks } = await (await api.get(`/api/albums/${mockReviewData.album.id}`)).json();
+  const picks = tracks.filter((track: ReviewedTrack) => track.pick !== null).map((track: ReviewedTrack) => [track.spotifyID, track.pick]);
+  expect(picks).toEqual([[second!.spotifyID, "worst"]]);
 });

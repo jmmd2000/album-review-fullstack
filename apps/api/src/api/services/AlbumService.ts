@@ -67,8 +67,6 @@ export class AlbumService {
           releaseDate,
           releaseYear,
           imageURLs: spotifyAlbum.images,
-          bestSong: data.bestSong,
-          worstSong: data.worstSong,
           runtime,
           reviewContent: data.reviewContent,
           reviewScore: baseScore,
@@ -122,6 +120,7 @@ export class AlbumService {
             duration: t.duration_ms,
             features: t.artists.filter(x => !selectedArtistIDs.includes(x.id)).map(x => ({ id: x.id, name: x.name })),
             rating: track.rating!,
+            pick: track.pick ?? null,
           },
           tx
         );
@@ -167,6 +166,7 @@ export class AlbumService {
       spotifyID: track.spotifyID,
       duration: track.duration,
       rating: track.rating,
+      pick: track.pick,
       features: track.features,
     }));
 
@@ -180,48 +180,9 @@ export class AlbumService {
     return { album, artists, tracks: displayTracks, allGenres, albumGenres };
   }
 
-  static async getAllAlbums(
-    includeCounts = false
-  ): Promise<{
-    albums: DisplayAlbum[];
-    numArtists?: number;
-    numAlbums?: number;
-    numTracks?: number;
-  }> {
-    const albums = await AlbumModel.getAllAlbums();
-    const albumIDs = albums.map(album => album.spotifyID);
-    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
-    const displayAlbums: DisplayAlbum[] = albums.map(album => ({
-      name: album.name,
-      spotifyID: album.spotifyID,
-      imageURLs: album.imageURLs,
-      finalScore: album.finalScore,
-      affectsArtistScore: album.affectsArtistScore,
-      artistName: album.artistName,
-      artistSpotifyID: album.artistSpotifyID,
-      releaseYear: album.releaseYear,
-      albumArtists: album.albumArtists,
-      artistSpotifyIDs: artistMap.get(album.spotifyID) ?? [],
-    }));
-
-    if (!includeCounts) return { albums: displayAlbums };
-
-    const numArtists = await ArtistModel.getArtistCount();
-    const numAlbums = await AlbumModel.getAlbumCount();
-    const numTracks = await TrackModel.getTrackCount();
-
-    return { albums: displayAlbums, numArtists, numAlbums, numTracks };
-  }
-
   static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
-
-    // const relatedGenres = opts.genres?.length ? await GenreModel.getRelatedGenres(opts.genres) : [];
-
-    const relevantGenres = opts.genres?.length ? await GenreService.getGenresForAlbums(albums.map(a => a.spotifyID)) : [];
-
-    const genres: Genre[] = await GenreModel.getAllGenres();
-    genres.sort((a, b) => a.name.localeCompare(b.name));
+    const genres = await GenreModel.getGenreCounts();
 
     const displayAlbums: DisplayAlbum[] = albums.map(album => ({
       spotifyID: album.spotifyID,
@@ -234,6 +195,7 @@ export class AlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       albumArtists: album.albumArtists,
+      colors: album.colors,
     }));
 
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albums.map(a => a.spotifyID));
@@ -246,7 +208,6 @@ export class AlbumService {
       furtherPages,
       totalCount,
       genres,
-      relatedGenres: relevantGenres,
     };
   }
 
@@ -306,8 +267,6 @@ export class AlbumService {
         albumID,
         {
           reviewContent: data.reviewContent,
-          bestSong: data.bestSong,
-          worstSong: data.worstSong,
           genres: data.genres,
           colors: data.colors,
           reviewScore: baseScore,
@@ -351,6 +310,7 @@ export class AlbumService {
               duration: newTrack.duration,
               features: newTrack.features,
               rating: newTrack.rating ?? 0,
+              pick: newTrack.pick ?? null,
             },
             tx
           );
@@ -359,6 +319,10 @@ export class AlbumService {
           if (newTrack.rating !== undefined) {
             await TrackModel.updateTrackRating(newTrack.spotifyID, newTrack.rating, tx);
           }
+        }
+
+        if (oldTrack && oldTrack.pick !== (newTrack.pick ?? null)) {
+          await TrackModel.updateTrackPick(newTrack.spotifyID, newTrack.pick ?? null, tx);
         }
 
         if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
@@ -391,10 +355,6 @@ export class AlbumService {
     });
 
     return AlbumModel.findBySpotifyID(albumID);
-  }
-
-  static async getReviewScoresByIds(ids: string[]) {
-    return AlbumModel.getReviewScoresByIds(ids);
   }
 
   private static resolveSelectedArtistIDs(selectedArtistIDs: string[] | undefined, albumArtists: AlbumArtist[]) {

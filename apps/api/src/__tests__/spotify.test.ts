@@ -4,13 +4,13 @@ import { resetTables } from "./testUtils";
 import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
 import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 
 // Async factory so the mock can import its fixture without fighting vi.mock hoisting
 vi.mock("../api/services/SpotifyService", async () => {
   const { mockReviewData } = await import("./constants");
   return {
     SpotifyService: {
-      getAccessToken: vi.fn(() => Promise.resolve("mock_token")),
       searchAlbums: vi.fn(() =>
         Promise.resolve([
           {
@@ -28,6 +28,8 @@ vi.mock("../api/services/SpotifyService", async () => {
   };
 });
 
+const authCookie = adminCookie();
+
 beforeEach(async () => {
   await resetTables(query);
 });
@@ -40,14 +42,20 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("GET /api/spotify/token - Should return token", async () => {
-  const response = await api.get("/api/spotify/token");
-  expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ token: "mock_token" });
+test("spotify routes require admin", async () => {
+  for (const path of ["/api/spotify/albums/search?query=abba", "/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n"]) {
+    const response = await api.get(path);
+    expect(response.status).toBe(401);
+  }
+});
+
+test("the token route is gone", async () => {
+  const response = await api.get("/api/spotify/token", authCookie);
+  expect(response.status).toBe(404);
 });
 
 test("GET /api/spotify/albums/search?query=abba - Should return albums", async () => {
-  const response = await api.get("/api/spotify/albums/search?query=abba");
+  const response = await api.get("/api/spotify/albums/search?query=abba", authCookie);
   expect(response.status).toBe(200);
   const data: DisplayAlbum[] = await response.json();
   expect(Array.isArray(data)).toBe(true);
@@ -56,7 +64,7 @@ test("GET /api/spotify/albums/search?query=abba - Should return albums", async (
 });
 
 test("GET /api/spotify/albums/:albumID - Should return album", async () => {
-  const response = await api.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false");
+  const response = await api.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false", authCookie);
   expect(response.status).toBe(200);
   const data: SpotifyAlbum = await response.json();
   expect(data).toHaveProperty("id", mockReviewData.album.id);

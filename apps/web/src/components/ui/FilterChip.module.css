@@ -1,0 +1,32 @@
+.chip {
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease-out);
+
+  &:hover {
+    background: var(--colour-panel-strong);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--colour-foreground);
+    color: var(--colour-background);
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.count {
+  margin-left: 6px;
+  color: var(--colour-text-muted);
+  font-size: inherit;
+
+  [aria-pressed="true"] > & {
+    color: inherit;
+    opacity: 0.7;
+  }
+}

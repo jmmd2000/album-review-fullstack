@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
+import { desc, eq, asc, count, inArray, sql, and, isNull, ilike, or } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
@@ -35,6 +35,31 @@ export class AlbumModel {
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
     return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
+  }
+
+  /** Up to `limit` reviewed albums, in a random order. */
+  static async getRandomAlbums(limit: number): Promise<ReviewedAlbum[]> {
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .orderBy(sql`random()`)
+      .limit(limit) as Promise<ReviewedAlbum[]>;
+  }
+
+  /** The Spotify ID of the newest review, or null when there are none. */
+  static async getLatestAlbumID(): Promise<string | null> {
+    const [latest] = await db.select({ spotifyID: reviewedAlbums.spotifyID }).from(reviewedAlbums).orderBy(desc(reviewedAlbums.createdAt)).limit(1);
+    return latest?.spotifyID ?? null;
+  }
+
+  /** Albums whose name or artist contains the query. Names that start with it come first, then the highest scores. */
+  static async searchAlbums(query: string, limit: number): Promise<ReviewedAlbum[]> {
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .where(or(ilike(reviewedAlbums.name, `%${query}%`), ilike(reviewedAlbums.artistName, `%${query}%`)))
+      .orderBy(desc(ilike(reviewedAlbums.name, `${query}%`)), sql`${reviewedAlbums.finalScore} DESC NULLS LAST`)
+      .limit(limit) as Promise<ReviewedAlbum[]>;
   }
 
   static async getAlbumsBySpotifyIDs(ids: string[]) {
@@ -211,33 +236,27 @@ export class AlbumModel {
     return executor.delete(albumArtists).where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
   }
 
-  static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {
-    const rows = await db
+  /** The final scores of the reviewed albums among `ids`. Albums without a review are left out. */
+  static async getFinalScoresByIds(ids: string[]): Promise<{ spotifyID: string; finalScore: number | null }[]> {
+    return db
       .select({
         spotifyID: reviewedAlbums.spotifyID,
-        reviewScore: reviewedAlbums.reviewScore,
+        finalScore: reviewedAlbums.finalScore,
       })
       .from(reviewedAlbums)
       .where(inArray(reviewedAlbums.spotifyID, ids));
-
-    return rows.map(r => ({
-      spotifyID: r.spotifyID,
-      reviewScore: r.reviewScore,
-    }));
   }
 
   private static async getAlbumIdsByGenres(slugs: string[]): Promise<string[]> {
     if (!slugs.length) return [];
 
-    // join album_genres -> genres, filter slug IN slugs
-    // group by album, require COUNT(*) = slugs.length so we only get albums that matched every slug
+    // An album matches when it has any of the slugs. Grouping lists an album with two of them once.
     const rows = await db
       .select({ id: albumGenres.albumSpotifyID })
       .from(albumGenres)
       .innerJoin(genresTable, eq(genresTable.id, albumGenres.genreID))
       .where(inArray(genresTable.slug, slugs))
-      .groupBy(albumGenres.albumSpotifyID)
-      .having(sql`COUNT(*) = ${slugs.length}`);
+      .groupBy(albumGenres.albumSpotifyID);
 
     return rows.map(r => r.id);
   }

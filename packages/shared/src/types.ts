@@ -178,12 +178,6 @@ export interface ReviewedAlbum {
   artistName: string;
   /** Spotify ID of the album. */
   spotifyID: string;
-  // /** The artist who created the album. */
-  // artist: ReviewedArtist;
-  /** The best song from the album as chosen in the review. */
-  bestSong: string;
-  /** The worst song from the album as chosen in the review. */
-  worstSong: string;
   /** The album's name. */
   name: string;
   /** JSON string containing album image URLs. */
@@ -288,6 +282,8 @@ export interface ReviewedTrack {
   duration: number;
   /** Rating of the track. */
   rating?: number;
+  /** Whether the review picks the track as one of the album's best or worst */
+  pick: TrackPick | null;
 }
 
 /**
@@ -318,6 +314,8 @@ export interface DisplayAlbum {
   bookmarked?: boolean;
   /** Optional JSON string containing scored track details. */
   scoredTracks?: string;
+  /** Colours picked from the cover, for the card's hover shadow */
+  colors?: ExtractedColor[];
 }
 
 /**
@@ -355,6 +353,8 @@ export interface DisplayArtist {
 /**
  * Represents the minimum data needed to display a track on a `TrackCard`.
  */
+export type TrackPick = "best" | "worst";
+
 export interface DisplayTrack {
   /** Spotify ID of the track. */
   spotifyID: string;
@@ -368,10 +368,14 @@ export interface DisplayTrack {
   duration: number;
   /** Optional rating of the track. */
   rating?: number;
+  /** Whether the review picks the track as one of the album's best or worst */
+  pick?: TrackPick | null;
   /** Array of names of features */
   features: { id: string; name: string }[];
   /** Optional album images */
   imageURLs?: SpotifyImage[];
+  /** The name of the track's album. Only the artist details send it. */
+  albumName?: string;
 }
 
 /**
@@ -488,22 +492,12 @@ export interface GetPaginatedAlbumsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
-  /** The genre to filter the results by */
+  /** Genre slugs to filter by. An album matches when it has any of them */
   genres?: string[];
   /** Secondary sort field (only used when orderBy is "releaseYear") */
   secondaryOrderBy?: "finalScore" | "name" | "createdAt";
   /** Secondary sort order (only used when orderBy is "releaseYear") */
   secondaryOrder?: "asc" | "desc";
-}
-
-/**
- * Represents the parameters passed to the GetStatsOptions method.
- */
-export interface GetStatsOptions {
-  /** The  genre slug to fetch data for. */
-  slug?: string;
-  /** The resource to display distribution data for */
-  resource?: "albums" | "tracks" | "artists";
 }
 
 /**
@@ -532,8 +526,6 @@ export interface GetPaginatedArtistsOptions {
   order?: "asc" | "desc";
   /** The search query to filter the results by */
   search?: string;
-  /** The score type when ordering by score (overall, peak, latest) */
-  scoreType?: "overall" | "peak" | "latest";
 }
 
 /**
@@ -605,14 +597,101 @@ export interface RelatedGenre {
   updatedAt: Date;
 }
 
+/** A genre and how many reviewed albums have it, for the genre filter */
+export interface GenreCount {
+  name: string;
+  slug: string;
+  albumCount: number;
+}
+
+/** A scored album on the stats page */
+export interface StatsAlbum {
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  finalScore: number;
+  imageURLs: SpotifyImage[];
+  /** The slugs of the album's genres */
+  genres: string[];
+  /** The Spotify IDs of all the album's artists */
+  artistSpotifyIDs: string[];
+}
+
+/** A rated artist on the stats page */
+export interface StatsArtist {
+  spotifyID: string;
+  name: string;
+  imageURLs: SpotifyImage[];
+  totalScore: number;
+  albumCount: number;
+}
+
+/** Everything the stats page shows. The page filters it itself. */
+export interface StatsOverview {
+  /** Every scored album, lowest score first */
+  albums: StatsAlbum[];
+  /** The rated artists */
+  artists: StatsArtist[];
+  /** Every genre with an album, most common first */
+  genres: GenreCount[];
+  /** The number of reviewed artists, rated or not */
+  artistCount: number;
+  ratedTrackCount: number;
+}
+
+/** A reviewed album in the home page's cover columns */
+export interface HomeAlbum {
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  finalScore: number | null;
+  imageURLs: SpotifyImage[];
+  colors: ExtractedColor[];
+}
+
+/** Everything the home page needs */
+export interface HomeOverview {
+  /** A random sample of reviewed albums, different on each request */
+  albums: HomeAlbum[];
+  /** The Spotify ID of the newest review, or null when there are none */
+  latestAlbumID: string | null;
+  albumCount: number;
+  /** The number of reviewed artists, rated or not */
+  artistCount: number;
+}
+
+/** A reviewed album in the home page's search results */
+export interface HomeSearchAlbum {
+  type: "album";
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  score: number | null;
+  imageURLs: SpotifyImage[];
+}
+
+/** A reviewed artist in the home page's search results */
+export interface HomeSearchArtist {
+  type: "artist";
+  spotifyID: string;
+  name: string;
+  albumCount: number;
+  /** Null while the artist is unrated */
+  score: number | null;
+  imageURLs: SpotifyImage[];
+}
+
+export type HomeSearchResult = HomeSearchAlbum | HomeSearchArtist;
+
 export interface PaginatedAlbumsResult {
   albums: DisplayAlbum[];
   totalCount: number;
   furtherPages: boolean;
-  /** All genres */
-  genres: Genre[];
-  /** All the genres that are related */
-  relatedGenres?: Genre[];
+  /** Every genre with an album, most common first */
+  genres: GenreCount[];
 }
 
 /** Represents the progress of settings operations */

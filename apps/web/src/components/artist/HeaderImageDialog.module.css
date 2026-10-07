@@ -1,0 +1,21 @@
+.popup {
+  --dialog-width: 34rem;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label {
+  font-weight: var(--font-weight-label);
+}
+
+.script {
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--colour-panel);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

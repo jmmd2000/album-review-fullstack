@@ -1,149 +1,117 @@
+@import "@fontsource-variable/funnel-display";
+@import "@fontsource-variable/funnel-sans";
 @import "./tokens.css";
-@import "./reset.css" layer(base);
-@import "tailwindcss";
-
-/* ---- tailwind configuration ---- */
-
-/* The shared package carries class names too (the rating tier colours), and
-   the automatic scan doesn't cross package boundaries */
-@source "../../../../packages/shared/src";
-
-@theme {
-  --animation-duration-lava0: 220s;
-  --animation-duration-lava1: 180s;
-  --animation-duration-lava2: 200s;
-  --animation-duration-infinite-scroll: 320s;
-
-  --breakpoint-3xl: 120.5rem;
-  --breakpoint-4xl: 137.5rem;
-}
-
-/* ---- base ---- */
-
-@font-face {
-  font-family: "Cabin";
-  src: local("cabin-latin-400-normal"), url("../assets/fonts/cabin-latin-400-normal.ttf");
-}
-
-html {
-  font-size: clamp(1rem, 0.347vw + 0.584rem, 1.25rem);
-  @apply bg-neutral-900;
-  @apply text-white;
-}
+@import "./reset.css";
 
 body {
-  font-family: "Cabin", sans-serif;
+  background: var(--colour-background);
+  color: var(--colour-foreground);
+  font-family: var(--font-body);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ---- keyframes and their helper classes ---- */
-
-/* Blurry header animations */
-@keyframes lava0 {
-  0% {
-    transform: translate(0vw, 0px) scale(1);
-  }
-  25% {
-    transform: translate(40vw, -50px) scale(1.2);
-  }
-  50% {
-    transform: translate(-30vw, 30px) scale(0.9);
-  }
-  75% {
-    transform: translate(30vw, -10px) scale(1.1);
-  }
-  100% {
-    transform: translate(0vw, 0px) scale(1);
-  }
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-display);
 }
 
-@keyframes lava1 {
-  0% {
-    transform: translate(0vw, 0px) scale(1);
-  }
-  25% {
-    transform: translate(-50vw, 40px) scale(1.1);
-  }
-  50% {
-    transform: translate(35vw, -30px) scale(0.95);
-  }
-  75% {
-    transform: translate(-40vw, 20px) scale(1.15);
-  }
-  100% {
-    transform: translate(0vw, 0px) scale(1);
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: var(--border-thick) solid var(--colour-foreground);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
-@keyframes lava2 {
-  0% {
-    transform: translate(0vw, 0px) scale(1);
-  }
-  25% {
-    transform: translate(45vw, -20px) scale(1.05);
-  }
-  50% {
-    transform: translate(-55vw, 25px) scale(1.1);
-  }
-  75% {
-    transform: translate(20vw, 50px) scale(0.9);
-  }
-  100% {
-    transform: translate(0vw, 0px) scale(1);
+/* The cover or photo that flies between pages travels a little slower than the page fades, so the eye follows it */
+::view-transition-group(album-cover),
+::view-transition-group(artist-photo) {
+  animation-duration: 0.45s;
+  animation-timing-function: var(--ease-out);
+}
+
+/* The browser blends the two pictures by adding them, which would glow while one sits on the other */
+::view-transition-old(album-cover),
+::view-transition-new(album-cover),
+::view-transition-old(artist-photo),
+::view-transition-new(artist-photo) {
+  mix-blend-mode: normal;
+}
+
+/* A picture is only as sharp as the size it was drawn at, so the bigger of the two flies.
+   Going back, that's the old page's picture, and the new one fades in as it lands. */
+::view-transition-old(album-cover),
+::view-transition-old(artist-photo) {
+  animation: none;
+}
+
+::view-transition-new(album-cover),
+::view-transition-new(artist-photo) {
+  animation: land 0.45s var(--ease-out) both;
+}
+
+/* Opening an album or an artist, the new page's picture is the big one, so it shows at once.
+   If it hasn't loaded yet it's see-through, and the clicked picture underneath flies instead. */
+:root:active-view-transition-type(album-grows)::view-transition-new(album-cover),
+:root:active-view-transition-type(artist-grows)::view-transition-new(artist-photo) {
+  animation: appear 0.1s ease-out both;
+}
+
+/* An artist photo can fly between a square card and a round photo, so it reshapes from one to the other as it flies.
+   Opening an artist, the round photo shows at once, so it rounds off quickly or the square's corners show behind it. */
+::view-transition-image-pair(artist-photo) {
+  overflow: hidden;
+  animation: reshape 0.45s var(--ease-out) both;
+}
+
+:root:active-view-transition-type(artist-grows)::view-transition-image-pair(artist-photo) {
+  animation-duration: 0.2s;
+}
+
+/* Going back, the round photo can't be clipped into a square, so it fades out as the square card fades in, inside the changing outline */
+:root:active-view-transition-type(artist-shrinks)::view-transition-old(artist-photo) {
+  animation: fade-out 0.45s var(--ease-out) both;
+  mix-blend-mode: plus-lighter;
+}
+
+:root:active-view-transition-type(artist-shrinks)::view-transition-new(artist-photo) {
+  animation: appear 0.45s var(--ease-out) both;
+  mix-blend-mode: plus-lighter;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
   }
 }
 
-.animate-lava0 {
-  animation: lava0 var(--animation-duration-lava0) ease-in-out infinite alternate;
-}
-
-.animate-lava1 {
-  animation: lava1 var(--animation-duration-lava1) ease-in-out infinite alternate;
-}
-
-.animate-lava2 {
-  animation: lava2 var(--animation-duration-lava2) ease-in-out infinite alternate;
-}
-
-/* Infinite scroll animation for the AlbumScroller */
-@keyframes infinite-scroll {
-  0% {
-    transform: translateX(0);
+@keyframes reshape {
+  from {
+    border-radius: var(--artist-photo-from-radius, 50%);
   }
-  100% {
-    transform: translateX(-33.333%);
+  to {
+    border-radius: var(--artist-photo-to-radius, 50%);
   }
 }
 
-.animate-infinite-scroll {
-  animation: infinite-scroll var(--animation-duration-infinite-scroll) linear infinite;
-}
-
-@keyframes scrollUp {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-16.666%);
+@keyframes land {
+  0%,
+  70% {
+    opacity: 0;
   }
 }
 
-.scrolling-container {
-  animation: scrollUp 30s linear infinite;
-}
-
-/* ---- utilities ---- */
-
-@layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    /* IE and Edge */
-    -ms-overflow-style: none;
-    /* Firefox */
-    scrollbar-width: none;
+@keyframes appear {
+  from {
+    opacity: 0;
   }
 }

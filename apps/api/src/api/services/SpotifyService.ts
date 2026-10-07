@@ -21,12 +21,10 @@ export class SpotifyService {
     const albums = mapSearchResults(await SpotifyClient.searchAlbums(rawQuery, token));
     if (albums.length === 0) return albums;
 
-    // Read our own data here and hand it to the pure enrichment step, so the
-    // Spotify layer never reaches into the database itself.
     const ids = albums.map(a => a.spotifyID);
-    const reviewScores = await AlbumModel.getReviewScoresByIds(ids);
+    const finalScores = await AlbumModel.getFinalScoresByIds(ids);
     const bookmarkedIDs = await BookmarkedAlbumModel.getBookmarkedByIds(ids);
-    return enrichAlbumsWithStatus(albums, reviewScores, bookmarkedIDs);
+    return enrichAlbumsWithStatus(albums, finalScores, bookmarkedIDs);
   }
 
   static async getAlbum(
@@ -38,7 +36,7 @@ export class SpotifyService {
     genres?: Genre[];
   }> {
     const existing = await AlbumModel.findBySpotifyID(id);
-    if (existing) throw new AppError("Album already exists in the database.", 400);
+    if (existing) throw new AppError("This album has already been reviewed.", 409);
 
     const token = await SpotifyTokenCache.getAccessToken();
     const album = await SpotifyClient.getAlbum(id, token);

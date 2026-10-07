@@ -56,14 +56,14 @@ test("spawning an image job streams the same way", async () => {
   spy.mockRestore();
 });
 
-test("a job that throws surfaces an error event before finishing", async () => {
+test("a job that throws surfaces a fatal event before finishing", async () => {
   const spy = vi.spyOn(ArtistService, "updateArtistHeaders").mockRejectedValue(new Error("boom"));
 
   const created = await api.post("/api/jobs/artist-headers", undefined, authCookie);
   const { jobID } = await created.json();
 
   const text = await (await api.get(`/api/jobs/${jobID}/events`, authCookie)).text();
-  expect(text).toContain("event: error");
+  expect(text).toContain("event: fatal");
   expect(text).toContain("boom");
   expect(text).toContain("event: done");
 

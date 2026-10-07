@@ -8,6 +8,13 @@
       "when": 1784589433171,
       "tag": "0000_tan_colossus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791330109501,
+      "tag": "0001_track_picks",
+      "breakpoints": true
     }
   ]
 }

@@ -1,121 +1,111 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, redirect, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { ApiError, client, handle, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { useEffect, useState } from "react";
-import type { DisplayAlbum, ExtractedColor } from "@shared/types";
-import ErrorComponent from "@/components/ui/ErrorComponent";
-import BlurryHeader from "@/components/layout/BlurryHeader";
-import AlbumReviewForm from "@/components/form/AlbumReviewForm";
-import HeaderDetails from "@/components/layout/HeaderDetails";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import AlbumDetails from "@/components/album/AlbumDetails";
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { client, handle } from "@/lib/client";
+import { toReviewPayload } from "@/lib/reviewForm";
+import { AdminOnly } from "@/components/admin/AdminOnly";
+import { ReviewForm } from "@/components/form/ReviewForm";
+import { RouteError } from "@/components/ui/RouteError";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 
-//# --------------------------------------------------------------------------------------------- #
-//# The usual structure for a route would be like:
-// const tokenQueryOptions = queryOptions({
-//   queryKey: ["album"],
-//   queryFn: fetchToken,
-// });
-//# And this would be passed to the loader in createFileRoute() like:
-// loader: ({ context }) => context.queryClient.ensureQueryData(tokenQueryOptions),
-//# But in this case, the query function needs a parameter, so we need to pass the param to queryOptions directly:
-// const albumQueryOptions = (albumSpotifyID: string) =>
-// queryOptions({
-//   queryKey: ["spotifyAlbum", albumSpotifyID],
-//   queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
-// });
-//# Then, in the loader:
-// loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
-//# And then inside the RouteComponent, you need to pass the same options to useQuery:
-// const { albumID } = useParams({ strict: false });
-//   if (!albumID) {
-//     throw new Error("albumID is undefined");
-//   }
-//   const { data } = useSuspenseQuery(albumQueryOptions(albumID));
-//# No need for error as the error boundary is already handled by the ErrorComponent
-//# No need for isPending as it's called with useSuspenseQuery, which handles the loading state
-//# --------------------------------------------------------------------------------------------- #
+import type { ReviewFormValues } from "@/lib/reviewForm";
 
 async function fetchAlbumFromSpotify(albumSpotifyID: string) {
   return handle(client.api.spotify.albums[":albumID"].$get({ param: { albumID: albumSpotifyID } }));
 }
 
-const albumQueryOptions = (albumSpotifyID: string) =>
+const spotifyAlbumQueryOptions = (albumID: string) =>
   queryOptions({
-    queryKey: queryKeys.albums.create(albumSpotifyID),
-    queryFn: () => fetchAlbumFromSpotify(albumSpotifyID),
+    queryKey: queryKeys.albums.create(albumID),
+    queryFn: () => fetchAlbumFromSpotify(albumID),
   });
 
-// This is the maximum number of recent albums to show in the recent albums list
-const MAX_RECENT = 14;
-
-// This page is for creating a new album review
 export const Route = createFileRoute("/albums/$albumID/create")({
-  loader: ({ params, context }) => context.queryClient.ensureQueryData(albumQueryOptions(params.albumID)),
+  ssr: false,
+  loader: async ({ params, context }) => {
+    try {
+      return await context.queryClient.ensureQueryData(spotifyAlbumQueryOptions(params.albumID));
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) throw redirect({ to: "/albums/$albumID", params: { albumID: params.albumID } });
+      if (error instanceof ApiError && error.status === 401) return undefined;
+      throw error;
+    }
+  },
   component: RouteComponent,
-  errorComponent: ErrorComponent,
+  errorComponent: ({ error, reset }) => (
+    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="Spotify has no album with this link.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </RouteError>
+  ),
   head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: `Review: ${loaderData?.album?.name ?? "Album Review"}`,
-      },
-    ],
+    meta: [{ title: loaderData ? `Review ${loaderData.album.name}` : "New review" }],
   }),
 });
 
 function RouteComponent() {
-  // Get the album ID from the URL
-  const { albumID } = useParams({ strict: false });
-  const [recentAlbums, setRecentAlbums] = useLocalStorage<DisplayAlbum[]>("recentAlbums", []);
+  return (
+    <AdminOnly>
+      <CreateReview />
+    </AdminOnly>
+  );
+}
 
-  // If the album ID is undefined, throw an error
-  if (!albumID) {
-    throw new Error("albumID is undefined");
-  }
+function CreateReview() {
+  const { albumID } = Route.useParams();
+  const { data } = useSuspenseQuery(spotifyAlbumQueryOptions(albumID));
+  const { album, artists } = data;
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
 
-  // Fetch the album data
-  const { data } = useSuspenseQuery(albumQueryOptions(albumID));
+  const save = useMutation({
+    mutationFn: (values: ReviewFormValues) => handleVoid(client.api.albums.create.$post({ json: { ...toReviewPayload(values), album } })),
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: queryKeys.albums.create(albumID) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.stats.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
+      ]);
+      await navigate({ to: "/albums/$albumID", params: { albumID } });
+    },
+  });
 
-  useEffect(() => {
-    if (!data.album.id) return;
-
-    const alreadyExists = recentAlbums.some(album => album.spotifyID === data.album.id);
-    if (alreadyExists) return;
-
-    const newAlbum: DisplayAlbum = {
-      spotifyID: data.album.id,
-      name: data.album.name,
-      artistName: data.album.artists[0].name,
-      artistSpotifyID: data.album.artists[0].id,
-      releaseYear: parseInt(data.album.release_date.split("-")[0], 10),
-      imageURLs: data.album.images,
-      finalScore: null,
-      affectsArtistScore: true,
-    };
-
-    setRecentAlbums(prev => {
-      const deduped = prev.filter(album => album.spotifyID !== data.album.id);
-      const updated = [newAlbum, ...deduped].slice(0, MAX_RECENT);
-      return updated;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.album.id]);
-
-  // State to manage selected colors
-  const [selectedColors, setSelectedColors] = useState<ExtractedColor[]>(data.album.colors);
+  const artistIDs = artists.map(artist => artist.spotifyID);
+  const initialValues: ReviewFormValues = {
+    tracks: album.tracks.items.map(track => ({
+      spotifyID: track.id,
+      artistSpotifyID: track.artists[0]?.id ?? album.artists[0]!.id,
+      artistName: track.artists[0]?.name ?? album.artists[0]!.name,
+      name: track.name,
+      duration: track.duration_ms,
+      features: track.artists.slice(1).map(artist => ({ id: artist.id, name: artist.name })),
+      rating: 0,
+      pick: null,
+    })),
+    reviewContent: "",
+    colours: album.colors,
+    genres: [],
+    affectsArtistScore: true,
+    creditedArtistIDs: artistIDs,
+    scoreArtistIDs: artistIDs,
+  };
 
   return (
-    <>
-      <RequireAdmin>
-        <BlurryHeader _colors={selectedColors}>
-          <HeaderDetails name={data.album.name} imageURL={data.album.images[1].url} />
-          {data.artists && data.artists.length > 0 && <AlbumDetails album={data.album} trackCount={data.album.tracks.items.length} artists={data.artists} />}
-        </BlurryHeader>
-
-        <AlbumReviewForm album={data.album} setSelectedColors={setSelectedColors} selectedColors={selectedColors} genres={data.genres ?? []} />
-      </RequireAdmin>
-    </>
+    <ReviewForm
+      albumName={album.name}
+      artistName={album.artists.map(artist => artist.name).join(", ")}
+      cover={album.images[0]}
+      albumArtists={artists}
+      initialValues={initialValues}
+      genreSuggestions={(data.genres ?? []).map(genre => genre.name)}
+      onSave={values => save.mutateAsync(values)}
+      onCancel={() => (canGoBack ? router.history.back() : navigate({ to: "/albums" }))}
+    />
   );
 }

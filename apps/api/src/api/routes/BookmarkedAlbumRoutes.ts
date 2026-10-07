@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { AppError } from "@/api/AppError";
 import { BookmarkedAlbumService } from "@/api/services/BookmarkedAlbumService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
@@ -32,19 +31,6 @@ const paginatedSchema = z.object({
 // admin only. Static paths are registered before /:albumID so they aren't matched as an id.
 const bookmark = new Hono()
   .use(requireAdmin)
-  .get("/status", async c => {
-    // Accept ?ids=1,2,3 or repeated ?ids=1&ids=2
-    const raw = c.req.queries("ids") ?? [];
-    const ids = raw.flatMap(value => (value.includes(",") ? value.split(",") : [value])).filter(Boolean);
-    if (ids.length === 0) throw new AppError("ids parameter is required.", 400);
-
-    const bookmarkedIds = await BookmarkedAlbumService.getBookmarkedByIds(ids);
-    const statusMap: Record<string, boolean> = {};
-    for (const id of ids) {
-      statusMap[id] = bookmarkedIds.includes(id);
-    }
-    return c.json(statusMap, 200);
-  })
   .get("/all", async c => {
     return c.json(await BookmarkedAlbumService.getAllAlbums(), 200);
   })

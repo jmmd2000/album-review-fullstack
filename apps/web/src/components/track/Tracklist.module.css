@@ -1,0 +1,67 @@
+.heading {
+  margin-bottom: var(--space-1);
+  font-size: 1.7rem;
+  font-weight: var(--font-weight-label);
+}
+
+.list {
+  list-style: none;
+}
+
+/* one line per track, split by dividers. The row itself is never tinted, so the rating is its only colour */
+.row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 52px;
+  padding-block: 10px;
+
+  & + & {
+    border-top: var(--border-thin) solid var(--colour-divider);
+  }
+
+  @media (width < 560px) {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+  }
+}
+
+.number,
+.duration {
+  color: var(--colour-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.number {
+  font-size: 0.92rem;
+}
+
+.name {
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.features {
+  color: var(--colour-text-muted);
+  font-weight: var(--font-weight-body);
+}
+
+.duration {
+  font-size: 0.9rem;
+
+  @media (width < 560px) {
+    display: none;
+  }
+}
+
+/* every chip is as wide as the longest word, so the durations line up */
+.rating {
+  min-width: 8em;
+  padding: 4px 10px;
+  color: var(--colour-text-on-tier);
+  font-size: 11px;
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+}

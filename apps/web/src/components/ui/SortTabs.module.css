@@ -1,0 +1,43 @@
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  color: var(--colour-text-muted);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 4px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  &[aria-pressed="true"] {
+    color: var(--colour-foreground);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+  }
+
+  & svg {
+    width: 0.85em;
+    height: 0.85em;
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,57 +1,25 @@
-// This component shares a lot with the AlbumCard. Could create a base, reusable card component and share it.
+import { linkOptions } from "@tanstack/react-router";
+import { Card } from "@/components/ui/Card";
 
 import type { DisplayArtist } from "@shared/types";
-import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useHydrated } from "@/hooks/useHydrated";
-import RatingChip from "@/components/ui/RatingChip";
 
 interface ArtistCardProps {
   artist: DisplayArtist;
+  /** The artist's place in the current ranking, or null when the sort isn't a ranking */
+  position: number | null;
+  score: number;
 }
 
-const ArtistCard = ({ artist }: ArtistCardProps) => {
-  const albumCountString = artist.albumCount === 1 ? `${artist.albumCount} album` : `${artist.albumCount} albums`;
-  const imageURL = artist.imageURLs?.[1]?.url ?? artist.imageURLs?.[0]?.url;
-  const largeImageURL = artist.imageURLs?.[0]?.url;
-  const hydrated = useHydrated();
+export function ArtistCard({ artist, position, score }: ArtistCardProps) {
   return (
-    <Link params={{ artistID: artist.spotifyID }} to={"/artists/$artistID"} resetScroll={true} viewTransition className="block" data-testid="artist-card">
-      <motion.div
-        initial={hydrated ? { opacity: 0, y: 10 } : false}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        whileHover={{
-          y: -10,
-        }}
-        className="flex flex-col rounded-xl items-center w-full max-w-60 3xl:max-w-none"
-      >
-        {imageURL ? (
-          <img
-            src={imageURL}
-            srcSet={largeImageURL ? `${largeImageURL} 640w, ${imageURL} 300w` : undefined}
-            sizes="(min-width: 1921px) 640px, 300px"
-            alt={artist.name}
-            loading="lazy"
-            decoding="async"
-            className="w-full aspect-square rounded-lg"
-            style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }}
-          />
-        ) : (
-          <div className="w-full aspect-square rounded-lg bg-neutral-800/40" style={{ viewTransitionName: `artist-image-${artist.spotifyID}` }} aria-label={`${artist.name} image unavailable`} />
-        )}
-        <div className="flex justify-between w-full">
-          <div className="flex flex-col px-0 py-1 w-[90%] relative">
-            <h2 className="w-full max-w-40 3xl:max-w-none text-sm font-medium truncate">{artist.name}</h2>
-            <p className="text-xs text-gray-500">{artist.unrated ? albumCountString : `#${artist.currentPosition || artist.leaderboardPosition} • ${albumCountString}`}</p>
-          </div>
-          <div className="grid place-items-center">
-            <RatingChip rating={Math.ceil(artist.displayScore || artist.totalScore)} options={{ small: true }} />
-          </div>
-        </div>
-      </motion.div>
-    </Link>
+    <Card
+      link={linkOptions({ to: "/artists/$artistID", params: { artistID: artist.spotifyID } })}
+      title={artist.name}
+      subtitle={`${artist.albumCount} ${artist.albumCount === 1 ? "album" : "albums"}`}
+      score={artist.unrated ? null : score}
+      images={artist.imageURLs}
+      rank={position ?? undefined}
+      morph={{ kind: "artist", spotifyID: artist.spotifyID }}
+    />
   );
-};
-
-export default ArtistCard;
+}

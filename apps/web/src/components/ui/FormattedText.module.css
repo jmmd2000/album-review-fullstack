@@ -1,0 +1,17 @@
+/* size and colour come from wherever the text is placed */
+.prose {
+  white-space: pre-line;
+
+  & strong {
+    font-weight: var(--font-weight-display);
+  }
+
+  & em {
+    font-style: italic;
+  }
+
+  & u {
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+}

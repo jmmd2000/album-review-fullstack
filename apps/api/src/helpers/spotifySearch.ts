@@ -1,9 +1,8 @@
 import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
 
 /**
- * Maps a raw Spotify album search payload into our DisplayAlbum shape. A search
- * result is an album we have not reviewed, so it carries no score and defaults to
- * affecting the artist score once reviewed.
+ * Maps a raw Spotify album search payload into our DisplayAlbum shape. The score
+ * starts as null, and enrichAlbumsWithStatus fills it in for reviewed albums.
  *
  * @param raw - The Spotify search response.
  * @returns One DisplayAlbum per search hit.
@@ -22,20 +21,20 @@ export function mapSearchResults(raw: { albums: { items: SpotifyAlbum[] } }): Di
 }
 
 /**
- * Combines review scores and bookmark status onto search results.
+ * Adds the final score and the bookmark status to search results.
  *
  * @param albums - The mapped search results.
- * @param reviewScores - Review scores for any of the albums that we have reviewed.
+ * @param finalScores - The final scores of the albums that are reviewed.
  * @param bookmarkedIDs - Spotify ids of the albums that are bookmarked.
- * @returns The albums with reviewScore and bookmarked filled in.
+ * @returns The albums with finalScore and bookmarked filled in. An album with no review keeps a null score.
  */
-export function enrichAlbumsWithStatus(albums: DisplayAlbum[], reviewScores: { spotifyID: string; reviewScore: number }[], bookmarkedIDs: string[]): DisplayAlbum[] {
-  const scoreMap = new Map(reviewScores.map(({ spotifyID, reviewScore }) => [spotifyID, reviewScore]));
+export function enrichAlbumsWithStatus(albums: DisplayAlbum[], finalScores: { spotifyID: string; finalScore: number | null }[], bookmarkedIDs: string[]): DisplayAlbum[] {
+  const scoreMap = new Map(finalScores.map(({ spotifyID, finalScore }) => [spotifyID, finalScore]));
   const bookmarkedSet = new Set(bookmarkedIDs);
 
   return albums.map(album => ({
     ...album,
-    reviewScore: scoreMap.get(album.spotifyID),
+    finalScore: scoreMap.get(album.spotifyID) ?? null,
     bookmarked: bookmarkedSet.has(album.spotifyID),
   }));
 }

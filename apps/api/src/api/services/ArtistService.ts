@@ -13,11 +13,12 @@ import { calculateLeaderboardPositions } from "@/helpers/calculateLeaderboardPos
 import { calculateArtistScore } from "@/helpers/calculateArtistScore";
 import { AppError } from "@/api/AppError";
 import { db, type Executor } from "@/db/client";
+import { PAGE_SIZE } from "@shared/constants";
 
 export class ArtistService {
   /**
-   * Recalculate all artist scores from their albums, updating only when values change.
-   * Also refreshes leaderboard positions after any updates.
+   * Recalculates the scores of all artists from their albums. It saves only the scores that change,
+   * then updates the leaderboard positions.
    */
   static async recalculateAllArtistScores() {
     const artists = await ArtistModel.getAllArtists();
@@ -224,17 +225,13 @@ export class ArtistService {
     };
   }
 
-  /**
-   * Updates all leaderboard positions (overall, peak, latest) for all artists
-   */
+  /** Updates the overall, peak and latest leaderboard positions of all rated artists. */
   static async updateAllLeaderboardPositions(executor: Executor = db) {
-    // Get all rated artists
     const allArtists = await ArtistModel.getAllArtists(executor);
     const ratedArtists = allArtists.filter(artist => !artist.unrated);
 
     if (ratedArtists.length === 0) return;
 
-    // Prepare data for each leaderboard type
     const overallData: ArtistLeaderboardData[] = ratedArtists.map(artist => ({
       id: artist.id,
       name: artist.name,
@@ -253,22 +250,18 @@ export class ArtistService {
       score: artist.latestScore,
     }));
 
-    // Calculate positions for each leaderboard
     const overallPositions = calculateLeaderboardPositions(overallData);
     const peakPositions = calculateLeaderboardPositions(peakData);
     const latestPositions = calculateLeaderboardPositions(latestData);
 
-    // Update overall leaderboard positions
     for (const artist of overallPositions) {
       await ArtistModel.updateLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
-    // Update peak leaderboard positions
     for (const artist of peakPositions) {
       await ArtistModel.updatePeakLeaderboardPosition(artist.id, artist.position!, executor);
     }
 
-    // Update latest leaderboard positions
     for (const artist of latestPositions) {
       await ArtistModel.updateLatestLeaderboardPosition(artist.id, artist.position!, executor);
     }
@@ -280,7 +273,7 @@ export class ArtistService {
   static async getPaginatedArtists(opts: GetPaginatedArtistsOptions) {
     const artists = await ArtistModel.getPaginatedArtists(opts);
     const totalArtistCount = await ArtistModel.getArtistCount();
-    const furtherPages = artists.length > 35;
+    const furtherPages = artists.length > PAGE_SIZE;
     if (furtherPages) artists.pop();
 
     const displayArtists: DisplayArtist[] = artists.map(artist => ({
@@ -318,7 +311,7 @@ export class ArtistService {
     const sortByDateDesc = <T extends { releaseDate: string; releaseYear: number }>(a: T, b: T) => {
       const dateA = new Date(toSortableDate(a.releaseDate, a.releaseYear)).getTime();
       const dateB = new Date(toSortableDate(b.releaseDate, b.releaseYear)).getTime();
-      return dateB - dateA; // descending
+      return dateB - dateA;
     };
     const sortedAlbums = albums.sort(sortByDateDesc);
 
@@ -336,8 +329,13 @@ export class ArtistService {
       artistSpotifyIDs: artistIDMap.get(album.spotifyID) ?? [],
     }));
 
-    const tracks = await TrackModel.getTracksByArtist(artistID);
-    const albumImageMap = new Map([...albumsWithArtists, ...featuredWithArtists].map(album => [album.spotifyID, album.imageURLs]));
+    const allAlbumsNewestFirst = [...albumsWithArtists, ...featuredWithArtists].sort(sortByDateDesc);
+    const albumsByID = new Map(allAlbumsNewestFirst.map(album => [album.spotifyID, album]));
+    const albumPositions = new Map(allAlbumsNewestFirst.map((album, index) => [album.spotifyID, index]));
+    const albumPosition = (albumSpotifyID: string) => albumPositions.get(albumSpotifyID) ?? albumPositions.size;
+
+    // The sort is stable, so each album's tracks stay in album order
+    const tracks = (await TrackModel.getTracksByArtist(artistID)).sort((a, b) => albumPosition(a.albumSpotifyID) - albumPosition(b.albumSpotifyID));
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
       spotifyID: track.spotifyID,
@@ -347,13 +345,17 @@ export class ArtistService {
       duration: track.duration,
       rating: track.rating,
       features: track.features,
-      imageURLs: albumImageMap.get(track.albumSpotifyID) || [],
+      imageURLs: albumsByID.get(track.albumSpotifyID)?.imageURLs ?? [],
+      albumName: albumsByID.get(track.albumSpotifyID)?.name,
     }));
+    const rankedArtistCount = await ArtistModel.getRankedArtistCount();
+
     return {
       artist,
       albums: albumsWithArtists,
       featuredAlbums: featuredWithArtists,
       tracks: displayTracks,
+      rankedArtistCount,
     };
   }
 
@@ -385,7 +387,7 @@ export class ArtistService {
     }
 
     const FAKE = false;
-    const BATCH_SIZE = 6; // Process this many at a time
+    const BATCH_SIZE = 6;
 
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
       ...a,
@@ -394,7 +396,6 @@ export class ArtistService {
 
     const total = artists.length;
 
-    // Split into batches
     const batches = [];
     for (let i = 0; i < artists.length; i += BATCH_SIZE) {
       batches.push(artists.slice(i, i + BATCH_SIZE));
@@ -412,7 +413,6 @@ export class ArtistService {
           const artistName = currentArtist?.name || "Unknown Artist";
           const artistImage = currentArtist?.imageURLs?.[0]?.url;
 
-          // Emit fetching progress
           emit("fetching", {
             index: processedCount + completed,
             total,
@@ -425,7 +425,6 @@ export class ArtistService {
 
       const headerResults = await fetchArtistHeadersFromSpotify(spotifyIDs, BATCH_SIZE, onProgress, FAKE);
 
-      // emit progress, then same/changed/error
       for (let i = 0; i < batch.length; i++) {
         const artist = batch[i];
         const { spotifyID: id, name, imageURLs } = artist;
@@ -433,7 +432,7 @@ export class ArtistService {
 
         processedCount++;
 
-        // ALWAYS emit progress first (for live banner updates)
+        // Send progress first. The live banner on the settings page updates from it.
         emit("progress", {
           index: processedCount,
           total,
@@ -442,13 +441,11 @@ export class ArtistService {
           artistImage,
         });
 
-        // Get the fetched header from batch results
         const newHeaderImage = headerResults[id];
 
         if (newHeaderImage) {
           const current = artist.headerImage;
 
-          // Normalize URLs for comparison
           const normalizedCurrent = current ? normalizeSpotifyImageUrl(current) : null;
           const normalizedNew = normalizeSpotifyImageUrl(newHeaderImage);
 
@@ -510,7 +507,6 @@ export class ArtistService {
   static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
     if (!all && !spotifyID) throw new AppError("Must specify either all=true or a spotifyID", 400);
 
-    // Fetch the artist list
     let dbArtists;
     if (all) {
       dbArtists = await ArtistModel.getAllArtists();
@@ -520,7 +516,6 @@ export class ArtistService {
       dbArtists = [artist];
     }
 
-    // Normalize to ReviewedArtist shape
     const artists: ReviewedArtist[] = dbArtists.map(a => ({
       ...a,
       leaderboardPosition: a.leaderboardPosition ?? 0,
@@ -539,20 +534,16 @@ export class ArtistService {
         spotifyID: id,
         artistName: name,
         artistImage: currentArtistImage,
-        // newArtistImage: newArtistImage,
       });
 
-      // Fetch new data from Spotify
       const artistData = await fetchArtistFromSpotify(id);
       if (!artistData) continue;
 
       const newArtistImage = artistData.images && artistData.images.length > 0 ? (artistData.images as SpotifyImage[])[0].url : undefined;
 
-      // Get only the URL strings, sorted
       const currentUrls = (imageURLs || []).map(img => img.url).sort();
       const fetchedUrls = (artistData.images as SpotifyImage[]).map(img => img.url).sort();
 
-      // Compare lengths and each URL
       const same = areImageUrlsSame(currentUrls, fetchedUrls);
 
       if (same) {
