@@ -6,14 +6,13 @@ import type { StatsAlbum, StatsArtist, StatsOverview } from "@shared/types";
 
 export class StatsService {
   /**
-   * Everything the stats page needs: every scored album lowest score first, with its genres and artists,
+   * Everything the stats page needs: every album lowest score first, with its genres and artists,
    * the rated artists, the genres with their album counts, and the artist and rated track totals.
    * The page filters these itself.
    */
   static async getOverview(): Promise<StatsOverview> {
-    const allAlbums = await AlbumModel.getAllAlbums();
-    const scoredAlbums = allAlbums.filter(album => album.finalScore !== null).sort((a, b) => a.finalScore - b.finalScore);
-    const albumIDs = scoredAlbums.map(album => album.spotifyID);
+    const sortedAlbums = (await AlbumModel.getAllAlbums()).sort((a, b) => a.finalScore - b.finalScore);
+    const albumIDs = sortedAlbums.map(album => album.spotifyID);
 
     const [genreRows, artistIDsByAlbum, allArtists, genres, artistCount, ratedTrackCount] = await Promise.all([
       GenreModel.getGenresForAlbumsRaw(albumIDs),
@@ -30,7 +29,7 @@ export class StatsService {
       genreSlugsByAlbum.set(row.album_genres.albumSpotifyID, [...slugs, row.genres.slug]);
     }
 
-    const albums: StatsAlbum[] = scoredAlbums.map(album => ({
+    const albums: StatsAlbum[] = sortedAlbums.map(album => ({
       spotifyID: album.spotifyID,
       name: album.name,
       artistName: album.artistName,

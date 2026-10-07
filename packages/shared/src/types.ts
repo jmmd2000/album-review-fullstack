@@ -232,8 +232,8 @@ export interface ReviewedArtist {
   imageURLs: SpotifyImage[];
   /** Header image scraped from spotify artist page */
   headerImage: string | null;
-  /** Position of the artist in the leaderboard. */
-  leaderboardPosition: number;
+  /** Position of the artist in the leaderboard, or null when the artist is unrated. */
+  leaderboardPosition: number | null;
   /** Position of the artist in the peak score leaderboard. */
   peakLeaderboardPosition: number | null;
   /** Position of the artist in the latest score leaderboard. */
@@ -621,7 +621,7 @@ export interface HomeAlbum {
   name: string;
   artistName: string;
   releaseYear: number;
-  finalScore: number | null;
+  finalScore: number;
   imageURLs: SpotifyImage[];
   colors: ExtractedColor[];
 }

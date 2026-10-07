@@ -25,7 +25,7 @@ export const reviewedAlbums = pgTable(
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
     bonus: real("bonus").notNull().default(0),
-    finalScore: real("final_score"),
+    finalScore: real("final_score").notNull(),
     affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),
@@ -224,7 +224,7 @@ export const relatedGenres = pgTable(
 // KV store for settings
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
-  value: jsonb("value"),
+  value: jsonb("value").$type<string>(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

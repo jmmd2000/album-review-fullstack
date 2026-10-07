@@ -34,7 +34,7 @@ export class AlbumModel {
   }
 
   static async getAllAlbums(): Promise<ReviewedAlbum[]> {
-    return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
+    return db.select().from(reviewedAlbums);
   }
 
   /** Up to `limit` reviewed albums, in a random order. */
@@ -43,7 +43,7 @@ export class AlbumModel {
       .select()
       .from(reviewedAlbums)
       .orderBy(sql`random()`)
-      .limit(limit) as Promise<ReviewedAlbum[]>;
+      .limit(limit);
   }
 
   /** The Spotify ID of the newest review, or null when there are none. */
@@ -58,8 +58,8 @@ export class AlbumModel {
       .select()
       .from(reviewedAlbums)
       .where(or(ilike(reviewedAlbums.name, `%${query}%`), ilike(reviewedAlbums.artistName, `%${query}%`)))
-      .orderBy(desc(ilike(reviewedAlbums.name, `${query}%`)), sql`${reviewedAlbums.finalScore} DESC NULLS LAST`)
-      .limit(limit) as Promise<ReviewedAlbum[]>;
+      .orderBy(desc(ilike(reviewedAlbums.name, `${query}%`)), desc(reviewedAlbums.finalScore))
+      .limit(limit);
   }
 
   static async getAlbumsBySpotifyIDs(ids: string[]) {
@@ -237,7 +237,7 @@ export class AlbumModel {
   }
 
   /** The final scores of the reviewed albums among `ids`. Albums without a review are left out. */
-  static async getFinalScoresByIds(ids: string[]): Promise<{ spotifyID: string; finalScore: number | null }[]> {
+  static async getFinalScoresByIds(ids: string[]): Promise<{ spotifyID: string; finalScore: number }[]> {
     return db
       .select({
         spotifyID: reviewedAlbums.spotifyID,

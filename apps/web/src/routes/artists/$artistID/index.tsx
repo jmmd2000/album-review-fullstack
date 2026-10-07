@@ -56,10 +56,6 @@ export const Route = createFileRoute("/artists/$artistID/")({
   }),
 });
 
-function hasScore<T extends { finalScore: number | null }>(album: T): album is T & { finalScore: number } {
-  return album.finalScore !== null;
-}
-
 function RouteComponent() {
   const { artistID } = useParams({ strict: false });
   if (!artistID) {
@@ -70,7 +66,7 @@ function RouteComponent() {
   const { artist, albums, featuredAlbums, tracks, rankedArtistCount } = data;
   const { isAdmin } = useAuth();
   const ratedTrackCount = tracks.filter(track => track.rating != null && track.rating > 0).length;
-  const scoredAlbumsOldestFirst = albums.filter(hasScore).reverse();
+  const albumsOldestFirst = [...albums].reverse();
 
   return (
     <div className={styles.page}>
@@ -83,10 +79,10 @@ function RouteComponent() {
       />
       <ArtistStanding artist={artist} rankedArtistCount={rankedArtistCount} albumCount={albums.length} ratedTrackCount={ratedTrackCount} />
 
-      {scoredAlbumsOldestFirst.length > 1 && (
+      {albumsOldestFirst.length > 1 && (
         <section className={styles.section}>
           <SectionHeader title="Score over time" />
-          <ScoreTimeline albums={scoredAlbumsOldestFirst} />
+          <ScoreTimeline albums={albumsOldestFirst} />
         </section>
       )}
 
