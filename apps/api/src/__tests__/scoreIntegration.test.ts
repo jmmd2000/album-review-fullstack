@@ -1,9 +1,12 @@
 import { beforeEach, afterEach, afterAll, test, expect, vi, describe } from "vitest";
-import { closeDatabase, query } from "@/db/client";
+import { closeDatabase, db, query } from "@/db/client";
+import { reviewedArtists } from "@/db/schema";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
+
+import type { DisplayArtist } from "@shared/types";
 
 // Mock Puppeteer header fetcher to avoid launch errors
 vi.mock("../helpers/fetchArtistHeaderFromSpotify", () => ({
@@ -292,30 +295,23 @@ describe("Score Integration Tests", () => {
     expect(artists[1].leaderboard_position).toBe(2);
   });
 
-  test("should handle API endpoints with score type parameter", async () => {
-    // Create an artist
-    const albumData = { ...mockReviewData, affectsArtistScore: true };
-    albumData.album.id = "unique_album_5";
-    albumData.album.artists = [{ ...mockReviewData.album.artists[0], id: "artist_5", name: "Artist 5" }];
-    albumData.ratedTracks = albumData.ratedTracks.map(track => ({
-      ...track,
-      rating: 8,
-    }));
+  test("the leaderboard sorts by overall, peak or latest score", async () => {
+    // Each score puts a different artist first, so a sort that ignores orderBy fails
+    await db.insert(reviewedArtists).values([
+      { spotifyID: "artist_a", name: "Artist A", imageURLs: [], averageScore: 70, totalScore: 70, peakScore: 90, latestScore: 50, unrated: false },
+      { spotifyID: "artist_b", name: "Artist B", imageURLs: [], averageScore: 80, totalScore: 80, peakScore: 60, latestScore: 70, unrated: false },
+      { spotifyID: "artist_c", name: "Artist C", imageURLs: [], averageScore: 60, totalScore: 60, peakScore: 75, latestScore: 95, unrated: false },
+    ]);
 
-    await api.post("/api/albums/create", albumData, authCookie);
+    const order = async (orderBy: string) => {
+      const response = await api.get(`/api/artists?orderBy=${orderBy}&order=desc`);
+      expect(response.status).toBe(200);
+      const { artists }: { artists: DisplayArtist[] } = await response.json();
+      return artists.map(artist => artist.spotifyID);
+    };
 
-    // Test different score type parameters
-    const overallResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=overall");
-    const peakResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=peak");
-    const latestResponse = await api.get("/api/artists?orderBy=totalScore&order=desc&scoreType=latest");
-
-    expect(overallResponse.status).toBe(200);
-    expect(peakResponse.status).toBe(200);
-    expect(latestResponse.status).toBe(200);
-
-    // All should return the same artist (since it's the only one)
-    expect((await overallResponse.json()).artists).toHaveLength(1);
-    expect((await peakResponse.json()).artists).toHaveLength(1);
-    expect((await latestResponse.json()).artists).toHaveLength(1);
+    expect(await order("totalScore")).toEqual(["artist_b", "artist_a", "artist_c"]);
+    expect(await order("peakScore")).toEqual(["artist_a", "artist_c", "artist_b"]);
+    expect(await order("latestScore")).toEqual(["artist_c", "artist_b", "artist_a"]);
   });
 });

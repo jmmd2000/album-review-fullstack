@@ -51,14 +51,16 @@ test("GET /api/albums/:albumID - should return a review for a given album", asyn
 });
 
 test("GET /api/albums - should return all album reviews", async () => {
-  await api.post("/api/albums/create", mockReviewData, authCookie);
-  await api.post("/api/albums/create", { ...mockReviewData, album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" } }, authCookie);
+  expect((await api.post("/api/albums/create", mockReviewData, authCookie)).status).toBe(201);
+  // Track IDs are unique, so the second album rates no tracks rather than reusing the first album's
+  const second = await api.post("/api/albums/create", { ...mockReviewData, album: { ...mockReviewData.album, id: "7fRrTyKvE4Skh93v97gtcU" }, ratedTracks: [] }, authCookie);
+  expect(second.status).toBe(201);
 
   const res = await api.get("/api/albums", authCookie);
   expect(res.status).toBe(200);
 
   const { albums }: { albums: DisplayAlbum[] } = await res.json();
-  expect(albums[0]).toHaveProperty("spotifyID");
+  expect(albums.map(album => album.spotifyID).sort()).toEqual(["0JGOiO34nwfUdDrD612dOp", "7fRrTyKvE4Skh93v97gtcU"]);
   expect(Array.isArray(albums[0].imageURLs)).toBe(true);
 });
 
