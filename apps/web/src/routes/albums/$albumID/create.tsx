@@ -27,6 +27,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
       return await context.queryClient.ensureQueryData(spotifyAlbumQueryOptions(params.albumID));
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) throw redirect({ to: "/albums/$albumID", params: { albumID: params.albumID } });
+      if (error instanceof ApiError && error.status === 401) return undefined;
       throw error;
     }
   },
