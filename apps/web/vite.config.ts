@@ -23,8 +23,9 @@ export default defineConfig(({ command }) => ({
     host: "0.0.0.0",
     port: 5173,
     proxy: {
+      // e2e points this at its own API
       "/api": {
-        target: "http://localhost:4000",
+        target: process.env.API_ORIGIN ?? "http://localhost:4000",
         changeOrigin: true,
       },
     },

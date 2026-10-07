@@ -27,7 +27,11 @@ const score = shownScoreOf(
 test("create album review flow", async ({ page }) => {
   // The create page fetches the album through the api's spotify proxy. Answer
   // that one call from the fixture so the run never touches spotify.
-  await page.route(`**/api/spotify/albums/${album.spotifyID}`, route => route.fulfill({ json: buildSpotifyAlbumResponse(album) }));
+  // The client adds a "?" to the URL, so this matches the path and not the whole URL
+  await page.route(
+    url => url.pathname === `/api/spotify/albums/${album.spotifyID}`,
+    route => route.fulfill({ json: buildSpotifyAlbumResponse(album) })
+  );
 
   // The seeded bookmark is the unreviewed entry point
   await page.goto("/bookmarks");

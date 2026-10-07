@@ -1,19 +1,24 @@
 import "dotenv/config";
+import { execSync } from "child_process";
 import { Client } from "pg";
+import { assertTestDatabase } from "@/db/databaseSafety";
 
 // Must match maxWorkers in vitest.config.ts
 const WORKER_COUNT = 8;
 
 /**
- * Creates one copy of the test database per vitest worker, cloned from the
- * template the db:push:test flow maintains, so test files can run concurrently.
+ * Brings the test database up to date with the migrations, then creates one copy
+ * of it per vitest worker, so test files can run concurrently.
  * The copies are dropped on teardown.
  */
 export default async function globalSetup() {
   const templateURL = process.env.DATABASE_URL_TEST;
-  if (!templateURL) {
-    throw new Error("DATABASE_URL_TEST must be set to run the suite");
-  }
+  assertTestDatabase(templateURL);
+
+  // drizzle.config.ts picks DATABASE_URL_TEST when NODE_ENV is test and no worker ID is set
+  const migrateEnvironment: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: "test" };
+  delete migrateEnvironment.VITEST_POOL_ID;
+  execSync("pnpm exec drizzle-kit migrate", { env: migrateEnvironment, stdio: "pipe" });
 
   const templateName = new URL(templateURL).pathname.slice(1);
 
