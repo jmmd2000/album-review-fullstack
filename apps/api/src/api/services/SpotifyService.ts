@@ -21,12 +21,10 @@ export class SpotifyService {
     const albums = mapSearchResults(await SpotifyClient.searchAlbums(rawQuery, token));
     if (albums.length === 0) return albums;
 
-    // Read our own data here and hand it to the pure enrichment step, so the
-    // Spotify layer never reaches into the database itself.
     const ids = albums.map(a => a.spotifyID);
-    const reviewScores = await AlbumModel.getReviewScoresByIds(ids);
+    const finalScores = await AlbumModel.getFinalScoresByIds(ids);
     const bookmarkedIDs = await BookmarkedAlbumModel.getBookmarkedByIds(ids);
-    return enrichAlbumsWithStatus(albums, reviewScores, bookmarkedIDs);
+    return enrichAlbumsWithStatus(albums, finalScores, bookmarkedIDs);
   }
 
   static async getAlbum(

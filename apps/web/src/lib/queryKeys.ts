@@ -2,8 +2,8 @@ import type { GetPaginatedAlbumsOptions, GetPaginatedArtistsOptions, GetPaginate
 
 /**
  * Every query key in the app. Roots prefix their children, so invalidating
- * `albums.all` covers the list, details, edit and create pages and the score
- * lookups in one call, and the same goes for `artists` and `bookmarks`.
+ * `albums.all` covers the list, details, edit and create pages in one call,
+ * and the same goes for `artists` and `bookmarks`.
  */
 export const queryKeys = {
   home: ["home"] as const,
@@ -16,7 +16,6 @@ export const queryKeys = {
     detail: (albumID: string) => ["albums", "detail", albumID] as const,
     edit: (albumID: string) => ["albums", "edit", albumID] as const,
     create: (albumID: string) => ["albums", "create", albumID] as const,
-    scores: (ids: string[]) => ["albums", "scores", ids] as const,
   },
   artists: {
     all: ["artists"] as const,
@@ -27,10 +26,11 @@ export const queryKeys = {
     all: ["bookmarks"] as const,
     lists: ["bookmarks", "list"] as const,
     list: (options: GetPaginatedBookmarkedAlbumsOptions) => ["bookmarks", "list", options] as const,
-    statuses: ["bookmarks", "status"] as const,
-    status: (ids: string[]) => ["bookmarks", "status", ids] as const,
   },
-  search: (options: SearchAlbumsOptions) => ["search", options] as const,
+  search: {
+    all: ["search"] as const,
+    results: (options: SearchAlbumsOptions) => ["search", options] as const,
+  },
   settings: {
     lastRuns: ["settings", "lastRuns"] as const,
     buildInfo: ["settings", "buildInfo"] as const,

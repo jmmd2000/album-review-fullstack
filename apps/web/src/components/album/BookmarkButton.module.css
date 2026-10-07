@@ -1,0 +1,17 @@
+.button {
+  background: var(--colour-background);
+  color: var(--colour-text-muted);
+
+  &:hover {
+    background: var(--colour-panel-strong);
+    color: var(--colour-foreground);
+  }
+
+  &[aria-pressed="true"] {
+    color: var(--colour-foreground);
+  }
+
+  &:disabled {
+    cursor: wait;
+  }
+}

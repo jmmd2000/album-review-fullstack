@@ -388,10 +388,6 @@ export class AlbumService {
     return AlbumModel.findBySpotifyID(albumID);
   }
 
-  static async getReviewScoresByIds(ids: string[]) {
-    return AlbumModel.getReviewScoresByIds(ids);
-  }
-
   private static resolveSelectedArtistIDs(selectedArtistIDs: string[] | undefined, albumArtists: AlbumArtist[]) {
     if (albumArtists.length === 0) {
       return selectedArtistIDs ?? [];

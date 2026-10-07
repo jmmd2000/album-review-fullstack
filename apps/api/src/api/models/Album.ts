@@ -211,19 +211,15 @@ export class AlbumModel {
     return executor.delete(albumArtists).where(and(eq(albumArtists.albumSpotifyID, albumSpotifyID), inArray(albumArtists.artistSpotifyID, artistIDs)));
   }
 
-  static async getReviewScoresByIds(ids: string[]): Promise<{ spotifyID: string; reviewScore: number }[]> {
-    const rows = await db
+  /** The final scores of the reviewed albums among `ids`. Albums without a review are left out. */
+  static async getFinalScoresByIds(ids: string[]): Promise<{ spotifyID: string; finalScore: number | null }[]> {
+    return db
       .select({
         spotifyID: reviewedAlbums.spotifyID,
-        reviewScore: reviewedAlbums.reviewScore,
+        finalScore: reviewedAlbums.finalScore,
       })
       .from(reviewedAlbums)
       .where(inArray(reviewedAlbums.spotifyID, ids));
-
-    return rows.map(r => ({
-      spotifyID: r.spotifyID,
-      reviewScore: r.reviewScore,
-    }));
   }
 
   private static async getAlbumIdsByGenres(slugs: string[]): Promise<string[]> {

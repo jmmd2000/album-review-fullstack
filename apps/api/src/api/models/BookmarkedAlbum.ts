@@ -5,6 +5,12 @@ import { bookmarkedAlbums } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
+/** Matches bookmarks whose album or artist name contains the search. An empty search matches every bookmark. */
+function searchFilter(search: string) {
+  if (!search.trim()) return undefined;
+  return or(ilike(bookmarkedAlbums.name, `%${search}%`), ilike(bookmarkedAlbums.artistName, `%${search}%`));
+}
+
 export class BookmarkedAlbumModel {
   static async findBySpotifyID(id: string) {
     return db
@@ -42,20 +48,21 @@ export class BookmarkedAlbumModel {
     const sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
 
-    const baseQuery = db
+    return db
       .select()
       .from(bookmarkedAlbums)
+      .where(searchFilter(search))
+      .orderBy(sortDirection === "asc" ? asc(bookmarkedAlbums[sortField]) : desc(bookmarkedAlbums[sortField]))
       .limit(PAGE_SIZE + 1)
-      .offset(OFFSET)
-      .orderBy(sortDirection === "asc" ? asc(bookmarkedAlbums[sortField]) : desc(bookmarkedAlbums[sortField]));
-
-    return search.trim() ? await baseQuery.where(or(ilike(bookmarkedAlbums.name, `%${search}%`), ilike(bookmarkedAlbums.artistName, `%${search}%`))) : await baseQuery;
+      .offset(OFFSET);
   }
 
-  static async getBookmarkedAlbumCount() {
+  /** The number of bookmarks that match the search, or of all bookmarks when it is empty. */
+  static async getBookmarkedAlbumCount(search = "") {
     return db
       .select({ count: count() })
       .from(bookmarkedAlbums)
+      .where(searchFilter(search))
       .then(r => r[0].count);
   }
 }

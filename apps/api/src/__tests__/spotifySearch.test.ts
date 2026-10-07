@@ -42,22 +42,22 @@ describe("mapSearchResults", () => {
 describe("enrichAlbumsWithStatus", () => {
   const albums = mapSearchResults({ albums: { items: [rawAlbum("a1", "First"), rawAlbum("a2", "Second")] } });
 
-  test("fills in review score and bookmark status from the passed-in db data", () => {
-    const result = enrichAlbumsWithStatus(albums, [{ spotifyID: "a1", reviewScore: 82 }], ["a2"]);
+  test("fills in the final score and bookmark status from the passed-in db data", () => {
+    const result = enrichAlbumsWithStatus(albums, [{ spotifyID: "a1", finalScore: 82 }], ["a2"]);
 
-    expect(result[0]).toMatchObject({ spotifyID: "a1", reviewScore: 82, bookmarked: false });
-    expect(result[1]).toMatchObject({ spotifyID: "a2", reviewScore: undefined, bookmarked: true });
+    expect(result[0]).toMatchObject({ spotifyID: "a1", finalScore: 82, bookmarked: false });
+    expect(result[1]).toMatchObject({ spotifyID: "a2", finalScore: null, bookmarked: true });
   });
 
-  test("leaves score undefined and bookmarked false when there is no db data", () => {
+  test("leaves the score null and bookmarked false when there is no db data", () => {
     const result = enrichAlbumsWithStatus(albums, [], []);
-    expect(result[0]).toMatchObject({ reviewScore: undefined, bookmarked: false });
-    expect(result[1]).toMatchObject({ reviewScore: undefined, bookmarked: false });
+    expect(result[0]).toMatchObject({ finalScore: null, bookmarked: false });
+    expect(result[1]).toMatchObject({ finalScore: null, bookmarked: false });
   });
 
   test("does not mutate the input albums", () => {
     const snapshot = JSON.parse(JSON.stringify(albums));
-    enrichAlbumsWithStatus(albums, [{ spotifyID: "a1", reviewScore: 82 }], ["a1"]);
+    enrichAlbumsWithStatus(albums, [{ spotifyID: "a1", finalScore: 82 }], ["a1"]);
     expect(albums).toEqual(snapshot);
   });
 });

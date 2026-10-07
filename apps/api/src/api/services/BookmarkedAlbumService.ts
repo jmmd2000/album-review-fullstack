@@ -25,10 +25,6 @@ export class BookmarkedAlbumService {
     return bookmarkedAlbum;
   }
 
-  static async getBookmarkedByIds(ids: string[]): Promise<string[]> {
-    return await BookmarkedAlbumModel.getBookmarkedByIds(ids);
-  }
-
   static async getAllAlbums() {
     const bookmarkedAlbums = await BookmarkedAlbumModel.getAllBookmarkedAlbums();
     const displayAlbums: DisplayAlbum[] = bookmarkedAlbums.map(album => ({
@@ -39,7 +35,7 @@ export class BookmarkedAlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       finalScore: null,
-      affectsArtistScore: true, // this probably should be boolean | null maybe?
+      affectsArtistScore: true,
     }));
 
     return { albums: displayAlbums };
@@ -47,7 +43,7 @@ export class BookmarkedAlbumService {
 
   static async getPaginatedAlbums(opts: GetPaginatedBookmarkedAlbumsOptions) {
     const albums = await BookmarkedAlbumModel.getPaginatedAlbums(opts);
-    const totalCount = await BookmarkedAlbumModel.getBookmarkedAlbumCount();
+    const totalCount = await BookmarkedAlbumModel.getBookmarkedAlbumCount(opts.search);
     const furtherPages = albums.length > PAGE_SIZE;
     if (furtherPages) albums.pop();
 
@@ -60,7 +56,7 @@ export class BookmarkedAlbumService {
       artistSpotifyID: album.artistSpotifyID,
       releaseYear: album.releaseYear,
       finalScore: null,
-      affectsArtistScore: true, // this probably should be boolean | null maybe?
+      affectsArtistScore: true,
     }));
 
     return { albums: displayAlbums, furtherPages, totalCount };
