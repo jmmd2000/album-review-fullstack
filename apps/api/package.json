@@ -8,8 +8,6 @@
     "dev": "nodemon --watch src --legacy-watch --exec tsx src/index.ts",
     "build": "tsc --noEmit && tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:reset": "drizzle-kit migrate && tsx ./src/db/wipe.ts && tsx ./src/db/seed.ts",

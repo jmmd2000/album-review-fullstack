@@ -1,4 +1,5 @@
 import { execSync } from "child_process";
+import path from "path";
 import { beforeEach, afterEach, afterAll, test, expect } from "vitest";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { closeDatabase, query } from "@/db/client";
@@ -11,8 +12,9 @@ import { BOOKMARKED_IDS, REVIEWED, capturedAlbum, ratingFor } from "@/db/fixture
 // The seed and wipe scripts run on import, so they are driven here as child
 // processes, the same way the e2e global setup runs them. The child inherits
 // this worker's env and therefore lands in this worker's database.
-const runSeed = () => execSync("pnpm run db:seed", { stdio: "pipe" });
-const runWipe = () => execSync("pnpm run db:wipe", { stdio: "pipe" });
+const API_ROOT = path.resolve(__dirname, "../..");
+const runSeed = () => execSync("pnpm run db:seed", { cwd: API_ROOT, stdio: "pipe" });
+const runWipe = () => execSync("pnpm run db:wipe", { cwd: API_ROOT, stdio: "pipe" });
 
 beforeEach(async () => {
   await resetTables(query);

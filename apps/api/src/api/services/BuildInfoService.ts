@@ -1,18 +1,28 @@
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { query } from "@/db/client";
 
 /**
  * Reads an installed package's version straight off its package.json on disk.
  * Plain fs rather than module resolution, so packages that lock down their
- * exports still report a version.
+ * exports still report a version. It looks in each node_modules from this
+ * file's folder upwards, the same way Node finds a package, so it works from
+ * the source and from the built bundle, whatever folder the process started in.
  */
 const packageVersion = (name: string): string | null => {
-  try {
-    const raw = readFileSync(path.join(process.cwd(), "node_modules", name, "package.json"), "utf8");
-    return (JSON.parse(raw) as { version: string }).version;
-  } catch {
-    return null;
+  let directory = __dirname;
+  while (true) {
+    const manifest = path.join(directory, "node_modules", name, "package.json");
+    if (existsSync(manifest)) {
+      try {
+        return (JSON.parse(readFileSync(manifest, "utf8")) as { version: string }).version;
+      } catch {
+        return null;
+      }
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) return null;
+    directory = parent;
   }
 };
 
