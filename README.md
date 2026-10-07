@@ -1,103 +1,71 @@
-# Album Reviews
+# James Reviews Music
 
-## Overview
+Album reviews with track-by-track ratings, scores, artist rankings and stats. Live at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com).
 
-A personal music review app for tracking album reviews. Uses the Spotify API and allows me to rate albums, track score statistics and bookmark albums for later. Built as a pnpm monorepo with a React frontend and a Hono backend.
+<p align="center">
+  <img src=".github/readme/home.webp" alt="The home page" width="640">
+</p>
 
-See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
+## Features
 
-## Tech Stack
+- **Reviews:** rate every track out of 10, add a bonus for the album as a whole, and write a review. The album scores out of 100 from the track average and the bonus.
+- **Artists:** a leaderboard ranked by overall (weighted), peak and latest score.
+- **Stats:** shows statistics for albums, including distribution by score tier.
+- **Bookmarks:** albums saved to review later.
 
-**Frontend:** React, Vite, TailwindCSS, TypeScript, TanStack Router, React Query, Vitest, Playwright
+## Stack
 
-**Backend:** Hono, TypeScript, Drizzle ORM, PostgreSQL, Vitest
+- Web: React, TanStack Start, React Query
+- API: Hono, Drizzle, Postgres
+- Tests: Vitest, Playwright
 
-## Development
+## Setup
 
-Copy `.env.example` to `.env` at the repo root and fill it in. The API, the web app, e2e and docker compose all read that one file.
+Needs Node 26, pnpm and Docker.
 
 ```bash
-# Install dependencies
+cp .env.example .env    # then fill it in
 pnpm install
-
-# Start both frontend and backend
+docker compose up -d db
+pnpm --filter @album-reviews/api db:reset
 pnpm dev
-
-# Or run one side on its own
-pnpm --filter @album-reviews/api dev # http://localhost:4000
-pnpm --filter @album-reviews/web dev # http://localhost:5173
 ```
 
 ## Database
 
-The dev Postgres container holds three databases. It creates them the first time it starts on an empty volume.
+Postgres has three databases: `albums_dev`, `albums_test` and `albums_test_e2e`. Schema changes go through migrations.
 
-- `albums_dev`: the dev servers use it, through `DATABASE_URL`.
-- `albums_test`: the integration tests use it, through `DATABASE_URL_TEST`. The test run brings it up to date with the migrations and gives each worker its own copy.
-- `albums_test_e2e`: e2e uses it, through `DATABASE_URL_TEST_E2E`. Each e2e run migrates, wipes and seeds it.
-
-Wipe and seed only run against a local database whose name ends in `_dev`, `_test` or `_test_e2e`. Tests also need `NODE_ENV=test` and a test database.
-
-Schema changes go through migrations. Never use `drizzle-kit push`.
+From `apps/api`:
 
 ```bash
-cd apps/api
-
-# Make a migration from changes to src/db/schema.ts
-pnpm db:generate
-
-# Apply the migrations to the dev database
-pnpm db:migrate
-
-# Apply the migrations, wipe the review data and seed the sample library
-pnpm db:reset
-
-# Seed or wipe on their own
+pnpm db:generate   # create a migration from schema changes
+pnpm db:migrate    # apply migrations
+pnpm db:reset      # migrate, wipe and seed
 pnpm db:seed
 pnpm db:wipe
 ```
 
-The tests and e2e reset their own databases, so they never need these commands.
-
-## Testing
+## Tests
 
 ```bash
-# Unit tests: shared, web and the API's pure tests. They need nothing running.
 pnpm test:unit
-
-# Integration tests: the API tests that use the test database. They need the dev Postgres container.
-pnpm test:integration
-
-# e2e: Playwright in a real browser, against its own servers and database
-pnpm test:e2e
-
-# All three, in that order
-pnpm test
+pnpm test:integration   # needs Postgres
+pnpm test:e2e           # needs Postgres
+pnpm test               # all of the above
 ```
 
-- The pre-commit hook runs `test:unit` only, so committing doesn't need Docker. Run `pnpm test` before you push.
-- An API test that uses the database ends in `.integration.test.ts`. Every other test is a unit test.
-- One Vitest config at the repo root runs every package as a project. Passing tests print as dots, and failures print in full.
-- e2e starts its own API on port 4100 and its own web server on port 5180, both on the e2e database. The API resets that database before it starts. e2e never uses the dev servers or the dev database, so it can run while they're up.
+The pre-commit hook runs format, lint, typecheck and unit tests.
 
-## Other root commands
+## Other commands
 
 ```bash
-# Lint everything
 pnpm lint
-
-# Format and autofix everything
 pnpm format
-
-# Typecheck every package
 pnpm typecheck
-
-# Build every package
 pnpm build
+pnpm coverage
 ```
 
-## Project Structure
+## Deploying
 
-- `apps/api` - Hono server
-- `apps/web` - React app
-- `packages/shared` - Types and helpers used by both sides
+Jenkins builds the images, pushes them to GHCR and deploys to staging or production on the VPS. Migrations run before the new containers start.
