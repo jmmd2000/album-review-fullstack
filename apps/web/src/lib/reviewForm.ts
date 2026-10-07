@@ -16,6 +16,18 @@ const FORMAT_MARKS: Record<TextFormat, [string, string]> = {
  */
 export function formatSelection(text: string, start: number, end: number, format: TextFormat): { text: string; cursor: number } {
   const [open, close] = FORMAT_MARKS[format];
+  return wrapSelection(text, start, end, open, close);
+}
+
+/**
+ * Wraps the selected part of the text in a link to an album.
+ * Returns the new text and the place to put the cursor, just after the closing mark.
+ */
+export function linkAlbumSelection(text: string, start: number, end: number, albumSpotifyID: string): { text: string; cursor: number } {
+  return wrapSelection(text, start, end, `{album:${albumSpotifyID}}`, "{album}");
+}
+
+function wrapSelection(text: string, start: number, end: number, open: string, close: string) {
   const selected = text.slice(start, end);
   return {
     text: text.slice(0, start) + open + selected + close + text.slice(end),
