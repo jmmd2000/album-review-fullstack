@@ -20,7 +20,7 @@ async function createArtist(id: string, score: number, unrated = false) {
   });
 }
 
-async function createAlbum(id: string, score: number | null, artistID: string) {
+async function createAlbum(id: string, score: number, artistID: string) {
   return AlbumModel.createAlbum({
     spotifyID: id,
     name: id,
@@ -31,7 +31,7 @@ async function createAlbum(id: string, score: number | null, artistID: string) {
     imageURLs: [],
     runtime: "00:00",
     reviewContent: "",
-    reviewScore: score ?? 0,
+    reviewScore: score,
     bonus: 0,
     finalScore: score,
     affectsArtistScore: true,
@@ -56,14 +56,14 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("the overview sends only scored albums, lowest score first", async () => {
+test("the overview sends every album, lowest score first", async () => {
   await createArtist("artist1", 70);
   await createAlbum("high", 90, "artist1");
-  await createAlbum("unscored", null, "artist1");
+  await createAlbum("no-rated-tracks", 0, "artist1");
   await createAlbum("low", 40, "artist1");
 
   const overview = await StatsService.getOverview();
-  expect(overview.albums.map(album => album.spotifyID)).toEqual(["low", "high"]);
+  expect(overview.albums.map(album => album.spotifyID)).toEqual(["no-rated-tracks", "low", "high"]);
 });
 
 test("each album carries its genre slugs and all its artists", async () => {

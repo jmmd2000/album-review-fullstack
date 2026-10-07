@@ -1,0 +1,1 @@
+ALTER TABLE "reviewed_albums" ALTER COLUMN "final_score" SET NOT NULL;

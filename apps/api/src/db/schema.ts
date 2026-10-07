@@ -25,7 +25,7 @@ export const reviewedAlbums = pgTable(
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
     bonus: real("bonus").notNull().default(0),
-    finalScore: real("final_score"),
+    finalScore: real("final_score").notNull(),
     affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
     genres: text("genres").array().notNull(),

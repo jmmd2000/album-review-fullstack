@@ -149,13 +149,16 @@ export class AlbumService {
     allGenres?: Genre[];
     albumGenres?: Genre[];
   }> {
-    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum | undefined;
-    if (!album) throw new AppError("Album not found", 404);
-    const artistLinks = await AlbumModel.getAlbumArtistLinks(album.spotifyID);
+    const row = await AlbumModel.findBySpotifyID(id);
+    if (!row) throw new AppError("Album not found", 404);
+    const artistLinks = await AlbumModel.getAlbumArtistLinks(row.spotifyID);
     const artistIDs = artistLinks.map(link => link.artistSpotifyID);
     const artists = (await ArtistModel.getArtistsBySpotifyIDs(artistIDs)) as ReviewedArtist[];
-    album.artistSpotifyIDs = artistIDs;
-    album.artistScoreIDs = artistLinks.filter(link => link.affectsScore).map(link => link.artistSpotifyID);
+    const album: ReviewedAlbum = {
+      ...row,
+      artistSpotifyIDs: artistIDs,
+      artistScoreIDs: artistLinks.filter(link => link.affectsScore).map(link => link.artistSpotifyID),
+    };
     const tracks = await TrackModel.getTracksByAlbumID(id);
 
     const displayTracks: DisplayTrack[] = tracks.map(track => ({
@@ -211,7 +214,7 @@ export class AlbumService {
   }
 
   static async deleteAlbum(id: string) {
-    const album = (await AlbumModel.findBySpotifyID(id)) as ReviewedAlbum;
+    const album = await AlbumModel.findBySpotifyID(id);
     if (!album) throw new AppError("Album not found", 404);
     const artistIDs = await AlbumModel.getAlbumArtistIDs(id);
 
@@ -232,7 +235,7 @@ export class AlbumService {
   }
 
   static async updateAlbumReview(data: ReceivedReviewData, albumID: string) {
-    const existingAlbum = (await AlbumModel.findBySpotifyID(albumID)) as ReviewedAlbum;
+    const existingAlbum = await AlbumModel.findBySpotifyID(albumID);
     if (!existingAlbum) throw new AppError("Album not found", 404);
 
     const existingTracks = await TrackModel.getTracksByAlbumID(albumID);

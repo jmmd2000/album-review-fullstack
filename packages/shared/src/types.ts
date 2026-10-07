@@ -621,7 +621,7 @@ export interface HomeAlbum {
   name: string;
   artistName: string;
   releaseYear: number;
-  finalScore: number | null;
+  finalScore: number;
   imageURLs: SpotifyImage[];
   colors: ExtractedColor[];
 }

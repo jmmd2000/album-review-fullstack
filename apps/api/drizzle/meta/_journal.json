@@ -29,6 +29,13 @@
       "when": 1791369890658,
       "tag": "0003_artist_decay",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791376507517,
+      "tag": "0004_album_score_not_null",
+      "breakpoints": true
     }
   ]
 }

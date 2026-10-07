@@ -74,7 +74,7 @@ export class ArtistService {
         .filter(link => link.affectsScore)
         .map(({ album }) => ({
           spotifyID: album.spotifyID,
-          finalScore: album.finalScore ?? 0,
+          finalScore: album.finalScore,
           ratedTracks: ratedTrackCounts.get(album.spotifyID) ?? 0,
           releaseDate: album.releaseDate,
           releaseYear: album.releaseYear,
