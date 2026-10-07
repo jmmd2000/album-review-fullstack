@@ -640,6 +640,28 @@ export interface StatsOverview {
   ratedTrackCount: number;
 }
 
+/** A reviewed album in the home page's cover columns */
+export interface HomeAlbum {
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  finalScore: number | null;
+  imageURLs: SpotifyImage[];
+  colors: ExtractedColor[];
+}
+
+/** Everything the home page needs */
+export interface HomeOverview {
+  /** A random sample of reviewed albums, different on each request */
+  albums: HomeAlbum[];
+  /** The Spotify ID of the newest review, or null when there are none */
+  latestAlbumID: string | null;
+  albumCount: number;
+  /** The number of reviewed artists, rated or not */
+  artistCount: number;
+}
+
 export interface PaginatedAlbumsResult {
   albums: DisplayAlbum[];
   totalCount: number;

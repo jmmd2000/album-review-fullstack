@@ -37,13 +37,6 @@ export class TrackModel {
     return executor.update(reviewedTracks).set({ features, updatedAt: new Date() }).where(eq(reviewedTracks.spotifyID, spotifyID));
   }
 
-  static async getTrackCount() {
-    return db
-      .select({ count: count() })
-      .from(reviewedTracks)
-      .then(r => r[0].count);
-  }
-
   static async getRatedTrackCount() {
     return db
       .select({ count: count() })

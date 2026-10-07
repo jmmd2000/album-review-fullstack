@@ -180,37 +180,6 @@ export class AlbumService {
     return { album, artists, tracks: displayTracks, allGenres, albumGenres };
   }
 
-  static async getAllAlbums(includeCounts = false): Promise<{
-    albums: DisplayAlbum[];
-    numArtists?: number;
-    numAlbums?: number;
-    numTracks?: number;
-  }> {
-    const albums = await AlbumModel.getAllAlbums();
-    const albumIDs = albums.map(album => album.spotifyID);
-    const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albumIDs);
-    const displayAlbums: DisplayAlbum[] = albums.map(album => ({
-      name: album.name,
-      spotifyID: album.spotifyID,
-      imageURLs: album.imageURLs,
-      finalScore: album.finalScore,
-      affectsArtistScore: album.affectsArtistScore,
-      artistName: album.artistName,
-      artistSpotifyID: album.artistSpotifyID,
-      releaseYear: album.releaseYear,
-      albumArtists: album.albumArtists,
-      artistSpotifyIDs: artistMap.get(album.spotifyID) ?? [],
-    }));
-
-    if (!includeCounts) return { albums: displayAlbums };
-
-    const numArtists = await ArtistModel.getArtistCount();
-    const numAlbums = await AlbumModel.getAlbumCount();
-    const numTracks = await TrackModel.getTrackCount();
-
-    return { albums: displayAlbums, numArtists, numAlbums, numTracks };
-  }
-
   static async getPaginatedAlbums(opts: GetPaginatedAlbumsOptions): Promise<PaginatedAlbumsResult> {
     const { albums, totalCount, furtherPages } = await AlbumModel.getPaginatedAlbums(opts);
     const genres = await GenreModel.getGenreCounts();

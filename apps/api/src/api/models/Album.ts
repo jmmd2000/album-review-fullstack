@@ -37,6 +37,21 @@ export class AlbumModel {
     return db.select().from(reviewedAlbums) as Promise<ReviewedAlbum[]>;
   }
 
+  /** Up to `limit` reviewed albums, in a random order. */
+  static async getRandomAlbums(limit: number): Promise<ReviewedAlbum[]> {
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .orderBy(sql`random()`)
+      .limit(limit) as Promise<ReviewedAlbum[]>;
+  }
+
+  /** The Spotify ID of the newest review, or null when there are none. */
+  static async getLatestAlbumID(): Promise<string | null> {
+    const [latest] = await db.select({ spotifyID: reviewedAlbums.spotifyID }).from(reviewedAlbums).orderBy(desc(reviewedAlbums.createdAt)).limit(1);
+    return latest?.spotifyID ?? null;
+  }
+
   static async getAlbumsBySpotifyIDs(ids: string[]) {
     if (ids.length === 0) return [];
     return db.select().from(reviewedAlbums).where(inArray(reviewedAlbums.spotifyID, ids));
