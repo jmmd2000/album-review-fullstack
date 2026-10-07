@@ -23,7 +23,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "description", content: "My album review blog. Scores, rankings and stats for every album I listen to." },
     ],
     links: [
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.ico" },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "preload", href: funnelDisplayURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: funnelSansURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
