@@ -1,0 +1,47 @@
+.slider {
+  display: grid;
+  gap: 6px;
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label {
+  font-weight: var(--font-weight-label);
+}
+
+.value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: var(--font-weight-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--colour-foreground);
+  cursor: pointer;
+
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}

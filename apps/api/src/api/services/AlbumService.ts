@@ -31,7 +31,7 @@ export class AlbumService {
     }
 
     // calculate album score
-    const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
+    const { baseScore, finalScore } = calculateAlbumScore(data.ratedTracks, data.bonus);
 
     const albumArtists = await AlbumService.resolveAlbumArtists(spotifyAlbum);
     if (albumArtists.length === 0) throw new AppError("Album artists could not be resolved", 400);
@@ -70,7 +70,7 @@ export class AlbumService {
           runtime,
           reviewContent: data.reviewContent,
           reviewScore: baseScore,
-          reviewBonuses: bonuses,
+          bonus: data.bonus,
           finalScore,
           affectsArtistScore: scoreArtistIDs.length > 0,
           artistSpotifyID: primaryArtist.spotifyID,
@@ -237,7 +237,7 @@ export class AlbumService {
     if (!existingAlbum) throw new AppError("Album not found", 404);
 
     const existingTracks = await TrackModel.getTracksByAlbumID(albumID);
-    const { baseScore, bonuses, finalScore } = calculateAlbumScore(data.ratedTracks);
+    const { baseScore, finalScore } = calculateAlbumScore(data.ratedTracks, data.bonus);
 
     let albumArtists = await AlbumService.resolveAlbumArtists(data.album ?? existingAlbum);
     if (albumArtists.length === 0 && existingAlbum.albumArtists?.length) {
@@ -270,7 +270,7 @@ export class AlbumService {
           genres: data.genres,
           colors: data.colors,
           reviewScore: baseScore,
-          reviewBonuses: bonuses,
+          bonus: data.bonus,
           finalScore: finalScore,
           affectsArtistScore: scoreArtistIDs.length > 0,
           artistSpotifyID: primaryArtist.spotifyID,

@@ -42,7 +42,7 @@ const seed = async () => {
         features: track.features.filter(feature => !albumArtistIDs.includes(feature.id)),
         rating: ratingFor(index, review.offset),
       }));
-      const { baseScore, bonuses, finalScore } = calculateAlbumScore(ratedTracks);
+      const { baseScore, finalScore } = calculateAlbumScore(ratedTracks, 0);
 
       const byRating = [...ratedTracks].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
       const bestTrackID = byRating[0].spotifyID;
@@ -80,7 +80,7 @@ const seed = async () => {
           runtime: captured.runtime,
           reviewContent: REVIEW_CONTENT,
           reviewScore: baseScore,
-          reviewBonuses: bonuses,
+          bonus: 0,
           finalScore,
           affectsArtistScore: scoreArtistIDs.length > 0,
           artistSpotifyID: primaryArtist.spotifyID,

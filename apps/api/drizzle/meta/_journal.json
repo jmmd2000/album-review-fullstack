@@ -15,6 +15,13 @@
       "when": 1791330109501,
       "tag": "0001_track_picks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791368710792,
+      "tag": "0002_album_bonus",
+      "breakpoints": true
     }
   ]
 }

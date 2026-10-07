@@ -78,6 +78,7 @@ function EditReview() {
   const initialValues: ReviewFormValues = {
     tracks,
     reviewContent: album.reviewContent ?? "",
+    bonus: album.bonus,
     colours: album.colors,
     genres: data.albumGenres?.map(genre => genre.name) ?? album.genres,
     affectsArtistScore: album.affectsArtistScore,

@@ -89,15 +89,16 @@ describe("Score Integration Tests", () => {
       rating: 9,
     }));
 
-    await api.put(`/api/albums/${albumData.album.id}`, updateData, authCookie);
+    const updateRes = await api.put(`/api/albums/${albumData.album.id}/edit`, updateData, authCookie);
+    expect(updateRes.status).toBe(200);
 
     // Check that all scores were updated
     const result = await query("SELECT * FROM reviewed_artists WHERE spotify_id = $1", [albumData.album.artists[0].id]);
     const artist = result.rows[0];
 
-    expect(artist.total_score).toBeGreaterThan(60); // Should be higher than initial
-    expect(artist.peak_score).toBeGreaterThan(60);
-    expect(artist.latest_score).toBeGreaterThan(60);
+    expect(artist.total_score).toBe(90);
+    expect(artist.peak_score).toBe(90);
+    expect(artist.latest_score).toBe(90);
   });
 
   test("should calculate different peak and latest scores for artist with multiple albums", async () => {

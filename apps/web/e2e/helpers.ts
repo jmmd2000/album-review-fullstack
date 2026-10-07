@@ -63,7 +63,7 @@ export const ratedTracksFor = (review: ReviewFixture) => {
 };
 
 /** The score the site shows for a list of rated tracks. Scores are rounded up for display. */
-export const shownScoreOf = (tracks: Parameters<typeof calculateAlbumScore>[0]): number => Math.ceil(calculateAlbumScore(tracks).finalScore);
+export const shownScoreOf = (tracks: Parameters<typeof calculateAlbumScore>[0]): number => Math.ceil(calculateAlbumScore(tracks, 0).finalScore);
 
 /** The score the site shows for a seeded review. */
 export const shownScoreFor = (review: ReviewFixture): number => shownScoreOf(ratedTracksFor(review));

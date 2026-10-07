@@ -78,6 +78,29 @@ test("PUT /api/albums/:albumID/edit - should update album review", async () => {
   expect(updated.album.reviewContent).toBe(mockUpdateData.reviewContent);
 }, 15000);
 
+test("a review's bonus is saved and added to the score from the tracks", async () => {
+  expect((await api.post("/api/albums/create", { ...mockReviewData, bonus: 2.5 }, authCookie)).status).toBe(201);
+
+  const created: { album: ReviewedAlbum } = await (await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie)).json();
+  expect(created.album.bonus).toBe(2.5);
+  expect(created.album.finalScore).toBe(Math.ceil(created.album.reviewScore + 2.5));
+
+  const updateRes = await api.put("/api/albums/0JGOiO34nwfUdDrD612dOp/edit", { ...mockUpdateData, album: created.album, bonus: -1.2 }, authCookie);
+  expect(updateRes.status).toBe(200);
+
+  const updated: { album: ReviewedAlbum } = await (await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie)).json();
+  expect(updated.album.bonus).toBeCloseTo(-1.2);
+  // The edit's tracks give 90
+  expect(updated.album.finalScore).toBe(89);
+}, 15000);
+
+test("a bonus outside -5 to +5 is refused", async () => {
+  const res = await api.post("/api/albums/create", { ...mockReviewData, bonus: 5.5 }, authCookie);
+
+  expect(res.status).toBe(400);
+  expect((await api.get("/api/albums/0JGOiO34nwfUdDrD612dOp", authCookie)).status).toBe(404);
+});
+
 test("POST /api/albums/create - should persist per-artist score flags", async () => {
   const collabData = JSON.parse(JSON.stringify(mockReviewData));
   collabData.album = {
