@@ -6,88 +6,6 @@
 export type Jsonified<T> = T extends Date ? string : T extends (infer U)[] ? Jsonified<U>[] : T extends object ? { [K in keyof T]: Jsonified<T[K]> } : T;
 
 /**
- * Represents a Spotify album search response.
- */
-export interface SpotifySearchResponse {
-  /**Contains the album search results.*/
-  albums: {
-    /** API endpoint for this search result. */
-    href: string;
-    /** List of albums returned. */
-    items: SpotifyAlbum[];
-    /** Number of albums per request. */
-    limit: number;
-    /** URL for the next page, or `null` if none. */
-    next: string | null;
-    /** Index of the first album in the current page. */
-    offset: number;
-    /** URL for the previous page, or `null` if first page. */
-    previous: string | null;
-    /** Total number of albums found. */
-    total: number;
-  };
-}
-
-/**
- * Represents an album from the Spotify API.
- */
-export interface SpotifyAlbum {
-  /** Type of the album (e.g., "album", "single"). */
-  album_type: string;
-  /** List of artists associated with the album. */
-  artists: SimpleSpotifyArtist[];
-  /** External URLs for the album (e.g., Spotify link). */
-  external_urls: { spotify: string };
-  /** API endpoint for the album. */
-  href: string;
-  /** Unique Spotify ID of the album. */
-  id: string;
-  /** List of album cover images in different sizes. */
-  images: {
-    /** Image height in pixels. */
-    height: number;
-    /** URL of the image. */
-    url: string;
-    /** Image width in pixels. */
-    width: number;
-  }[];
-  /** Album name. */
-  name: string;
-  /** Release date of the album (YYYY-MM-DD or YYYY). */
-  release_date: string;
-  /** Precision of the release date ("year", "month", or "day"). */
-  release_date_precision: string;
-  /** Total number of tracks in the album. */
-  total_tracks: number;
-  /** Type of entity (always "album"). */
-  type: string;
-  /** Spotify URI for the album. */
-  uri: string;
-  /** List of tracks in the album. */
-  tracks: { items: SpotifyTrack[] };
-  /** The extracted colours from the album cover */
-  colors: ExtractedColor[];
-  /** Optional expanded artist data for album UI */
-  albumArtists?: AlbumArtist[];
-}
-
-/** Represents the artist data that comes with a Spotify album */
-export interface SimpleSpotifyArtist {
-  /** External URLs for the artist (e.g., Spotify link). */
-  external_urls: { spotify: string };
-  /** API endpoint for the artist. */
-  href: string;
-  /** Unique Spotify ID of the artist. */
-  id: string;
-  /** Name of the artist. */
-  name: string;
-  /** Type of entity (e.g., "artist"). */
-  type: string;
-  /** Spotify URI for the artist. */
-  uri: string;
-}
-
-/**
  * Represents artist data attached to an album for display/selection.
  */
 export interface AlbumArtist {
@@ -97,73 +15,6 @@ export interface AlbumArtist {
   name: string;
   /** List of artist images. */
   imageURLs: SpotifyImage[];
-}
-
-/**
- * Represents a track from the Spotify API.
- */
-export interface SpotifyTrack {
-  /** List of artists featured on the track. */
-  artists: {
-    /** External URLs for the artist (e.g., Spotify link). */
-    external_urls: { spotify: string };
-    /** API endpoint for the artist. */
-    href: string;
-    /** Unique Spotify ID of the artist. */
-    id: string;
-    /** Name of the artist. */
-    name: string;
-    /** Type of entity (always "artist"). */
-    type: string;
-    /** Spotify URI for the artist. */
-    uri: string;
-  }[];
-  /** The disc number the track is on (1 for single-disc albums). */
-  disc_number: number;
-  /** Duration of the track in milliseconds. */
-  duration_ms: number;
-  /** Whether the track contains explicit content. */
-  explicit: boolean;
-  /** External URLs for the track (e.g., Spotify link). */
-  external_urls: { spotify: string };
-  /** API endpoint for the track. */
-  href: string;
-  /** Unique Spotify ID of the track. */
-  id: string;
-  /** Whether the track is a local file. */
-  is_local: boolean;
-  /** Name of the track. */
-  name: string;
-  /** URL for a 30-second preview of the track. */
-  preview_url: string;
-  /** Track position within the album. */
-  track_number: number;
-  /** Type of entity (always "track"). */
-  type: string;
-  /** Spotify URI for the track. */
-  uri: string;
-}
-
-/**
- * Represents an artist from the Spotify API.
- */
-export interface SpotifyArtist {
-  /** External URLs for the artist (e.g., Spotify link). */
-  external_urls: { spotify: string };
-  /** List of genres associated with the artist. */
-  genres: string[];
-  /** API endpoint for the artist. */
-  href: string;
-  /** Unique Spotify ID of the artist. */
-  id: string;
-  /** List of images of the artist in different sizes. */
-  images: SpotifyImage[];
-  /** Name of the artist. */
-  name: string;
-  /** Type of entity (always "artist"). */
-  type: string;
-  /** Spotify URI for the artist. */
-  uri: string;
 }
 
 /**
@@ -202,8 +53,6 @@ export interface ReviewedAlbum {
   releaseDate: string;
   /** Release year of the album. */
   releaseYear: number;
-  /** JSON string containing track ratings in the form { `id:string;` `rating:number` } */
-  // scoredTracks: string;
   /** JSON string containing extracted colors from the album cover. */
   colors: ExtractedColor[];
   /** Optional array of ReviewedTracks */
@@ -384,94 +233,8 @@ export interface SpotifyImage {
   width: number;
 }
 
-/**
- * Represents a reason for a bonus point.
- */
-export interface Reason {
-  /** Description of the reason. */
-  reason: string;
-  /** Numerical value of the bonus. */
-  value: number;
-  /** Optional album associated with the reason. */
-  album?: MinimalAlbum;
-  /** Optional concert associated with the reason. */
-  concert?: Concert;
-}
-
-/**
- * Represents a concert performance.
- */
-export interface Concert {
-  /** Unique ID of the concert. */
-  id: number;
-  /** The artist who performed at the concert. */
-  artist: ReviewedArtist;
-  /** Spotify ID of the associated artist. */
-  artistSpotifyID: number;
-  /** Name of the concert or tour. */
-  showName: string;
-  /** Date of the concert. */
-  date: Date;
-  /** City where the concert took place. */
-  city: string;
-  /** Venue where the concert was held. */
-  venue: string;
-  /** URL of the concert image or poster. */
-  imageURL: string;
-  /** List of tracks played at the concert. */
-  setlist: SetlistTrack[];
-  /** List of supporting artists, reviewed or non-reviewed. */
-  supportArtists: Array<ReviewedArtist | NonReviewedArtist>;
-}
-
-/**
- * Represents a track played in a concert setlist.
- */
-export interface SetlistTrack {
-  /** Name of the track. */
-  name: string;
-  /** Whether the track was played as an encore. */
-  encore: boolean;
-  /** Additional information about the track. */
-  trackInfo: string;
-}
-
-/**
- * Represents an artist who has not been reviewed.
- */
-export interface NonReviewedArtist {
-  /** Spotify ID of the artist. */
-  spotifyID: string;
-  /** Name of the artist. */
-  name: string;
-  /** JSON string containing artist image URLs. */
-  imageURLs: SpotifyImage[];
-}
-
-/**
- * Represents bare minimum data for an album
- */
-export interface MinimalAlbum {
-  /** Unique ID of the album. */
-  id: number;
-  /** Spotify ID of the album. */
-  spotifyID: string;
-  /** Name of the album. */
-  name: string;
-  /** List of album cover images. */
-  imageURLs: SpotifyImage[];
-}
-
 export interface ExtractedColor {
-  // area: number;
-  // blue: number;
-  // green: number;
-  // red: number;
   hex: string;
-  // hue: number;
-  // lightness: number;
-  // saturation: number;
-  // intensity: number;
 }
 
 /**
@@ -530,13 +293,6 @@ export interface SearchAlbumsOptions {
   query?: string;
 }
 
-export type AuthContextType = {
-  isAdmin: boolean;
-  isPending: boolean;
-  login: (password: string) => Promise<void>;
-  logout: () => Promise<void>;
-};
-
 export interface Genre {
   /** Unique ID of the genre */
   id: number;
@@ -548,14 +304,6 @@ export interface Genre {
   createdAt: Date;
   /** When the row was last updated */
   updatedAt: Date;
-}
-
-/** Junction table linking albums and genres */
-export interface AlbumGenre {
-  /** Spotify ID of the album */
-  albumSpotifyID: string;
-  /** Genre ID (FK into genres.id) */
-  genreID: number;
 }
 
 /** Co-occurrence weights for pairs of genres */

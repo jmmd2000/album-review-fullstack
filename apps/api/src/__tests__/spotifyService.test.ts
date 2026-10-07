@@ -1,6 +1,6 @@
 import { afterAll, afterEach, describe, test, expect, vi } from "vitest";
-import type { SpotifyAlbum, SpotifyArtist } from "@shared/types";
 import { closeDatabase } from "@/db/client";
+import type { SpotifyAlbumResponse } from "@/api/schemas/spotifySchema";
 import { SpotifyService } from "@/api/services/SpotifyService";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
@@ -12,15 +12,15 @@ vi.mock("@/helpers/getImageColors", () => ({
   getImageColors: vi.fn(() => Promise.resolve([])),
 }));
 
-// A raw Spotify album carrying only the fields the mapper actually reads.
-const rawAlbum = (id: string, name: string): SpotifyAlbum =>
-  ({
-    id,
-    name,
-    artists: [{ id: `${id}-artist`, name: `${name} Artist` }],
-    release_date: "2024-05-01",
-    images: [{ url: `${id}.jpg`, height: 640, width: 640 }],
-  }) as unknown as SpotifyAlbum;
+const rawAlbum = (id: string, name: string): SpotifyAlbumResponse => ({
+  id,
+  name,
+  uri: `spotify:album:${id}`,
+  artists: [{ id: `${id}-artist`, name: `${name} Artist` }],
+  release_date: "2024-05-01",
+  images: [{ url: `${id}.jpg`, height: 640, width: 640 }],
+  tracks: { items: [] },
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -73,15 +73,13 @@ describe("getAlbum", () => {
     vi.spyOn(AlbumModel, "findBySpotifyID").mockResolvedValue(undefined as never);
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
     vi.spyOn(SpotifyClient, "getAlbum").mockResolvedValue({
-      id: "alb",
-      name: "Album",
-      images: [{ url: "img.jpg", height: 640, width: 640 }],
+      ...rawAlbum("alb", "Album"),
       artists: [
         { id: "a1", name: "One" },
         { id: "a2", name: "Two" },
       ],
-    } as unknown as SpotifyAlbum);
-    vi.spyOn(SpotifyClient, "getArtists").mockResolvedValue([{ id: "a1", images: [{ url: "a1.jpg", height: 300, width: 300 }] } as unknown as SpotifyArtist]);
+    });
+    vi.spyOn(SpotifyClient, "getArtists").mockResolvedValue([{ id: "a1", name: "One", images: [{ url: "a1.jpg", height: 300, width: 300 }] }]);
     const genres = [{ id: 1, name: "Rock", slug: "rock" }];
     const genresSpy = vi.spyOn(GenreModel, "getAllGenres").mockResolvedValue(genres as never);
 

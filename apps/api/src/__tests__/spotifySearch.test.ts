@@ -1,16 +1,14 @@
 import { describe, test, expect } from "vitest";
-import type { SpotifyAlbum } from "@shared/types";
+import type { SpotifyAlbumSummary } from "@/api/schemas/spotifySchema";
 import { mapSearchResults, enrichAlbumsWithStatus } from "@/helpers/spotifySearch";
 
-// A raw Spotify album carrying only the fields the mapper actually reads.
-const rawAlbum = (id: string, name: string): SpotifyAlbum =>
-  ({
-    id,
-    name,
-    artists: [{ id: `${id}-artist`, name: `${name} Artist` }],
-    release_date: "2024-05-01",
-    images: [{ url: `${id}.jpg`, height: 640, width: 640 }],
-  }) as unknown as SpotifyAlbum;
+const rawAlbum = (id: string, name: string): SpotifyAlbumSummary => ({
+  id,
+  name,
+  artists: [{ id: `${id}-artist`, name: `${name} Artist` }],
+  release_date: "2024-05-01",
+  images: [{ url: `${id}.jpg`, height: 640, width: 640 }],
+});
 
 describe("mapSearchResults", () => {
   test("maps each search hit into a DisplayAlbum", () => {

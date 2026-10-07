@@ -1,11 +1,11 @@
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
-import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
+import type { DisplayAlbum } from "@shared/types";
 import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
-import { SpotifyService } from "../api/services/SpotifyService";
+import { SpotifyService, type SpotifyAlbumToReview } from "../api/services/SpotifyService";
 
 // Async factory so the mock can import its fixture without fighting vi.mock hoisting
 vi.mock("../api/services/SpotifyService", async () => {
@@ -67,7 +67,7 @@ test("GET /api/spotify/albums/search?query=abba - Should return albums", async (
 test("GET /api/spotify/albums/:albumID - Should return album", async () => {
   const response = await api.get("/api/spotify/albums/7aJuG4TFXa2hmE4z1yxc3n?includeGenres=false", authCookie);
   expect(response.status).toBe(200);
-  const data: SpotifyAlbum = await response.json();
+  const data: SpotifyAlbumToReview = await response.json();
   expect(data).toHaveProperty("id", mockReviewData.album.id);
   expect(data).toHaveProperty("name", mockReviewData.album.name);
 });
