@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { AlbumService } from "@/api/services/AlbumService";
+import { ReviewService } from "@/api/services/ReviewService";
 import { reviewDataSchema } from "@/api/schemas/reviewSchema";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
@@ -31,15 +32,15 @@ const album = new Hono()
     return c.json(await AlbumService.getPaginatedAlbums({ ...opts, genres: genreList }), 200);
   })
   .post("/create", requireAdmin, validate("json", reviewDataSchema), async c => {
-    const reviewedAlbum = await AlbumService.createAlbumReview(c.req.valid("json"));
+    const reviewedAlbum = await ReviewService.createAlbumReview(c.req.valid("json"));
     return c.json(reviewedAlbum, 201);
   })
   .delete("/:albumID", requireAdmin, async c => {
-    await AlbumService.deleteAlbum(c.req.param("albumID"));
+    await ReviewService.deleteAlbum(c.req.param("albumID"));
     return c.body(null, 204);
   })
   .put("/:albumID/edit", requireAdmin, validate("json", reviewDataSchema), async c => {
-    const updated = await AlbumService.updateAlbumReview(c.req.valid("json"), c.req.param("albumID"));
+    const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), c.req.param("albumID"));
     return c.json(updated, 200);
   });
 
