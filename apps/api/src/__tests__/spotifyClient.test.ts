@@ -4,6 +4,16 @@ import { AppError } from "@/api/AppError";
 
 const jsonResponse = (body: unknown, ok = true) => ({ ok, json: () => Promise.resolve(body) }) as Response;
 
+const spotifyAlbum = {
+  id: "alb",
+  name: "Album",
+  uri: "spotify:album:alb",
+  release_date: "2024-05-17",
+  images: [{ url: "cover.jpg", width: 640, height: 640 }],
+  artists: [{ id: "art", name: "Artist" }],
+  tracks: { items: [{ id: "trk", name: "Track", duration_ms: 200000, artists: [{ id: "art", name: "Artist" }] }] },
+};
+
 const stubFetch = (implementation: Mock) => {
   vi.stubGlobal("fetch", implementation);
   return implementation;
@@ -40,6 +50,12 @@ describe("requestToken", () => {
 
     await expect(SpotifyClient.requestToken()).rejects.toMatchObject({ status: 502, message: "Spotify authentication failed." });
   });
+
+  test("refuses a token reply with no access token", async () => {
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ token_type: "Bearer", expires_in: 3600 })));
+
+    await expect(SpotifyClient.requestToken()).rejects.toMatchObject({ status: 502, message: expect.stringContaining("access_token") });
+  });
 });
 
 describe("searchAlbums", () => {
@@ -71,11 +87,17 @@ describe("searchAlbums", () => {
 });
 
 describe("getAlbum", () => {
-  test("returns the album payload as-is", async () => {
-    const album = { id: "alb", name: "Album" };
-    stubFetch(vi.fn().mockResolvedValue(jsonResponse(album)));
+  test("returns the album with only the fields the app reads", async () => {
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...spotifyAlbum, label: "Some Label", popularity: 80 })));
 
-    expect(await SpotifyClient.getAlbum("alb", "tok")).toEqual(album);
+    expect(await SpotifyClient.getAlbum("alb", "tok")).toEqual(spotifyAlbum);
+  });
+
+  test("refuses an album reply with a bad field, and names the field", async () => {
+    const tracks = { items: [{ ...spotifyAlbum.tracks.items[0], duration_ms: "3:20" }] };
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...spotifyAlbum, tracks })));
+
+    await expect(SpotifyClient.getAlbum("alb", "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("tracks.items.0.duration_ms") });
   });
 
   test("maps an unknown album to a 404", async () => {
@@ -102,13 +124,19 @@ describe("getArtists", () => {
   test("fetches each artist and drops failed lookups", async () => {
     const fetchMock = stubFetch(
       vi.fn().mockImplementation((url: string) => {
-        if (url.endsWith("/artists/good")) return Promise.resolve(jsonResponse({ id: "good", name: "Good" }));
+        if (url.endsWith("/artists/good")) return Promise.resolve(jsonResponse({ id: "good", name: "Good", images: [] }));
         return Promise.resolve(jsonResponse({}, false));
       })
     );
 
     const result = await SpotifyClient.getArtists(["good", "bad"], "tok");
-    expect(result).toEqual([{ id: "good", name: "Good" }]);
+    expect(result).toEqual([{ id: "good", name: "Good", images: [] }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("refuses an artist reply it can't read, rather than dropping it", async () => {
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ id: "odd", name: "Odd" })));
+
+    await expect(SpotifyClient.getArtists(["odd"], "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("images") });
   });
 });

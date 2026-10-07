@@ -1,4 +1,4 @@
-import type { AlbumArtist, DisplayAlbum, Genre, SearchAlbumsOptions, SpotifyAlbum } from "@shared/types";
+import type { AlbumArtist, DisplayAlbum, ExtractedColor, Genre, SearchAlbumsOptions } from "@shared/types";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
@@ -7,6 +7,13 @@ import { GenreModel } from "../models/Genre";
 import { getImageColors } from "@/helpers/getImageColors";
 import { mapSearchResults, enrichAlbumsWithStatus } from "@/helpers/spotifySearch";
 import { AppError } from "../AppError";
+import type { SpotifyAlbumResponse } from "@/api/schemas/spotifySchema";
+
+/** A Spotify album ready to review, with its cover colours and its artists' photos */
+export interface SpotifyAlbumToReview extends SpotifyAlbumResponse {
+  colors: ExtractedColor[];
+  albumArtists: AlbumArtist[];
+}
 
 export class SpotifyService {
   static async getAccessToken() {
@@ -31,7 +38,7 @@ export class SpotifyService {
     id: string,
     includeGenres: boolean = true
   ): Promise<{
-    album: SpotifyAlbum;
+    album: SpotifyAlbumToReview;
     artists: AlbumArtist[];
     genres?: Genre[];
   }> {
@@ -39,15 +46,15 @@ export class SpotifyService {
     if (existing) throw new AppError("This album has already been reviewed.", 409);
 
     const token = await SpotifyTokenCache.getAccessToken();
-    const album = await SpotifyClient.getAlbum(id, token);
-    album.colors = await getImageColors(album.images[0].url);
+    const spotifyAlbum = await SpotifyClient.getAlbum(id, token);
+    const colors = await getImageColors(spotifyAlbum.images[0].url);
 
     const artistDetails = await SpotifyClient.getArtists(
-      album.artists.map(a => a.id),
+      spotifyAlbum.artists.map(a => a.id),
       token
     );
     const artistMap = new Map(artistDetails.map(a => [a.id, a]));
-    const albumArtists: AlbumArtist[] = album.artists.map(a => {
+    const albumArtists: AlbumArtist[] = spotifyAlbum.artists.map(a => {
       const details = artistMap.get(a.id);
       return {
         spotifyID: a.id,
@@ -55,7 +62,7 @@ export class SpotifyService {
         imageURLs: details?.images ?? [],
       };
     });
-    album.albumArtists = albumArtists;
+    const album: SpotifyAlbumToReview = { ...spotifyAlbum, colors, albumArtists };
 
     if (!includeGenres) {
       return { album, artists: albumArtists };
