@@ -5,7 +5,7 @@ import { TrackModel } from "@/api/models/Track";
 import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeaderFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
-import { ArtistService } from "./ArtistService";
+import { ArtistScoreService } from "./ArtistScoreService";
 import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";
@@ -441,7 +441,7 @@ export class AlbumService {
     const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(uniqueArtistIDs, executor);
     if (existingArtists.length === 0) return;
 
-    const scores = await ArtistService.calculateScores(
+    const scores = await ArtistScoreService.calculateScores(
       existingArtists.map(artist => artist.spotifyID),
       executor
     );
@@ -455,6 +455,6 @@ export class AlbumService {
       }
     }
 
-    await ArtistService.updateAllLeaderboardPositions(executor);
+    await ArtistScoreService.updateAllLeaderboardPositions(executor);
   }
 }

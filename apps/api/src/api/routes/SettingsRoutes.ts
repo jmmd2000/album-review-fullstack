@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { SettingsService } from "@/api/services/SettingsService";
 import { BuildInfoService } from "@/api/services/BuildInfoService";
-import { ArtistService } from "@/api/services/ArtistService";
+import { ArtistScoreService } from "@/api/services/ArtistScoreService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
 
@@ -36,7 +36,7 @@ const settings = new Hono()
     return c.json({ key, value, message: "Setting updated successfully" }, 200);
   })
   .post("/recalculate-scores", async c => {
-    const result = await ArtistService.recalculateAllArtistScores();
+    const result = await ArtistScoreService.recalculateAllArtistScores();
     await SettingsService.setLastRun("scores");
     return c.json(result, 200);
   })

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { ArtistService } from "@/api/services/ArtistService";
+import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
 
@@ -31,7 +32,7 @@ const artist = new Hono()
   })
   .put("/:artistID/headerImage", requireAdmin, validate("json", headerImageSchema), async c => {
     const { headerImage } = c.req.valid("json");
-    await ArtistService.updateSingleArtistHeader(c.req.param("artistID"), headerImage);
+    await ArtistImageService.updateSingleArtistHeader(c.req.param("artistID"), headerImage);
     return c.json({ message: "Header image updated successfully" }, 200);
   })
   .delete("/:artistID", requireAdmin, async c => {

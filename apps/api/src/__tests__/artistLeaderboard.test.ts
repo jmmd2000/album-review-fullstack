@@ -2,7 +2,7 @@ import { beforeEach, afterEach, afterAll, test, expect, vi, describe } from "vit
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { mockReviewData } from "./constants";
-import { ArtistService } from "../api/services/ArtistService";
+import { ArtistScoreService } from "../api/services/ArtistScoreService";
 import type { ReviewedArtist } from "@shared/types";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
@@ -99,7 +99,7 @@ describe("Artist Leaderboard Position Updates", () => {
     }
 
     // Update all leaderboard positions
-    await ArtistService.updateAllLeaderboardPositions();
+    await ArtistScoreService.updateAllLeaderboardPositions();
 
     // Verify the positions were updated correctly
     const result = await query("SELECT * FROM reviewed_artists ORDER BY total_score DESC");
@@ -161,7 +161,7 @@ describe("Artist Leaderboard Position Updates", () => {
     }
 
     // Update all leaderboard positions
-    await ArtistService.updateAllLeaderboardPositions();
+    await ArtistScoreService.updateAllLeaderboardPositions();
 
     // Verify the positions were updated correctly
     const result = await query("SELECT * FROM reviewed_artists ORDER BY total_score DESC");
@@ -231,7 +231,7 @@ describe("Artist Leaderboard Position Updates", () => {
     }
 
     // Update all leaderboard positions
-    await ArtistService.updateAllLeaderboardPositions();
+    await ArtistScoreService.updateAllLeaderboardPositions();
 
     // Verify only the rated artist got a position
     const result = await query("SELECT * FROM reviewed_artists ORDER BY total_score DESC");
@@ -255,7 +255,7 @@ describe("Artist Leaderboard Position Updates", () => {
 
   test("should handle empty artist list", async () => {
     // Update leaderboard positions with no artists
-    await ArtistService.updateAllLeaderboardPositions();
+    await ArtistScoreService.updateAllLeaderboardPositions();
 
     // Should not throw an error
     const result = await query("SELECT * FROM reviewed_artists");

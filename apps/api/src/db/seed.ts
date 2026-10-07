@@ -8,7 +8,7 @@ import { TrackModel } from "@/api/models/Track";
 import { GenreModel } from "@/api/models/Genre";
 import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
 import { GenreService } from "@/api/services/GenreService";
-import { ArtistService } from "@/api/services/ArtistService";
+import { ArtistScoreService } from "@/api/services/ArtistScoreService";
 import { BOOKMARKED_IDS, REVIEW_CONTENT, REVIEWED, capturedAlbum, ratingFor } from "./fixtures/fixtures";
 
 // Seeds the database directly from the checked-in fixture snapshot, no server,
@@ -124,12 +124,12 @@ const seed = async () => {
     }
 
     // Aggregate pass through the app's own artist scoring
-    const scores = await ArtistService.calculateScores([...createdArtistIDs], tx);
+    const scores = await ArtistScoreService.calculateScores([...createdArtistIDs], tx);
     for (const [artistID, fields] of scores) {
       await ArtistModel.updateArtist(artistID, fields, tx);
     }
 
-    await ArtistService.updateAllLeaderboardPositions(tx);
+    await ArtistScoreService.updateAllLeaderboardPositions(tx);
   });
 
   // Bookmarks sit outside the review graph
