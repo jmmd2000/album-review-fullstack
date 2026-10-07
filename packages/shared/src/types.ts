@@ -327,6 +327,16 @@ export interface GenreCount {
   albumCount: number;
 }
 
+/** An album a review links to, with what its hovercard shows */
+export interface LinkedAlbum {
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  finalScore: number;
+  imageURLs: SpotifyImage[];
+}
+
 /** A scored album on the stats page */
 export interface StatsAlbum {
   spotifyID: string;

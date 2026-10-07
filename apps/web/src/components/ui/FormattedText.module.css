@@ -15,3 +15,7 @@
     text-underline-offset: 2px;
   }
 }
+
+.albumName {
+  color: var(--colour-album-mention);
+}
