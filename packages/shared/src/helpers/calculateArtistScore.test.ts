@@ -19,7 +19,6 @@ describe("weighReleases", () => {
     expect(weighted[0]!.weight).toBe(10);
     expect(weighted[1]!.weight).toBeCloseTo(6);
     expect(weighted[2]!.weight).toBeCloseTo(3.6);
-    expect(weighted.reduce((sum, { share }) => sum + share, 0)).toBeCloseTo(1);
   });
 
   it("gives a release with more rated tracks more weight", () => {

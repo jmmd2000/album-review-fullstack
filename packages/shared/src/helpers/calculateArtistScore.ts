@@ -11,11 +11,10 @@ export interface ScoredRelease {
   releaseYear: number;
 }
 
-/** A release with its weight in the artist score, and that weight as a fraction of all the weights */
+/** A release with its weight in the artist score */
 export interface WeightedRelease<Release extends ScoredRelease> {
   release: Release;
   weight: number;
-  share: number;
 }
 
 /** Best score first. Equal scores put the release with more rated tracks first, so the order never depends on the input order. */
@@ -39,9 +38,7 @@ function trackWeightedMean(releases: ScoredRelease[]): number {
  */
 export function weighReleases<Release extends ScoredRelease>(releases: Release[]): WeightedRelease<Release>[] {
   const ranked = releases.filter(release => release.ratedTracks > 0).sort(compareBestFirst);
-  const weights = ranked.map((release, rank) => release.ratedTracks * SCORE_DECAY ** rank);
-  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-  return ranked.map((release, rank) => ({ release, weight: weights[rank]!, share: weights[rank]! / totalWeight }));
+  return ranked.map((release, rank) => ({ release, weight: release.ratedTracks * SCORE_DECAY ** rank }));
 }
 
 /**
