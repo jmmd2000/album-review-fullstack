@@ -27,7 +27,7 @@ export function ScoreTimeline({ albums }: ScoreTimelineProps) {
 
   return (
     <div className={styles.shell}>
-      <div className={styles.chart}>
+      <div className={styles.chart} data-few={albums.length <= 4 ? "" : undefined}>
         <svg className={styles.line} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <polyline points={line} />
         </svg>

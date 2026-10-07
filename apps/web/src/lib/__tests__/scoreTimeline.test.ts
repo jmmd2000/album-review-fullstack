@@ -4,11 +4,27 @@ import { timelinePoints } from "@/lib/scoreTimeline";
 describe("timelinePoints", () => {
   it("spreads releases from 4% to 96% of the width", () => {
     const points = timelinePoints([
+      { score: 60, year: 2016 },
+      { score: 70, year: 2018 },
+      { score: 80, year: 2020 },
+      { score: 70, year: 2022 },
+      { score: 60, year: 2024 },
+    ]);
+    expect(points.map(point => point.x)).toEqual([4, 27, 50, 73, 96]);
+  });
+
+  it("keeps a few releases 30% apart around the middle", () => {
+    const two = timelinePoints([
+      { score: 60, year: 2018 },
+      { score: 70, year: 2020 },
+    ]);
+    const three = timelinePoints([
       { score: 60, year: 2018 },
       { score: 70, year: 2020 },
       { score: 80, year: 2022 },
     ]);
-    expect(points.map(point => point.x)).toEqual([4, 50, 96]);
+    expect(two.map(point => point.x)).toEqual([35, 65]);
+    expect(three.map(point => point.x)).toEqual([20, 50, 80]);
   });
 
   it("puts a single release in the middle", () => {

@@ -9,6 +9,10 @@
   position: relative;
   height: clamp(240px, 26vw, 320px);
   border-bottom: var(--border-thin) solid var(--colour-divider);
+
+  @media (width < 560px) {
+    height: 200px;
+  }
 }
 
 .line {
@@ -34,6 +38,8 @@
   --cover: clamp(28px, 3.4vw, 46px);
   --ring: 6px;
   position: absolute;
+  /* Without this, a point near the right edge shrinks to the space left and squeezes its cover */
+  width: max-content;
   transform: translate(-50%, 50%);
 
   & a {
@@ -61,6 +67,10 @@
   @media (width < 560px) {
     --cover: 22px;
     --ring: 4px;
+  }
+
+  [data-few] & {
+    --cover: clamp(36px, 4.4vw, 56px);
   }
 }
 
