@@ -3,6 +3,8 @@ import { streamSSE } from "hono/streaming";
 import { JobService } from "@/api/services/JobService";
 import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
+import { validate } from "@/api/middleware/validate";
+import { jobParamSchema } from "@/api/schemas/paramSchema";
 
 // admin only
 const job = new Hono()
@@ -15,8 +17,8 @@ const job = new Hono()
     const jobID = JobService.create(emit => ArtistImageService.updateArtistImages(true, undefined, emit));
     return c.json({ jobID }, 202);
   })
-  .get("/:id/events", c => {
-    const found = JobService.get(c.req.param("id"));
+  .get("/:id/events", validate("param", jobParamSchema, 404), c => {
+    const found = JobService.get(c.req.valid("param").id);
     if (!found) return c.json({ message: "Job not found" }, 404);
 
     // resume from the last event the client saw if it is reconnecting

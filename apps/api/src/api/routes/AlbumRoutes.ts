@@ -5,6 +5,7 @@ import { ReviewService } from "@/api/services/ReviewService";
 import { reviewDataSchema } from "@/api/schemas/reviewSchema";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
+import { albumParamSchema, includeGenresSchema } from "@/api/schemas/paramSchema";
 
 const paginatedSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -17,8 +18,8 @@ const paginatedSchema = z.object({
 });
 
 const album = new Hono()
-  .get("/:albumID", async c => {
-    const data = await AlbumService.getAlbumByID(c.req.param("albumID"), c.req.query("includeGenres") !== "false");
+  .get("/:albumID", validate("param", albumParamSchema, 404), validate("query", includeGenresSchema), async c => {
+    const data = await AlbumService.getAlbumByID(c.req.valid("param").albumID, c.req.valid("query").includeGenres !== "false");
     return c.json(data, 200);
   })
   .get("/", validate("query", paginatedSchema), async c => {
@@ -35,12 +36,12 @@ const album = new Hono()
     const reviewedAlbum = await ReviewService.createAlbumReview(c.req.valid("json"));
     return c.json(reviewedAlbum, 201);
   })
-  .delete("/:albumID", requireAdmin, async c => {
-    await ReviewService.deleteAlbum(c.req.param("albumID"));
+  .delete("/:albumID", requireAdmin, validate("param", albumParamSchema, 404), async c => {
+    await ReviewService.deleteAlbum(c.req.valid("param").albumID);
     return c.body(null, 204);
   })
-  .put("/:albumID/edit", requireAdmin, validate("json", reviewDataSchema), async c => {
-    const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), c.req.param("albumID"));
+  .put("/:albumID/edit", requireAdmin, validate("param", albumParamSchema, 404), validate("json", reviewDataSchema), async c => {
+    const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), c.req.valid("param").albumID);
     return c.json(updated, 200);
   });
 

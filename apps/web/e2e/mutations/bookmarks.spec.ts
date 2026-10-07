@@ -7,7 +7,7 @@ const reserved = capturedAlbum(BOOKMARKED_IDS[1]);
 
 // The album card expects the three image sizes spotify always sends
 const fakeAlbum = {
-  spotifyID: "e2e-fake-album",
+  spotifyID: "e2eFixtureAlbum0000001",
   name: "E2E Fixture Album",
   artistName: "E2E Fixture Artist",
   artistSpotifyID: "e2e-fake-artist",

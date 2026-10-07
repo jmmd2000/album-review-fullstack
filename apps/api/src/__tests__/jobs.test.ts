@@ -71,7 +71,7 @@ test("a job that throws surfaces a fatal event before finishing", async () => {
 });
 
 test("unknown job ids return 404", async () => {
-  const res = await api.get("/api/jobs/not-a-job/events", authCookie);
+  const res = await api.get("/api/jobs/00000000-0000-4000-8000-000000000000/events", authCookie);
   expect(res.status).toBe(404);
 });
 
