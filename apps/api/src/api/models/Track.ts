@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { asc, count, eq, gt, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, sql } from "drizzle-orm";
 import { reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import type { TrackPick } from "@shared/types";
@@ -43,6 +43,17 @@ export class TrackModel {
       .from(reviewedTracks)
       .where(gt(reviewedTracks.rating, 0))
       .then(r => r[0].count);
+  }
+
+  /** The number of tracks rated above 0 on each album. An album with none is left out of the map. */
+  static async getRatedTrackCounts(albumSpotifyIDs: string[], executor: Executor = db) {
+    if (albumSpotifyIDs.length === 0) return new Map<string, number>();
+    const rows = await executor
+      .select({ albumSpotifyID: reviewedTracks.albumSpotifyID, count: count() })
+      .from(reviewedTracks)
+      .where(and(inArray(reviewedTracks.albumSpotifyID, albumSpotifyIDs), gt(reviewedTracks.rating, 0)))
+      .groupBy(reviewedTracks.albumSpotifyID);
+    return new Map(rows.map(row => [row.albumSpotifyID, row.count]));
   }
 
   /** The artist's tracks, each album's tracks in album order. The albums come in the order they were reviewed. */

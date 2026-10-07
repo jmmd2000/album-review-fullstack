@@ -1,6 +1,7 @@
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { tierColourVar } from "@/lib/tierColours";
 import { ScoreDisplay } from "@/components/ui/ScoreDisplay";
+import { ScoreExplainer } from "@/components/artist/ScoreExplainer";
 import styles from "./ArtistStanding.module.css";
 
 import type { CSSProperties } from "react";
@@ -24,13 +25,18 @@ interface ArtistStandingProps {
 }
 
 /**
- * The artist's score, then one strip of their ranks and counts.
+ * The artist's score with a note on how scores work, then one strip of their ranks and counts.
  * An unrated artist has no score or ranks, so the strip shows only the counts.
  */
 export function ArtistStanding({ artist, rankedArtistCount, albumCount, ratedTrackCount }: ArtistStandingProps) {
   return (
     <div className={styles.standing}>
-      {!artist.unrated && <ScoreDisplay score={artist.totalScore} />}
+      {!artist.unrated && (
+        <div className={styles.score}>
+          <ScoreDisplay score={artist.totalScore} />
+          <ScoreExplainer />
+        </div>
+      )}
       <dl className={styles.strip}>
         {!artist.unrated && (
           <>

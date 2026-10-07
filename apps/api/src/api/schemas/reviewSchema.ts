@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_ALBUM_BONUS } from "@shared/constants";
 
 const spotifyImageSchema = z.object({
   height: z.number(),
@@ -67,6 +68,7 @@ const reviewedAlbumSchema = z.object({
 export const reviewDataSchema = z.object({
   ratedTracks: z.array(ratedTrackSchema),
   reviewContent: z.string(),
+  bonus: z.number().min(-MAX_ALBUM_BONUS).max(MAX_ALBUM_BONUS),
   affectsArtistScore: z.boolean(),
   album: z.union([spotifyAlbumSchema, reviewedAlbumSchema]).optional(),
   colors: z.array(extractedColourSchema),

@@ -89,6 +89,7 @@ function CreateReview() {
       pick: null,
     })),
     reviewContent: "",
+    bonus: 0,
     colours: album.colors,
     genres: [],
     affectsArtistScore: true,

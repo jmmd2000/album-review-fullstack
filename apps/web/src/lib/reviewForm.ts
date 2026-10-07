@@ -27,6 +27,8 @@ export interface ReviewFormValues {
   /** Every track in album order. A rating of 0 means unrated, and pick marks the best and worst tracks. */
   tracks: DisplayTrack[];
   reviewContent: string;
+  /** Points added or taken away for how the album works as a whole, from -5 to +5 */
+  bonus: number;
   colours: ExtractedColor[];
   /** Genre names */
   genres: string[];
@@ -42,10 +44,17 @@ export function toReviewPayload(values: ReviewFormValues) {
   return {
     ratedTracks: values.tracks.map(track => ({ ...track, rating: track.rating ?? 0, pick: track.pick ?? null })),
     reviewContent: values.reviewContent,
+    bonus: values.bonus,
     affectsArtistScore: values.affectsArtistScore,
     colors: values.colours,
     genres: values.genres,
     selectedArtistIDs: values.creditedArtistIDs,
     scoreArtistIDs: values.scoreArtistIDs,
   };
+}
+
+/** Shows a bonus with its sign and at most one decimal place, such as "+1.5", "-2" or "0". */
+export function formatBonus(bonus: number): string {
+  const rounded = Number(bonus.toFixed(1));
+  return rounded > 0 ? `+${rounded}` : `${rounded}`;
 }

@@ -188,8 +188,8 @@ export interface ReviewedAlbum {
   updatedAt: Date;
   /** The numerical review score given to the album via my ratings */
   reviewScore: number;
-  /** The bonus points awarded */
-  reviewBonuses: ReviewBonuses | null;
+  /** The bonus set on the review, from -5 to +5, for how the album works as a whole */
+  bonus: number;
   /** The final calculated score */
   finalScore: number;
   /** Whether or not the album will affect it's artists score */
@@ -240,17 +240,11 @@ export interface ReviewedArtist {
   latestLeaderboardPosition: number | null;
   /** List of albums associated with the artist. */
   albums?: DisplayAlbum[];
-  /** Average review score of the artist's albums. */
-  averageScore: number;
-  /** Bonus points awarded to the artist. */
-  bonusPoints: number;
-  /** Reason for bonus points, if applicable. */
-  bonusReason: string | null;
-  /** Total calculated score of the artist. */
+  /** The artist's score: the mean of their releases, best first, each counting 0.6 as much as the one above it. */
   totalScore: number;
-  /** Peak score calculated from top 3 highest rated albums. */
+  /** The score of the artist's best release. */
   peakScore: number;
-  /** Latest score calculated from latest 3 albums. */
+  /** The mean score of the artist's latest 3 releases, weighted by rated tracks. */
   latestScore: number;
   /** Number of albums reviewed by the artist. */
   reviewCount: number;
@@ -542,25 +536,6 @@ export type AuthContextType = {
   login: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
-
-export interface ReviewBonuses {
-  /** Rewards albums with perfect rated tracks (max 1.5) */
-  perfectBonus: number;
-  /** Rewards albums with high quality tracks, 8/9 (max 1.5) */
-  qualityBonus: number;
-  /** Rewards albums with consistent track quality (max 1) */
-  consistencyBonus: number;
-  /** Rewards albums with no low rated tracks, < 5 (max 1) */
-  noWeakBonus: number;
-  /** Penalizes albums with terrible rated tracks, 1/10 (max -3) */
-  terriblePenalty: number;
-  /** Penalizes albums with poor quality tracks, 2-3/10 (max -2) */
-  poorQualityPenalty: number;
-  /** Penalizes albums with no tracks rated above 5/10 (fixed -2) */
-  noStrongPenalty: number;
-  /** Sum of all bonuses and penalties (capped between -5 and +5) */
-  totalBonus: number;
-}
 
 export interface Genre {
   /** Unique ID of the genre */

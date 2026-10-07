@@ -10,6 +10,12 @@
   padding: clamp(28px, 3.4vw, 44px) var(--page-gutter);
 }
 
+.score {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
 .strip {
   display: flex;
   flex-wrap: wrap;

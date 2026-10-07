@@ -47,7 +47,8 @@ test("seeds the fixture library into an empty database", async () => {
       duration: track.duration,
       features: track.features,
       rating: ratingFor(index, review.offset),
-    }))
+    })),
+    0
   );
   const seeded = await AlbumModel.findBySpotifyID(review.spotifyID);
   expect(seeded.finalScore).toBe(finalScore);

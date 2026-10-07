@@ -4,9 +4,11 @@ import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { coverColourStyle } from "@/lib/coverColours";
 import { tierColourVar } from "@/lib/tierColours";
+import { formatBonus } from "@/lib/reviewForm";
 import { toast } from "@/lib/toast";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { AlbumArtistsField } from "@/components/form/AlbumArtistsField";
+import { BonusSlider } from "@/components/form/BonusSlider";
 import { ColourSwatches } from "@/components/form/ColourSwatches";
 import { GenreChips } from "@/components/form/GenreChips";
 import { ReviewTextInput } from "@/components/form/ReviewTextInput";
@@ -69,7 +71,7 @@ export function ReviewForm({ albumName, artistName, cover, albumArtists, initial
       <form className={styles.split} onSubmit={handleSubmit}>
         <div className={styles.aside}>
           {cover && <img className={styles.cover} src={cover.url} alt={`${albumName} cover`} width={cover.width} height={cover.height} />}
-          <LiveScore tracks={values.tracks} ratedCount={ratedCount} />
+          <LiveScore tracks={values.tracks} bonus={values.bonus} ratedCount={ratedCount} />
         </div>
 
         <div ref={headRef} className={styles.head}>
@@ -87,6 +89,10 @@ export function ReviewForm({ albumName, artistName, cover, albumArtists, initial
 
         <div className={styles.body}>
           <TrackRater tracks={values.tracks} onRate={(index, rating) => changeTrack(index, { rating })} onPick={(index, pick) => changeTrack(index, { pick })} />
+
+          <div className={styles.field}>
+            <BonusSlider value={values.bonus} onChange={bonus => update({ bonus })} />
+          </div>
 
           <ReviewTextInput value={values.reviewContent} onChange={reviewContent => update({ reviewContent })} />
 
@@ -129,15 +135,14 @@ export function ReviewForm({ albumName, artistName, cover, albumArtists, initial
 
 interface LiveScoreProps {
   tracks: DisplayTrack[];
+  bonus: number;
   ratedCount: number;
 }
 
-/** The score the ratings add up to so far, with its tier and a line on how it's made. */
-function LiveScore({ tracks, ratedCount }: LiveScoreProps) {
-  const { baseScore, bonuses, finalScore } = calculateAlbumScore(tracks);
+/** The score the ratings and the bonus add up to so far, with its tier and a line on how it's made. */
+function LiveScore({ tracks, bonus, ratedCount }: LiveScoreProps) {
+  const { baseScore, finalScore } = calculateAlbumScore(tracks, bonus);
   const tier = ratedCount > 0 ? scoreTier(finalScore) : "Unrated";
-  const roundedBonus = Math.round(bonuses.totalBonus * 10) / 10;
-  const bonus = roundedBonus > 0 ? `+${roundedBonus}` : `${roundedBonus}`;
 
   return (
     <div className={styles.live} style={{ color: tierColourVar(tier) }} aria-live="polite">
@@ -145,7 +150,7 @@ function LiveScore({ tracks, ratedCount }: LiveScoreProps) {
       <div>
         <div className={styles.word}>{tier}</div>
         <div className={styles.sum}>
-          {ratedCount} of {tracks.length} rated. {baseScore} from the tracks, {bonus} in bonuses.
+          {ratedCount} of {tracks.length} rated. {baseScore} from the tracks, {bonus === 0 ? "no bonus" : `${formatBonus(bonus)} bonus`}.
         </div>
       </div>
     </div>

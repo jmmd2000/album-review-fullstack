@@ -1,15 +1,6 @@
 /** Number of items per page in paginated queries. */
 export { PAGE_SIZE } from "@shared/constants";
 
-/** Maximum possible score for an artist (capped). */
-export const MAX_SCORE = 100;
-
-/** Bonus added to artist score for each album scoring > 55. */
-export const GOOD_ALBUM_BONUS = 0.25;
-
-/** Penalty deducted from artist score for each album scoring < 45. */
-export const BAD_ALBUM_BONUS = 0.25;
-
 /** Configuration for album cover color extraction. */
 export const COLOR_EXTRACTION = {
   pixels: 409600,

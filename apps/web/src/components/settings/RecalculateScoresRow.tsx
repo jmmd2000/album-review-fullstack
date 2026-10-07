@@ -14,8 +14,6 @@ const FIELD_LABELS: Record<ScoreChange["field"], string> = {
   totalScore: "Score",
   peakScore: "Peak",
   latestScore: "Latest",
-  averageScore: "Average",
-  bonusPoints: "Bonus",
   reviewCount: "Reviews",
   unrated: "Unrated",
   leaderboardPosition: "Rank",

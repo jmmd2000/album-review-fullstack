@@ -1,4 +1,3 @@
-import type { ReviewBonuses } from "@shared/types";
 import { sql } from "drizzle-orm";
 import { boolean, index, integer, jsonb, pgEnum, pgTable, real, serial, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
@@ -25,16 +24,7 @@ export const reviewedAlbums = pgTable(
     runtime: varchar("runtime", { length: 50 }).notNull(),
     reviewContent: text("review_content"),
     reviewScore: real("review_score").notNull(),
-    reviewBonuses: jsonb("bonus_details").$type<ReviewBonuses>().default({
-      qualityBonus: 0,
-      perfectBonus: 0,
-      consistencyBonus: 0,
-      noWeakBonus: 0,
-      terriblePenalty: 0,
-      poorQualityPenalty: 0,
-      noStrongPenalty: 0,
-      totalBonus: 0,
-    }),
+    bonus: real("bonus").notNull().default(0),
     finalScore: real("final_score"),
     affectsArtistScore: boolean().notNull().default(false),
     colors: jsonb("colors").$type<{ hex: string }[]>().notNull(),
@@ -119,12 +109,9 @@ export const reviewedArtists = pgTable(
     spotifyID: varchar("spotify_id", { length: 255 }).notNull().unique(), // Unique Spotify ID
     imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
     headerImage: varchar("header_image", { length: 255 }),
-    averageScore: real("average_score").notNull(),
     leaderboardPosition: integer("leaderboard_position"),
     peakLeaderboardPosition: integer("peak_leaderboard_position"),
     latestLeaderboardPosition: integer("latest_leaderboard_position"),
-    bonusPoints: real("bonus_points").notNull().default(0),
-    bonusReason: text("bonus_reason"),
     totalScore: real("total_score").notNull().default(0),
     peakScore: real("peak_score").notNull().default(0),
     latestScore: real("latest_score").notNull().default(0),
