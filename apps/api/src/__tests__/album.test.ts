@@ -131,8 +131,16 @@ test("POST /api/albums/create - should persist per-artist score flags", async ()
 });
 
 test("GET /api/albums/:albumID - returns 404 for an unknown album", async () => {
-  const res = await api.get("/api/albums/thisIdDoesNotExist", authCookie);
+  const res = await api.get("/api/albums/unknownAlbumSpotifyID1", authCookie);
   expect(res.status).toBe(404);
+});
+
+test("GET /api/albums/:albumID - returns 404 for a malformed id", async () => {
+  for (const albumID of ["..%2Fstats", "short", "unknownAlbumSpotifyID1-"]) {
+    const res = await api.get(`/api/albums/${albumID}`, authCookie);
+    expect(res.status).toBe(404);
+    expect((await res.json()).message).toBe("Album not found.");
+  }
 });
 
 test("POST /api/albums/create - a mid-flight failure rolls the whole review back", async () => {

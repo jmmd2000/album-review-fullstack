@@ -72,7 +72,7 @@ describe("Score Integration Tests", () => {
   test("should update all scores when album is updated", async () => {
     // Create initial album
     const albumData = { ...mockReviewData, affectsArtistScore: true };
-    albumData.album.id = "unique_album_2";
+    albumData.album.id = "scoreIntegrationAlbum2";
     albumData.album.artists = [{ ...mockReviewData.album.artists[0], id: "unique_artist_2" }];
     albumData.ratedTracks = albumData.ratedTracks.map(track => ({
       ...track,

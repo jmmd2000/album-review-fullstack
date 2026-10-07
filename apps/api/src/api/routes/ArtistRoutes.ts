@@ -4,6 +4,7 @@ import { ArtistService } from "@/api/services/ArtistService";
 import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
+import { artistParamSchema } from "@/api/schemas/paramSchema";
 
 const paginatedSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -21,22 +22,22 @@ const artist = new Hono()
   .get("/all", async c => {
     return c.json(await ArtistService.getAllArtists(), 200);
   })
-  .get("/details/:artistID", async c => {
-    return c.json(await ArtistService.getArtistDetails(c.req.param("artistID")), 200);
+  .get("/details/:artistID", validate("param", artistParamSchema, 404), async c => {
+    return c.json(await ArtistService.getArtistDetails(c.req.valid("param").artistID), 200);
   })
-  .get("/:artistID", async c => {
-    return c.json(await ArtistService.getArtistByID(c.req.param("artistID")), 200);
+  .get("/:artistID", validate("param", artistParamSchema, 404), async c => {
+    return c.json(await ArtistService.getArtistByID(c.req.valid("param").artistID), 200);
   })
   .get("/", validate("query", paginatedSchema), async c => {
     return c.json(await ArtistService.getPaginatedArtists(c.req.valid("query")), 200);
   })
-  .put("/:artistID/headerImage", requireAdmin, validate("json", headerImageSchema), async c => {
+  .put("/:artistID/headerImage", requireAdmin, validate("param", artistParamSchema, 404), validate("json", headerImageSchema), async c => {
     const { headerImage } = c.req.valid("json");
-    await ArtistImageService.updateSingleArtistHeader(c.req.param("artistID"), headerImage);
+    await ArtistImageService.updateSingleArtistHeader(c.req.valid("param").artistID, headerImage);
     return c.json({ message: "Header image updated successfully" }, 200);
   })
-  .delete("/:artistID", requireAdmin, async c => {
-    await ArtistService.deleteArtist(c.req.param("artistID"));
+  .delete("/:artistID", requireAdmin, validate("param", artistParamSchema, 404), async c => {
+    await ArtistService.deleteArtist(c.req.valid("param").artistID);
     return c.body(null, 204);
   });
 

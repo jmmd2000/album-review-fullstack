@@ -274,7 +274,7 @@ describe("Artist Score Calculation Integration", () => {
     album1Data.album.artists = [
       {
         ...mockReviewData.album.artists[0],
-        id: "test_artist",
+        id: "integrationTestArtist1",
         name: "Test Artist",
       },
     ];
@@ -301,7 +301,7 @@ describe("Artist Score Calculation Integration", () => {
     album2Data.album.artists = [
       {
         ...mockReviewData.album.artists[0],
-        id: "test_artist",
+        id: "integrationTestArtist1",
         name: "Test Artist",
       },
     ];
@@ -328,7 +328,7 @@ describe("Artist Score Calculation Integration", () => {
     album3Data.album.artists = [
       {
         ...mockReviewData.album.artists[0],
-        id: "test_artist",
+        id: "integrationTestArtist1",
         name: "Test Artist",
       },
     ];
@@ -356,7 +356,7 @@ describe("Artist Score Calculation Integration", () => {
     album4Data.album.artists = [
       {
         ...mockReviewData.album.artists[0],
-        id: "test_artist",
+        id: "integrationTestArtist1",
         name: "Test Artist",
       },
     ];
@@ -380,7 +380,7 @@ describe("Artist Score Calculation Integration", () => {
     }
 
     // Get the artist details
-    const response = await api.get("/api/artists/test_artist");
+    const response = await api.get("/api/artists/integrationTestArtist1");
     const artist: ReviewedArtist = await response.json();
 
     expect(response.status).toBe(200);

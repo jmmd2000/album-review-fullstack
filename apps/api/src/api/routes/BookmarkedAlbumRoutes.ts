@@ -3,6 +3,7 @@ import { z } from "zod";
 import { BookmarkedAlbumService } from "@/api/services/BookmarkedAlbumService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
+import { albumParamSchema } from "@/api/schemas/paramSchema";
 
 const spotifyImageSchema = z.object({
   url: z.string(),
@@ -37,15 +38,15 @@ const bookmark = new Hono()
   .get("/", validate("query", paginatedSchema), async c => {
     return c.json(await BookmarkedAlbumService.getPaginatedAlbums(c.req.valid("query")), 200);
   })
-  .get("/:albumID", async c => {
-    return c.json(await BookmarkedAlbumService.getAlbumByID(c.req.param("albumID")), 200);
+  .get("/:albumID", validate("param", albumParamSchema, 404), async c => {
+    return c.json(await BookmarkedAlbumService.getAlbumByID(c.req.valid("param").albumID), 200);
   })
-  .post("/:albumID/add", validate("json", bookmarkAlbumSchema), async c => {
+  .post("/:albumID/add", validate("param", albumParamSchema, 404), validate("json", bookmarkAlbumSchema), async c => {
     const bookmarkedAlbum = await BookmarkedAlbumService.bookmarkAlbum(c.req.valid("json"));
     return c.json(bookmarkedAlbum, 201);
   })
-  .delete("/:albumID/remove", async c => {
-    await BookmarkedAlbumService.removeBookmarkedAlbum(c.req.param("albumID"));
+  .delete("/:albumID/remove", validate("param", albumParamSchema, 404), async c => {
+    await BookmarkedAlbumService.removeBookmarkedAlbum(c.req.valid("param").albumID);
     return c.body(null, 204);
   });
 
