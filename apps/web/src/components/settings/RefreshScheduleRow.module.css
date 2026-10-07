@@ -1,0 +1,17 @@
+.select {
+  padding: 11px 14px;
+  border-radius: var(--radius-control);
+  background: var(--colour-panel);
+  color: var(--colour-foreground);
+  transition: box-shadow var(--duration-quick) var(--ease-out);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--border-thick) var(--colour-text-faint);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

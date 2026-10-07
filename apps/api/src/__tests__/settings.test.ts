@@ -116,3 +116,22 @@ test("the refresh interval is 7 days until one is saved, and a bad stored value 
     expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
   }
 });
+
+test("the refresh interval can be read and changed, and says the schedule is off on this server", async () => {
+  const before = await api.get("/api/settings/refresh-interval", authCookie);
+  expect(await before.json()).toEqual({ intervalDays: 7, scheduleEnabled: false });
+
+  const update = await api.put("/api/settings/refresh-interval", { intervalDays: 14 }, authCookie);
+  expect(update.status).toBe(200);
+
+  const after = await api.get("/api/settings/refresh-interval", authCookie);
+  expect((await after.json()).intervalDays).toBe(14);
+});
+
+test("a refresh interval that isn't a whole number of days from 0 to 365 is rejected", async () => {
+  for (const intervalDays of [-1, 2.5, 366, "7"]) {
+    const res = await api.put("/api/settings/refresh-interval", { intervalDays }, authCookie);
+    expect(res.status).toBe(400);
+  }
+  expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+});

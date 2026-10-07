@@ -32,6 +32,10 @@ export class SettingsService {
     return Number.isInteger(days) && days >= 0 ? days : DEFAULT_REFRESH_INTERVAL_DAYS;
   }
 
+  static async setRefreshIntervalDays(days: number): Promise<void> {
+    await this.set(REFRESH_INTERVAL_KEY, String(days));
+  }
+
   static async getAllLastRuns(): Promise<Record<string, Date | null>> {
     const results = await SettingsModel.findAllByKeyPattern("_last_run");
     const lastRuns: Record<string, Date | null> = {};

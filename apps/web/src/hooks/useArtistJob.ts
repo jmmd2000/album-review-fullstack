@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
+import { formatJobCounts } from "@/lib/jobStatus";
 
 import type { JobEventMap, Progress } from "@shared/types";
 
@@ -28,9 +29,7 @@ const JOB_LABELS: Record<ArtistJob, string> = {
 
 /** The counts of a job's results, such as "4 updated, 130 unchanged, 2 failed". */
 export function summariseArtistJob(state: ArtistJobState) {
-  const parts = [`${state.changed.length} updated`, `${state.unchangedCount} unchanged`];
-  if (state.failed.length > 0) parts.push(`${state.failed.length} failed`);
-  return parts.join(", ");
+  return formatJobCounts(state.changed.length, state.unchangedCount, state.failed.length);
 }
 
 /** Listens for one job event and hands the handler its parsed payload. */
@@ -81,6 +80,7 @@ export function useArtistJob(job: ArtistJob) {
           toast.success(`${JOB_LABELS[job]}: ${summariseArtistJob(latest)}`);
         }
         queryClient.invalidateQueries({ queryKey: queryKeys.settings.lastRuns });
+        queryClient.invalidateQueries({ queryKey: queryKeys.settings.jobResults });
         queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
       });
 
