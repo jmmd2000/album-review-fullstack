@@ -662,6 +662,30 @@ export interface HomeOverview {
   artistCount: number;
 }
 
+/** A reviewed album in the home page's search results */
+export interface HomeSearchAlbum {
+  type: "album";
+  spotifyID: string;
+  name: string;
+  artistName: string;
+  releaseYear: number;
+  score: number | null;
+  imageURLs: SpotifyImage[];
+}
+
+/** A reviewed artist in the home page's search results */
+export interface HomeSearchArtist {
+  type: "artist";
+  spotifyID: string;
+  name: string;
+  albumCount: number;
+  /** Null while the artist is unrated */
+  score: number | null;
+  imageURLs: SpotifyImage[];
+}
+
+export type HomeSearchResult = HomeSearchAlbum | HomeSearchArtist;
+
 export interface PaginatedAlbumsResult {
   albums: DisplayAlbum[];
   totalCount: number;

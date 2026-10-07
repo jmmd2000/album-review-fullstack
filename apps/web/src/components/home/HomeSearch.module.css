@@ -1,0 +1,108 @@
+.search {
+  width: 100%;
+}
+
+.field {
+  position: relative;
+}
+
+.icon {
+  position: absolute;
+  top: 50%;
+  left: 22px;
+  width: 20px;
+  height: 20px;
+  translate: 0 -50%;
+  color: var(--colour-text-muted);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 18px 22px 18px 56px;
+  border-radius: var(--radius-menu);
+  background: var(--colour-panel);
+  box-shadow: inset 0 0 0 var(--border-thin) var(--colour-divider);
+  color: var(--colour-foreground);
+  font-size: 1.05rem;
+  transition: box-shadow var(--duration-quick) var(--ease-out);
+
+  &::placeholder {
+    color: var(--colour-text-muted);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--border-thick) var(--colour-text-faint);
+  }
+
+  /* Escape twice clears the box, so the browser's clear button isn't needed */
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+.positioner {
+  z-index: var(--z-dropdown);
+  width: var(--anchor-width);
+}
+
+.popup {
+  padding: 6px;
+  border-radius: var(--radius-menu);
+  background: var(--colour-panel);
+  box-shadow: var(--shadow-float);
+}
+
+.status:not(:empty) {
+  padding: 12px 14px;
+  color: var(--colour-text-muted);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 8px 10px 8px 8px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+
+  &[data-highlighted] {
+    background: var(--colour-panel-strong);
+  }
+}
+
+.thumbnail {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: var(--radius-cover);
+  background: var(--colour-panel-strong);
+}
+
+.round {
+  border-radius: 50%;
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name,
+.subtitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.name {
+  font-weight: var(--font-weight-label);
+}
+
+.subtitle {
+  color: var(--colour-text-muted);
+  font-size: 0.9rem;
+}

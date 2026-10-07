@@ -41,7 +41,7 @@ export function RecalculateScoresRow({ lastRun }: { lastRun: string | null }) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.settings.lastRuns }),
         queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.home }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
       ]);
     },
   });

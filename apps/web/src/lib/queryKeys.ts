@@ -6,7 +6,11 @@ import type { GetPaginatedAlbumsOptions, GetPaginatedArtistsOptions, GetPaginate
  * and the same goes for `artists` and `bookmarks`.
  */
 export const queryKeys = {
-  home: ["home"] as const,
+  home: {
+    all: ["home"] as const,
+    overview: ["home", "overview"] as const,
+    search: (query: string) => ["home", "search", query] as const,
+  },
   auth: {
     status: ["auth", "status"] as const,
   },

@@ -70,7 +70,7 @@ function CreateReview() {
         queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.stats.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.home }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
       ]);
       await navigate({ to: "/albums/$albumID", params: { albumID } });
     },

@@ -69,7 +69,7 @@ function EditReview() {
         queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.stats.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.home }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
       ]);
       await navigate({ to: "/albums/$albumID", params: { albumID } });
     },

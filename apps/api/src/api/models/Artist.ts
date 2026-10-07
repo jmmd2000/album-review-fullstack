@@ -27,6 +27,16 @@ export class ArtistModel {
     return search.trim() ? await baseQuery.where(ilike(reviewedArtists.name, `%${search}%`)) : await baseQuery;
   }
 
+  /** Artists whose name contains the query. Names that start with it come first, then the highest scores. */
+  static async searchArtists(query: string, limit: number): Promise<ReviewedArtist[]> {
+    return db
+      .select()
+      .from(reviewedArtists)
+      .where(ilike(reviewedArtists.name, `%${query}%`))
+      .orderBy(desc(ilike(reviewedArtists.name, `${query}%`)), desc(reviewedArtists.totalScore))
+      .limit(limit) as Promise<ReviewedArtist[]>;
+  }
+
   static async getArtistBySpotifyID(artistID: string) {
     return db
       .select()

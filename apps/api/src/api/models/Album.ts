@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { desc, eq, asc, count, inArray, sql, and, isNull } from "drizzle-orm";
+import { desc, eq, asc, count, inArray, sql, and, isNull, ilike, or } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
@@ -50,6 +50,16 @@ export class AlbumModel {
   static async getLatestAlbumID(): Promise<string | null> {
     const [latest] = await db.select({ spotifyID: reviewedAlbums.spotifyID }).from(reviewedAlbums).orderBy(desc(reviewedAlbums.createdAt)).limit(1);
     return latest?.spotifyID ?? null;
+  }
+
+  /** Albums whose name or artist contains the query. Names that start with it come first, then the highest scores. */
+  static async searchAlbums(query: string, limit: number): Promise<ReviewedAlbum[]> {
+    return db
+      .select()
+      .from(reviewedAlbums)
+      .where(or(ilike(reviewedAlbums.name, `%${query}%`), ilike(reviewedAlbums.artistName, `%${query}%`)))
+      .orderBy(desc(ilike(reviewedAlbums.name, `${query}%`)), sql`${reviewedAlbums.finalScore} DESC NULLS LAST`)
+      .limit(limit) as Promise<ReviewedAlbum[]>;
   }
 
   static async getAlbumsBySpotifyIDs(ids: string[]) {
