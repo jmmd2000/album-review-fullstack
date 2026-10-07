@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { coverColourStyle } from "@/lib/coverColours";
+import { morphProps, preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
@@ -33,7 +34,9 @@ const reviewQueryOptions = (albumID: string) =>
 export const Route = createFileRoute("/albums/$albumID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    return context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+    const review = await context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+    await preloadImage(review.album.imageURLs[0]?.url);
+    return review;
   },
   component: RouteComponent,
   errorComponent: ({ error, reset }) => (
@@ -81,7 +84,7 @@ function RouteComponent() {
         )}
       </div>
       <section className={styles.showcase}>
-        {cover && <img className={styles.cover} src={cover.url} alt={`${album.name} cover`} width={cover.width} height={cover.height} />}
+        {cover && <img className={styles.cover} src={cover.url} alt={`${album.name} cover`} width={cover.width} height={cover.height} {...morphProps("album", album.spotifyID)} />}
         <div className={styles.column}>
           <div ref={panelsRef} className={styles.panels}>
             <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} />

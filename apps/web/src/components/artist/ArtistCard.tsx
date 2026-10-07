@@ -19,6 +19,7 @@ export function ArtistCard({ artist, position, score }: ArtistCardProps) {
       score={artist.unrated ? null : score}
       images={artist.imageURLs}
       rank={position ?? undefined}
+      morph={{ kind: "artist", spotifyID: artist.spotifyID }}
     />
   );
 }

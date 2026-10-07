@@ -3,6 +3,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { HeaderImageDialog } from "@/components/artist/HeaderImageDialog";
@@ -32,7 +33,9 @@ const artistQueryOptions = (artistID: string) =>
 export const Route = createFileRoute("/artists/$artistID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    return context.queryClient.ensureQueryData(artistQueryOptions(params.artistID));
+    const details = await context.queryClient.ensureQueryData(artistQueryOptions(params.artistID));
+    await preloadImage(details.artist.imageURLs[0]?.url);
+    return details;
   },
   component: RouteComponent,
   errorComponent: ({ error, reset }) => (
@@ -72,6 +75,7 @@ function RouteComponent() {
   return (
     <div className={styles.page}>
       <ArtistHeader
+        artistID={artist.spotifyID}
         name={artist.name}
         headerImage={artist.headerImage}
         images={artist.imageURLs}

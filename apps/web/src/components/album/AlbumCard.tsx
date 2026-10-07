@@ -20,5 +20,16 @@ export function AlbumCard({ album, subtitle, action }: AlbumCardProps) {
 
   const link = hasScore ? linkOptions({ to: "/albums/$albumID", params: { albumID: album.spotifyID } }) : linkOptions({ to: "/albums/$albumID/create", params: { albumID: album.spotifyID } });
 
-  return <Card link={link} title={album.name} subtitle={subtitle ?? album.artistName} score={album.finalScore} images={album.imageURLs} shade={shade} action={action} />;
+  return (
+    <Card
+      link={link}
+      title={album.name}
+      subtitle={subtitle ?? album.artistName}
+      score={album.finalScore}
+      images={album.imageURLs}
+      shade={shade}
+      action={action}
+      morph={{ kind: "album", spotifyID: album.spotifyID }}
+    />
+  );
 }

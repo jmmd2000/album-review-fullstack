@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { highsAndLows } from "@/lib/statsSelection";
+import { morphProps } from "@/lib/coverMorph";
 import { ScoreChip } from "@/components/ui/ScoreChip";
 import styles from "./HighsAndLows.module.css";
 
@@ -67,7 +68,7 @@ function AlbumRow({ album, place }: { album: StatsAlbum; place: number }) {
     <li>
       <Link to="/albums/$albumID" params={{ albumID: album.spotifyID }} className={styles.row}>
         <span className={styles.place}>{place}</span>
-        {cover ? <img src={cover.url} alt="" width={48} height={48} loading="lazy" /> : <span />}
+        {cover ? <img src={cover.url} alt="" width={48} height={48} loading="lazy" {...morphProps("album", album.spotifyID)} /> : <span />}
         <span className={styles.name}>
           <span title={album.name}>{album.name}</span>
           <small>
@@ -87,7 +88,7 @@ function ArtistRow({ artist, place }: { artist: StatsArtist; place: number }) {
     <li>
       <Link to="/artists/$artistID" params={{ artistID: artist.spotifyID }} className={styles.row}>
         <span className={styles.place}>{place}</span>
-        {photo ? <img className={styles.round} src={photo.url} alt="" width={48} height={48} loading="lazy" /> : <span />}
+        {photo ? <img className={styles.round} src={photo.url} alt="" width={48} height={48} loading="lazy" {...morphProps("artist", artist.spotifyID)} /> : <span />}
         <span className={styles.name}>
           <span title={artist.name}>{artist.name}</span>
           <small>

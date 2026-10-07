@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Link } from "@tanstack/react-router";
 import { usableCoverColours } from "@/lib/coverColours";
+import { morphProps } from "@/lib/coverMorph";
 import styles from "./CoverColumns.module.css";
 
 import type { CSSProperties } from "react";
@@ -39,13 +40,21 @@ function dealColumns(albums: HomeAlbum[]): HomeAlbum[][] {
 export const CoverColumns = memo(function CoverColumns({ albums, onHover }: CoverColumnsProps) {
   if (albums.length === 0) return null;
 
+  // A small sample repeats covers, and only one copy of a cover may be the one that lands from its album page
+  const landingIDs = new Set<string>();
+  const canLand = (album: HomeAlbum) => {
+    if (landingIDs.has(album.spotifyID)) return false;
+    landingIDs.add(album.spotifyID);
+    return true;
+  };
+
   return (
     <div className={styles.columns}>
       {dealColumns(albums).map((column, columnIndex) => (
         <div key={columnIndex} className={styles.column}>
           <div className={styles.track}>
             {column.map((album, row) => (
-              <Cover key={row} album={album} onHover={onHover} />
+              <Cover key={row} album={album} onHover={onHover} canLand={canLand(album)} />
             ))}
             {column.map((album, row) => (
               <Cover key={`copy-${row}`} album={album} onHover={onHover} isCopy />
@@ -62,9 +71,11 @@ interface CoverProps {
   onHover: (album: HomeAlbum | null) => void;
   /** The second set of covers in a column, which screen readers and the Tab key skip */
   isCopy?: boolean;
+  /** Whether this is the copy the cover lands on when coming back from its album page */
+  canLand?: boolean;
 }
 
-function Cover({ album, onHover, isCopy = false }: CoverProps) {
+function Cover({ album, onHover, isCopy = false, canLand = false }: CoverProps) {
   const image = album.imageURLs[1] ?? album.imageURLs[0];
   const largeImage = album.imageURLs[0];
   const shade = usableCoverColours(album.colors)[0];
@@ -86,7 +97,8 @@ function Cover({ album, onHover, isCopy = false }: CoverProps) {
       onBlur={() => onHover(null)}
     >
       {image ? (
-        <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt="" width={image.width} height={image.height} loading="lazy" decoding="async" />
+        // Not lazy: a lazy image isn't painted yet when the browser pictures the page, so the covers would be blank as one flies home
+        <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt="" width={image.width} height={image.height} {...morphProps("album", album.spotifyID, canLand)} />
       ) : (
         <span className={styles.missing} aria-hidden="true">
           {album.name.trim().charAt(0)}

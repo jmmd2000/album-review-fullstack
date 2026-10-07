@@ -23,8 +23,95 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* The cover or photo that flies between pages travels a little slower than the page fades, so the eye follows it */
+::view-transition-group(album-cover),
+::view-transition-group(artist-photo) {
+  animation-duration: 0.45s;
+  animation-timing-function: var(--ease-out);
+}
+
+/* The browser blends the two pictures by adding them, which would glow while one sits on the other */
+::view-transition-old(album-cover),
+::view-transition-new(album-cover),
+::view-transition-old(artist-photo),
+::view-transition-new(artist-photo) {
+  mix-blend-mode: normal;
+}
+
+/* A picture is only as sharp as the size it was drawn at, so the bigger of the two flies.
+   Going back, that's the old page's picture, and the new one fades in as it lands. */
+::view-transition-old(album-cover),
+::view-transition-old(artist-photo) {
+  animation: none;
+}
+
+::view-transition-new(album-cover),
+::view-transition-new(artist-photo) {
+  animation: land 0.45s var(--ease-out) both;
+}
+
+/* Opening an album or an artist, the new page's picture is the big one, so it shows at once.
+   If it hasn't loaded yet it's see-through, and the clicked picture underneath flies instead. */
+:root:active-view-transition-type(album-grows)::view-transition-new(album-cover),
+:root:active-view-transition-type(artist-grows)::view-transition-new(artist-photo) {
+  animation: appear 0.1s ease-out both;
+}
+
+/* An artist photo can fly between a square card and a round photo, so it reshapes from one to the other as it flies.
+   Opening an artist, the round photo shows at once, so it rounds off quickly or the square's corners show behind it. */
+::view-transition-image-pair(artist-photo) {
+  overflow: hidden;
+  animation: reshape 0.45s var(--ease-out) both;
+}
+
+:root:active-view-transition-type(artist-grows)::view-transition-image-pair(artist-photo) {
+  animation-duration: 0.2s;
+}
+
+/* Going back, the round photo can't be clipped into a square, so it fades out as the square card fades in, inside the changing outline */
+:root:active-view-transition-type(artist-shrinks)::view-transition-old(artist-photo) {
+  animation: fade-out 0.45s var(--ease-out) both;
+  mix-blend-mode: plus-lighter;
+}
+
+:root:active-view-transition-type(artist-shrinks)::view-transition-new(artist-photo) {
+  animation: appear 0.45s var(--ease-out) both;
+  mix-blend-mode: plus-lighter;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes reshape {
+  from {
+    border-radius: var(--artist-photo-from-radius, 50%);
+  }
+  to {
+    border-radius: var(--artist-photo-to-radius, 50%);
+  }
+}
+
+@keyframes land {
+  0%,
+  70% {
+    opacity: 0;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
   }
 }

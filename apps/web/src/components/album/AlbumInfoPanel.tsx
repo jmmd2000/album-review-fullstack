@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { reviewedDate, shortRuntime, ukReleaseDate } from "@/lib/albumFacts";
+import { morphProps } from "@/lib/coverMorph";
 import { ScoreDisplay } from "@/components/ui/ScoreDisplay";
 import styles from "./AlbumInfoPanel.module.css";
 
@@ -14,14 +15,15 @@ interface AlbumInfoPanelProps {
 
 /** The album's title, artists, score, facts and genres, on a see-through panel over the backdrop. */
 export function AlbumInfoPanel({ album, artists, genres }: AlbumInfoPanelProps) {
-  const photo = artists[0]?.imageURLs.at(-1);
+  const photoArtist = artists[0];
+  const photo = photoArtist?.imageURLs.at(-1);
 
   return (
     <div className={styles.panel}>
       <h1 className={styles.title}>{album.name}</h1>
 
       <p className={styles.byline}>
-        {photo && <img src={photo.url} alt="" width={34} height={34} />}
+        {photo && <img src={photo.url} alt="" width={34} height={34} {...morphProps("artist", photoArtist.spotifyID)} />}
         <span>
           {artists.length > 0
             ? artists.map((artist, index) => (

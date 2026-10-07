@@ -61,7 +61,7 @@ function RootComponent() {
     <AuthProvider>
       <div className={styles.layout}>
         <Navbar />
-        <main className={styles.main} style={{ viewTransitionName: "main-content" }}>
+        <main className={styles.main}>
           <Outlet />
         </main>
       </div>

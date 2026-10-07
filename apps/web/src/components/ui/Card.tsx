@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
+import { morphProps } from "@/lib/coverMorph";
 import { ScoreChip } from "@/components/ui/ScoreChip";
 import styles from "./Card.module.css";
 
 import type { CSSProperties, ReactNode } from "react";
 import type { LinkProps } from "@tanstack/react-router";
 import type { SpotifyImage } from "@shared/types";
+import type { MorphKind } from "@/lib/coverMorph";
 
 interface CardProps {
   link: LinkProps;
@@ -19,13 +21,15 @@ interface CardProps {
   shade?: string;
   /** A button in the cover's top right corner. It sits outside the link, so clicking it doesn't open the page. */
   action?: ReactNode;
+  /** Lets the cover fly to and from the album or artist's own page */
+  morph?: { kind: MorphKind; spotifyID: string };
 }
 
 /**
  * The one card for albums and artists: a square cover, then the title and
  * subtitle with the score chip beside them. It's a list item, so it goes in a CardGrid.
  */
-export function Card({ link, title, subtitle, score, images, rank, shade, action }: CardProps) {
+export function Card({ link, title, subtitle, score, images, rank, shade, action, morph }: CardProps) {
   const image = images[1] ?? images[0];
   const largeImage = images[0];
   // 4d is 30% opacity. Chrome can only animate a plain colour in a filter, so the CSS can't mix it in.
@@ -36,7 +40,8 @@ export function Card({ link, title, subtitle, score, images, rank, shade, action
       <Link {...link} className={styles.card} style={style}>
         <div className={styles.art}>
           {image ? (
-            <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt="" width={image.width} height={image.height} loading="lazy" />
+            // Not lazy because a lazy image isn't painted yet when the browser pictures the page, so the cards would flash blank as the page changes
+            <img src={image.url} srcSet={largeImage ? `${largeImage.url} 2x` : undefined} alt="" width={image.width} height={image.height} {...(morph && morphProps(morph.kind, morph.spotifyID))} />
           ) : (
             <span className={styles.missing} aria-hidden="true">
               {title.trim().charAt(0)}

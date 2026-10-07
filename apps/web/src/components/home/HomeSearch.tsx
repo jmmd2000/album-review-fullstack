@@ -5,6 +5,7 @@ import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { morphProps } from "@/lib/coverMorph";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ScoreChip } from "@/components/ui/ScoreChip";
 import styles from "./HomeSearch.module.css";
@@ -83,7 +84,11 @@ export function HomeSearch({ albumCount, artistCount }: HomeSearchProps) {
 
                   return (
                     <Autocomplete.Item key={`${result.type}-${result.spotifyID}`} value={result} className={styles.item} render={<Link {...link} />}>
-                      {thumbnail ? <img className={thumbnailClass} src={thumbnail.url} alt="" width={44} height={44} /> : <span className={thumbnailClass} />}
+                      {thumbnail ? (
+                        <img className={thumbnailClass} src={thumbnail.url} alt="" width={44} height={44} {...morphProps(result.type, result.spotifyID, false)} />
+                      ) : (
+                        <span className={thumbnailClass} />
+                      )}
                       <span className={styles.text}>
                         <span className={styles.name}>{result.name}</span>
                         <span className={styles.subtitle}>{result.type === "album" ? `${result.artistName} · ${result.releaseYear}` : `Artist · ${plural(result.albumCount, "album")}`}</span>
