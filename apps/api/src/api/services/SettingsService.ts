@@ -1,5 +1,6 @@
 import { SettingsModel } from "@/api/models/Settings";
 import { AppError } from "@/api/AppError";
+import { artistJobResultSchema, type ArtistJobResult } from "@/api/schemas/artistJobResultSchema";
 
 const REFRESH_INTERVAL_KEY = "artist_refresh_interval_days";
 const DEFAULT_REFRESH_INTERVAL_DAYS = 7;
@@ -40,6 +41,32 @@ export class SettingsService {
     }
 
     return lastRuns;
+  }
+
+  static async setJobResult(job: "images" | "headers", result: ArtistJobResult): Promise<void> {
+    await this.set(`artist_${job}_last_result`, JSON.stringify(result));
+  }
+
+  /** Gets how each artist job's latest run went. A job that never ran, or a stored value the app can't read, gives null. */
+  static async getJobResults(): Promise<Record<"images" | "headers", ArtistJobResult | null>> {
+    return {
+      images: await this.getJobResult("images"),
+      headers: await this.getJobResult("headers"),
+    };
+  }
+
+  private static async getJobResult(job: "images" | "headers"): Promise<ArtistJobResult | null> {
+    // Drizzle parses a jsonb string again when the string holds JSON, so the value can arrive as an object
+    let stored: unknown = await this.get(`artist_${job}_last_result`);
+    if (typeof stored === "string") {
+      try {
+        stored = JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    const result = artistJobResultSchema.safeParse(stored);
+    return result.success ? result.data : null;
   }
 
   static async setLastRun(type: "images" | "headers" | "scores", date: Date = new Date()): Promise<void> {

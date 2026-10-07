@@ -20,6 +20,9 @@ const settings = new Hono()
   .get("/last-runs", async c => {
     return c.json(await SettingsService.getAllLastRuns(), 200);
   })
+  .get("/job-results", async c => {
+    return c.json(await SettingsService.getJobResults(), 200);
+  })
   .get("/last-runs/:type", validate("param", lastRunTypeSchema), async c => {
     const lastRun = await SettingsService.getLastRun(c.req.valid("param").type);
     return c.json({ lastRun }, 200);

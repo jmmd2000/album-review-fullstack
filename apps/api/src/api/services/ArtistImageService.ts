@@ -5,6 +5,7 @@ import type { JobEmit } from "@/api/services/JobService";
 import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseSpotifyImageURL";
 import { SettingsService } from "./SettingsService";
 import { AppError } from "@/api/AppError";
+import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
 
 export type ArtistImageJob = "images" | "headers";
 
@@ -20,24 +21,40 @@ export class ArtistImageService {
   /**
    * Gets each artist's header from their Spotify page and saves the ones that changed.
    * Only one run goes at a time. A second run throws a 409 AppError.
+   * When the run ends, it saves how the run went, also when it stops early.
    */
-  static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
-    return this.runAlone("headers", () => this.refreshHeaders(all, spotifyID, emit));
+  static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit, source: ArtistJobSource): Promise<void> {
+    return this.runAlone("headers", source, emit, countingEmit => this.refreshHeaders(all, spotifyID, countingEmit));
   }
 
   /**
    * Gets each artist's photos from Spotify and saves the ones that changed.
    * Only one run goes at a time. A second run throws a 409 AppError.
+   * When the run ends, it saves how the run went, also when it stops early.
    */
-  static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
-    return this.runAlone("images", () => this.refreshImages(all, spotifyID, emit));
+  static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit, source: ArtistJobSource): Promise<void> {
+    return this.runAlone("images", source, emit, countingEmit => this.refreshImages(all, spotifyID, countingEmit));
   }
 
-  private static async runAlone(job: ArtistImageJob, run: () => Promise<void>): Promise<void> {
+  private static async runAlone(job: ArtistImageJob, source: ArtistJobSource, emit: JobEmit, run: (countingEmit: JobEmit) => Promise<void>): Promise<void> {
     if (runningJobs.has(job)) throw new AppError("This job is already running.", 409);
     runningJobs.add(job);
+
+    const counts = { updated: 0, unchanged: 0, failed: 0 };
+    const countingEmit: JobEmit = (event, data) => {
+      if (event === "changed") counts.updated++;
+      if (event === "same") counts.unchanged++;
+      if (event === "failed") counts.failed++;
+      emit(event, data);
+    };
+    const saveResult = (stoppedEarly: boolean) => SettingsService.setJobResult(job, { source, finishedAt: new Date().toISOString(), ...counts, stoppedEarly });
+
     try {
-      await run();
+      await run(countingEmit);
+      await saveResult(false);
+    } catch (error) {
+      await saveResult(true);
+      throw error;
     } finally {
       runningJobs.delete(job);
     }
@@ -132,20 +149,19 @@ export class ArtistImageService {
               headerImage: current ?? undefined,
             });
           } else {
-            emit("changed", {
-              index: processedCount,
-              total,
-              spotifyID: id,
-              artistName: name,
-              artistImage,
-              headerImage: current ?? undefined,
-              newHeaderImage: newHeaderImage,
-            });
-
             try {
               await ArtistModel.updateArtist(id, {
                 headerImage: newHeaderImage,
                 imageUpdatedAt: new Date(),
+              });
+              emit("changed", {
+                index: processedCount,
+                total,
+                spotifyID: id,
+                artistName: name,
+                artistImage,
+                headerImage: current ?? undefined,
+                newHeaderImage: newHeaderImage,
               });
             } catch (err) {
               console.error(`Header update failed for ${id}:`, err);
@@ -204,7 +220,17 @@ export class ArtistImageService {
       });
 
       const artistData = await fetchArtistFromSpotify(id);
-      if (!artistData) continue;
+      if (!artistData) {
+        emit("failed", {
+          index: i + 1,
+          total,
+          spotifyID: id,
+          artistName: name,
+          artistImage: currentArtistImage,
+          message: "Spotify didn't send this artist, or sent a reply the app can't read.",
+        });
+        continue;
+      }
 
       const newArtistImage = artistData.images.length > 0 ? artistData.images[0].url : undefined;
 
@@ -223,19 +249,18 @@ export class ArtistImageService {
         });
         continue;
       } else {
-        emit("changed", {
-          index: i + 1,
-          total,
-          spotifyID: id,
-          artistName: name,
-          artistImage: currentArtistImage,
-          newArtistImage: newArtistImage,
-        });
-
         try {
           await ArtistModel.updateArtist(id, {
             imageURLs: artistData.images,
             imageUpdatedAt: new Date(),
+          });
+          emit("changed", {
+            index: i + 1,
+            total,
+            spotifyID: id,
+            artistName: name,
+            artistImage: currentArtistImage,
+            newArtistImage: newArtistImage,
           });
         } catch (err) {
           console.error(`Image update failed for ${id}:`, err);

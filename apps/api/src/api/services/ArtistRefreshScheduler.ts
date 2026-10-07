@@ -34,8 +34,8 @@ async function runIfDue(job: ArtistImageJob, intervalDays: number, now: Date): P
 
   logger.info({ job }, "Scheduled artist refresh started");
   try {
-    if (job === "images") await ArtistImageService.updateArtistImages(true, undefined, logFailures);
-    else await ArtistImageService.updateArtistHeaders(true, undefined, logFailures);
+    if (job === "images") await ArtistImageService.updateArtistImages(true, undefined, logFailures, "scheduled");
+    else await ArtistImageService.updateArtistHeaders(true, undefined, logFailures, "scheduled");
     logger.info({ job }, "Scheduled artist refresh finished");
   } catch (error) {
     logger.error({ job, error }, "Scheduled artist refresh stopped early");

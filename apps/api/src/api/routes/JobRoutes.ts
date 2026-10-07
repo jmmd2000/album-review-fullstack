@@ -11,12 +11,12 @@ const job = new Hono()
   .use(requireAdmin)
   .post("/artist-headers", c => {
     if (ArtistImageService.isRunning("headers")) return c.json({ message: "The artist headers are already updating. Try again when that run finishes." }, 409);
-    const jobID = JobService.create(emit => ArtistImageService.updateArtistHeaders(true, undefined, emit));
+    const jobID = JobService.create(emit => ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual"));
     return c.json({ jobID }, 202);
   })
   .post("/artist-images", c => {
     if (ArtistImageService.isRunning("images")) return c.json({ message: "The artist photos are already updating. Try again when that run finishes." }, 409);
-    const jobID = JobService.create(emit => ArtistImageService.updateArtistImages(true, undefined, emit));
+    const jobID = JobService.create(emit => ArtistImageService.updateArtistImages(true, undefined, emit, "manual"));
     return c.json({ jobID }, 202);
   })
   .get("/:id/events", validate("param", jobParamSchema, 404), c => {
