@@ -8,8 +8,7 @@ const RATING_PATTERN = [8, 7, 9, 6, 10, 7, 8, 5, 9, 6];
 
 export const ratingFor = (trackIndex: number, offset: number): number => RATING_PATTERN[(trackIndex + offset) % RATING_PATTERN.length];
 
-export const REVIEW_CONTENT =
-  "Seeded review. The scores here are deterministic fixtures, the same numbers come out every run so the e2e tests can assert against them.";
+export const REVIEW_CONTENT = "Seeded review. The scores here are deterministic fixtures, the same numbers come out every run so the e2e tests can assert against them.";
 
 /** How one captured album should be reviewed by the seeder. */
 export interface ReviewFixture {

@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+.mypy_cache/
+apps/web/src/routeTree.gen.ts
+apps/api/drizzle/meta/
+apps/api/src/db/fixtures/albums.ts
