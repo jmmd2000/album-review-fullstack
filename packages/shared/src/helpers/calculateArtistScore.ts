@@ -55,7 +55,7 @@ export function calculateArtistScore(releases: ScoredRelease[]): { totalScore: n
 
   const totalWeight = weighted.reduce((sum, { weight }) => sum + weight, 0);
   const weightedMean = weighted.reduce((sum, { release, weight }) => sum + release.finalScore * weight, 0) / totalWeight;
-  const best = weighted[0]!.release;
+  const best = weighted[0].release;
   const latest = weighted
     .map(({ release }) => release)
     .sort(compareNewestFirst)

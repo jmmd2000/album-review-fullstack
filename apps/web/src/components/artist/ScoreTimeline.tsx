@@ -33,7 +33,7 @@ export function ScoreTimeline({ albums }: ScoreTimelineProps) {
         </svg>
         <ol className={styles.points}>
           {albums.map((album, index) => {
-            const point = points[index]!;
+            const point = points[index];
             const score = Math.ceil(album.finalScore);
             const cover = album.imageURLs[1] ?? album.imageURLs[0];
             const style = { left: `${point.x}%`, bottom: `${point.y}%`, "--tier": tierColourVar(scoreTier(score)) } as CSSProperties;
@@ -51,8 +51,8 @@ export function ScoreTimeline({ albums }: ScoreTimelineProps) {
         </ol>
         <div aria-hidden="true">
           {albums.map((album, index) =>
-            points[index]!.showYear ? (
-              <span key={album.spotifyID} className={styles.year} style={{ left: `${points[index]!.x}%` }}>
+            points[index].showYear ? (
+              <span key={album.spotifyID} className={styles.year} style={{ left: `${points[index].x}%` }}>
                 {album.releaseYear}
               </span>
             ) : null

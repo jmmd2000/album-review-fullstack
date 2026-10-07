@@ -15,7 +15,7 @@ const login = (password: string) =>
 
 describe("Auth (JWT + bcrypt)", () => {
   test("login succeeds with the valid password and sets an httpOnly cookie", async () => {
-    const res = await login(process.env.ADMIN_PASSWORD!);
+    const res = await login(process.env.ADMIN_PASSWORD ?? "");
     expect(res.status).toBe(204);
     const setCookie = res.headers.get("set-cookie");
     expect(setCookie).toContain("token=");
@@ -31,7 +31,7 @@ describe("Auth (JWT + bcrypt)", () => {
   });
 
   test("status is true with a valid token", async () => {
-    const cookie = (await login(process.env.ADMIN_PASSWORD!)).headers.get("set-cookie")!.split(";")[0];
+    const cookie = (await login(process.env.ADMIN_PASSWORD ?? "")).headers.get("set-cookie")?.split(";")[0] ?? "";
     const res = await app.request("/api/auth/status", { headers: { Cookie: cookie } });
     expect(await res.json()).toEqual({ isAdmin: true });
   });

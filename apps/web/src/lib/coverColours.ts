@@ -84,7 +84,7 @@ export function coverColourStyle(colours: ExtractedColor[]): CSSProperties {
   const properties = themes.flatMap(theme => {
     const usable = usableCoverColours(colours, theme).slice(0, MAXIMUM_COVER_COLOURS);
     // A single colour fills the second pool too, so the backdrop isn't lopsided
-    if (usable.length === 1) usable.push(usable[0]!);
+    if (usable.length === 1) usable.push(usable[0]);
     return usable.map((hex, index) => [`--cover-${theme}-${index + 1}`, hex]);
   });
   return Object.fromEntries(properties);

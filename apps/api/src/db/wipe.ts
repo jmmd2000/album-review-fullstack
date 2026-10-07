@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "@/config/loadEnvironment";
 import { resolveDatabaseURL } from "@/config/database";
 import { query, closeDatabase } from "@/db/client";
 import { assertSafeToWipe } from "@/db/databaseSafety";
@@ -12,4 +12,7 @@ const wipe = async () => {
   await closeDatabase();
 };
 
-wipe();
+wipe().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

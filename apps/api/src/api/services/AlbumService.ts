@@ -1,4 +1,3 @@
-import "dotenv/config";
 import type { DisplayAlbum, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre, LinkedAlbum } from "@shared/types";
 import { findLinkedAlbumIDs } from "@shared/helpers/parseReviewContent";
 import { AlbumModel } from "@/api/models/Album";

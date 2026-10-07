@@ -55,7 +55,7 @@ function SearchPage() {
   return (
     <>
       <PageHeader title="Review an album">
-        <SearchForm label="Search Spotify albums" defaultValue={query} onSearch={value => navigate({ search: { query: value } })} />
+        <SearchForm label="Search Spotify albums" defaultValue={query} onSearch={value => void navigate({ search: { query: value } })} />
       </PageHeader>
       {query ? (
         <SearchResults query={query} />

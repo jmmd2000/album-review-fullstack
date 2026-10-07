@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "@/config/loadEnvironment";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import type { DisplayTrack } from "@shared/types";
 import { resolveDatabaseURL } from "@/config/database";
@@ -115,7 +115,7 @@ const seed = async () => {
             spotifyID: track.spotifyID,
             duration: track.duration,
             features: track.features,
-            rating: track.rating!,
+            rating: track.rating ?? 0,
             pick: track.spotifyID === bestTrackID ? "best" : track.spotifyID === worstTrackID ? "worst" : null,
           },
           tx
@@ -154,4 +154,7 @@ const seed = async () => {
   await closeDatabase();
 };
 
-seed();
+seed().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

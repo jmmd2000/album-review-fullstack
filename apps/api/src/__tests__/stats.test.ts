@@ -79,8 +79,8 @@ test("each album carries its genre slugs and all its artists", async () => {
   ]);
 
   const [album] = (await StatsService.getOverview()).albums;
-  expect(album!.genres.sort()).toEqual(["pop", "rock"]);
-  expect(album!.artistSpotifyIDs.sort()).toEqual(["artist1", "artist2"]);
+  expect(album.genres.sort()).toEqual(["pop", "rock"]);
+  expect(album.artistSpotifyIDs.sort()).toEqual(["artist1", "artist2"]);
 });
 
 test("the overview sends only rated artists, but counts every artist", async () => {

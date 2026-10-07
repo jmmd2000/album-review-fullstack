@@ -71,7 +71,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
   return (
     <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(values.colours)}>
       <AlbumBackdrop until={headRef} />
-      <form className={styles.split} onSubmit={handleSubmit}>
+      <form className={styles.split} onSubmit={event => void handleSubmit(event)}>
         <div className={styles.aside}>
           {cover && <img className={styles.cover} src={cover.url} alt={`${albumName} cover`} width={cover.width} height={cover.height} {...morphProps("album", albumID)} />}
           <LiveScore tracks={values.tracks} bonus={values.bonus} ratedCount={ratedCount} />

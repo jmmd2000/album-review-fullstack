@@ -3,6 +3,7 @@ import path from "path";
 
 export default defineConfig({
   test: {
+    expect: { requireAssertions: true },
     environment: "node",
     testTimeout: 30000,
     include: ["src/__tests__/**/*.test.ts"],

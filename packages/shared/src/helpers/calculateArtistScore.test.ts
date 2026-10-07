@@ -16,16 +16,16 @@ describe("weighReleases", () => {
     const weighted = weighReleases([release("c", 70, 10, "2022-01-01"), release("a", 90, 10, "2020-01-01"), release("b", 80, 10, "2021-01-01")]);
 
     expect(weighted.map(({ release }) => release.spotifyID)).toEqual(["a", "b", "c"]);
-    expect(weighted[0]!.weight).toBe(10);
-    expect(weighted[1]!.weight).toBeCloseTo(6);
-    expect(weighted[2]!.weight).toBeCloseTo(3.6);
+    expect(weighted[0].weight).toBe(10);
+    expect(weighted[1].weight).toBeCloseTo(6);
+    expect(weighted[2].weight).toBeCloseTo(3.6);
   });
 
   it("gives a release with more rated tracks more weight", () => {
     const [album, ep] = weighReleases([release("album", 80, 12, "2020-01-01"), release("ep", 79, 4, "2021-01-01")]);
 
-    expect(album!.weight).toBe(12);
-    expect(ep!.weight).toBeCloseTo(2.4);
+    expect(album.weight).toBe(12);
+    expect(ep.weight).toBeCloseTo(2.4);
   });
 
   it("orders equal scores by rated tracks, whatever the input order", () => {

@@ -145,7 +145,7 @@ function RouteComponent() {
           value={orderBy}
           direction={order}
           onSortChange={(value, direction) => {
-            navigate({
+            void navigate({
               search: prev => ({
                 ...prev,
                 orderBy: value as typeof orderBy,
@@ -155,7 +155,7 @@ function RouteComponent() {
             });
           }}
         />
-        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
+        {isGroupedSort(orderBy) && <Checkbox label="Groups" checked={showTiles} onChange={checked => void navigate({ search: prev => ({ ...prev, groups: checked ? "on" : "off" }) })} />}
       </PageHeader>
       {data.artists.length === 0 ? (
         <PageState title="No artists found" detail="Try a different search." />

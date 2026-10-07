@@ -10,13 +10,20 @@ const collect = async (stream: AsyncGenerator<JobEvent>): Promise<JobEvent[]> =>
   return events;
 };
 
+/** The job with this ID, which the test has just created */
+function jobFor(id: string) {
+  const job = JobService.get(id);
+  if (!job) throw new Error(`No job with ID ${id}`);
+  return job;
+}
+
 test("replays buffered events then ends with a done event", async () => {
   const id = JobService.create(async emit => {
     emit("progress", progress(1));
     emit("progress", progress(2));
   });
 
-  const events = await collect(JobService.get(id)!.stream(-1));
+  const events = await collect(jobFor(id).stream(-1));
 
   expect(events.map(e => e.event)).toEqual(["progress", "progress", "done"]);
   expect(events.map(e => e.id)).toEqual([0, 1, 2]);
@@ -28,7 +35,7 @@ test("resumes after a given event id, so a reconnect gets no duplicates", async 
     emit("progress", progress(2));
   });
 
-  const events = await collect(JobService.get(id)!.stream(0));
+  const events = await collect(jobFor(id).stream(0));
 
   // id 0 already seen, so only the second progress (id 1) and done (id 2) arrive
   expect(events.map(e => e.id)).toEqual([1, 2]);
@@ -39,7 +46,7 @@ test("surfaces a thrown runner error as a final fatal event", async () => {
     throw new Error("boom");
   });
 
-  const events = await collect(JobService.get(id)!.stream(-1));
+  const events = await collect(jobFor(id).stream(-1));
 
   expect(events.map(e => e.event)).toEqual(["fatal", "done"]);
   expect((events[0].data as { message: string }).message).toBe("boom");

@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { bookmarkedAlbums } from "@/db/schema";

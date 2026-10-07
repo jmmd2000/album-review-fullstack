@@ -91,7 +91,7 @@ function Bookmarks() {
           value={options.orderBy}
           direction={options.order}
           onSortChange={(value, direction) => {
-            navigate({
+            void navigate({
               search: prev => ({
                 ...prev,
                 orderBy: value as typeof options.orderBy,

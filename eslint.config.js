@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import prettier from "eslint-config-prettier";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
@@ -7,7 +8,8 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // Global ignores
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "apps/web/src/routeTree.gen.ts"],
+    // docs/ is gitignored and holds local notes and design handoffs
+    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "apps/web/src/routeTree.gen.ts", "docs/**"],
   },
 
   // Base TS rules
@@ -30,6 +32,30 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/ban-ts-comment": "warn",
       "@typescript-eslint/no-extra-non-null-assertion": "off",
+    },
+  },
+
+  // Type-aware rules, with each file checked against its own package's tsconfig
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          // The web vitest config sits outside the web tsconfigs
+          allowDefaultProject: ["apps/web/vitest.config.ts"],
+        },
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // A forgotten await fails silently: the error is lost and the request carries on.
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+      // A switch over a union must handle every member, so adding a new one flags every switch to update.
+      // A switch with a default case already handles a new member.
+      "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
+      "@typescript-eslint/no-non-null-assertion": "error",
+      eqeqeq: "error",
     },
   },
 
@@ -85,5 +111,8 @@ export default tseslint.config(
       globals: globals.node,
       parser: tseslint.parser,
     },
-  }
+  },
+
+  // Turns off the style rules Prettier already handles
+  prettier
 );

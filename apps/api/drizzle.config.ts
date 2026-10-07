@@ -1,5 +1,7 @@
+import path from "path";
 import * as dotenv from "dotenv";
-dotenv.config();
+// The one .env at the repo root. Production gets its env from compose, so there's no file to find there.
+dotenv.config({ path: path.resolve(__dirname, "../../.env"), quiet: true });
 
 import { defineConfig } from "drizzle-kit";
 // Relative import so drizzle-kit can load this config without a path-alias resolver

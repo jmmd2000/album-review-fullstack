@@ -5,8 +5,10 @@ interface RatingTier {
   range: [number, number];
 }
 
+const UNRATED_TIER: RatingTier = { label: "Unrated", range: [0, 0] };
+
 export const ratingTiers: RatingTier[] = [
-  { label: "Unrated", range: [0, 0] },
+  UNRATED_TIER,
   { label: "Terrible", range: [1, 10] },
   { label: "Awful", range: [11, 20] },
   { label: "Bad", range: [21, 30] },
@@ -20,7 +22,7 @@ export const ratingTiers: RatingTier[] = [
 ];
 
 export const getRatingStyles = (rating: number | string | undefined): RatingTier => {
-  if (rating === undefined) return ratingTiers.find(t => t.label === "Unrated")!;
+  if (rating === undefined) return UNRATED_TIER;
 
   if (typeof rating === "string") {
     const tier = ratingTiers.find(t => t.label.toLowerCase() === rating.toLowerCase());

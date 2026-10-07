@@ -24,7 +24,7 @@ export function splitFeatures(trackName: string, features: Feature[], leaveOut?:
   const credit = trackName.match(BRACKETED_CREDIT) ?? trackName.match(TRAILING_CREDIT);
   const title = credit ? trackName.slice(0, credit.index) : trackName;
 
-  if (credit && features.length === 0) return { title, featuring: [credit[1]!] };
+  if (credit && features.length === 0) return { title, featuring: [credit[1]] };
 
   const featuring = extraFeatures(title, features)
     .map(feature => feature.name)

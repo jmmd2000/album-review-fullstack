@@ -14,13 +14,13 @@ export function formatDate(inputDate: string): string {
 
   // Year and month only, e.g. "2023-09" (release_date_precision "month") -> "September 2023"
   if (dateParts.length === 2) {
-    const parsedDate = new Date(year!, month! - 1, 1);
+    const parsedDate = new Date(year, month - 1, 1);
     if (isNaN(parsedDate.getTime())) return inputDate;
     return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long" }).format(parsedDate);
   }
 
   // Full date, e.g. "2023-09-22" -> "September 22nd, 2023"
-  const parsedDate = new Date(year!, month! - 1, day);
+  const parsedDate = new Date(year, month - 1, day);
   if (isNaN(parsedDate.getTime())) return inputDate;
 
   const formatter = new Intl.DateTimeFormat("en-US", {

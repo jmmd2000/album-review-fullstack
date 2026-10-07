@@ -74,19 +74,22 @@ function AlbumSearch({ initialText, onPick }: AlbumSearchProps) {
       />
       {albums.length > 0 && (
         <ul className={styles.results}>
-          {albums.map(album => (
-            <li key={album.spotifyID}>
-              <button type="button" className={styles.result} onClick={() => onPick(album)}>
-                {album.imageURLs.at(-1) ? <img src={album.imageURLs.at(-1)!.url} alt="" width={36} height={36} /> : <span />}
-                <span className={styles.resultText}>
-                  <b>{album.name}</b>
-                  <span>
-                    {album.artistName}, {album.releaseYear}
+          {albums.map(album => {
+            const thumbnail = album.imageURLs.at(-1);
+            return (
+              <li key={album.spotifyID}>
+                <button type="button" className={styles.result} onClick={() => onPick(album)}>
+                  {thumbnail ? <img src={thumbnail.url} alt="" width={36} height={36} /> : <span />}
+                  <span className={styles.resultText}>
+                    <b>{album.name}</b>
+                    <span>
+                      {album.artistName}, {album.releaseYear}
+                    </span>
                   </span>
-                </span>
-              </button>
-            </li>
-          ))}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
       {results.isSuccess && search === text.trim() && albums.length === 0 && text.trim() !== "" && <p className={styles.status}>No reviewed album matches that.</p>}

@@ -2,8 +2,8 @@ packages:
   - "apps/api"
   - "apps/web"
   - "packages/shared"
+saveExact: true
+engineStrict: true
 minimumReleaseAge: 0
 allowBuilds:
-  cypress: true
   esbuild: true
-  puppeteer: true

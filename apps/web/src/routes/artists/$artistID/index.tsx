@@ -65,7 +65,7 @@ function RouteComponent() {
   const { data } = useSuspenseQuery(artistQueryOptions(artistID));
   const { artist, albums, featuredAlbums, tracks, rankedArtistCount } = data;
   const { isAdmin } = useAuth();
-  const ratedTrackCount = tracks.filter(track => track.rating != null && track.rating > 0).length;
+  const ratedTrackCount = tracks.filter(track => (track.rating ?? 0) > 0).length;
   const albumsOldestFirst = [...albums].reverse();
 
   return (

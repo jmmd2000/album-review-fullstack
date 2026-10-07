@@ -12,6 +12,7 @@ export default defineConfig({
     __VITE_VERSION__: JSON.stringify("6.0.0-test"),
   },
   test: {
+    expect: { requireAssertions: true },
     globals: true,
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],

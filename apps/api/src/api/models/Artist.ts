@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { desc, eq, ilike, asc, count, inArray } from "drizzle-orm";
 import { reviewedArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";

@@ -1,6 +1,6 @@
 import { writeFileSync } from "fs";
 import path from "path";
-import "dotenv/config";
+import "@/config/loadEnvironment";
 import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
@@ -70,4 +70,7 @@ const capture = async () => {
   console.log(`Wrote ${albums.length} albums to albums.ts`);
 };
 
-capture();
+capture().catch(error => {
+  console.error(error);
+  process.exit(1);
+});

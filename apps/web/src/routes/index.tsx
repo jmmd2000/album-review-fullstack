@@ -59,7 +59,7 @@ function Index() {
 
   const shuffle = () => {
     const album = data.albums[Math.floor(Math.random() * data.albums.length)];
-    if (album) navigate({ to: "/albums/$albumID", params: { albumID: album.spotifyID } });
+    if (album) void navigate({ to: "/albums/$albumID", params: { albumID: album.spotifyID } });
   };
 
   const tintStyle = tintColour ? ({ "--tint": tintColour } as CSSProperties) : undefined;

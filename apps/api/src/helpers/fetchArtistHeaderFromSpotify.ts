@@ -113,9 +113,9 @@ export async function fetchArtistHeadersFromSpotify(
 
           // Block fonts and some scripts, but allow images and main resources
           if (["font"].includes(resourceType) || url.includes("google-analytics") || url.includes("googletagmanager")) {
-            req.abort();
+            void req.abort();
           } else {
-            req.continue();
+            void req.continue();
           }
         });
 

@@ -96,7 +96,13 @@ function EditReview() {
       initialValues={initialValues}
       genreSuggestions={(data.allGenres ?? []).map(genre => genre.name)}
       onSave={values => save.mutateAsync(values)}
-      onCancel={() => (canGoBack ? router.history.back() : navigate({ to: "/albums/$albumID", params: { albumID } }))}
+      onCancel={() => {
+        if (canGoBack) {
+          router.history.back();
+          return;
+        }
+        void navigate({ to: "/albums/$albumID", params: { albumID } });
+      }}
     />
   );
 }
