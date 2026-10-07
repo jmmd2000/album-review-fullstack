@@ -9,7 +9,7 @@ import type { CSSProperties } from "react";
 import type { TierLabel } from "@shared/helpers/ratingTiers";
 import type { StatsAlbum } from "@shared/types";
 
-const TOOLTIP_WIDTH = 260;
+const TOOLTIP_WIDTH = 300;
 
 /** Terrible to Perfect, one tenth of the chart each */
 const scoredTiers = ratingTiers.filter(tier => tier.label !== "Unrated");

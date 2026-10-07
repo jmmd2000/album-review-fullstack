@@ -96,7 +96,7 @@
   grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
-  width: 260px;
+  width: 300px;
   padding: 10px;
   border-radius: 12px;
   background: var(--colour-panel-strong);
@@ -117,6 +117,13 @@
   gap: 2px;
   align-self: center;
   min-width: 0;
+
+  /* One line each, so a long name doesn't make the card taller and move it */
+  & > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   & b {
     font-weight: var(--font-weight-label);
