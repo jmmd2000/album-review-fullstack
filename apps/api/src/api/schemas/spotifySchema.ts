@@ -52,6 +52,7 @@ export const artistResponseSchema = z.object({
   images: z.array(imageSchema),
 });
 
+export type SpotifyAlbumSummary = z.infer<typeof albumSummarySchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;

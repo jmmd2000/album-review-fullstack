@@ -1,5 +1,5 @@
 import "dotenv/config";
-import type { DisplayAlbum, SpotifyImage, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
+import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { AppError } from "@/api/AppError";
 import { PAGE_SIZE } from "@shared/constants";
@@ -15,7 +15,7 @@ export class BookmarkedAlbumService {
       artistSpotifyID: album.artistSpotifyID,
       artistName: album.artistName,
       releaseYear: album.releaseYear,
-      imageURLs: album.imageURLs as SpotifyImage[],
+      imageURLs: album.imageURLs,
     });
   }
 

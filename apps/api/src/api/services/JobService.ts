@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { JobEventMap } from "@shared/types";
 
 export type JobEvent = {
   /** Counts up from 0. It is also the SSE event id, so a client that reconnects can resume. */
@@ -7,8 +8,8 @@ export type JobEvent = {
   data?: unknown;
 };
 
-/** Reports progress from inside a running job */
-export type JobEmit = (event: string, data?: unknown) => void;
+/** Reports progress from inside a running job. Each event name takes the payload JobEventMap gives it. */
+export type JobEmit = <Event extends keyof JobEventMap>(event: Event, data: JobEventMap[Event]) => void;
 
 type JobRunner = (emit: JobEmit) => Promise<void>;
 
@@ -23,14 +24,14 @@ class Job {
   private waiters: (() => void)[] = [];
 
   /** Adds an event and wakes the streams that wait for one. */
-  push(event: string, data?: unknown): void {
+  push<Event extends keyof JobEventMap>(event: Event, data: JobEventMap[Event]): void {
     this.events.push({ id: this.nextID++, event, data });
     this.wake();
   }
 
   /** Adds the final "done" event and marks the job finished. */
   finish(): void {
-    this.push("done");
+    this.push("done", null);
     this.done = true;
     this.wake();
   }

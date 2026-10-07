@@ -1,5 +1,11 @@
 import { createContext } from "react";
-import type { AuthContextType } from "@shared/types";
+
+export interface AuthContextType {
+  isAdmin: boolean;
+  isPending: boolean;
+  login: (password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
 
 /**
  * Context to provide auth status & login/logout functions.
