@@ -81,30 +81,18 @@ export class ReviewService {
         tx
       );
 
-      // Sequential, not Promise.all: these share the transaction's single connection.
-      const genreIDs: number[] = [];
-      for (const name of data.genres) {
-        genreIDs.push(await GenreService.findOrCreateGenre(name, tx));
-      }
+      const genreIDs = await ReviewService.findOrCreateGenreIDs(data.genres, tx);
 
       // Link new genres & bump related strengths
       await GenreModel.linkGenresToAlbum(album.spotifyID, genreIDs, tx);
       await GenreModel.incrementRelatedStrength(genreIDs, tx);
 
-      await AlbumModel.upsertAlbumArtists(
-        album.spotifyID,
-        selectedArtistIDs.map(artistSpotifyID => ({
-          artistSpotifyID,
-          affectsScore: scoreArtistIDs.includes(artistSpotifyID),
-        })),
-        tx
-      );
+      await ReviewService.saveAlbumArtistLinks(album.spotifyID, selectedArtistIDs, scoreArtistIDs, tx);
 
-      // create track entries
-      const trackArtistIDs = Array.from(new Set(spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id))));
-      const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
-      const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
-      selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
+      const linkableArtistIDs = await ReviewService.findLinkableArtistIDs(
+        spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id)),
+        selectedArtistIDs
+      );
 
       for (const track of data.ratedTracks) {
         const t = spotifyAlbum.tracks.items.find(i => i.id === track.spotifyID);
@@ -123,7 +111,7 @@ export class ReviewService {
           },
           tx
         );
-        const linkArtistIDs = t.artists.map(a => a.id).filter(id => existingArtistIDs.has(id));
+        const linkArtistIDs = t.artists.map(a => a.id).filter(id => linkableArtistIDs.has(id));
         await TrackModel.linkArtistsToTrack(t.id, linkArtistIDs, tx);
       }
 
@@ -208,20 +196,13 @@ export class ReviewService {
         tx
       );
 
-      await AlbumModel.upsertAlbumArtists(
-        albumID,
-        selectedArtistIDs.map(artistSpotifyID => ({
-          artistSpotifyID,
-          affectsScore: scoreArtistIDs.includes(artistSpotifyID),
-        })),
-        tx
-      );
+      await ReviewService.saveAlbumArtistLinks(albumID, selectedArtistIDs, scoreArtistIDs, tx);
       await AlbumModel.unlinkArtistsFromAlbum(albumID, removedArtistIDs, tx);
 
-      const trackArtistIDs = Array.from(new Set(data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)])));
-      const existingTrackArtists = await ArtistModel.getArtistsBySpotifyIDs(trackArtistIDs);
-      const existingArtistIDs = new Set(existingTrackArtists.map(a => a.spotifyID));
-      selectedArtistIDs.forEach(id => existingArtistIDs.add(id));
+      const linkableArtistIDs = await ReviewService.findLinkableArtistIDs(
+        data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)]),
+        selectedArtistIDs
+      );
 
       for (const newTrack of data.ratedTracks) {
         const oldTrack = existingTracks.find(t => t.spotifyID === newTrack.spotifyID);
@@ -256,17 +237,13 @@ export class ReviewService {
         if (oldTrack && JSON.stringify(oldTrack.features ?? []) !== JSON.stringify(newTrack.features ?? [])) {
           await TrackModel.updateTrackFeatures(newTrack.spotifyID, newTrack.features, tx);
         }
-        const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id => existingArtistIDs.has(id));
+        const linkArtistIDs = [newTrack.artistSpotifyID, ...newTrack.features.map(f => f.id)].filter(id => linkableArtistIDs.has(id));
         await TrackModel.unlinkArtistsFromTrack(newTrack.spotifyID, tx);
         await TrackModel.linkArtistsToTrack(newTrack.spotifyID, linkArtistIDs, tx);
       }
 
-      // Get new vs old genre IDs (sequential: shared transaction connection)
       const oldIDs = await GenreModel.getGenreIDsForAlbum(albumID);
-      const newIDs: number[] = [];
-      for (const name of data.genres) {
-        newIDs.push(await GenreService.findOrCreateGenre(name, tx));
-      }
+      const newIDs = await ReviewService.findOrCreateGenreIDs(data.genres, tx);
       const toAdd = newIDs.filter(nid => !oldIDs.includes(nid));
       const toRemove = oldIDs.filter(oid => !newIDs.includes(oid));
 
@@ -283,6 +260,34 @@ export class ReviewService {
     });
 
     return AlbumModel.findBySpotifyID(albumID);
+  }
+
+  /** Turns genre names into genre IDs, and creates any genre that doesn't exist yet. */
+  private static async findOrCreateGenreIDs(names: string[], executor: Executor) {
+    // One at a time, not Promise.all: the queries share the transaction's single connection
+    const genreIDs: number[] = [];
+    for (const name of names) {
+      genreIDs.push(await GenreService.findOrCreateGenre(name, executor));
+    }
+    return genreIDs;
+  }
+
+  /** Saves which artists the album is credited to, and which of them it counts towards. */
+  private static async saveAlbumArtistLinks(albumSpotifyID: string, selectedArtistIDs: string[], scoreArtistIDs: string[], executor: Executor) {
+    await AlbumModel.upsertAlbumArtists(
+      albumSpotifyID,
+      selectedArtistIDs.map(artistSpotifyID => ({
+        artistSpotifyID,
+        affectsScore: scoreArtistIDs.includes(artistSpotifyID),
+      })),
+      executor
+    );
+  }
+
+  /** Finds the artists a track can be linked to: the tracks' artists that are already saved, and the album's credited artists. */
+  private static async findLinkableArtistIDs(trackArtistIDs: string[], selectedArtistIDs: string[]) {
+    const savedArtists = await ArtistModel.getArtistsBySpotifyIDs([...new Set(trackArtistIDs)]);
+    return new Set([...savedArtists.map(artist => artist.spotifyID), ...selectedArtistIDs]);
   }
 
   private static resolveSelectedArtistIDs(selectedArtistIDs: string[] | undefined, albumArtists: AlbumArtist[]) {
