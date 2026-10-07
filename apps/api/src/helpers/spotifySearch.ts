@@ -1,4 +1,5 @@
-import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
+import type { DisplayAlbum } from "@shared/types";
+import type { SpotifyAlbumSearchResponse } from "@/api/schemas/spotifySchema";
 
 /**
  * Maps a raw Spotify album search payload into our DisplayAlbum shape. The score
@@ -7,7 +8,7 @@ import type { DisplayAlbum, SpotifyAlbum } from "@shared/types";
  * @param raw - The Spotify search response.
  * @returns One DisplayAlbum per search hit.
  */
-export function mapSearchResults(raw: { albums: { items: SpotifyAlbum[] } }): DisplayAlbum[] {
+export function mapSearchResults(raw: SpotifyAlbumSearchResponse): DisplayAlbum[] {
   return raw.albums.items.map(album => ({
     spotifyID: album.id,
     name: album.name,
