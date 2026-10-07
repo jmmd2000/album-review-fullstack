@@ -224,7 +224,7 @@ export const relatedGenres = pgTable(
 // KV store for settings
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
-  value: jsonb("value"),
+  value: jsonb("value").$type<string>(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

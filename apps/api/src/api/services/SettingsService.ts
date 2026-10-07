@@ -1,19 +1,13 @@
 import { SettingsModel } from "@/api/models/Settings";
 import { AppError } from "@/api/AppError";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SettingValue = string | number | boolean | Date | { [key: string]: any };
-
 export class SettingsService {
-  static async get<T = SettingValue>(key: string): Promise<T | null> {
+  static async get(key: string): Promise<string | null> {
     const result = await SettingsModel.findByKey(key);
-    return (result?.value as T) || null;
+    return result?.value ?? null;
   }
 
-  static async set(key: string, value: SettingValue): Promise<void> {
-    if (value === undefined) {
-      throw new AppError("Value is required", 400);
-    }
+  static async set(key: string, value: string): Promise<void> {
     await SettingsModel.upsert(key, value);
   }
 
@@ -22,7 +16,7 @@ export class SettingsService {
     if (type !== "images" && type !== "headers" && type !== "scores") {
       throw new AppError("Type must be 'images', 'headers', or 'scores'", 400);
     }
-    const result = await this.get<string>(`artist_${type}_last_run`);
+    const result = await this.get(`artist_${type}_last_run`);
     return result ? new Date(result) : null;
   }
 
@@ -31,7 +25,7 @@ export class SettingsService {
     const lastRuns: Record<string, Date | null> = {};
 
     for (const entry of results) {
-      lastRuns[entry.key] = entry.value ? new Date(entry.value as string) : null;
+      lastRuns[entry.key] = entry.value ? new Date(entry.value) : null;
     }
 
     return lastRuns;
