@@ -167,31 +167,31 @@ importers:
   .:
     devDependencies:
       '@eslint/js':
-        specifier: ^9.19.0
+        specifier: 9.39.2
         version: 9.39.2
       eslint:
-        specifier: ^9.19.0
+        specifier: 9.39.2
         version: 9.39.2(jiti@2.7.0)(supports-color@8.1.1)
       eslint-plugin-react-hooks:
-        specifier: ^5.0.0
+        specifier: 5.2.0
         version: 5.2.0(eslint@9.39.2(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-react-refresh:
-        specifier: ^0.4.18
+        specifier: 0.4.26
         version: 0.4.26(eslint@9.39.2(jiti@2.7.0)(supports-color@8.1.1))
       globals:
-        specifier: ^15.14.0
+        specifier: 15.15.0
         version: 15.15.0
       husky:
-        specifier: ^9.1.7
+        specifier: 9.1.7
         version: 9.1.7
       lint-staged:
-        specifier: ^17.2.0
+        specifier: 17.2.0
         version: 17.2.0
       prettier:
-        specifier: ^3.9.5
+        specifier: 3.9.5
         version: 3.9.5
       typescript-eslint:
-        specifier: ^8.22.0
+        specifier: 8.55.0
         version: 8.55.0(eslint@9.39.2(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.3)
 
   apps/api:
@@ -200,92 +200,92 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared
       '@hono/node-server':
-        specifier: ^2.0.11
+        specifier: 2.0.11
         version: 2.0.11(hono@4.12.31)
       '@hono/zod-validator':
-        specifier: ^0.9.0
+        specifier: 0.9.0
         version: 0.9.0(hono@4.12.31)(zod@4.4.3)
       bcryptjs:
-        specifier: ^3.0.3
+        specifier: 3.0.3
         version: 3.0.3
       dotenv:
-        specifier: ^16.4.7
+        specifier: 16.6.1
         version: 16.6.1
       drizzle-kit:
-        specifier: ^0.31.10
+        specifier: 0.31.10
         version: 0.31.10
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 0.45.2
         version: 0.45.2(@types/pg@8.20.0)(gel@2.2.0(supports-color@5.5.0))(pg@8.22.0)
       express-rate-limit:
         specifier: 8.6.0
         version: 8.6.0(express@4.22.1(supports-color@5.5.0))(supports-color@5.5.0)
       extract-colors:
-        specifier: ^4.1.1
+        specifier: 4.2.1
         version: 4.2.1
       get-pixels:
-        specifier: ^3.3.3
+        specifier: 3.3.3
         version: 3.3.3
       hono:
-        specifier: ^4.12.31
+        specifier: 4.12.31
         version: 4.12.31
       jsonwebtoken:
-        specifier: ^9.0.3
+        specifier: 9.0.3
         version: 9.0.3
       pg:
-        specifier: ^8.22.0
+        specifier: 8.22.0
         version: 8.22.0
       pino:
-        specifier: ^10.3.1
+        specifier: 10.3.1
         version: 10.3.1
       puppeteer-core:
-        specifier: ^24.6.1
+        specifier: 24.37.3
         version: 24.37.3(supports-color@5.5.0)
       slugify:
-        specifier: ^1.6.9
+        specifier: 1.6.9
         version: 1.6.9
       zod:
-        specifier: ^4.4.3
+        specifier: 4.4.3
         version: 4.4.3
     devDependencies:
       '@types/get-pixels':
-        specifier: ^3.3.4
+        specifier: 3.3.4
         version: 3.3.4
       '@types/jsonwebtoken':
-        specifier: ^9.0.10
+        specifier: 9.0.10
         version: 9.0.10
       '@types/node':
-        specifier: ^22.13.4
+        specifier: 22.19.11
         version: 22.19.11
       '@types/pg':
-        specifier: ^8.20.0
+        specifier: 8.20.0
         version: 8.20.0
       '@vitest/coverage-v8':
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(vitest@4.1.10)
       nodemon:
-        specifier: ^3.1.14
+        specifier: 3.1.14
         version: 3.1.14
       pino-pretty:
-        specifier: ^13.1.3
+        specifier: 13.1.3
         version: 13.1.3
       prettier:
-        specifier: ^3.9.5
+        specifier: 3.9.5
         version: 3.9.5
       ts-node:
-        specifier: ^10.9.2
+        specifier: 10.9.2
         version: 10.9.2(@types/node@22.19.11)(typescript@6.0.3)
       tsup:
-        specifier: ^8.4.0
+        specifier: 8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.22)(supports-color@5.5.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)
       tsx:
-        specifier: ^4.23.1
+        specifier: 4.23.1
         version: 4.23.1
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vitest:
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(@types/node@22.19.11)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@28.1.0(@noble/hashes@1.8.0)(supports-color@5.5.0))(vite@8.1.5(@types/node@22.19.11)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
 
   apps/web:
@@ -294,10 +294,10 @@ importers:
         specifier: 1.8.0
         version: 1.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@hono/node-server':
-        specifier: ^2.0.11
+        specifier: 2.0.11
         version: 2.0.11(hono@4.12.31)
       hono:
-        specifier: ^4.12.31
+        specifier: 4.12.31
         version: 4.12.31
       zod:
         specifier: 4.4.3
@@ -313,13 +313,13 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       '@phosphor-icons/react':
-        specifier: ^2.1.10
+        specifier: 2.1.10
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 1.61.1
         version: 1.61.1
       '@tanstack/react-query':
-        specifier: ^5.101.2
+        specifier: 5.101.2
         version: 5.101.2(react@19.2.7)
       '@tanstack/react-router':
         specifier: 1.170.18
@@ -331,67 +331,67 @@ importers:
         specifier: 1.168.32
         version: 1.168.32(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.5)(rollup@4.57.1)(supports-color@8.1.1)(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
       '@testing-library/jest-dom':
-        specifier: ^6.9.1
+        specifier: 6.9.1
         version: 6.9.1
       '@testing-library/react':
-        specifier: ^16.3.2
+        specifier: 16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@testing-library/user-event':
-        specifier: ^14.6.1
+        specifier: 14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@types/node':
-        specifier: ^22.13.4
+        specifier: 22.19.11
         version: 22.19.11
       '@types/react':
-        specifier: ^19.2.17
+        specifier: 19.2.17
         version: 19.2.17
       '@types/react-dom':
-        specifier: ^19.0.3
+        specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
-        specifier: ^6.0.4
+        specifier: 6.0.4
         version: 6.0.4(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
       '@vitest/coverage-v8':
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(vitest@4.1.10)
       '@vitest/ui':
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(vitest@4.1.10)
       dotenv:
-        specifier: ^17.4.2
+        specifier: 17.4.2
         version: 17.4.2
       jsdom:
-        specifier: ^28.0.0
+        specifier: 28.1.0
         version: 28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1)
       prettier:
-        specifier: ^3.9.5
+        specifier: 3.9.5
         version: 3.9.5
       react:
-        specifier: ^19.2.7
+        specifier: 19.2.7
         version: 19.2.7
       react-dom:
-        specifier: ^19.2.7
+        specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
       ts-node:
-        specifier: ^10.9.2
+        specifier: 10.9.2
         version: 10.9.2(@types/node@22.19.11)(typescript@6.0.3)
       typescript:
-        specifier: ~6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vite:
-        specifier: ^8.1.5
+        specifier: 8.1.5
         version: 8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)
       vitest:
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(@types/node@22.19.11)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1))(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
 
   packages/shared:
     devDependencies:
       '@vitest/coverage-v8':
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(vitest@4.1.10)
       vitest:
-        specifier: ^4.1.10
+        specifier: 4.1.10
         version: 4.1.10(@types/node@22.19.11)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(jsdom@28.1.0(@noble/hashes@1.8.0)(supports-color@8.1.1))(vite@8.1.5(@types/node@22.19.11)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
 
 packages:
