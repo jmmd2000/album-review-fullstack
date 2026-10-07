@@ -1,0 +1,42 @@
+.card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 300px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--colour-panel-strong);
+  box-shadow: var(--shadow-tooltip);
+
+  & img {
+    width: 52px;
+    height: 52px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  align-self: center;
+  min-width: 0;
+
+  /* One line each, so a long name doesn't make the card taller and move it */
+  & > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  & b {
+    font-weight: var(--font-weight-label);
+    line-height: 1.2;
+  }
+
+  & span {
+    color: var(--colour-text-muted);
+    font-size: 0.9rem;
+  }
+}
