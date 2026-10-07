@@ -1,7 +1,8 @@
 # Stage 1: Build stage
-FROM node:22.23.3-alpine AS build
+FROM node:26.10.0-alpine AS build
 
-RUN corepack enable
+# Node 25 and later no longer ship Corepack, so it comes from npm. It installs the pnpm that packageManager names.
+RUN npm install -g corepack@0.36.0 && corepack enable
 
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
@@ -45,7 +46,7 @@ WORKDIR /app
 RUN pnpm --filter @album-reviews/web deploy --prod --legacy /deploy
 
 # Stage 2: Production stage
-FROM node:22.23.3-alpine AS production
+FROM node:26.10.0-alpine AS production
 
 WORKDIR /app
 

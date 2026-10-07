@@ -30,7 +30,7 @@ export default defineConfig(({ command }) => ({
       },
     },
     fs: {
-      allow: [path.resolve(__dirname, "../..")],
+      allow: [path.resolve(import.meta.dirname, "../..")],
     },
   },
   // The production image ships no app dependencies, so the server bundle
@@ -48,8 +48,8 @@ export default defineConfig(({ command }) => ({
   plugins: [tanstackStart(), viteReact()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
-      "@shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@": path.resolve(import.meta.dirname, "src"),
+      "@shared": path.resolve(import.meta.dirname, "../../packages/shared/src"),
     },
   },
 }));

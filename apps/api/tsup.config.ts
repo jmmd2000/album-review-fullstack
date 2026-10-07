@@ -10,7 +10,7 @@ export default defineConfig({
     "db/schema": "src/db/schema.ts",
   },
   format: "cjs",
-  target: "node22",
+  target: "node26",
   outDir: "dist",
   clean: true,
 });

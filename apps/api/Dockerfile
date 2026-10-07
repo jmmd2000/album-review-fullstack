@@ -1,7 +1,8 @@
 # Stage 1: Build stage
-FROM node:22.23.3 AS build
+FROM node:26.10.0 AS build
 
-RUN corepack enable
+# Node 25 and later no longer ship Corepack, so it comes from npm. It installs the pnpm that packageManager names.
+RUN npm install -g corepack@0.36.0 && corepack enable
 
 WORKDIR /app
 
@@ -27,7 +28,7 @@ WORKDIR /app
 RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
 
 # Stage 2: Production stage
-FROM node:22.23.3-alpine AS production
+FROM node:26.10.0-alpine AS production
 
 # Build info baked in by Jenkins, served from the settings build-info route.
 # Local builds fall back to "dev"
