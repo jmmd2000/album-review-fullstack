@@ -4,7 +4,8 @@ import { PageState } from "@/components/ui/PageState";
 import { Button } from "@/components/ui/Button";
 
 interface RouteErrorProps {
-  error: Error;
+  /** Whatever the route threw. An ApiError with status 404 shows the not-found message. */
+  error: unknown;
   reset: () => void;
   notFoundTitle?: string;
   notFoundDetail?: string;
