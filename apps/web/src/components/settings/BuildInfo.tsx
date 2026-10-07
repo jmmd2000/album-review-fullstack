@@ -8,7 +8,7 @@ function formatBuiltAt(builtAt: string) {
   return new Date(builtAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 }
 
-/** The api and web commits that are deployed, when they were built, and the versions running now. */
+/** The site version, the api and web commits that are deployed, when they were built, and the versions running now. */
 export function BuildInfo() {
   const { data, isError } = useQuery({
     queryKey: queryKeys.settings.buildInfo,
@@ -35,6 +35,8 @@ export function BuildInfo() {
   return (
     <div className={styles.build}>
       <dl className={styles.facts}>
+        <dt>Version</dt>
+        <dd>{__SITE_VERSION__}</dd>
         <dt>API commit</dt>
         <dd className={styles.sha}>{data.api.sha}</dd>
         <dt>Web commit</dt>
