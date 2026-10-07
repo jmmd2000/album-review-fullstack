@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM node:22.22.0 AS build
+FROM node:22.23.3 AS build
 
 RUN corepack enable
 
@@ -27,7 +27,7 @@ WORKDIR /app
 RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
 
 # Stage 2: Production stage
-FROM node:22.22.0-alpine AS production
+FROM node:22.23.3-alpine AS production
 
 # Build info baked in by Jenkins, served from the settings build-info route.
 # Local builds fall back to "dev"
