@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import "./loadEnvironment";
 
 function requireEnv(key: string): string {
   const value = process.env[key];

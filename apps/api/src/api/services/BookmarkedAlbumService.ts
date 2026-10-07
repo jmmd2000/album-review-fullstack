@@ -1,4 +1,3 @@
-import "dotenv/config";
 import type { DisplayAlbum, GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
 import { AppError } from "@/api/AppError";

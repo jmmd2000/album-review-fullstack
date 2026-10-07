@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "@/config/loadEnvironment";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import type { DisplayTrack } from "@shared/types";
 import { resolveDatabaseURL } from "@/config/database";

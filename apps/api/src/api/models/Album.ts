@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { desc, eq, asc, count, inArray, sql, and, isNull, ilike, or } from "drizzle-orm";
 import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";

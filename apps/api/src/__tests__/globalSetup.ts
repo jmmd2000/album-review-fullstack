@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "@/config/loadEnvironment";
 import { execSync } from "child_process";
 import { Client } from "pg";
 import { assertTestDatabase } from "@/db/databaseSafety";

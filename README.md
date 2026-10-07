@@ -14,6 +14,8 @@ See at [jamesreviewsmusic.com](https://www.jamesreviewsmusic.com)
 
 ## Development
 
+Copy `.env.example` to `.env` at the repo root and fill it in. The API, the web app, e2e and docker compose all read that one file.
+
 ```bash
 # Install dependencies
 pnpm install

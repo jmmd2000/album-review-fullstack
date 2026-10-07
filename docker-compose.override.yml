@@ -49,7 +49,6 @@ services:
       - ./pnpm-lock.yaml:/pnpm-lock.yaml
     environment:
       - CHOKIDAR_USEPOLLING=true # Ensure file changes are detected in Docker
-      - VITE_API_URL=http://localhost:4000
     ports:
       - "5173:5173"
     command: pnpm run dev

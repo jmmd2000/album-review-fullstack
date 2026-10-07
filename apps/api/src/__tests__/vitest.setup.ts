@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
+import "@/config/loadEnvironment";
 import { beforeAll, afterAll, vi } from "vitest";
-
-dotenv.config();
 
 vi.mock("@/helpers/fetchArtistHeaderFromSpotify", () => ({
   fetchArtistHeaderFromSpotify: vi.fn(() => Promise.resolve(null)),
