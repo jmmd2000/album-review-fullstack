@@ -18,7 +18,7 @@
   z-index: var(--z-modal);
   display: grid;
   gap: var(--space-2);
-  width: 26rem;
+  width: var(--dialog-width, 26rem);
   max-width: calc(100vw - 2 * var(--page-gutter));
   padding: var(--space-panel);
   border-radius: var(--radius-panel);

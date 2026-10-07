@@ -12,7 +12,7 @@ const paginatedSchema = z.object({
 });
 
 const headerImageSchema = z.object({
-  headerImage: z.string().nullable(),
+  headerImage: z.url({ protocol: /^https?$/, error: "The header image must be a web link." }).nullable(),
 });
 
 // Static paths are registered before /:artistID so they aren't matched as an id.

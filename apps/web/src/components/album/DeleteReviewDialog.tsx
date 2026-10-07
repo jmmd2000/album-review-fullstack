@@ -6,7 +6,7 @@ import { client, handleVoid } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/Button";
-import styles from "./DeleteReviewDialog.module.css";
+import styles from "@/styles/dialog.module.css";
 
 interface DeleteReviewDialogProps {
   albumID: string;

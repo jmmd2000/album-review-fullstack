@@ -3,7 +3,9 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { useAuth } from "@/auth/useAuth";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
+import { HeaderImageDialog } from "@/components/artist/HeaderImageDialog";
 import { ArtistStanding } from "@/components/artist/ArtistStanding";
 import { ScoreTimeline } from "@/components/artist/ScoreTimeline";
 import { TracksByRating } from "@/components/artist/TracksByRating";
@@ -63,12 +65,18 @@ function RouteComponent() {
 
   const { data } = useSuspenseQuery(artistQueryOptions(artistID));
   const { artist, albums, featuredAlbums, tracks, rankedArtistCount } = data;
+  const { isAdmin } = useAuth();
   const ratedTrackCount = tracks.filter(track => track.rating != null && track.rating > 0).length;
   const scoredAlbumsOldestFirst = albums.filter(hasScore).reverse();
 
   return (
     <div className={styles.page}>
-      <ArtistHeader name={artist.name} headerImage={artist.headerImage} images={artist.imageURLs} />
+      <ArtistHeader
+        name={artist.name}
+        headerImage={artist.headerImage}
+        images={artist.imageURLs}
+        actions={isAdmin && <HeaderImageDialog artistID={artist.spotifyID} headerImage={artist.headerImage} />}
+      />
       <ArtistStanding artist={artist} rankedArtistCount={rankedArtistCount} albumCount={albums.length} ratedTrackCount={ratedTrackCount} />
 
       {scoredAlbumsOldestFirst.length > 1 && (

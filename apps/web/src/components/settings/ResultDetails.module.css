@@ -1,0 +1,17 @@
+.details {
+  display: grid;
+}
+
+.summary {
+  width: fit-content;
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+}
+
+.details[open] .summary {
+  margin-bottom: var(--space-3);
+}

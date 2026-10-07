@@ -31,13 +31,13 @@ test("resumes after a given event id, so a reconnect gets no duplicates", async 
   expect(events.map(e => e.id)).toEqual([1, 2]);
 });
 
-test("surfaces a thrown runner error as a final error event", async () => {
+test("surfaces a thrown runner error as a final fatal event", async () => {
   const id = JobService.create(async () => {
     throw new Error("boom");
   });
 
   const events = await collect(JobService.get(id)!.stream(-1));
 
-  expect(events.map(e => e.event)).toEqual(["error", "done"]);
+  expect(events.map(e => e.event)).toEqual(["fatal", "done"]);
   expect((events[0].data as { message: string }).message).toBe("boom");
 });

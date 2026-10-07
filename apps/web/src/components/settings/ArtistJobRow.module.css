@@ -1,0 +1,118 @@
+.progress {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 60ch;
+}
+
+.track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel-strong);
+}
+
+.fill {
+  height: 100%;
+  background: var(--colour-foreground);
+  transform-origin: left;
+  transition: transform var(--duration-quick) var(--ease-out);
+}
+
+.current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.currentName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  color: var(--colour-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.results {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 60ch;
+}
+
+.error {
+  color: var(--colour-worst);
+}
+
+.changes {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.change {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.arrow {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--colour-text-muted);
+}
+
+.photo {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--colour-panel-strong);
+  object-fit: cover;
+}
+
+.header {
+  flex: none;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-tag);
+  background: var(--colour-panel-strong);
+  object-fit: cover;
+}
+
+.artistLink {
+  min-width: 0;
+  margin-left: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.failed {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.failedTitle {
+  color: var(--colour-worst);
+  font-weight: var(--font-weight-label);
+}
+
+.failedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-3);
+
+  & .artistLink {
+    margin-left: 0;
+  }
+}
