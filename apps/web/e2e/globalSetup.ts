@@ -1,12 +1,17 @@
 import { execSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
+import { e2eEnvironment } from "./environment";
 
-// Every run starts from the same seeded library. This wipes and reseeds
-// whatever DATABASE_URL points at.
+/**
+ * Brings the e2e database up to date, then wipes and reseeds it, so every run starts from the same library.
+ * The API scripts read DATABASE_URL_TEST when NODE_ENV is test, so they only ever touch the e2e database.
+ */
 export default function globalSetup() {
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const repoRoot = path.resolve(here, "../../..");
-  execSync("pnpm --filter @album-reviews/api run db:wipe", { cwd: repoRoot, stdio: "inherit" });
-  execSync("pnpm --filter @album-reviews/api run db:seed", { cwd: repoRoot, stdio: "inherit" });
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+  execSync("pnpm --filter @album-reviews/api run db:reset", {
+    cwd: repoRoot,
+    stdio: "inherit",
+    env: { ...process.env, NODE_ENV: "test", DATABASE_URL_TEST: e2eEnvironment.DATABASE_URL_TEST_E2E },
+  });
 }

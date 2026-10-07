@@ -23,7 +23,19 @@ function optionalFlag(key: string): boolean {
   throw new Error(`Environment variable ${key} must be "true" or "false"`);
 }
 
+function optionalPort(key: string, fallback: number): number {
+  const value = process.env[key];
+  if (value === undefined || value === "") return fallback;
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`Environment variable ${key} must be a port number`);
+  }
+  return port;
+}
+
 export const env = {
+  // e2e runs its own API on a spare port
+  PORT: optionalPort("PORT", 4000),
   DATABASE_URL: requireEnv("DATABASE_URL"),
   ADMIN_PASSWORD_HASH: requireEnv("ADMIN_PASSWORD_HASH"),
   JWT_SECRET: requireSecret("JWT_SECRET", 32),
