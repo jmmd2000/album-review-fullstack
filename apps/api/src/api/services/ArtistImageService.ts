@@ -2,7 +2,7 @@ import { ArtistModel } from "@/api/models/Artist";
 import { fetchArtistHeadersFromSpotify } from "@/helpers/fetchArtistHeaderFromSpotify";
 import { fetchArtistFromSpotify } from "@/helpers/fetchArtistFromSpotify";
 import type { JobEmit } from "@/api/services/JobService";
-import { areImageUrlsSame, normalizeSpotifyImageUrl } from "@/helpers/normaliseSpotifyImageURL";
+import { isSameImage } from "@/helpers/spotifyImageID";
 import { SettingsService } from "./SettingsService";
 import { AppError } from "@/api/AppError";
 import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
@@ -135,20 +135,21 @@ export class ArtistImageService {
         if (newHeaderImage) {
           const current = artist.headerImage;
 
-          const normalizedCurrent = current ? normalizeSpotifyImageUrl(current) : null;
-          const normalizedNew = normalizeSpotifyImageUrl(newHeaderImage);
-
-          if (normalizedCurrent === normalizedNew) {
-            emit("same", {
-              index: processedCount,
-              total,
-              spotifyID: id,
-              artistName: name,
-              artistImage,
-              headerImage: current ?? undefined,
-            });
-          } else {
-            try {
+          try {
+            if (isSameImage(current, newHeaderImage)) {
+              // Spotify can serve the same picture from a new host or at a new size. Keep the new URL, but don't count it as a change.
+              if (current !== newHeaderImage) {
+                await ArtistModel.updateArtist(id, { headerImage: newHeaderImage });
+              }
+              emit("same", {
+                index: processedCount,
+                total,
+                spotifyID: id,
+                artistName: name,
+                artistImage,
+                headerImage: current ?? undefined,
+              });
+            } else {
               await ArtistModel.updateArtist(id, {
                 headerImage: newHeaderImage,
                 imageUpdatedAt: new Date(),
@@ -162,18 +163,18 @@ export class ArtistImageService {
                 headerImage: current ?? undefined,
                 newHeaderImage: newHeaderImage,
               });
-            } catch (err) {
-              console.error(`Header update failed for ${id}:`, err);
-              emit("failed", {
-                spotifyID: id,
-                index: processedCount,
-                total,
-                artistName: name,
-                artistImage,
-                headerImage: current ?? undefined,
-                message: (err as Error).message,
-              });
             }
+          } catch (err) {
+            console.error(`Header update failed for ${id}:`, err);
+            emit("failed", {
+              spotifyID: id,
+              index: processedCount,
+              total,
+              artistName: name,
+              artistImage,
+              headerImage: current ?? undefined,
+              message: (err as Error).message,
+            });
           }
         } else {
           emit("failed", {
@@ -232,22 +233,23 @@ export class ArtistImageService {
 
       const newArtistImage = artistData.images.length > 0 ? artistData.images[0].url : undefined;
 
-      const currentUrls = (imageURLs || []).map(img => img.url).sort();
-      const fetchedUrls = artistData.images.map(img => img.url).sort();
+      const currentURLs = (imageURLs || []).map(image => image.url).join(" ");
+      const fetchedURLs = artistData.images.map(image => image.url).join(" ");
 
-      const same = areImageUrlsSame(currentUrls, fetchedUrls);
-
-      if (same) {
-        emit("same", {
-          index: i + 1,
-          total,
-          spotifyID: id,
-          artistName: name,
-          artistImage: currentArtistImage,
-        });
-        continue;
-      } else {
-        try {
+      try {
+        // Every size of a photo shows the same picture, so the first one is enough to compare
+        if (isSameImage(currentArtistImage, newArtistImage)) {
+          if (currentURLs !== fetchedURLs) {
+            await ArtistModel.updateArtist(id, { imageURLs: artistData.images });
+          }
+          emit("same", {
+            index: i + 1,
+            total,
+            spotifyID: id,
+            artistName: name,
+            artistImage: currentArtistImage,
+          });
+        } else {
           await ArtistModel.updateArtist(id, {
             imageURLs: artistData.images,
             imageUpdatedAt: new Date(),
@@ -260,17 +262,17 @@ export class ArtistImageService {
             artistImage: currentArtistImage,
             newArtistImage: newArtistImage,
           });
-        } catch (err) {
-          console.error(`Image update failed for ${id}:`, err);
-          emit("failed", {
-            index: i + 1,
-            total,
-            spotifyID: id,
-            artistName: name,
-            artistImage: currentArtistImage,
-            message: (err as Error).message,
-          });
         }
+      } catch (err) {
+        console.error(`Image update failed for ${id}:`, err);
+        emit("failed", {
+          index: i + 1,
+          total,
+          spotifyID: id,
+          artistName: name,
+          artistImage: currentArtistImage,
+          message: (err as Error).message,
+        });
       }
     }
 
