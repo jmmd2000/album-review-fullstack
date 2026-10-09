@@ -11,22 +11,32 @@ const SPOTIFY_IMAGE_PATH = /^\/image\/([0-9a-f]{40})$/;
  * @returns The picture's ID, or the URL unchanged if it isn't a Spotify image URL.
  */
 export function spotifyImageID(url: string): string {
+  const imageID = imageIDInURL(url);
+  if (!imageID) return url;
+  if (imageID.startsWith("ab67")) return imageID.slice(16);
+  return imageID;
+}
+
+/** Tells whether a URL points at an image on Spotify's image CDN. */
+export function isSpotifyImageURL(url: string): boolean {
+  return imageIDInURL(url) !== null;
+}
+
+/** The 40-character image ID in a Spotify image URL, or null if the URL isn't one. */
+function imageIDInURL(url: string): string | null {
   let parsedURL: URL;
   try {
     parsedURL = new URL(url);
   } catch {
-    return url;
+    return null;
   }
 
   const isSpotifyHost = SPOTIFY_IMAGE_HOSTS.some(host => parsedURL.hostname.endsWith(host));
-  if (!isSpotifyHost) return url;
+  if (!isSpotifyHost) return null;
 
   const match = SPOTIFY_IMAGE_PATH.exec(parsedURL.pathname);
-  if (!match) return url;
-
-  const imageID = match[1];
-  if (imageID.startsWith("ab67")) return imageID.slice(16);
-  return imageID;
+  if (!match) return null;
+  return match[1];
 }
 
 /**

@@ -1,5 +1,6 @@
-import puppeteer, { type Browser, type Page } from "puppeteer-core";
+import puppeteer, { type Browser, type HTTPResponse, type Page } from "puppeteer-core";
 import { env } from "@/config/env";
+import { readHeaderImage, type HeaderResult } from "@/helpers/artistHeaderImage";
 
 // Scrapes run through the browserless sidecar
 const browserWSEndpoint = `${env.BROWSERLESS_URL}?token=${env.BROWSERLESS_TOKEN}`;
@@ -24,24 +25,40 @@ function getFakeHeaderUrl(): string {
   return FAKE_HEADERS[Math.floor(Math.random() * FAKE_HEADERS.length)];
 }
 
-// Single artist fetch (for backward compat)
-export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake: boolean = false): Promise<string | null> {
-  const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
-  return results[spotifyArtistID] || null;
+/** The web player's request for an artist's page data, which holds the header. */
+function isArtistOverviewResponse(response: HTTPResponse): boolean {
+  if (!response.url().includes("/pathfinder/")) return false;
+  const body = response.request().postData() ?? "";
+  return body.includes('"operationName":"queryArtistOverview"');
 }
 
-// Batch fetch
+/**
+ * Gets one artist's header URL from their Spotify page.
+ * @returns The header URL, or null if the artist has no header or the scrape failed.
+ */
+export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake: boolean = false): Promise<string | null> {
+  const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
+  const result = results[spotifyArtistID];
+  if (result?.status !== "found") return null;
+  return result.url;
+}
+
+/**
+ * Gets each artist's header from their Spotify page, a few pages at a time.
+ * It reads the header from the artist data the page loads, not from the page itself.
+ * @returns A result for each artist: the header URL, "none" if Spotify says there's no header, or "failed".
+ */
 export async function fetchArtistHeadersFromSpotify(
   spotifyArtistIDs: string[],
   concurrency: number = 1,
   onProgress?: (completed: number, total: number, artistName?: string) => void,
   fake: boolean = false
-): Promise<Record<string, string | null>> {
-  const results: Record<string, string | null> = {};
+): Promise<Record<string, HeaderResult>> {
+  const results: Record<string, HeaderResult> = {};
   let completed = 0;
 
-  const markDone = (spotifyArtistID: string, bannerUrl: string | null) => {
-    results[spotifyArtistID] = bannerUrl;
+  const markDone = (spotifyArtistID: string, result: HeaderResult) => {
+    results[spotifyArtistID] = result;
     completed++;
     if (onProgress) {
       onProgress(completed, spotifyArtistIDs.length, spotifyArtistID);
@@ -63,7 +80,7 @@ export async function fetchArtistHeadersFromSpotify(
 
         // simulate real conditions with some failures
         const success = Math.random() > 0.1;
-        markDone(spotifyArtistID, success ? getFakeHeaderUrl() : null);
+        markDone(spotifyArtistID, success ? { status: "found", url: getFakeHeaderUrl() } : { status: "failed" });
       });
 
       await Promise.all(promises);
@@ -88,7 +105,7 @@ export async function fetchArtistHeadersFromSpotify(
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("Failed to open a browserless session:", errorMessage);
       for (const spotifyArtistID of chunk) {
-        markDone(spotifyArtistID, null);
+        markDone(spotifyArtistID, { status: "failed" });
       }
       continue;
     }
@@ -99,94 +116,31 @@ export async function fetchArtistHeadersFromSpotify(
       try {
         page = await browser.newPage();
 
-        // Set longer timeouts
         page.setDefaultTimeout(20000);
         page.setDefaultNavigationTimeout(20000);
 
-        await page.setViewport({ width: 1920, height: 1080 });
-
-        // Block unnecessary resources but allow images (needed for background)
+        // Only the page's data is needed, so skip the images, fonts and media
         await page.setRequestInterception(true);
-        page.on("request", req => {
-          const resourceType = req.resourceType();
-          const url = req.url();
-
-          // Block fonts and some scripts, but allow images and main resources
-          if (["font"].includes(resourceType) || url.includes("google-analytics") || url.includes("googletagmanager")) {
-            void req.abort();
+        page.on("request", request => {
+          if (["image", "font", "media"].includes(request.resourceType())) {
+            void request.abort();
           } else {
-            void req.continue();
+            void request.continue();
           }
         });
 
-        await page.goto(`https://open.spotify.com/artist/${spotifyArtistID}`, {
-          waitUntil: "domcontentloaded",
-        });
+        const [overviewResponse] = await Promise.all([
+          page.waitForResponse(isArtistOverviewResponse),
+          page.goto(`https://open.spotify.com/artist/${spotifyArtistID}`, { waitUntil: "domcontentloaded" }),
+        ]);
 
-        // Wait for the page to load and try multiple selectors
-        let bannerUrl: string | null = null;
-
-        // Try multiple selectors in order of preference
-        const selectors = ['div[data-testid="background-image"]', '[data-testid="background-image"]', ".background-image", '[style*="background-image"]', 'div[style*="background"]'];
-
-        for (const selector of selectors) {
-          try {
-            await page.waitForSelector(selector, { timeout: 5000 });
-
-            bannerUrl = await page.evaluate(sel => {
-              const element = document.querySelector(sel);
-              if (!element) return null;
-
-              // Try to get background image from style attribute
-              const style = element.getAttribute("style");
-              if (style) {
-                const match = style.match(/url\(["']?([^"']+)["']?\)/);
-                if (match) return match[1];
-              }
-
-              // Try computed style
-              const computedStyle = window.getComputedStyle(element);
-              const bgImage = computedStyle.backgroundImage;
-              if (bgImage && bgImage !== "none") {
-                const match = bgImage.match(/url\(["']?([^"']+)["']?\)/);
-                if (match) return match[1];
-              }
-
-              return null;
-            }, selector);
-
-            if (bannerUrl) break;
-          } catch {
-            // Continue to next selector
-            continue;
-          }
+        if (!overviewResponse.ok()) {
+          console.error(`Spotify answered ${overviewResponse.status()} for the artist data of ${spotifyArtistID}`);
+          markDone(spotifyArtistID, { status: "failed" });
+          return;
         }
 
-        // If no banner found with selectors, try to find any image with Spotify CDN
-        if (!bannerUrl) {
-          bannerUrl = await page.evaluate(() => {
-            const images = document.querySelectorAll('img, [style*="background-image"]');
-            for (const img of images) {
-              let src = "";
-              if (img.tagName === "IMG") {
-                src = (img as HTMLImageElement).src;
-              } else {
-                const style = img.getAttribute("style");
-                if (style) {
-                  const match = style.match(/url\(["']?([^"']+)["']?\)/);
-                  if (match) src = match[1];
-                }
-              }
-
-              if (src && src.includes("i.scdn.co") && src.includes("ab676161")) {
-                return src;
-              }
-            }
-            return null;
-          });
-        }
-
-        markDone(spotifyArtistID, bannerUrl);
+        markDone(spotifyArtistID, readHeaderImage(await overviewResponse.json(), spotifyArtistID));
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error(`Failed to fetch header for ${spotifyArtistID}:`, errorMessage);
@@ -200,7 +154,7 @@ export async function fetchArtistHeadersFromSpotify(
           console.error("Could not get page info for debugging");
         }
 
-        markDone(spotifyArtistID, null);
+        markDone(spotifyArtistID, { status: "failed" });
       } finally {
         // The page may already be gone if the sidecar cuts off
         if (page) await page.close().catch(() => {});

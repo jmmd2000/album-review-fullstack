@@ -52,6 +52,28 @@ export const artistResponseSchema = z.object({
   images: z.array(imageSchema),
 });
 
+// The artist data the Spotify web player loads. The Web API doesn't give headers, so the scraper reads them from here.
+export const artistOverviewResponseSchema = z.object({
+  data: z.object({
+    artistUnion: z.object({
+      id: z.string(),
+      headerImage: z
+        .object({
+          data: z.object({
+            sources: z.array(
+              z.object({
+                url: z.string(),
+                maxWidth: z.number(),
+                maxHeight: z.number(),
+              })
+            ),
+          }),
+        })
+        .nullable(),
+    }),
+  }),
+});
+
 export type SpotifyAlbumSummary = z.infer<typeof albumSummarySchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;

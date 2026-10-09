@@ -130,53 +130,9 @@ export class ArtistImageService {
           artistImage,
         });
 
-        const newHeaderImage = headerResults[id];
+        const headerResult = headerResults[id];
 
-        if (newHeaderImage) {
-          const current = artist.headerImage;
-
-          try {
-            if (isSameImage(current, newHeaderImage)) {
-              // Spotify can serve the same picture from a new host or at a new size. Keep the new URL, but don't count it as a change.
-              if (current !== newHeaderImage) {
-                await ArtistModel.updateArtist(id, { headerImage: newHeaderImage });
-              }
-              emit("same", {
-                index: processedCount,
-                total,
-                spotifyID: id,
-                artistName: name,
-                artistImage,
-                headerImage: current ?? undefined,
-              });
-            } else {
-              await ArtistModel.updateArtist(id, {
-                headerImage: newHeaderImage,
-                imageUpdatedAt: new Date(),
-              });
-              emit("changed", {
-                index: processedCount,
-                total,
-                spotifyID: id,
-                artistName: name,
-                artistImage,
-                headerImage: current ?? undefined,
-                newHeaderImage: newHeaderImage,
-              });
-            }
-          } catch (err) {
-            console.error(`Header update failed for ${id}:`, err);
-            emit("failed", {
-              spotifyID: id,
-              index: processedCount,
-              total,
-              artistName: name,
-              artistImage,
-              headerImage: current ?? undefined,
-              message: (err as Error).message,
-            });
-          }
-        } else {
+        if (!headerResult || headerResult.status === "failed") {
           emit("failed", {
             spotifyID: id,
             total,
@@ -184,6 +140,52 @@ export class ArtistImageService {
             artistName: FAKE ? `[FAKE] ${name}` : name,
             artistImage,
             message: FAKE ? "[FAKE] Failed to fetch header image" : "Failed to fetch header image",
+          });
+          continue;
+        }
+
+        const current = artist.headerImage;
+        const newHeaderImage = headerResult.status === "found" ? headerResult.url : null;
+
+        try {
+          if (isSameImage(current, newHeaderImage)) {
+            // Spotify can serve the same picture from a new host or at a new size. Keep the new URL, but don't count it as a change.
+            if (current !== newHeaderImage) {
+              await ArtistModel.updateArtist(id, { headerImage: newHeaderImage });
+            }
+            emit("same", {
+              index: processedCount,
+              total,
+              spotifyID: id,
+              artistName: name,
+              artistImage,
+              headerImage: current ?? undefined,
+            });
+          } else {
+            await ArtistModel.updateArtist(id, {
+              headerImage: newHeaderImage,
+              imageUpdatedAt: new Date(),
+            });
+            emit("changed", {
+              index: processedCount,
+              total,
+              spotifyID: id,
+              artistName: name,
+              artistImage,
+              headerImage: current ?? undefined,
+              newHeaderImage: newHeaderImage ?? undefined,
+            });
+          }
+        } catch (err) {
+          console.error(`Header update failed for ${id}:`, err);
+          emit("failed", {
+            spotifyID: id,
+            index: processedCount,
+            total,
+            artistName: name,
+            artistImage,
+            headerImage: current ?? undefined,
+            message: (err as Error).message,
           });
         }
       }

@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe("header refresh", () => {
   test("a header moved to a new host and size counts as the same, and keeps the new URL without a new update time", async () => {
-    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: movedHeader });
+    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: { status: "found", url: movedHeader } });
 
     await ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual");
 
@@ -47,12 +47,40 @@ describe("header refresh", () => {
   });
 
   test("a different header counts as a change and sets a new update time", async () => {
-    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: newHeader });
+    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: { status: "found", url: newHeader } });
 
     await ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual");
 
     expect(events).toContain("changed");
     expect(updateArtist).toHaveBeenCalledWith(spotifyID, { headerImage: newHeader, imageUpdatedAt: expect.any(Date) });
+  });
+
+  test("no header on Spotify clears the stored one and counts as a change", async () => {
+    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: { status: "none" } });
+
+    await ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual");
+
+    expect(events).toContain("changed");
+    expect(updateArtist).toHaveBeenCalledWith(spotifyID, { headerImage: null, imageUpdatedAt: expect.any(Date) });
+  });
+
+  test("no header on Spotify and none stored counts as the same, with nothing saved", async () => {
+    vi.spyOn(ArtistModel, "getAllArtists").mockResolvedValue([{ spotifyID, name: "Artist", headerImage: null, imageURLs: oldPhotos }] as never);
+    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: { status: "none" } });
+
+    await ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual");
+
+    expect(events).toContain("same");
+    expect(updateArtist).not.toHaveBeenCalled();
+  });
+
+  test("a failed scrape keeps the stored header", async () => {
+    vi.mocked(fetchArtistHeadersFromSpotify).mockResolvedValue({ [spotifyID]: { status: "failed" } });
+
+    await ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual");
+
+    expect(events).toContain("failed");
+    expect(updateArtist).not.toHaveBeenCalled();
   });
 });
 
