@@ -1,0 +1,28 @@
+app: album-reviews
+images:
+  - name: album-api
+    dockerfile: apps/api/Dockerfile
+    buildArgs:
+      GIT_SHA: "{tag}"
+      GIT_MESSAGE_B64: "{commitMessageBase64}"
+      BUILT_AT: "{builtAt}"
+  - name: album-web
+    dockerfile: apps/web/Dockerfile
+    buildArgs:
+      GIT_SHA: "{tag}"
+      BUILT_AT: "{builtAt}"
+files: [docker-compose.yml, backup.sh]
+database: db
+migrate: migrate
+healthcheck: /api/health
+environments:
+  staging:
+    dir: /home/james/album-review/staging
+    domain: staging.jamesreviewsmusic.com
+    envCredential: album-env-staging
+    restoreFromBackups: /home/james/backups/album-reviews-production
+  production:
+    dir: /home/james/album-review/prod
+    domain: jamesreviewsmusic.com
+    envCredential: album-env-prod
+    backup: true
