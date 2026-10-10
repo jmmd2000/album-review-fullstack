@@ -38,3 +38,4 @@ apps/web/e2e/.auth
 
 docs/
 .claude/
+.term-layout.json
