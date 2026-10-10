@@ -13,14 +13,41 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* as wide as the number, so the rule above it underlines the whole score */
+/* as wide as the number, so it underlines the whole score */
+.rule {
+  height: var(--border-thick);
+  margin-top: calc(var(--size) * 0.085);
+  background: currentColor;
+  transform-origin: left;
+}
+
 .word {
-  margin-top: 0.5em;
-  padding-top: 0.45em;
-  border-top: var(--border-thick) solid currentColor;
+  padding-top: calc(var(--size) * 0.0765);
   font-size: calc(var(--size) * 0.17);
   font-weight: var(--font-weight-label);
   letter-spacing: 0.14em;
   text-align: center;
   text-transform: uppercase;
+}
+
+/* The number counts up in useCountUp over the same 0.6s, and the word settles in as it lands */
+.arriving .rule {
+  animation: draw-rule 0.6s var(--ease-out) both;
+}
+
+.arriving .word {
+  animation: settle-word 0.3s var(--ease-out) 0.45s both;
+}
+
+@keyframes draw-rule {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes settle-word {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }

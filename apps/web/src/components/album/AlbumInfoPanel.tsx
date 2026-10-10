@@ -39,7 +39,7 @@ export function AlbumInfoPanel({ album, artists, genres }: AlbumInfoPanelProps) 
       </p>
 
       <div className={styles.score}>
-        <ScoreDisplay score={album.finalScore} />
+        <ScoreDisplay key={album.spotifyID} score={album.finalScore} arriveFor={album.spotifyID} />
       </div>
 
       <p className={styles.facts}>
