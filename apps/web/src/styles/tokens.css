@@ -82,6 +82,10 @@
   /* how strongly an album's cover colours show behind its page */
   --backdrop-strength: 0.5;
 
+  /* the lightest and darkest a text selection can be, so the text on it stays readable */
+  --selection-lightness-min: 0.82;
+  --selection-lightness-max: 1;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-quick: 0.3s;
 
@@ -98,11 +102,15 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --backdrop-strength: 0.65;
+  --selection-lightness-min: 0;
+  --selection-lightness-max: 0.42;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --backdrop-strength: 0.65;
+    --selection-lightness-min: 0;
+    --selection-lightness-max: 0.42;
   }
 }
 

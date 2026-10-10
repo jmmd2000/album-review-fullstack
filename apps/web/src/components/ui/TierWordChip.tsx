@@ -13,7 +13,7 @@ interface TierWordChipProps {
 /** A track's tier word on a chip of its tier colour. Every chip is the same width, so the chips line up in a list. */
 export function TierWordChip({ tier, children }: TierWordChipProps) {
   return (
-    <span className={styles.chip} style={{ backgroundColor: tierFillVar(tier) }}>
+    <span className={styles.chip} style={{ backgroundColor: tierFillVar(tier) }} data-on-tier="">
       {children}
     </span>
   );

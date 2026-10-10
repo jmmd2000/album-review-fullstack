@@ -93,6 +93,7 @@ function RatingSteps({ trackName, rating, onRate }: RatingStepsProps) {
             key={step}
             type="button"
             className={step <= rating ? `${styles.step} ${styles.filled}` : styles.step}
+            data-on-tier={step <= rating ? "" : undefined}
             style={style}
             aria-pressed={step === rating}
             aria-label={`${step} out of 10`}

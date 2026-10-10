@@ -17,7 +17,7 @@ export function ScoreChip({ score }: ScoreChipProps) {
   const { chipRef, seen } = useSeenOnce(tier === "Perfect");
 
   return (
-    <span ref={chipRef} className={styles.chip} style={{ backgroundColor: tierFillVar(tier) }} title={tier} data-tier={tier} data-glint={seen || undefined}>
+    <span ref={chipRef} className={styles.chip} style={{ backgroundColor: tierFillVar(tier) }} title={tier} data-tier={tier} data-glint={seen || undefined} data-on-tier="">
       {score === null ? "-" : Math.ceil(score)}
     </span>
   );

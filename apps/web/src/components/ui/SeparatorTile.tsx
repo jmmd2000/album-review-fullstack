@@ -12,7 +12,7 @@ export function SeparatorTile({ label, tier }: Separator) {
   const range = tier && tier !== "Unrated" ? ratingTiers.find(ratingTier => ratingTier.label === tier)?.range : undefined;
 
   return (
-    <li className={styles.tile} data-tier={tier ? "" : undefined} style={tier ? { backgroundColor: tierFillVar(tier) } : undefined}>
+    <li className={styles.tile} data-tier={tier ? "" : undefined} data-on-tier={tier ? "" : undefined} style={tier ? { backgroundColor: tierFillVar(tier) } : undefined}>
       <h2 className={styles.label}>{label}</h2>
       {range && (
         <span className={styles.range}>

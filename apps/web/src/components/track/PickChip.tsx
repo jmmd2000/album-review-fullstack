@@ -7,7 +7,7 @@ interface PickChipProps {
 /** Marks an album's best or worst track, in the score chip's shape. */
 export function PickChip({ pick }: PickChipProps) {
   return (
-    <span className={styles.chip} data-pick={pick}>
+    <span className={styles.chip} data-pick={pick} data-on-tier="">
       {pick === "best" ? "Best" : "Worst"}
     </span>
   );

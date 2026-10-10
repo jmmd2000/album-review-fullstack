@@ -11,6 +11,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Selected text, mixed into the page and kept within the theme's lightness limits so the words stay readable. Album pages tint it with the cover colour through CoverHighlight. */
+::selection {
+  background: oklch(
+    from color-mix(in oklab, light-dark(var(--selection-light, Highlight), var(--selection-dark, Highlight)) 55%, var(--colour-background))
+      clamp(var(--selection-lightness-min), l, var(--selection-lightness-max)) c h
+  );
+  color: var(--colour-foreground);
+}
+
+/* White text on a tier fill keeps its colour when selected */
+[data-on-tier]::selection,
+[data-on-tier] ::selection {
+  background: color-mix(in oklab, var(--colour-text-on-tier) 30%, transparent);
+  color: var(--colour-text-on-tier);
+}
+
 :where(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-display);
 }

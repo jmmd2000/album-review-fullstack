@@ -23,6 +23,11 @@ const pageColours: Record<PageTheme, OKLab> = {
   dark: { lightness: 0.19, a: 0.002, b: 0.006 },
 };
 
+/** True for a "#rrggbb" colour, the only form that's safe to put into CSS text. */
+export function isHexColour(value: string): boolean {
+  return /^#[0-9a-f]{6}$/i.test(value);
+}
+
 /** Converts a "#rrggbb" colour to OKLab, where distances roughly match how different colours look. */
 function toOKLab(hex: string): OKLab {
   const [red, green, blue] = [1, 3, 5].map(start => {
@@ -65,7 +70,7 @@ function showsOn(colour: OKLab, theme: PageTheme): boolean {
 export function usableCoverColours(colours: ExtractedColor[], theme?: PageTheme): string[] {
   const themes: PageTheme[] = theme ? [theme] : ["light", "dark"];
   const usable = colours
-    .filter(colour => /^#[0-9a-f]{6}$/i.test(colour.hex))
+    .filter(colour => isHexColour(colour.hex))
     .map(colour => ({ hex: colour.hex, oklab: toOKLab(colour.hex) }))
     .filter(colour => themes.every(pageTheme => showsOn(colour.oklab, pageTheme)));
 
