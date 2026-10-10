@@ -1,0 +1,61 @@
+.roll {
+  display: inline-grid;
+  overflow: hidden;
+
+  & > span {
+    grid-area: 1 / 1;
+  }
+}
+
+.leaving,
+.entering {
+  animation: 0.32s var(--ease-out) both;
+}
+
+.roll[data-direction="up"] {
+  & .leaving {
+    animation-name: leave-up;
+  }
+
+  & .entering {
+    animation-name: enter-up;
+  }
+}
+
+.roll[data-direction="down"] {
+  & .leaving {
+    animation-name: leave-down;
+  }
+
+  & .entering {
+    animation-name: enter-down;
+  }
+}
+
+@keyframes leave-up {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes leave-down {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes enter-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}

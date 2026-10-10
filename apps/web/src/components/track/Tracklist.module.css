@@ -53,16 +53,3 @@
     display: none;
   }
 }
-
-/* every chip is as wide as the longest word, so the durations line up */
-.rating {
-  min-width: 8em;
-  padding: 4px 10px;
-  border-radius: 0.45em;
-  color: var(--colour-text-on-tier);
-  font-size: 11px;
-  font-weight: var(--font-weight-display);
-  letter-spacing: 0.1em;
-  text-align: center;
-  text-transform: uppercase;
-}

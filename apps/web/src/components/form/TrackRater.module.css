@@ -35,13 +35,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.rating {
-  color: var(--tier-colour);
-  font-family: var(--font-display);
-  font-weight: 650;
-  text-align: right;
-}
-
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -67,8 +60,10 @@
   transition:
     background-color 0.15s var(--ease-out),
     color 0.15s var(--ease-out);
+  transition-delay: var(--step-delay, 0ms);
 
   &:hover {
+    transition-delay: 0ms;
     background: var(--colour-panel-strong);
     color: var(--colour-foreground);
   }

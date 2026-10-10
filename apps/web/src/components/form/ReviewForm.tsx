@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { scoreTier } from "@shared/helpers/ratingTiers";
+import { useCountUp } from "@/hooks/useCountUp";
 import { coverColourStyle } from "@/lib/coverColours";
 import { morphProps } from "@/lib/coverMorph";
 import { tierColourVar } from "@/lib/tierColours";
@@ -16,6 +17,7 @@ import { ReviewTextInput } from "@/components/form/ReviewTextInput";
 import { TrackRater } from "@/components/form/TrackRater";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { RollingText } from "@/components/ui/RollingText";
 import coverColours from "@/styles/coverColours.module.css";
 import styles from "./ReviewForm.module.css";
 
@@ -146,12 +148,20 @@ interface LiveScoreProps {
 function LiveScore({ tracks, bonus, ratedCount }: LiveScoreProps) {
   const { baseScore, finalScore } = calculateAlbumScore(tracks, bonus);
   const tier = ratedCount > 0 ? scoreTier(finalScore) : "Unrated";
+  const roundedScore = Math.ceil(finalScore);
+  const shownScore = useCountUp(roundedScore, roundedScore);
 
   return (
     <div className={styles.live} style={{ color: tierColourVar(tier) }} aria-live="polite">
-      <span className={styles.number}>{ratedCount > 0 ? Math.ceil(finalScore) : "-"}</span>
+      {/* Screen readers get only the final score, not every number on the way to it */}
+      <span className={styles.number} aria-hidden="true">
+        {ratedCount > 0 ? shownScore : "-"}
+      </span>
+      <span className={styles.screenReaderOnly}>{ratedCount > 0 ? roundedScore : "No score yet"}</span>
       <div>
-        <div className={styles.word}>{tier}</div>
+        <div className={styles.word}>
+          <RollingText text={tier} value={finalScore} />
+        </div>
         <div className={styles.sum}>
           {ratedCount} of {tracks.length} rated. {baseScore} from the tracks, {bonus === 0 ? "no bonus" : `${formatBonus(bonus)} bonus`}.
         </div>

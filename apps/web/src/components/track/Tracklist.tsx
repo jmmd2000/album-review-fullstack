@@ -1,8 +1,8 @@
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { formatDuration } from "@shared/helpers/formatDuration";
-import { tierFillVar } from "@/lib/tierColours";
 import { splitFeatures } from "@/lib/trackFeatures";
 import { PickChip } from "@/components/track/PickChip";
+import { TierWordChip } from "@/components/ui/TierWordChip";
 import styles from "./Tracklist.module.css";
 
 import type { DisplayTrack } from "@shared/types";
@@ -52,9 +52,7 @@ function TrackRow({ track, position }: TrackRowProps) {
         )}
       </span>
       <span className={styles.duration}>{formatDuration(track.duration, "short")}</span>
-      <span className={styles.rating} style={{ backgroundColor: tierFillVar(tier) }}>
-        {tier}
-      </span>
+      <TierWordChip tier={tier}>{tier}</TierWordChip>
     </li>
   );
 }
