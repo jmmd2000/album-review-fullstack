@@ -11,6 +11,7 @@ import { morphProps, preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { CoverHighlight } from "@/components/album/CoverHighlight";
+import { CoverToolbar } from "@/components/album/CoverToolbar";
 import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
 import { ReviewContent } from "@/components/album/ReviewContent";
 import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
@@ -81,6 +82,7 @@ function RouteComponent() {
     <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(album.colors ?? [])}>
       <AlbumBackdrop until={panelsRef} />
       <CoverHighlight colours={album.colors ?? []} />
+      <CoverToolbar colours={album.colors ?? []} />
       <div className={styles.links}>
         <Link to="/albums" className={styles.link}>
           <ArrowLeftIcon weight="bold" aria-hidden="true" /> Albums

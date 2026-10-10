@@ -10,6 +10,7 @@ import { formatBonus } from "@/lib/reviewForm";
 import { toast } from "@/lib/toast";
 import { AlbumBackdrop } from "@/components/album/AlbumBackdrop";
 import { CoverHighlight } from "@/components/album/CoverHighlight";
+import { CoverToolbar } from "@/components/album/CoverToolbar";
 import { AlbumArtistsField } from "@/components/form/AlbumArtistsField";
 import { BonusSlider } from "@/components/form/BonusSlider";
 import { ColourSwatches } from "@/components/form/ColourSwatches";
@@ -75,6 +76,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
     <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(values.colours)}>
       <AlbumBackdrop until={headRef} />
       <CoverHighlight colours={values.colours} />
+      <CoverToolbar colours={values.colours} />
       <form className={styles.split} onSubmit={event => void handleSubmit(event)}>
         <div className={styles.aside}>
           {cover && <img className={styles.cover} src={cover.url} alt={`${albumName} cover`} width={cover.width} height={cover.height} {...morphProps("album", albumID)} />}

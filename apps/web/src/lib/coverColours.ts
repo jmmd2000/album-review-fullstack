@@ -44,6 +44,30 @@ function toOKLab(hex: string): OKLab {
   };
 }
 
+/** Converts an OKLab colour back to "#rrggbb", clipping anything outside sRGB to its edge. */
+function toHex(colour: OKLab): string {
+  const long = Math.pow(colour.lightness + 0.3963377774 * colour.a + 0.2158037573 * colour.b, 3);
+  const medium = Math.pow(colour.lightness - 0.1055613458 * colour.a - 0.0638541728 * colour.b, 3);
+  const short = Math.pow(colour.lightness - 0.0894841775 * colour.a - 1.291485548 * colour.b, 3);
+  const linear = [
+    4.0767416621 * long - 3.3077115913 * medium + 0.2309699292 * short,
+    -1.2684380046 * long + 2.6097574011 * medium - 0.3413193965 * short,
+    -0.0041960863 * long - 0.7034186147 * medium + 1.707614701 * short,
+  ];
+  return (
+    "#" +
+    linear
+      .map(channel => {
+        const clipped = Math.min(Math.max(channel, 0), 1);
+        const encoded = clipped <= 0.0031308 ? clipped * 12.92 : 1.055 * Math.pow(clipped, 1 / 2.4) - 0.055;
+        return Math.round(encoded * 255)
+          .toString(16)
+          .padStart(2, "0");
+      })
+      .join("")
+  );
+}
+
 function chroma(colour: OKLab): number {
   return Math.hypot(colour.a, colour.b);
 }
@@ -75,6 +99,25 @@ export function usableCoverColours(colours: ExtractedColor[], theme?: PageTheme)
     .filter(colour => themes.every(pageTheme => showsOn(colour.oklab, pageTheme)));
 
   return usable.sort((first, second) => chroma(second.oklab) - chroma(first.oklab)).map(colour => colour.hex);
+}
+
+/** How much of the cover colour goes into the browser's toolbar. The rest is the page colour, as at the top of the backdrop. */
+const TOOLBAR_COVER_SHARE = 0.45;
+
+/**
+ * The colour for the browser's own toolbar on an album page: the cover's most vivid colour for the theme, mixed into the page colour.
+ *
+ * @param colours The colours stored for an album's cover.
+ * @param theme The theme on screen.
+ * @returns A "#rrggbb" colour, or null when no cover colour stands out on that theme.
+ */
+export function toolbarColour(colours: ExtractedColor[], theme: PageTheme): string | null {
+  const [vivid] = usableCoverColours(colours, theme);
+  if (!vivid) return null;
+  const cover = toOKLab(vivid);
+  const page = pageColours[theme];
+  const mix = (coverValue: number, pageValue: number) => coverValue * TOOLBAR_COVER_SHARE + pageValue * (1 - TOOLBAR_COVER_SHARE);
+  return toHex({ lightness: mix(cover.lightness, page.lightness), a: mix(cover.a, page.a), b: mix(cover.b, page.b) });
 }
 
 /** The backdrop has five pools, one for each colour a cover can store */

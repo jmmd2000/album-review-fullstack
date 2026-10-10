@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { usableCoverColours } from "@/lib/coverColours";
+import { toolbarColour, usableCoverColours } from "@/lib/coverColours";
 
 describe("usableCoverColours", () => {
   it("keeps vivid colours, most vivid first", () => {
@@ -42,5 +42,23 @@ describe("usableCoverColours for one theme", () => {
 
   it("still drops mid and dark greys on the dark page", () => {
     expect(usableCoverColours([{ hex: "#808080" }, { hex: "#525252" }], "dark")).toEqual([]);
+  });
+});
+
+describe("toolbarColour", () => {
+  it("mixes the most vivid colour into the page colour", () => {
+    expect(toolbarColour([{ hex: "#808080" }, { hex: "#2f6fd6" }], "dark")).toMatch(/^#[0-9a-f]{6}$/);
+    expect(toolbarColour([{ hex: "#2f6fd6" }], "dark")).not.toBe("#2f6fd6");
+  });
+
+  it("is darker on the dark page than on the light one", () => {
+    const dark = toolbarColour([{ hex: "#2f6fd6" }], "dark") ?? "";
+    const light = toolbarColour([{ hex: "#2f6fd6" }], "light") ?? "";
+    const lightness = (hex: string) => parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(3, 5), 16) + parseInt(hex.slice(5, 7), 16);
+    expect(lightness(dark)).toBeLessThan(lightness(light));
+  });
+
+  it("leaves the toolbar alone for a black and white cover", () => {
+    expect(toolbarColour([{ hex: "#111111" }, { hex: "#cccccc" }], "light")).toBeNull();
   });
 });
