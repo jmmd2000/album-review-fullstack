@@ -1,11 +1,13 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { client, handle, handleVoid } from "@/lib/client";
+import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { queryKeys } from "@/lib/queryKeys";
 import { toReviewPayload } from "@/lib/reviewForm";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ReviewForm } from "@/components/form/ReviewForm";
 import { RouteError } from "@/components/ui/RouteError";
+import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 
 import type { ReviewFormValues } from "@/lib/reviewForm";
@@ -22,10 +24,17 @@ const reviewQueryOptions = (albumID: string) =>
 
 export const Route = createFileRoute("/albums/$albumID/edit")({
   ssr: false,
-  loader: ({ params, context }) => context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID)),
+  loader: ({ params, context }) => notFoundOn404(context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID))),
   component: RouteComponent,
+  notFoundComponent: () => (
+    <NotFound title="Album not found" detail="This album has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </NotFound>
+  ),
   errorComponent: ({ error, reset }) => (
-    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
+    <RouteError error={error} reset={reset}>
       <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>

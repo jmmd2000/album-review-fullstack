@@ -1,11 +1,13 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { ApiError, client, handle, handleVoid } from "@/lib/client";
+import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { queryKeys } from "@/lib/queryKeys";
 import { toReviewPayload } from "@/lib/reviewForm";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ReviewForm } from "@/components/form/ReviewForm";
 import { RouteError } from "@/components/ui/RouteError";
+import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 
 import type { ReviewFormValues } from "@/lib/reviewForm";
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
   ssr: false,
   loader: async ({ params, context }) => {
     try {
-      return await context.queryClient.ensureQueryData(spotifyAlbumQueryOptions(params.albumID));
+      return await notFoundOn404(context.queryClient.ensureQueryData(spotifyAlbumQueryOptions(params.albumID)));
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) throw redirect({ to: "/albums/$albumID", params: { albumID: params.albumID } });
       if (error instanceof ApiError && error.status === 401) return undefined;
@@ -32,8 +34,15 @@ export const Route = createFileRoute("/albums/$albumID/create")({
     }
   },
   component: RouteComponent,
+  notFoundComponent: () => (
+    <NotFound title="Album not found" detail="Spotify has no album with this link.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </NotFound>
+  ),
   errorComponent: ({ error, reset }) => (
-    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="Spotify has no album with this link.">
+    <RouteError error={error} reset={reset}>
       <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>

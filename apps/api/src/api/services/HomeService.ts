@@ -1,6 +1,6 @@
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
-import type { HomeOverview, HomeSearchAlbum, HomeSearchArtist, HomeSearchResult } from "@shared/types";
+import type { HomeAlbum, HomeOverview, HomeSearchAlbum, HomeSearchArtist, HomeSearchResult, ReviewedAlbum } from "@shared/types";
 
 /** Enough covers to fill the home page's columns on a wide screen */
 const SAMPLE_SIZE = 64;
@@ -8,6 +8,18 @@ const SAMPLE_SIZE = 64;
 const SEARCH_LIMIT = 5;
 /** Artists come first in the dropdown, so this many at most leaves room for albums */
 const SEARCH_ARTIST_SHARE = 2;
+
+function toHomeAlbum(album: ReviewedAlbum): HomeAlbum {
+  return {
+    spotifyID: album.spotifyID,
+    name: album.name,
+    artistName: album.artistName,
+    releaseYear: album.releaseYear,
+    finalScore: album.finalScore,
+    imageURLs: album.imageURLs,
+    colors: album.colors,
+  };
+}
 
 export class HomeService {
   /**
@@ -22,17 +34,13 @@ export class HomeService {
       ArtistModel.getArtistCount(),
     ]);
 
-    const albums = sample.map(album => ({
-      spotifyID: album.spotifyID,
-      name: album.name,
-      artistName: album.artistName,
-      releaseYear: album.releaseYear,
-      finalScore: album.finalScore,
-      imageURLs: album.imageURLs,
-      colors: album.colors,
-    }));
+    return { albums: sample.map(toHomeAlbum), latestAlbumID, albumCount, artistCount };
+  }
 
-    return { albums, latestAlbumID, albumCount, artistCount };
+  /** Picks a random reviewed album for the not found page, or null when there are no reviews. */
+  static async getPick(): Promise<HomeAlbum | null> {
+    const [album] = await AlbumModel.getRandomAlbums(1);
+    return album ? toHomeAlbum(album) : null;
   }
 
   /**

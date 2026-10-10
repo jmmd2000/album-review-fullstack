@@ -10,6 +10,7 @@ export const queryKeys = {
     all: ["home"] as const,
     overview: ["home", "overview"] as const,
     search: (query: string) => ["home", "search", query] as const,
+    pick: ["home", "pick"] as const,
   },
   auth: {
     status: ["auth", "status"] as const,

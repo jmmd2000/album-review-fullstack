@@ -3,6 +3,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
 import { ArtistHeader } from "@/components/artist/ArtistHeader";
@@ -14,6 +15,7 @@ import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { RouteError } from "@/components/ui/RouteError";
+import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import styles from "./index.module.css";
 
@@ -33,13 +35,20 @@ const artistQueryOptions = (artistID: string) =>
 export const Route = createFileRoute("/artists/$artistID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    const details = await context.queryClient.ensureQueryData(artistQueryOptions(params.artistID));
+    const details = await notFoundOn404(context.queryClient.ensureQueryData(artistQueryOptions(params.artistID)));
     await preloadImage(details.artist.imageURLs[0]?.url);
     return details;
   },
   component: RouteComponent,
+  notFoundComponent: () => (
+    <NotFound title="Artist not found" detail="This artist has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/artists" variant="secondary">
+        Back to artists
+      </ButtonLink>
+    </NotFound>
+  ),
   errorComponent: ({ error, reset }) => (
-    <RouteError error={error} reset={reset} notFoundTitle="Artist not found" notFoundDetail="This artist has not been reviewed, or the link is wrong.">
+    <RouteError error={error} reset={reset}>
       <ButtonLink to="/artists" variant="secondary">
         Back to artists
       </ButtonLink>

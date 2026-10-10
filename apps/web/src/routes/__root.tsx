@@ -6,6 +6,7 @@ import funnelSansURL from "@fontsource-variable/funnel-sans/files/funnel-sans-la
 import { AuthProvider } from "@/auth/AuthContext";
 import appCss from "@/styles/globals.css?url";
 import { Navbar } from "@/components/layout/Navbar";
+import { NotFound } from "@/components/layout/NotFound";
 import { themeScript } from "@/lib/theme";
 import styles from "./__root.module.css";
 
@@ -39,6 +40,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   }),
   shellComponent: RootDocument,
   component: RootComponent,
+  // The root owns the not found page, so the server sends its styles with the root's
+  notFoundComponent: () => <NotFound />,
 });
 
 function RootDocument({ children }: { children: ReactNode }) {

@@ -11,6 +11,9 @@ const home = new Hono()
   .get("/", async c => {
     return c.json(await HomeService.getOverview(), 200);
   })
+  .get("/pick", async c => {
+    return c.json(await HomeService.getPick(), 200);
+  })
   .get("/search", validate("query", searchSchema), async c => {
     return c.json(await HomeService.search(c.req.valid("query").query), 200);
   });

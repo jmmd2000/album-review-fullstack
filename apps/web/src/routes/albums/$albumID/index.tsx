@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { coverColourStyle } from "@/lib/coverColours";
 import { morphProps, preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
@@ -14,6 +15,7 @@ import { ReviewContent } from "@/components/album/ReviewContent";
 import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
 import { Tracklist } from "@/components/track/Tracklist";
 import { RouteError } from "@/components/ui/RouteError";
+import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import coverColours from "@/styles/coverColours.module.css";
 import styles from "./index.module.css";
@@ -34,13 +36,20 @@ const reviewQueryOptions = (albumID: string) =>
 export const Route = createFileRoute("/albums/$albumID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    const review = await context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID));
+    const review = await notFoundOn404(context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID)));
     await preloadImage(review.album.imageURLs[0]?.url);
     return review;
   },
   component: RouteComponent,
+  notFoundComponent: () => (
+    <NotFound title="Album not found" detail="This album has not been reviewed, or the link is wrong.">
+      <ButtonLink to="/albums" variant="secondary">
+        Back to albums
+      </ButtonLink>
+    </NotFound>
+  ),
   errorComponent: ({ error, reset }) => (
-    <RouteError error={error} reset={reset} notFoundTitle="Album not found" notFoundDetail="This album has not been reviewed, or the link is wrong.">
+    <RouteError error={error} reset={reset}>
       <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>
