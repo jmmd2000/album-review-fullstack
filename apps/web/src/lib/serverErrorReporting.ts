@@ -2,8 +2,8 @@ import * as Sentry from "@sentry/node";
 
 /**
  * Builds the SDK options. Only the integrations listed here run, so the SDK never collects
- * request data such as cookies, headers, bodies or query strings by itself. The default
- * integrations would collect it, so they stay off. beforeSend drops any that arrives anyway.
+ * request data such as cookies, headers or bodies by itself. The default integrations would
+ * collect it, so they stay off. beforeSend keeps only the page address from the request.
  *
  * @param dsn Where GlitchTip takes events.
  * @param environment Where the events come from, such as production or staging.
@@ -21,7 +21,7 @@ export function buildErrorReportingOptions(dsn: string, environment: string, rel
       // "strict" keeps Node's own behaviour: an unhandled rejection stops the process
       Sentry.onUnhandledRejectionIntegration({ mode: "strict" }),
     ],
-    beforeSend: event => ({ ...event, request: undefined }),
+    beforeSend: event => ({ ...event, request: event.request?.url ? { url: event.request.url } : undefined }),
   };
 }
 
@@ -41,7 +41,12 @@ export function startErrorReporting(): void {
  *
  * @param error The error to send.
  * @param tags Values to search by in GlitchTip.
+ * @param pageURL The address of the page that failed, with its query string.
  */
-export function reportError(error: unknown, tags: Record<string, string> = {}): void {
-  Sentry.captureException(error, { tags });
+export function reportError(error: unknown, tags: Record<string, string> = {}, pageURL?: string): void {
+  Sentry.withScope(scope => {
+    scope.setTags(tags);
+    if (pageURL) scope.addEventProcessor(event => ({ ...event, request: { url: pageURL } }));
+    Sentry.captureException(error);
+  });
 }

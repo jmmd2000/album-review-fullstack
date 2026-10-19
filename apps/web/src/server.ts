@@ -9,7 +9,7 @@ startErrorReporting();
 const fetch = createStartHandler(
   defineHandlerCallback(context => {
     for (const { routeId, error } of routeFailuresToReport(context.router.state.matches)) {
-      reportError(error, { side: "server", route: routeId });
+      reportError(error, { side: "server", route: routeId }, context.request.url);
     }
     return defaultStreamHandler(context);
   })
