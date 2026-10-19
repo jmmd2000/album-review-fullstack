@@ -50,6 +50,8 @@ services:
       BROWSERLESS_URL: ws://browserless:3000
       BROWSERLESS_TOKEN: ${BROWSERLESS_TOKEN}
       SCHEDULED_REFRESH: ${SCHEDULED_REFRESH:-false}
+      GLITCHTIP_DSN: ${GLITCHTIP_API_DSN:-}
+      GLITCHTIP_ENVIRONMENT: ${GLITCHTIP_ENVIRONMENT:-}
       NODE_ENV: production
     depends_on:
       db:
@@ -91,6 +93,9 @@ services:
     environment:
       # Where SSR fetches reach the api, over the internal network
       API_ORIGIN: http://api:4000
+      # Error reporting is off while the DSN is empty
+      GLITCHTIP_DSN: ${GLITCHTIP_WEB_DSN:-}
+      GLITCHTIP_ENVIRONMENT: ${GLITCHTIP_ENVIRONMENT:-}
     depends_on:
       api:
         condition: service_healthy

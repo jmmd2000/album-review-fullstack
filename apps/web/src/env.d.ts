@@ -10,3 +10,8 @@ declare const __REACT_VERSION__: string;
 declare const __VITE_VERSION__: string;
 /** The site's version, from the root package.json */
 declare const __SITE_VERSION__: string;
+
+/** The values for error reporting, set by /glitchtip-config.js. Null or missing means reporting is off. */
+interface Window {
+  __GLITCHTIP__?: { dsn: string; environment: string } | null;
+}

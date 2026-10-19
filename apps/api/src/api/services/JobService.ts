@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import type { JobEventMap } from "@shared/types";
+import { reportError } from "@/config/errorReporting";
 
 export type JobEvent = {
   /** Counts up from 0. It is also the SSE event id, so a client that reconnects can resume. */
@@ -84,6 +85,7 @@ export const JobService = {
       try {
         await runner((event, data) => job.push(event, data));
       } catch (error) {
+        reportError(error);
         // Not "error": EventSource uses that name for its own connection errors
         job.push("fatal", { message: (error as Error).message });
       } finally {
