@@ -57,7 +57,7 @@ function listen(): Promise<{ url: string; close: () => void }> {
 }
 
 describe("an unexpected error in a request", () => {
-  test("is reported with its environment, release and request ID, and without request data", async () => {
+  test("is reported with its environment, release, request ID, method and path, and without request data", async () => {
     vi.spyOn(AuthService, "authenticate").mockRejectedValue(new Error("the database is down"));
     const server = await listen();
 
@@ -71,7 +71,11 @@ describe("an unexpected error in a request", () => {
 
     expect(res.status).toBe(500);
     expect(sentEvents).toHaveLength(1);
-    expect(sentEvents[0]).toMatchObject({ environment: "staging", release: "abc1234", tags: { requestID: res.headers.get("x-request-id") } });
+    expect(sentEvents[0]).toMatchObject({
+      environment: "staging",
+      release: "abc1234",
+      tags: { requestID: res.headers.get("x-request-id"), method: "POST", path: "/api/auth/login" },
+    });
     const sent = JSON.stringify(sentEvents);
     for (const secret of [password, cookie, authorisation, searchTerm]) {
       expect(sent).not.toContain(secret);
