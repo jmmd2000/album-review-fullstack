@@ -1,6 +1,7 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import type { Progress } from "@shared/types";
 import { JobService, type JobEvent } from "@/api/services/JobService";
+import * as errorReporting from "@/config/errorReporting";
 
 const progress = (index: number): Progress => ({ index, total: 2, spotifyID: "jobTestArtistSpotify01", artistName: "Artist" });
 
@@ -41,13 +42,17 @@ test("resumes after a given event id, so a reconnect gets no duplicates", async 
   expect(events.map(e => e.id)).toEqual([1, 2]);
 });
 
-test("surfaces a thrown runner error as a final fatal event", async () => {
+test("surfaces a thrown runner error as a final fatal event and reports it", async () => {
+  const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
+  const error = new Error("boom");
   const id = JobService.create(async () => {
-    throw new Error("boom");
+    throw error;
   });
 
   const events = await collect(jobFor(id).stream(-1));
 
   expect(events.map(e => e.event)).toEqual(["fatal", "done"]);
   expect((events[0].data as { message: string }).message).toBe("boom");
+  expect(report).toHaveBeenCalledWith(error);
+  report.mockRestore();
 });

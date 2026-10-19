@@ -1,5 +1,6 @@
 import { logger } from "@/config/logger";
 import { env } from "@/config/env";
+import { reportError } from "@/config/errorReporting";
 import { ArtistImageService, type ArtistImageJob } from "@/api/services/ArtistImageService";
 import { SettingsService } from "@/api/services/SettingsService";
 import type { JobEmit } from "@/api/services/JobService";
@@ -39,6 +40,7 @@ async function runIfDue(job: ArtistImageJob, intervalDays: number, now: Date): P
     logger.info({ job }, "Scheduled artist refresh finished");
   } catch (error) {
     logger.error({ job, error }, "Scheduled artist refresh stopped early");
+    reportError(error, { job });
   }
 }
 

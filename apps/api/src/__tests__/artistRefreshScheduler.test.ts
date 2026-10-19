@@ -2,6 +2,7 @@ import { afterEach, describe, test, expect, vi } from "vitest";
 import { ArtistRefreshScheduler, isRefreshDue } from "@/api/services/ArtistRefreshScheduler";
 import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { SettingsService } from "@/api/services/SettingsService";
+import * as errorReporting from "@/config/errorReporting";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const threeAM = new Date("2026-10-12T03:00:00Z");
@@ -80,15 +81,18 @@ describe("runDueRefreshes", () => {
     expect(calls).toEqual(["headers"]);
   });
 
-  test("a photo refresh that throws doesn't stop the header refresh", async () => {
+  test("a photo refresh that throws is reported and doesn't stop the header refresh", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
     const { images, headers } = mockJobs();
-    images.mockRejectedValue(new Error("spotify is down"));
+    const error = new Error("spotify is down");
+    images.mockRejectedValue(error);
 
     await ArtistRefreshScheduler.runDueRefreshes(threeAM);
 
     expect(headers).toHaveBeenCalledTimes(1);
+    expect(report).toHaveBeenCalledWith(error, { job: "images" });
   });
 
   test("does nothing when the interval is 0", async () => {

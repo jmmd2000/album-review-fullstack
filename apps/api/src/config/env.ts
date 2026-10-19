@@ -31,6 +31,21 @@ function optionalPort(key: string, fallback: number): number {
   return port;
 }
 
+function isDSN(value: string): boolean {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return url.username !== "" && /^\/\d+$/.test(url.pathname);
+}
+
+function optionalDSN(key: string): string | undefined {
+  const value = process.env[key];
+  if (value === undefined || value === "") return undefined;
+  if (!isDSN(value)) throw new Error(`Environment variable ${key} must be a DSN, such as https://<key>@<host>/<project id>`);
+  return value;
+}
+
+const glitchTipDSN = optionalDSN("GLITCHTIP_DSN");
+
 export const env = {
   // e2e runs its own API on a spare port
   PORT: optionalPort("PORT", 4000),
@@ -46,4 +61,9 @@ export const env = {
   BROWSERLESS_TOKEN: process.env.BROWSERLESS_TOKEN ?? "dev-token",
   // Only production sets this. Staging restores the production database, so the settings table can't keep it off there.
   SCHEDULED_REFRESH: optionalFlag("SCHEDULED_REFRESH"),
+  // Error reporting is off without a DSN. The environment names where events come from, such as production or staging.
+  GLITCHTIP_DSN: glitchTipDSN,
+  GLITCHTIP_ENVIRONMENT: glitchTipDSN ? requireEnv("GLITCHTIP_ENVIRONMENT") : undefined,
+  // Baked into the image by the docker build, "dev" outside a built image
+  GIT_SHA: process.env.GIT_SHA ?? "dev",
 };

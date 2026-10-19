@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { CORS_ORIGINS } from "@/config/cors";
 import { logger } from "@/config/logger";
+import { reportError } from "@/config/errorReporting";
 import { AppError } from "@/api/AppError";
 import { requestLogger } from "@/api/middleware/requestLogger";
 import { db, query, type Executor } from "@/db/client";
@@ -65,11 +66,13 @@ app.onError((err, c) => {
   if (err instanceof AppError) {
     if (err.status >= 500) {
       logger.error({ requestID, err }, err.message);
+      reportError(err, { requestID });
     } else {
       logger.warn({ requestID }, `${err.status}: ${err.message}`);
     }
     return c.json({ message: err.message }, err.status as ContentfulStatusCode);
   }
   logger.error({ requestID, err }, "Unhandled error");
+  reportError(err, { requestID });
   return c.json({ message: "Internal server error" }, 500);
 });

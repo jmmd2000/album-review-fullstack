@@ -24,6 +24,7 @@
     "@album-reviews/shared": "workspace:*",
     "@hono/node-server": "2.1.3",
     "@hono/zod-validator": "0.9.1",
+    "@sentry/node": "11.8.0",
     "bcryptjs": "3.0.3",
     "dotenv": "18.0.6",
     "drizzle-kit": "0.31.11",
