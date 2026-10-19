@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node dist/albums-api.js",
     "dev": "nodemon --watch src --legacy-watch --exec tsx src/index.ts",
     "build": "tsc --noEmit && tsup",
     "typecheck": "tsc --noEmit",

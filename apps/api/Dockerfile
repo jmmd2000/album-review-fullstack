@@ -23,6 +23,24 @@ COPY packages/shared ./packages/shared
 WORKDIR /app/apps/api
 RUN pnpm run build
 
+# Source maps. The inject step stamps a debug ID into the bundle, and GlitchTip matches it to the uploaded map.
+# The upload needs the token, so a build without it skips the upload. A failed upload warns and the build goes on.
+# The step prints GIT_SHA and BUILT_AT so Docker runs it again for every build, and a failed upload is never cached.
+# The maps are deleted afterwards, so the image never ships them.
+# Only the app bundle is uploaded. The drizzle files only run in the migrate container.
+# Do not set SENTRY_LOG_LEVEL=debug here, because it can print the token.
+ARG GIT_SHA=dev
+ARG BUILT_AT=""
+ENV SENTRY_URL=https://glitchtip.vps.jamesmddoyle.com SENTRY_ORG=james-org SENTRY_PROJECT=albums-api
+RUN --mount=type=secret,id=glitchtip_token,env=SENTRY_AUTH_TOKEN \
+    echo "Source maps for $GIT_SHA built at $BUILT_AT" \
+ && pnpm exec sentry-cli sourcemaps inject dist/albums-api.js dist/albums-api.js.map \
+ && if [ -n "$SENTRY_AUTH_TOKEN" ]; then \
+      pnpm exec sentry-cli sourcemaps upload --release "$GIT_SHA" dist/albums-api.js dist/albums-api.js.map \
+        || echo "WARNING: source map upload failed"; \
+    else echo "No GlitchTip token, so the source maps are not uploaded"; fi \
+ && find dist -name "*.map" -delete
+
 # Deploy prod deps to a clean directory
 WORKDIR /app
 RUN pnpm --filter @album-reviews/api deploy --prod --legacy /deploy
@@ -61,4 +79,4 @@ USER node
 # Expose port
 EXPOSE 4000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/albums-api.js"]

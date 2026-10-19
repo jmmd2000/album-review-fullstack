@@ -6,6 +6,10 @@ images:
       GIT_SHA: "{tag}"
       GIT_MESSAGE_B64: "{commitMessageBase64}"
       BUILT_AT: "{builtAt}"
+    buildSecrets:
+      glitchtip_token: glitchtip-token
+    buildSecrets:
+      glitchtip_token: glitchtip-token
   - name: album-web
     dockerfile: apps/web/Dockerfile
     buildArgs:

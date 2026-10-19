@@ -5,7 +5,8 @@ import { defineConfig } from "tsup";
 // can load them standalone at migrate time.
 export default defineConfig({
   entry: {
-    index: "src/index.ts",
+    // GlitchTip can match a third-party file called index.js to this bundle's map, so the bundle has a name of its own
+    "albums-api": "src/index.ts",
     "drizzle.config": "drizzle.config.ts",
     "db/schema": "src/db/schema.ts",
   },
@@ -13,4 +14,6 @@ export default defineConfig({
   target: "node26",
   outDir: "dist",
   clean: true,
+  // The build step in the Dockerfile uploads the maps and then deletes them.
+  sourcemap: true,
 });
