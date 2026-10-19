@@ -35,6 +35,21 @@ ENV BUILT_AT=$BUILT_AT
 
 RUN pnpm run build
 
+# Source maps. The inject step stamps a debug ID into each bundle, and GlitchTip matches it to the uploaded map.
+# The upload needs the token, so a build without it skips the upload. A failed upload warns and the build goes on.
+# The step prints GIT_SHA and BUILT_AT so Docker runs it again for every build, and a failed upload is never cached.
+# The maps are deleted afterwards, so the image never serves them.
+# Do not set SENTRY_LOG_LEVEL=debug here, because it can print the token.
+ENV SENTRY_URL=https://glitchtip.vps.jamesmddoyle.com SENTRY_ORG=james-org SENTRY_PROJECT=albums-web
+RUN --mount=type=secret,id=glitchtip_token,env=SENTRY_AUTH_TOKEN \
+    echo "Source maps for $GIT_SHA built at $BUILT_AT" \
+ && pnpm exec sentry-cli sourcemaps inject dist \
+ && if [ -n "$SENTRY_AUTH_TOKEN" ]; then \
+      pnpm exec sentry-cli sourcemaps upload --release "$GIT_SHA" dist \
+        || echo "WARNING: source map upload failed"; \
+    else echo "No GlitchTip token, so the source maps are not uploaded"; fi \
+ && find dist -name "*.map" -delete
+
 # The ssr pass links the stylesheet by its own hash, which only matches the
 # client's copy while both passes produce identical bytes. Ship the ssr copy
 # so the linked file always exists

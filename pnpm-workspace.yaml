@@ -6,4 +6,6 @@ saveExact: true
 engineStrict: true
 minimumReleaseAge: 0
 allowBuilds:
+  # The Sentry CLI binary comes from a platform package, so its own install script is not needed.
+  "@sentry/cli": false
   esbuild: true

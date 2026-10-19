@@ -44,6 +44,8 @@ export default defineConfig(({ command }) => ({
   // produced identical bytes, the dockerfile copies it into the public dir
   build: {
     ssrEmitAssets: true,
+    // The build step in the Dockerfile uploads the maps and then deletes them. Hidden leaves out the link to them.
+    sourcemap: "hidden",
   },
   plugins: [tanstackStart(), viteReact()],
   resolve: {

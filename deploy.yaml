@@ -11,6 +11,8 @@ images:
     buildArgs:
       GIT_SHA: "{tag}"
       BUILT_AT: "{builtAt}"
+    buildSecrets:
+      glitchtip_token: glitchtip-token
 files: [docker-compose.yml, backup.sh]
 database: db
 migrate: migrate
