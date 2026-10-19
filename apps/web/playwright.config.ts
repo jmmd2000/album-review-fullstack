@@ -40,6 +40,8 @@ export default defineConfig({
         DATABASE_URL: e2eEnvironment.DATABASE_URL_TEST_E2E,
         CLIENT_ORIGIN: `http://localhost:${E2E_WEB_PORT}`,
         SCHEDULED_REFRESH: "false",
+        // A DSN in .env must not send e2e errors to GlitchTip
+        GLITCHTIP_DSN: "",
       },
     },
     {
@@ -49,7 +51,7 @@ export default defineConfig({
       reuseExistingServer: false,
       cwd: "../..",
       timeout: 60000,
-      env: { API_ORIGIN: `http://localhost:${E2E_API_PORT}` },
+      env: { API_ORIGIN: `http://localhost:${E2E_API_PORT}`, GLITCHTIP_DSN: "" },
     },
   ],
 });
