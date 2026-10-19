@@ -5,11 +5,28 @@ import { compress } from "hono/compress";
 import { z } from "zod";
 import start from "./dist/server/server.js";
 
-const environmentSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  // Server rendering reaches the api here, so a missing one would send every request to localhost
-  API_ORIGIN: z.url(),
-});
+function isDSN(value) {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return url.username !== "" && /^\/\d+$/.test(url.pathname);
+}
+
+// A blank line in .env counts as not set
+const optional = schema => z.preprocess(value => (value === "" ? undefined : value), schema.optional());
+
+const environmentSchema = z
+  .object({
+    PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+    // Server rendering reaches the api here, so a missing one would send every request to localhost
+    API_ORIGIN: z.url(),
+    // Error reporting is off without a DSN. The start bundle reads both values itself.
+    GLITCHTIP_DSN: optional(z.string().refine(isDSN, "Must be a DSN, such as https://<key>@<host>/<project id>")),
+    GLITCHTIP_ENVIRONMENT: optional(z.string()),
+  })
+  .refine(environment => !environment.GLITCHTIP_DSN || environment.GLITCHTIP_ENVIRONMENT, {
+    message: "Needed whenever GLITCHTIP_DSN is set, such as production or staging",
+    path: ["GLITCHTIP_ENVIRONMENT"],
+  });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);
 
