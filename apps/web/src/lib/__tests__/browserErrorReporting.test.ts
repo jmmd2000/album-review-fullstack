@@ -7,6 +7,8 @@ interface SentEvent {
   environment?: string;
   release?: string;
   tags?: Record<string, string>;
+  request?: { url?: string; headers?: Record<string, string> };
+  breadcrumbs?: { category?: string; message?: string }[];
 }
 
 let sentEvents: SentEvent[] = [];
@@ -14,6 +16,7 @@ let sentEvents: SentEvent[] = [];
 /** Starts the SDK with the real options and a transport that keeps the events in memory. */
 function startWithFakeTransport() {
   sentEvents = [];
+  Sentry.getCurrentScope().clearBreadcrumbs();
   Sentry.init({
     ...buildBrowserErrorReportingOptions("https://key@glitchtip.invalid/1", "staging", "abc1234"),
     transport: () => ({
@@ -63,16 +66,39 @@ describe("reportBrowserError", () => {
     expect(sentEvents).toHaveLength(0);
   });
 
-  it("sends no cookies, query strings or page address", async () => {
+  it("sends the page address and the browser, and nothing else about the request", async () => {
     document.cookie = "token=secret-cookie-value";
-    window.history.pushState({}, "", "/search?q=secret-search-term");
+    window.history.pushState({}, "", "/search?q=some-term");
     startWithFakeTransport();
     reportBrowserError(new Error("boom"));
     await Sentry.flush(2000);
-    const sent = JSON.stringify(sentEvents);
     expect(sentEvents).toHaveLength(1);
-    expect(sent).not.toContain("secret-cookie-value");
-    expect(sent).not.toContain("secret-search-term");
+    expect(sentEvents[0].request).toEqual({ url: `${window.location.origin}/search?q=some-term`, headers: { "User-Agent": navigator.userAgent } });
+    expect(JSON.stringify(sentEvents)).not.toContain("secret-cookie-value");
+  });
+});
+
+describe("the actions before an error", () => {
+  it("are clicks, page changes and failed API calls, and never typed text", async () => {
+    startWithFakeTransport();
+    const field = document.createElement("input");
+    field.name = "password";
+    const button = document.createElement("button");
+    button.id = "save";
+    document.body.append(field, button);
+
+    field.value = "typed-secret-text";
+    field.dispatchEvent(new KeyboardEvent("keypress", { bubbles: true, key: "t" }));
+    button.click();
+    window.history.pushState({}, "", "/albums?page=2");
+    await fetch("http://127.0.0.1:1/api/albums?page=2").catch(() => undefined);
+    reportBrowserError(new Error("boom"));
+    await Sentry.flush(2000);
+
+    const categories = sentEvents[0].breadcrumbs?.map(breadcrumb => breadcrumb.category);
+    expect(categories).toEqual(expect.arrayContaining(["ui.click", "navigation", "fetch"]));
+    expect(categories).not.toContain("ui.input");
+    expect(JSON.stringify(sentEvents)).not.toContain("typed-secret-text");
   });
 });
 

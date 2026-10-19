@@ -60,19 +60,20 @@ export type AppType = typeof app;
 // Anything else is logged in full and returns a generic 500 so internals never reach the client.
 app.onError((err, c) => {
   const requestID = c.get("requestID");
+  const request = { requestID, method: c.req.method, path: c.req.path };
   if (err instanceof HTTPException) {
     return c.json({ message: err.message }, err.status);
   }
   if (err instanceof AppError) {
     if (err.status >= 500) {
       logger.error({ requestID, err }, err.message);
-      reportError(err, { requestID });
+      reportError(err, request);
     } else {
       logger.warn({ requestID }, `${err.status}: ${err.message}`);
     }
     return c.json({ message: err.message }, err.status as ContentfulStatusCode);
   }
   logger.error({ requestID, err }, "Unhandled error");
-  reportError(err, { requestID });
+  reportError(err, request);
   return c.json({ message: "Internal server error" }, 500);
 });

@@ -2,9 +2,17 @@ import * as Sentry from "@sentry/react";
 import { ApiError } from "@/lib/client";
 
 /**
+ * The address of the page, with its query string, and the browser's own description of itself.
+ * Nothing else about the request goes in an event, so there are no cookies, referrer or other headers.
+ */
+function describePage() {
+  return { url: `${window.location.origin}${window.location.pathname}${window.location.search}`, headers: { "User-Agent": navigator.userAgent } };
+}
+
+/**
  * Builds the SDK options. Only the integrations listed here run, so the SDK never collects
- * request data such as cookies, headers or query strings by itself. The default integrations
- * would collect some of it, so they stay off. beforeSend drops any that arrives anyway.
+ * request data such as cookies or headers by itself. The default integrations would collect
+ * some of it, so they stay off. beforeSend adds the page address and the browser, and nothing more.
  *
  * @param dsn Where GlitchTip takes events. It is public, like any browser DSN.
  * @param environment Where the events come from, such as production or staging.
@@ -16,8 +24,16 @@ export function buildBrowserErrorReportingOptions(dsn: string, environment: stri
     environment,
     release,
     defaultIntegrations: false,
-    integrations: [Sentry.linkedErrorsIntegration(), Sentry.globalHandlersIntegration()],
-    beforeSend: event => ({ ...event, request: undefined }),
+    integrations: [
+      Sentry.linkedErrorsIntegration(),
+      Sentry.globalHandlersIntegration(),
+      // The clicks, page changes and API calls before an error. This integration does not record console messages, which could hold data.
+      Sentry.breadcrumbsIntegration({ sentry: false }),
+    ],
+    maxBreadcrumbs: 20,
+    // A typing breadcrumb names the field that the person typed in. Nothing about typing goes in an event.
+    beforeBreadcrumb: breadcrumb => (breadcrumb.category === "ui.input" ? null : breadcrumb),
+    beforeSend: event => ({ ...event, request: describePage() }),
   };
 }
 
