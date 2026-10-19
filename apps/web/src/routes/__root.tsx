@@ -30,6 +30,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [
+      // Blocks until it runs, so the values are there before the app starts
+      { src: "/glitchtip-config.js" },
       {
         src: "https://umami.vps.jamesmddoyle.com/script.js",
         defer: true,

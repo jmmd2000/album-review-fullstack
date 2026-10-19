@@ -48,6 +48,16 @@ app.use(async (context, next) => {
   context.header("X-Frame-Options", "DENY");
 });
 
+// The browser's error reporting reads its DSN and environment from here, so one image can serve staging and production.
+// A DSN is public by design. This route must come before the static files, which have an "off" copy for dev.
+app.get("/glitchtip-config.js", context => {
+  const { GLITCHTIP_DSN: dsn, GLITCHTIP_ENVIRONMENT: environment } = parsedEnvironment.data;
+  const config = dsn ? { dsn, environment } : null;
+  context.header("Content-Type", "text/javascript");
+  context.header("Cache-Control", "no-cache");
+  return context.body(`window.__GLITCHTIP__ = ${JSON.stringify(config)};`);
+});
+
 // Hashed bundles never change, so they cache for a year. A missing bundle
 // must 404 rather than fall through to the document pretending to be js
 app.use(
