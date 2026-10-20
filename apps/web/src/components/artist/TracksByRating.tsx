@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { scoreTier } from "@shared/helpers/ratingTiers";
+import { trackEvent } from "@/lib/analytics";
 import { tierColourVar } from "@/lib/tierColours";
 import { splitFeatures } from "@/lib/trackFeatures";
 import { Button } from "@/components/ui/Button";
@@ -37,6 +38,11 @@ export function TracksByRating({ tracks, artistName }: TracksByRatingProps) {
   const shownGroups = showAll ? groups : groups.slice(0, GROUPS_SHOWN_FIRST);
   const hiddenTrackCount = groups.slice(GROUPS_SHOWN_FIRST).reduce((total, group) => total + group.tracks.length, 0);
 
+  const showEveryTrack = () => {
+    setShowAll(true);
+    trackEvent("tracks-show-all");
+  };
+
   return (
     <div className={styles.shell}>
       {shownGroups.map(group => {
@@ -60,7 +66,7 @@ export function TracksByRating({ tracks, artistName }: TracksByRatingProps) {
         );
       })}
       {!showAll && hiddenTrackCount > 0 && (
-        <Button className={styles.more} onClick={() => setShowAll(true)}>
+        <Button className={styles.more} onClick={showEveryTrack}>
           Show the other {hiddenTrackCount} tracks
         </Button>
       )}

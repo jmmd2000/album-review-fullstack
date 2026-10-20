@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { REVIEWED, capturedAlbum } from "../../../api/src/db/fixtures/fixtures";
 
 const album = capturedAlbum(REVIEWED[0].spotifyID);
+const artist = album.artists[0];
 
 // Stands in for the Umami script, which does not load on the e2e domain
 test.beforeEach(async ({ page }) => {
@@ -86,4 +87,42 @@ test("an album that has not been reviewed sends not-found as an album", async ({
 
   await expect(page.getByRole("heading", { name: "Album not found" })).toBeVisible();
   await expect.poll(() => trackedEvents(page)).toContainEqual(["not-found", { path: "/albums/not-a-reviewed-album", kind: "album" }]);
+});
+
+test("switching the theme sends the theme that is now showing", async ({ page }) => {
+  await page.goto("/");
+
+  // Hydration wires up the button, so the click is repeated until it takes
+  await expect(async () => {
+    await page.getByRole("button", { name: "Dark mode" }).click();
+    expect((await trackedEvents(page)).length).toBeGreaterThan(0);
+  }).toPass({ timeout: 15000 });
+
+  const shownTheme = await page.evaluate(() => document.documentElement.dataset.theme);
+  expect(await trackedEvents(page)).toEqual([["theme-toggle", { theme: shownTheme }]]);
+});
+
+test("opening how scores work sends one event, and closing it sends none", async ({ page }) => {
+  await page.goto(`/artists/${artist.spotifyID}`);
+  const trigger = page.getByRole("button", { name: "How scores work" });
+
+  await expect(async () => {
+    await trigger.click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15000 });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+
+  expect(await trackedEvents(page)).toEqual([["score-explainer-open"]]);
+});
+
+test("showing all of an artist's rated tracks sends one event", async ({ page }) => {
+  await page.goto(`/artists/${artist.spotifyID}`);
+
+  await expect(async () => {
+    await page.getByRole("button", { name: /^Show the other \d+ tracks$/ }).click({ timeout: 1000 });
+    await expect(page.getByRole("button", { name: /^Show the other \d+ tracks$/ })).toBeHidden({ timeout: 1000 });
+  }).toPass({ timeout: 15000 });
+
+  expect(await trackedEvents(page)).toEqual([["tracks-show-all"]]);
 });
