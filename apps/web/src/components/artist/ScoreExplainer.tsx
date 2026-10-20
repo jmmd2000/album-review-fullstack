@@ -1,12 +1,17 @@
 import { Popover } from "@base-ui/react/popover";
 import { InfoIcon } from "@phosphor-icons/react";
 import { SINGLE_RELEASE_DISCOUNT } from "@shared/constants";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./ScoreExplainer.module.css";
 
 /** A button that opens a short, plain-words note on how artist scores work. It shows no figures from the artist. */
 export function ScoreExplainer() {
   return (
-    <Popover.Root>
+    <Popover.Root
+      onOpenChange={isOpen => {
+        if (isOpen) trackEvent("score-explainer-open");
+      }}
+    >
       <Popover.Trigger className={styles.trigger}>
         <InfoIcon weight="bold" aria-hidden="true" /> How scores work
       </Popover.Trigger>

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Autocomplete } from "@base-ui/react/autocomplete";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { trackEvent } from "@/lib/analytics";
 import { morphProps } from "@/lib/coverMorph";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ScoreChip } from "@/components/ui/ScoreChip";
@@ -20,6 +21,9 @@ const homeSearchQueryOptions = (query: string) =>
 
 /** The thumbnail is 44px, so this covers a 2x screen */
 const THUMBNAIL_WIDTH = 88;
+
+/** How long a search that finds nothing must stay as it is before it counts as a search that found nothing */
+const EMPTY_SEARCH_DELAY_MS = 1000;
 
 function plural(count: number, word: string): string {
   return `${count.toLocaleString("en-GB")} ${word}${count === 1 ? "" : "s"}`;
@@ -48,11 +52,19 @@ export function HomeSearch({ albumCount, artistCount }: HomeSearchProps) {
   const items = text.trim() === "" ? [] : (results.data ?? []);
   // Says nothing matches only once the results for the current text are in
   const isSettled = query === text.trim() && results.isSuccess && !results.isPlaceholderData;
+  const isEmpty = isSettled && items.length === 0;
+
+  // The wait stops a search from counting at every letter that finds nothing
+  useEffect(() => {
+    if (!isEmpty) return;
+    const timer = window.setTimeout(() => trackEvent("home-search", { query, result: "none" }), EMPTY_SEARCH_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [isEmpty, query]);
 
   function getStatus(): string | null {
     if (text.trim() === "") return null;
     if (results.isError) return "The search isn't working. Try again.";
-    if (isSettled && items.length === 0) return "Nothing called that yet.";
+    if (isEmpty) return "Nothing called that yet.";
     return null;
   }
   const status = getStatus();
@@ -83,7 +95,13 @@ export function HomeSearch({ albumCount, artistCount }: HomeSearchProps) {
                       : ({ to: "/artists/$artistID", params: { artistID: result.spotifyID } } as const);
 
                   return (
-                    <Autocomplete.Item key={`${result.type}-${result.spotifyID}`} value={result} className={styles.item} render={<Link {...link} />}>
+                    <Autocomplete.Item
+                      key={`${result.type}-${result.spotifyID}`}
+                      value={result}
+                      className={styles.item}
+                      render={<Link {...link} />}
+                      onClick={() => trackEvent("home-search", { query, result: result.type })}
+                    >
                       {thumbnail ? (
                         <img className={thumbnailClass} src={thumbnail.url} alt="" width={44} height={44} {...morphProps(result.type, result.spotifyID, false)} />
                       ) : (
