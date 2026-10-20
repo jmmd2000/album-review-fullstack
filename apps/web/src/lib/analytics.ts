@@ -1,9 +1,12 @@
 import type { Theme } from "@/lib/theme";
 
+/** The kinds of page that can be missing. A page is any address the site has no route for. */
+export type NotFoundKind = "page" | "album" | "artist";
+
 /** The events the site sends to Umami, and the data each one carries. */
 interface AnalyticsEvents {
   "home-search": { query: string; result: "album" | "artist" | "none" };
-  "not-found": { path: string; kind: string };
+  "not-found": { path: string; kind: NotFoundKind };
   "theme-toggle": { theme: Theme };
   "score-explainer-open": undefined;
   "tracks-show-all": undefined;

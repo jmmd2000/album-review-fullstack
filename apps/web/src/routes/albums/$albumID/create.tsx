@@ -35,7 +35,7 @@ export const Route = createFileRoute("/albums/$albumID/create")({
   },
   component: RouteComponent,
   notFoundComponent: () => (
-    <NotFound title="Album not found" detail="Spotify has no album with this link.">
+    <NotFound kind="album" title="Album not found" detail="Spotify has no album with this link.">
       <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { linkOptions } from "@tanstack/react-router";
+import { linkOptions, useLocation } from "@tanstack/react-router";
+import { trackEvent } from "@/lib/analytics";
 import { client, handle } from "@/lib/client";
 import { usableCoverColours } from "@/lib/coverColours";
 import { queryKeys } from "@/lib/queryKeys";
@@ -7,9 +9,12 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import styles from "./NotFound.module.css";
 
+import type { NotFoundKind } from "@/lib/analytics";
 import type { ReactNode } from "react";
 
 interface NotFoundProps {
+  /** What is missing. It goes to Umami with the address. */
+  kind?: NotFoundKind;
   title?: string;
   /** A line under the title on why the page isn't there */
   detail?: string;
@@ -21,7 +26,8 @@ interface NotFoundProps {
  * The page for a link that leads nowhere. It offers a random album instead, with a button to pick another.
  * Without an album to offer, it shows only the message and the way back.
  */
-export function NotFound({ title = "That page doesn't exist.", detail, children }: NotFoundProps) {
+export function NotFound({ kind = "page", title = "That page doesn't exist.", detail, children }: NotFoundProps) {
+  const pathname = useLocation({ select: location => location.pathname });
   const {
     data: album,
     isPending,
@@ -35,6 +41,10 @@ export function NotFound({ title = "That page doesn't exist.", detail, children 
   });
   // The pick loads in the browser, so its line and button hold their space until it arrives, and nothing moves when it does
   const offerShown = isPending || album !== null;
+
+  useEffect(() => {
+    trackEvent("not-found", { path: pathname, kind });
+  }, [pathname, kind]);
 
   return (
     <section className={styles.page}>

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/artists/$artistID/")({
   },
   component: RouteComponent,
   notFoundComponent: () => (
-    <NotFound title="Artist not found" detail="This artist has not been reviewed, or the link is wrong.">
+    <NotFound kind="artist" title="Artist not found" detail="This artist has not been reviewed, or the link is wrong.">
       <ButtonLink to="/artists" variant="secondary">
         Back to artists
       </ButtonLink>

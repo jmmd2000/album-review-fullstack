@@ -27,7 +27,7 @@ export const Route = createFileRoute("/albums/$albumID/edit")({
   loader: ({ params, context }) => notFoundOn404(context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID))),
   component: RouteComponent,
   notFoundComponent: () => (
-    <NotFound title="Album not found" detail="This album has not been reviewed, or the link is wrong.">
+    <NotFound kind="album" title="Album not found" detail="This album has not been reviewed, or the link is wrong.">
       <ButtonLink to="/albums" variant="secondary">
         Back to albums
       </ButtonLink>
