@@ -29,16 +29,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "preload", href: funnelSansURL, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: appCss },
     ],
-    scripts: [
-      // Blocks until it runs, so the values are there before the app starts
-      { src: "/glitchtip-config.js" },
-      {
-        src: "https://umami.vps.jamesmddoyle.com/script.js",
-        defer: true,
-        "data-website-id": "347baf58-55c7-4b85-a153-25a0fcd914eb",
-        "data-domains": "jamesreviewsmusic.com,www.jamesreviewsmusic.com",
-      },
-    ],
   }),
   shellComponent: RootDocument,
   component: RootComponent,
@@ -52,6 +42,8 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <ScriptOnce>{themeScript}</ScriptOnce>
         <HeadContent />
+        <script src="/glitchtip-config.js" />
+        <script defer src="https://umami.vps.jamesmddoyle.com/script.js" data-website-id="347baf58-55c7-4b85-a153-25a0fcd914eb" data-domains="jamesreviewsmusic.com,www.jamesreviewsmusic.com" />
       </head>
       <body>
         {children}
