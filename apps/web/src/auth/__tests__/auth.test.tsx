@@ -46,6 +46,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 beforeEach(() => {
   queryClient.clear();
+  localStorage.clear();
   vi.clearAllMocks();
 });
 
@@ -66,6 +67,38 @@ describe("AuthProvider", () => {
 
     await waitFor(() => expect(result.current.isPending).toBe(false));
     expect(result.current.isAdmin).toBe(false);
+  });
+
+  it("tells Umami to ignore a browser that is logged in as admin", async () => {
+    statusGet.mockResolvedValue(jsonResponse({ isAdmin: true }));
+
+    renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => expect(localStorage.getItem("umami.disabled")).toBe("1"));
+  });
+
+  it("leaves a visitor's browser counted", async () => {
+    statusGet.mockResolvedValue(jsonResponse({ isAdmin: false }));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(localStorage.getItem("umami.disabled")).toBeNull();
+  });
+
+  it("keeps ignoring the browser after the admin logs out", async () => {
+    statusGet.mockResolvedValueOnce(jsonResponse({ isAdmin: true })).mockResolvedValue(jsonResponse({ isAdmin: false }));
+    logoutPost.mockResolvedValue(jsonResponse(null));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.isAdmin).toBe(true));
+
+    await act(async () => {
+      await result.current.logout();
+    });
+
+    await waitFor(() => expect(result.current.isAdmin).toBe(false));
+    expect(localStorage.getItem("umami.disabled")).toBe("1");
   });
 
   it("login posts the password and refreshes the status", async () => {
