@@ -29,7 +29,6 @@
     "dotenv": "18.0.6",
     "drizzle-kit": "0.31.11",
     "drizzle-orm": "0.45.3",
-    "express-rate-limit": "8.7.1",
     "extract-colors": "4.2.1",
     "get-pixels": "3.3.3",
     "hono": "4.13.13",
