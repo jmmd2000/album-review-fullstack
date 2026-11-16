@@ -46,6 +46,7 @@ app.use(async (context, next) => {
   context.header("X-Content-Type-Options", "nosniff");
   context.header("Referrer-Policy", "strict-origin-when-cross-origin");
   context.header("X-Frame-Options", "DENY");
+  context.header("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
 });
 
 // The browser's error reporting reads its DSN and environment from here, so one image can serve staging and production.
@@ -69,7 +70,7 @@ app.use(
 );
 app.all("/assets/*", context => context.text("Not Found", 404));
 
-// Root-level public files, the favicon
+// Root-level public files, such as the favicon and the social card image
 app.use(serveStatic({ root: "./dist/client" }));
 
 // Everything else renders through the start server bundle. The document

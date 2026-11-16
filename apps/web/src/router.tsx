@@ -1,10 +1,16 @@
+import "@/lib/zodConfig";
 import { createRouter, ErrorComponent } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { routeTree } from "./routeTree.gen";
 import { Toaster } from "@/components/ui/Toaster";
 import { isLoaderError, reportBrowserError, startBrowserErrorReporting } from "@/lib/browserErrorReporting";
 import { measureLandings, prepareMorph } from "@/lib/coverMorph";
+
+// The server puts this on every inline script it writes, and the content security policy allows only that value.
+// The browser has nothing to write, so it gets no nonce.
+const createScriptNonce = createIsomorphicFn().server(() => crypto.randomUUID());
 
 /**
  * Creates the router. TanStack Start calls this from its client and server entries.
@@ -15,6 +21,7 @@ export function getRouter() {
   const queryClient = new QueryClient();
   const router = createRouter({
     routeTree,
+    ssr: { nonce: createScriptNonce() },
     defaultPreload: "intent",
     // Gives every route an error boundary, so defaultOnCatch can report a render error. This is the router's own error screen.
     defaultErrorComponent: ErrorComponent,
