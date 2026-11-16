@@ -3,6 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
+import { trackEvent } from "@/lib/analytics";
 import { client, handle } from "@/lib/client";
 import { usableCoverColours } from "@/lib/coverColours";
 import { CoverColumns } from "@/components/home/CoverColumns";
@@ -59,7 +60,9 @@ function Index() {
 
   const shuffle = () => {
     const album = data.albums[Math.floor(Math.random() * data.albums.length)];
-    if (album) void navigate({ to: "/albums/$albumID", params: { albumID: album.spotifyID } });
+    if (!album) return;
+    trackEvent("home-button", { button: "shuffle" });
+    void navigate({ to: "/albums/$albumID", params: { albumID: album.spotifyID } });
   };
 
   const tintStyle = tintColour ? ({ "--tint": tintColour } as CSSProperties) : undefined;
@@ -93,7 +96,7 @@ function Index() {
           <div className={styles.buttons}>
             {data.albums.length > 0 && <Button onClick={shuffle}>Shuffle</Button>}
             {data.latestAlbumID && (
-              <ButtonLink variant="primary" to="/albums/$albumID" params={{ albumID: data.latestAlbumID }}>
+              <ButtonLink variant="primary" to="/albums/$albumID" params={{ albumID: data.latestAlbumID }} onClick={() => trackEvent("home-button", { button: "latest" })}>
                 Latest review
               </ButtonLink>
             )}

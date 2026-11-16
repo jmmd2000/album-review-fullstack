@@ -6,6 +6,7 @@ export type NotFoundKind = "page" | "album" | "artist";
 /** The events the site sends to Umami, and the data each one carries. */
 interface AnalyticsEvents {
   "home-search": { query: string; result: "album" | "artist" | "none" };
+  "home-button": { button: "shuffle" | "latest" };
   "not-found": { path: string; kind: NotFoundKind };
   "theme-toggle": { theme: Theme };
   "score-explainer-open": undefined;

@@ -89,6 +89,30 @@ test("an album that has not been reviewed sends not-found as an album", async ({
   await expect.poll(() => trackedEvents(page)).toContainEqual(["not-found", { path: "/albums/not-a-reviewed-album", kind: "album" }]);
 });
 
+test("shuffling from the home page sends one event", async ({ page }) => {
+  await page.goto("/");
+
+  // Hydration wires up the button, so the click is repeated until it takes
+  await expect(async () => {
+    await page.getByRole("button", { name: "Shuffle" }).click({ timeout: 1000 });
+    expect((await trackedEvents(page)).length).toBeGreaterThan(0);
+  }).toPass({ timeout: 15000 });
+
+  await expect(page).toHaveURL(/\/albums\//);
+  expect(await trackedEvents(page)).toEqual([["home-button", { button: "shuffle" }]]);
+});
+
+test("opening the latest review from the home page sends one event", async ({ page }) => {
+  // Before hydration the link loads the album as a new page, which clears the events.
+  // Waiting for the scripts to load gives hydration time, and the home page is loaded again if the click still came too early.
+  await expect(async () => {
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.getByRole("link", { name: "Latest review" }).click();
+    await expect(page).toHaveURL(/\/albums\//, { timeout: 1000 });
+    expect(await trackedEvents(page)).toEqual([["home-button", { button: "latest" }]]);
+  }).toPass({ timeout: 15000 });
+});
+
 test("switching the theme sends the theme that is now showing", async ({ page }) => {
   await page.goto("/");
 
