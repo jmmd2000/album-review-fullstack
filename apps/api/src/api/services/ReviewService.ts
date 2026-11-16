@@ -14,6 +14,9 @@ import { GenreService } from "@/api/services/GenreService";
 import { AppError } from "@/api/AppError";
 import { db, type Executor } from "@/db/client";
 import type { ReceivedReviewData, ReceivedSpotifyAlbum, ReceivedReviewedAlbum } from "@/api/schemas/reviewSchema";
+import type { reviewedArtists } from "@/db/schema";
+
+type NewArtist = typeof reviewedArtists.$inferInsert;
 
 function isSpotifyAlbum(album: ReceivedReviewData["album"]): album is ReceivedSpotifyAlbum {
   return !!album && "uri" in album && "tracks" in album;
@@ -40,8 +43,7 @@ export class ReviewService {
     const scoreArtistIDs = ReviewService.resolveScoreArtistIDs(data.scoreArtistIDs, selectedArtistIDs, albumArtists.length === 1 ? data.affectsArtistScore : undefined);
     const primaryArtist = albumArtists.find(a => selectedArtistIDs.includes(a.spotifyID)) ?? albumArtists[0];
 
-    // Ensure all selected artists exist before linking tracks/albums
-    await ReviewService.ensureArtists(selectedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
+    const newArtists = await ReviewService.prepareNewArtists(selectedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
 
     // prepare misc album data
     const releaseDate = formatDate(spotifyAlbum.release_date);
@@ -59,6 +61,8 @@ export class ReviewService {
 
     // create album, tracks, genres, links and score refresh as one atomic unit
     return await db.transaction(async tx => {
+      await ReviewService.saveNewArtists(newArtists, tx);
+
       const album = await AlbumModel.createAlbum(
         {
           name: spotifyAlbum.name,
@@ -91,7 +95,8 @@ export class ReviewService {
 
       const linkableArtistIDs = await ReviewService.findLinkableArtistIDs(
         spotifyAlbum.tracks.items.flatMap(track => track.artists.map(a => a.id)),
-        selectedArtistIDs
+        selectedArtistIDs,
+        tx
       );
 
       for (const track of data.ratedTracks) {
@@ -174,10 +179,11 @@ export class ReviewService {
     const addedArtistIDs = selectedArtistIDs.filter(id => !previousArtistIDs.includes(id));
     const removedArtistIDs = previousArtistIDs.filter(id => !selectedArtistIDs.includes(id));
 
-    // Ensure any newly added artists exist before updates
-    await ReviewService.ensureArtists(addedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
+    const newArtists = await ReviewService.prepareNewArtists(addedArtistIDs, albumArtists, scoreArtistIDs, finalScore);
 
     await db.transaction(async tx => {
+      await ReviewService.saveNewArtists(newArtists, tx);
+
       // update review fields and AAS flag
       await AlbumModel.updateAlbum(
         albumID,
@@ -201,7 +207,8 @@ export class ReviewService {
 
       const linkableArtistIDs = await ReviewService.findLinkableArtistIDs(
         data.ratedTracks.flatMap(track => [track.artistSpotifyID, ...track.features.map(f => f.id)]),
-        selectedArtistIDs
+        selectedArtistIDs,
+        tx
       );
 
       for (const newTrack of data.ratedTracks) {
@@ -285,8 +292,8 @@ export class ReviewService {
   }
 
   /** Finds the artists a track can be linked to: the tracks' artists that are already saved, and the album's credited artists. */
-  private static async findLinkableArtistIDs(trackArtistIDs: string[], selectedArtistIDs: string[]) {
-    const savedArtists = await ArtistModel.getArtistsBySpotifyIDs([...new Set(trackArtistIDs)]);
+  private static async findLinkableArtistIDs(trackArtistIDs: string[], selectedArtistIDs: string[], executor: Executor) {
+    const savedArtists = await ArtistModel.getArtistsBySpotifyIDs([...new Set(trackArtistIDs)], executor);
     return new Set([...savedArtists.map(artist => artist.spotifyID), ...selectedArtistIDs]);
   }
 
@@ -326,41 +333,51 @@ export class ReviewService {
     return [];
   }
 
-  private static async ensureArtists(artistIDs: string[], albumArtists: AlbumArtist[], scoreArtistIDs: string[], finalScore: number) {
+  /**
+   * Builds the rows for the artists that aren't saved yet, with their header images.
+   * Call it before the transaction: the header lookup is slow and must not hold a transaction open.
+   */
+  private static async prepareNewArtists(artistIDs: string[], albumArtists: AlbumArtist[], scoreArtistIDs: string[], finalScore: number) {
     const infoMap = new Map(albumArtists.map(a => [a.spotifyID, a]));
     const existingArtists = await ArtistModel.getArtistsBySpotifyIDs(artistIDs);
     const existingIDs = new Set(existingArtists.map(a => a.spotifyID));
 
+    const newArtists: NewArtist[] = [];
     for (const artistID of artistIDs) {
-      if (!existingIDs.has(artistID)) {
-        const info = infoMap.get(artistID);
-        if (!info) continue;
+      if (existingIDs.has(artistID)) continue;
+      const info = infoMap.get(artistID);
+      if (!info) continue;
 
-        let headerImage: string | null = null;
-        try {
-          headerImage = await fetchArtistHeaderFromSpotify(artistID);
-        } catch (err) {
-          console.warn("Could not fetch artist header image, skipping scraper:", err);
-        }
+      let headerImage: string | null = null;
+      try {
+        headerImage = await fetchArtistHeaderFromSpotify(artistID);
+      } catch (err) {
+        console.warn("Could not fetch artist header image, skipping scraper:", err);
+      }
 
-        const affectsScore = scoreArtistIDs.includes(artistID);
-        const score = affectsScore ? finalScore : 0;
-        await ArtistModel.createArtist({
-          name: info.name,
-          spotifyID: artistID,
-          imageURLs: info.imageURLs,
-          headerImage,
-          totalScore: score,
-          reviewCount: 0,
-          unrated: !affectsScore,
-          leaderboardPosition: null,
-        });
+      const affectsScore = scoreArtistIDs.includes(artistID);
+      newArtists.push({
+        name: info.name,
+        spotifyID: artistID,
+        imageURLs: info.imageURLs,
+        headerImage,
+        totalScore: affectsScore ? finalScore : 0,
+        reviewCount: 0,
+        unrated: !affectsScore,
+        leaderboardPosition: null,
+      });
+    }
+    return newArtists;
+  }
 
-        // Backfill any existing featured tracks now that the artist exists
-        const featuredTracks = await TrackModel.getTracksFeaturingArtist(artistID);
-        for (const track of featuredTracks) {
-          await TrackModel.linkArtistsToTrack(track.spotifyID, [artistID]);
-        }
+  /** Saves the artists from prepareNewArtists, and links each one to the tracks it already features on. */
+  private static async saveNewArtists(newArtists: NewArtist[], executor: Executor) {
+    for (const artist of newArtists) {
+      await ArtistModel.createArtist(artist, executor);
+
+      const featuredTracks = await TrackModel.getTracksFeaturingArtist(artist.spotifyID, executor);
+      for (const track of featuredTracks) {
+        await TrackModel.linkArtistsToTrack(track.spotifyID, [artist.spotifyID], executor);
       }
     }
   }

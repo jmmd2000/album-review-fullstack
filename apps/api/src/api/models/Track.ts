@@ -66,9 +66,9 @@ export class TrackModel {
     return rows.map(r => r.reviewed_tracks);
   }
 
-  static async getTracksFeaturingArtist(artistID: string) {
+  static async getTracksFeaturingArtist(artistID: string, executor: Executor = db) {
     const filter = JSON.stringify([{ id: artistID }]);
-    return db
+    return executor
       .select()
       .from(reviewedTracks)
       .where(sql`${reviewedTracks.features} @> ${filter}::jsonb`);

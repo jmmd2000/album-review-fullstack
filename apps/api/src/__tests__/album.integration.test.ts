@@ -4,6 +4,7 @@ import type { DisplayAlbum, ReviewedAlbum, ReviewedArtist, ReviewedTrack } from 
 import { beforeAll, beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { resetTables } from "./testUtils";
 import { ArtistModel } from "../api/models/Artist";
+import { AlbumModel } from "../api/models/Album";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 
@@ -178,8 +179,30 @@ test("POST /api/albums/create - a mid-flight failure rolls the whole review back
   const genreLinks = await query("SELECT 1 FROM album_genres WHERE album_spotify_id = $1", [mockReviewData.album.id]);
   expect(genreLinks.rowCount).toBe(0);
 
-  // Note: the artist row itself is created before the transaction (the header scrape
-  // stays outside it), so it is intentionally not rolled back.
+  const artists = await query("SELECT 1 FROM reviewed_artists WHERE spotify_id = $1", [mockReviewData.album.artists[0].id]);
+  expect(artists.rowCount).toBe(0);
+
+  spy.mockRestore();
+});
+
+test("PUT /api/albums/:albumID/edit - a failed save leaves no new artist behind", async () => {
+  await api.post("/api/albums/create", mockReviewData, authCookie);
+  const created = await (await api.get(`/api/albums/${mockReviewData.album.id}`, authCookie)).json();
+
+  const addedArtist = { spotifyID: "0C8ZW7ezQVs4URX5aX7Kqx", name: "Added Artist", imageURLs: [] };
+  const albumArtists = [...created.album.albumArtists, addedArtist];
+  const update = {
+    ...mockUpdateData,
+    album: { ...created.album, albumArtists },
+    selectedArtistIDs: albumArtists.map(artist => artist.spotifyID),
+  };
+  const spy = vi.spyOn(AlbumModel, "updateAlbum").mockRejectedValueOnce(new Error("forced album write failure"));
+
+  const res = await api.put(`/api/albums/${mockReviewData.album.id}/edit`, update, authCookie);
+  expect(res.status).toBe(500);
+
+  const artists = await query("SELECT 1 FROM reviewed_artists WHERE spotify_id = $1", [addedArtist.spotifyID]);
+  expect(artists.rowCount).toBe(0);
 
   spy.mockRestore();
 });
