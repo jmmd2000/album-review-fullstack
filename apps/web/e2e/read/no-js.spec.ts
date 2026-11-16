@@ -88,4 +88,6 @@ test("an artist page and the home page serve their unfurl tags", async ({ page }
 
   await page.goto("/");
   await expect(page.locator('meta[property="og:description"]')).toHaveAttribute("content", /album review blog/);
+  // A page with no image of its own still needs one, and unfurlers only take a full url
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /^https:\/\//);
 });
