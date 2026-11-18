@@ -46,6 +46,7 @@ export const albumTrackPageSchema = z.object({
 
 export const albumResponseSchema = albumSummarySchema.extend({
   uri: z.string(),
+  external_ids: z.object({ upc: z.string().optional() }).optional(),
   tracks: z.object({
     items: z.array(albumTrackSchema),
   }),
