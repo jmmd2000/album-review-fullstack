@@ -8,17 +8,18 @@ import { GenreService } from "@/api/services/GenreService";
 import { AppError } from "@/api/AppError";
 
 export class AlbumService {
+  /** The reviewed album for its page. `allGenres`, every genre for the review form, is only included when asked for. */
   static async getAlbumByID(
     id: string,
-    includeGenres: boolean = true
+    includeAllGenres: boolean = false
   ): Promise<{
     album: ReviewedAlbum;
     artists: ReviewedArtist[];
     tracks: DisplayTrack[];
     /** The reviewed albums the review text links to */
     linkedAlbums: LinkedAlbum[];
+    albumGenres: Genre[];
     allGenres?: Genre[];
-    albumGenres?: Genre[];
   }> {
     const row = await AlbumModel.findBySpotifyID(id);
     if (!row) throw new AppError("Album not found", 404);
@@ -44,12 +45,12 @@ export class AlbumService {
     }));
 
     const linkedAlbums = await this.getLinkedAlbums(row.reviewContent);
+    const albumGenres = await GenreService.getGenresForAlbums([album.spotifyID]);
 
-    if (!includeGenres) {
-      return { album, artists, tracks: displayTracks, linkedAlbums };
+    if (!includeAllGenres) {
+      return { album, artists, tracks: displayTracks, linkedAlbums, albumGenres };
     }
 
-    const albumGenres = await GenreService.getGenresForAlbums([album.spotifyID]);
     const allGenres = await GenreModel.getAllGenres();
 
     return { album, artists, tracks: displayTracks, linkedAlbums, allGenres, albumGenres };

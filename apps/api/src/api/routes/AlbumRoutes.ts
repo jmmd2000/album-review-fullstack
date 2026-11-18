@@ -19,7 +19,7 @@ const paginatedSchema = z.object({
 
 const album = new Hono()
   .get("/:albumID", validate("param", albumParamSchema, 404), validate("query", includeGenresSchema), async c => {
-    const data = await AlbumService.getAlbumByID(c.req.valid("param").albumID, c.req.valid("query").includeGenres !== "false");
+    const data = await AlbumService.getAlbumByID(c.req.valid("param").albumID, c.req.valid("query").includeGenres === "true");
     return c.json(data, 200);
   })
   .get("/", validate("query", paginatedSchema), async c => {

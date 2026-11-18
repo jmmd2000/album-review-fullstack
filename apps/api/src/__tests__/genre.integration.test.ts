@@ -36,7 +36,7 @@ test("album creation stores genres", async () => {
   const create = await api.post("/api/albums/create", mockReviewData, authCookie);
   expect(create.status).toBe(201);
 
-  const res = await api.get(`/api/albums/${albumID}`, authCookie);
+  const res = await api.get(`/api/albums/${albumID}?includeGenres=true`, authCookie);
   expect(res.status).toBe(200);
 
   const body = await res.json();
@@ -45,6 +45,18 @@ test("album creation stores genres", async () => {
   const expected = [...mockReviewData.genres].sort();
   expect(albumGenres).toEqual(expected);
   expect(allGenres).toEqual(expected);
+});
+
+test("the public album page gets the album's genres but not the full genre list", async () => {
+  const create = await api.post("/api/albums/create", mockReviewData, authCookie);
+  expect(create.status).toBe(201);
+
+  const res = await api.get(`/api/albums/${albumID}`);
+  expect(res.status).toBe(200);
+
+  const body = await res.json();
+  expect(body).not.toHaveProperty("allGenres");
+  expect((body.albumGenres as Genre[]).map(g => g.name).sort()).toEqual([...mockReviewData.genres].sort());
 });
 
 test("filter albums by genre", async () => {
@@ -95,7 +107,7 @@ test("updating genres replaces old entries", async () => {
   const update = await api.put(`/api/albums/${albumID}/edit`, updateData, authCookie);
   expect(update.status).toBe(200);
 
-  const res = await api.get(`/api/albums/${albumID}`, authCookie);
+  const res = await api.get(`/api/albums/${albumID}?includeGenres=true`, authCookie);
   const body = await res.json();
   const names = (body.albumGenres as Genre[]).map(g => g.name).sort();
   expect(names).toEqual(["genre1", "genre2", "genre3"]);
