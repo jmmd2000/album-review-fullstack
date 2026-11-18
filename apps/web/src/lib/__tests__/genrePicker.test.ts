@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickerRows, splitMatch } from "@/lib/genrePicker";
+import { genreKey, pickerRows, splitMatch } from "@/lib/genrePicker";
 
 import type { GenreCount } from "@shared/types";
 import type { PickerRow } from "@/lib/genrePicker";
@@ -26,6 +26,17 @@ describe("pickerRows", () => {
 
   it("doesn't offer to add a genre that's already picked", () => {
     expect(names(pickerRows(genres, "dream pop", ["Dream Pop"]))).toEqual([]);
+  });
+});
+
+describe("genreKey", () => {
+  it("treats case, spaces, hyphens and '&' against 'and' as the same", () => {
+    expect(genreKey("Dream-Pop")).toBe(genreKey("dream  pop"));
+    expect(genreKey("r&b")).toBe(genreKey("R and B"));
+  });
+
+  it("keeps near names apart", () => {
+    expect(genreKey("post-punk")).not.toBe(genreKey("post-rock"));
   });
 });
 

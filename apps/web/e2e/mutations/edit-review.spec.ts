@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { REVIEWED, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
-import { rateTracks, shownScoreOf } from "../helpers";
+import { fakeGenreSuggestions, rateTracks, shownScoreOf } from "../helpers";
 
 // This spec owns the second reviewed album. No other spec touches it, so it
 // arrives here exactly as the seeder wrote it.
@@ -22,11 +22,14 @@ const newScore = shownScoreOf(
 );
 
 test("editing a review recalculates the score", async ({ page }) => {
+  // MusicBrainz is down for this run, so the form must work with no suggestions row
+  await fakeGenreSuggestions(page, null);
   // Starting on the album page caches it, so this also checks the save replaces the cached copy
   await page.goto(`/albums/${review.spotifyID}`);
   await page.getByRole("link", { name: "Edit", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/albums/${review.spotifyID}/edit$`));
   await expect(page.getByRole("heading", { name: album.name, level: 1 })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Suggested genres" })).toHaveCount(0);
 
   await rateTracks(page, newRatings);
   await page.getByRole("button", { name: "Save review" }).click();

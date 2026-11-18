@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Combobox } from "@base-ui/react/combobox";
-import { XIcon } from "@phosphor-icons/react";
-import { hasGenre, pickerRows, splitMatch } from "@/lib/genrePicker";
+import { PlusIcon, XIcon } from "@phosphor-icons/react";
+import { genreKey, hasGenre, pickerRows, splitMatch } from "@/lib/genrePicker";
 import listbox from "@/styles/listbox.module.css";
 import styles from "./GenreChips.module.css";
 
@@ -13,18 +13,23 @@ interface GenreChipsProps {
   genres: string[];
   /** Every genre with its album count, most used first, offered while typing */
   options: GenreCount[];
+  /** Genres MusicBrainz suggests, most voted first. `isNew` marks one the genre list doesn't have yet. */
+  suggestions: { name: string; isNew: boolean }[];
   onChange: (genres: string[]) => void;
 }
 
 const rowLabel = (row: PickerRow) => (row.kind === "genre" ? row.genre.name : row.name);
 
 /**
- * The album's genres as removable chips, and a box to add one. Its list offers existing genres, most
- * used first, and ends with a row to add what's typed as a new genre when no genre has that name.
+ * The album's genres as removable chips, suggested genres to tap, and a box to add one. Its list offers
+ * existing genres, most used first, and ends with a row to add what's typed as a new genre when no genre
+ * has that name.
  */
-export function GenreChips({ genres, options, onChange }: GenreChipsProps) {
+export function GenreChips({ genres, options, suggestions, onChange }: GenreChipsProps) {
   const [query, setQuery] = useState("");
   const rows = pickerRows(options, query, genres);
+  const pickedKeys = new Set(genres.map(genreKey));
+  const openSuggestions = suggestions.filter(suggestion => !pickedKeys.has(genreKey(suggestion.name)));
   // Enter only picks a row straight away when it starts with the text, so it never adds a genre that merely contains it
   const firstRowStartsWithText = rows[0]?.kind === "genre" && query.trim() !== "" && rows[0].genre.name.toLowerCase().startsWith(query.trim().toLowerCase());
 
@@ -48,6 +53,19 @@ export function GenreChips({ genres, options, onChange }: GenreChipsProps) {
               {genre}
               <button type="button" aria-label={`Remove ${genre}`} onClick={() => onChange(genres.filter(other => other !== genre))}>
                 <XIcon weight="bold" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {openSuggestions.length > 0 && (
+        <ul className={styles.suggestions} aria-label="Suggested genres">
+          {openSuggestions.map(suggestion => (
+            <li key={suggestion.name}>
+              <button type="button" className={styles.suggestion} aria-label={suggestion.isNew ? `Add ${suggestion.name}, a new genre` : `Add ${suggestion.name}`} onClick={() => add(suggestion.name)}>
+                <PlusIcon weight="bold" aria-hidden="true" />
+                {suggestion.name}
+                {suggestion.isNew && <span className={styles.new}>new</span>}
               </button>
             </li>
           ))}

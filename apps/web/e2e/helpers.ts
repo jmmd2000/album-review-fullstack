@@ -67,3 +67,14 @@ export const shownScoreOf = (tracks: Parameters<typeof calculateAlbumScore>[0]):
 
 /** The score the site shows for a seeded review. */
 export const shownScoreFor = (review: ReviewFixture): number => shownScoreOf(ratedTracksFor(review));
+
+/**
+ * Answers the review form's genre suggestion request, so a run never calls MusicBrainz.
+ * Passing null makes the request fail, as it does when MusicBrainz is down.
+ */
+export async function fakeGenreSuggestions(page: Page, suggestions: { name: string; isNew: boolean }[] | null): Promise<void> {
+  await page.route(
+    url => url.pathname.endsWith("/genre-suggestions"),
+    route => (suggestions === null ? route.fulfill({ status: 500, json: { message: "MusicBrainz is down" } }) : route.fulfill({ json: { suggestions } }))
+  );
+}
