@@ -8,8 +8,6 @@ images:
       BUILT_AT: "{builtAt}"
     buildSecrets:
       glitchtip_token: glitchtip-token
-    buildSecrets:
-      glitchtip_token: glitchtip-token
   - name: album-web
     dockerfile: apps/web/Dockerfile
     buildArgs:
