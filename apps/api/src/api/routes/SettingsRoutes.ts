@@ -15,10 +15,6 @@ const refreshIntervalSchema = z.object({
   intervalDays: z.number({ error: "Choose how many days to wait between refreshes." }).int().min(0).max(365),
 });
 
-const setSettingSchema = z.object({
-  value: z.string(),
-});
-
 // admin only
 const settings = new Hono()
   .use(requireAdmin)
@@ -39,17 +35,6 @@ const settings = new Hono()
   .get("/last-runs/:type", validate("param", lastRunTypeSchema), async c => {
     const lastRun = await SettingsService.getLastRun(c.req.valid("param").type);
     return c.json({ lastRun }, 200);
-  })
-  .get("/setting/:key", async c => {
-    const key = c.req.param("key");
-    const value = await SettingsService.get(key);
-    return c.json({ key, value }, 200);
-  })
-  .put("/setting/:key", validate("json", setSettingSchema), async c => {
-    const key = c.req.param("key");
-    const { value } = c.req.valid("json");
-    await SettingsService.set(key, value);
-    return c.json({ key, value, message: "Setting updated successfully" }, 200);
   })
   .post("/recalculate-scores", async c => {
     const result = await ArtistScoreService.recalculateAllArtistScores();

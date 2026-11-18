@@ -98,10 +98,4 @@ export class ArtistService {
       rankedArtistCount,
     };
   }
-
-  static async deleteArtist(artistID: string) {
-    const artist = await ArtistModel.getArtistBySpotifyID(artistID);
-    if (!artist) throw new AppError("Artist not found.", 404);
-    return ArtistModel.deleteArtist(artistID);
-  }
 }

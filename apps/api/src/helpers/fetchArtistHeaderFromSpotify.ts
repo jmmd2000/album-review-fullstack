@@ -5,26 +5,6 @@ import { readHeaderImage, type HeaderResult } from "@/helpers/artistHeaderImage"
 // Scrapes run through the browserless sidecar
 const browserWSEndpoint = `${env.BROWSERLESS_URL}?token=${env.BROWSERLESS_TOKEN}`;
 
-// Fake header URLs for testing
-const FAKE_HEADERS = [
-  "https://i.scdn.co/image/ab6761610000e5eb1234567890abcdef12345678",
-  "https://i.scdn.co/image/ab6761610000e5eb87654321fedcba0987654321",
-  "https://i.scdn.co/image/ab6761610000e5eba1b2c3d4e5f6789012345678",
-  "https://i.scdn.co/image/ab6761610000e5eb9876543210fedcba87654321",
-  "https://i.scdn.co/image/ab6761610000e5ebdeadbeefcafebabe12345678",
-];
-
-// simulate real network requests
-function fakeDelay(): Promise<void> {
-  const delay = Math.random() * 2000 + 500; // 500-2500ms
-  return new Promise(resolve => setTimeout(resolve, delay));
-}
-
-// Generate a fake header URL
-function getFakeHeaderUrl(): string {
-  return FAKE_HEADERS[Math.floor(Math.random() * FAKE_HEADERS.length)];
-}
-
 /** The web player's request for an artist's page data, which holds the header. */
 function isArtistOverviewResponse(response: HTTPResponse): boolean {
   if (!response.url().includes("/pathfinder/")) return false;
@@ -36,8 +16,8 @@ function isArtistOverviewResponse(response: HTTPResponse): boolean {
  * Gets one artist's header URL from their Spotify page.
  * @returns The header URL, or null if the artist has no header or the scrape failed.
  */
-export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake: boolean = false): Promise<string | null> {
-  const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3, undefined, fake);
+export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string): Promise<string | null> {
+  const results = await fetchArtistHeadersFromSpotify([spotifyArtistID], 3);
   const result = results[spotifyArtistID];
   if (result?.status !== "found") return null;
   return result.url;
@@ -51,8 +31,7 @@ export async function fetchArtistHeaderFromSpotify(spotifyArtistID: string, fake
 export async function fetchArtistHeadersFromSpotify(
   spotifyArtistIDs: string[],
   concurrency: number = 1,
-  onProgress?: (completed: number, total: number, artistName?: string) => void,
-  fake: boolean = false
+  onProgress?: (completed: number, total: number, artistName?: string) => void
 ): Promise<Record<string, HeaderResult>> {
   const results: Record<string, HeaderResult> = {};
   let completed = 0;
@@ -65,32 +44,6 @@ export async function fetchArtistHeadersFromSpotify(
     }
   };
 
-  // -- fake mode for testing
-  if (fake) {
-    // Process in chunks to simulate real batching behavior
-    const chunks = [];
-    for (let i = 0; i < spotifyArtistIDs.length; i += concurrency) {
-      chunks.push(spotifyArtistIDs.slice(i, i + concurrency));
-    }
-
-    for (const chunk of chunks) {
-      const promises = chunk.map(async spotifyArtistID => {
-        // Simulate network delay
-        await fakeDelay();
-
-        // simulate real conditions with some failures
-        const success = Math.random() > 0.1;
-        markDone(spotifyArtistID, success ? { status: "found", url: getFakeHeaderUrl() } : { status: "failed" });
-      });
-
-      await Promise.all(promises);
-    }
-
-    return results;
-  }
-  // -- /fake mode for testing
-
-  // Real implementation
   const chunks = [];
   for (let i = 0; i < spotifyArtistIDs.length; i += concurrency) {
     chunks.push(spotifyArtistIDs.slice(i, i + concurrency));

@@ -80,7 +80,6 @@ export class ArtistImageService {
       artists = [artist];
     }
 
-    const FAKE = false;
     const BATCH_SIZE = 6;
 
     const total = artists.length;
@@ -106,13 +105,13 @@ export class ArtistImageService {
             index: processedCount + completed,
             total,
             spotifyID: currentArtistID,
-            artistName: `${FAKE ? "[FAKE] " : ""}${artistName}`,
+            artistName,
             artistImage,
           });
         }
       };
 
-      const headerResults = await fetchArtistHeadersFromSpotify(spotifyIDs, BATCH_SIZE, onProgress, FAKE);
+      const headerResults = await fetchArtistHeadersFromSpotify(spotifyIDs, BATCH_SIZE, onProgress);
 
       for (let i = 0; i < batch.length; i++) {
         const artist = batch[i];
@@ -137,9 +136,9 @@ export class ArtistImageService {
             spotifyID: id,
             total,
             index: processedCount,
-            artistName: FAKE ? `[FAKE] ${name}` : name,
+            artistName: name,
             artistImage,
-            message: FAKE ? "[FAKE] Failed to fetch header image" : "Failed to fetch header image",
+            message: "Failed to fetch header image",
           });
           continue;
         }

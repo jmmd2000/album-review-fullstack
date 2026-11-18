@@ -49,9 +49,8 @@ export class SpotifyClient {
   }
 
   /**
-   * Fetches an album with every track. The album reply holds the first 50 tracks, so this follows
-   * each `next` link until the last page.
-   * @throws AppError 404 for an unknown album, 502 when a later page of tracks fails or can't be read.
+   * Fetches an album with all of its tracks.
+   * @throws AppError 404 for an unknown album, 502 when a page of tracks fails or can't be read.
    */
   static async getAlbum(albumID: string, accessToken: string): Promise<SpotifyAlbumResponse> {
     try {

@@ -24,33 +24,6 @@ test("settings routes require admin", async () => {
   expect(res.status).toBe(401);
 });
 
-test("reading a setting that was never written returns null", async () => {
-  const res = await api.get("/api/settings/setting/some-key", authCookie);
-  expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ key: "some-key", value: null });
-});
-
-test("a setting can be written and read back", async () => {
-  const put = await api.put("/api/settings/setting/theme", { value: "dark" }, authCookie);
-  expect(put.status).toBe(200);
-
-  const get = await api.get("/api/settings/setting/theme", authCookie);
-  expect(await get.json()).toEqual({ key: "theme", value: "dark" });
-});
-
-test("writing a setting overwrites the previous value", async () => {
-  await api.put("/api/settings/setting/theme", { value: "dark" }, authCookie);
-  await api.put("/api/settings/setting/theme", { value: "light" }, authCookie);
-
-  const get = await api.get("/api/settings/setting/theme", authCookie);
-  expect(await get.json()).toEqual({ key: "theme", value: "light" });
-});
-
-test("writing a setting without a value is rejected", async () => {
-  const res = await api.put("/api/settings/setting/theme", {}, authCookie);
-  expect(res.status).toBe(400);
-});
-
 test("last runs start empty and reflect a recorded run", async () => {
   const empty = await api.get("/api/settings/last-runs", authCookie);
   expect(await empty.json()).toEqual({});

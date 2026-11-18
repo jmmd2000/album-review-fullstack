@@ -35,10 +35,6 @@ const artist = new Hono()
     const { headerImage } = c.req.valid("json");
     await ArtistImageService.updateSingleArtistHeader(c.req.valid("param").artistID, headerImage);
     return c.json({ message: "Header image updated successfully" }, 200);
-  })
-  .delete("/:artistID", requireAdmin, validate("param", artistParamSchema, 404), async c => {
-    await ArtistService.deleteArtist(c.req.valid("param").artistID);
-    return c.body(null, 204);
   });
 
 export default artist;

@@ -71,20 +71,3 @@ test("updating the header of an unknown artist returns 404", async () => {
   const res = await api.put("/api/artists/unknownArtistSpotifyID/headerImage", { headerImage: null }, authCookie);
   expect(res.status).toBe(404);
 });
-
-test("deleting an artist requires admin", async () => {
-  const res = await api.delete("/api/artists/artistAdminTestArtist1");
-  expect(res.status).toBe(401);
-});
-
-test("deleting an artist removes it", async () => {
-  const res = await api.delete("/api/artists/artistAdminTestArtist1", authCookie);
-  expect(res.status).toBe(204);
-
-  expect(await ArtistModel.getArtistBySpotifyID("artistAdminTestArtist1")).toBeUndefined();
-});
-
-test("deleting an unknown artist returns 404", async () => {
-  const res = await api.delete("/api/artists/unknownArtistSpotifyID", authCookie);
-  expect(res.status).toBe(404);
-});
