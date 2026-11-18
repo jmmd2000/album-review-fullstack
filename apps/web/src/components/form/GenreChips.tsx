@@ -1,32 +1,42 @@
 import { useState } from "react";
+import { Combobox } from "@base-ui/react/combobox";
 import { XIcon } from "@phosphor-icons/react";
+import { hasGenre, pickerRows, splitMatch } from "@/lib/genrePicker";
+import listbox from "@/styles/listbox.module.css";
 import styles from "./GenreChips.module.css";
 
 import type { KeyboardEvent } from "react";
+import type { GenreCount } from "@shared/types";
+import type { PickerRow } from "@/lib/genrePicker";
 
 interface GenreChipsProps {
   genres: string[];
-  /** Every genre name, suggested while typing */
-  suggestions: string[];
+  /** Every genre with its album count, most used first, offered while typing */
+  options: GenreCount[];
   onChange: (genres: string[]) => void;
 }
 
-/** The album's genres as removable chips, and a box to add one. Enter adds what's typed, new or not. */
-export function GenreChips({ genres, suggestions, onChange }: GenreChipsProps) {
-  const [draft, setDraft] = useState("");
+const rowLabel = (row: PickerRow) => (row.kind === "genre" ? row.genre.name : row.name);
 
-  const add = () => {
-    const name = draft.trim();
-    setDraft("");
-    if (!name || genres.some(genre => genre.toLowerCase() === name.toLowerCase())) return;
-    onChange([...genres, name]);
+/**
+ * The album's genres as removable chips, and a box to add one. Its list offers existing genres, most
+ * used first, and ends with a row to add what's typed as a new genre when no genre has that name.
+ */
+export function GenreChips({ genres, options, onChange }: GenreChipsProps) {
+  const [query, setQuery] = useState("");
+  const rows = pickerRows(options, query, genres);
+  // Enter only picks a row straight away when it starts with the text, so it never adds a genre that merely contains it
+  const firstRowStartsWithText = rows[0]?.kind === "genre" && query.trim() !== "" && rows[0].genre.name.toLowerCase().startsWith(query.trim().toLowerCase());
+
+  const add = (name: string) => {
+    setQuery("");
+    if (hasGenre(genres, name)) return;
+    onChange([...genres, name.trim()]);
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    // Enter would submit the review
-    event.preventDefault();
-    add();
+  // Enter would submit the review when no row is highlighted. The list still picks a highlighted row.
+  const stopSubmit = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") event.preventDefault();
   };
 
   return (
@@ -43,22 +53,55 @@ export function GenreChips({ genres, suggestions, onChange }: GenreChipsProps) {
           ))}
         </ul>
       )}
-      <input
-        className={styles.input}
-        type="text"
-        list="genre-suggestions"
-        placeholder="Add a genre"
-        aria-label="Add a genre"
-        autoComplete="off"
-        value={draft}
-        onChange={event => setDraft(event.currentTarget.value)}
-        onKeyDown={handleKeyDown}
-      />
-      <datalist id="genre-suggestions">
-        {suggestions.map(name => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
+      <Combobox.Root<PickerRow>
+        items={rows}
+        filter={null}
+        value={null}
+        inputValue={query}
+        onInputValueChange={setQuery}
+        onValueChange={row => {
+          if (row) add(rowLabel(row));
+        }}
+        itemToStringLabel={rowLabel}
+        autoHighlight={firstRowStartsWithText}
+        openOnInputClick
+      >
+        <Combobox.Input className={styles.input} placeholder="Add a genre" aria-label="Add a genre" onKeyDown={stopSubmit} />
+        <Combobox.Portal>
+          <Combobox.Positioner className={`${listbox.positioner} ${styles.positioner}`} sideOffset={6}>
+            <Combobox.Popup className={listbox.popup}>
+              <Combobox.Empty className={listbox.empty}>Nothing else matches.</Combobox.Empty>
+              <Combobox.List className={listbox.list}>
+                {(row: PickerRow) =>
+                  row.kind === "genre" ? (
+                    <Combobox.Item key={row.genre.slug} value={row} className={`${listbox.row} ${styles.row}`}>
+                      <MatchedName name={row.genre.name} query={query} />
+                      <small className={listbox.albumCount}>{row.genre.albumCount}</small>
+                    </Combobox.Item>
+                  ) : (
+                    <Combobox.Item key="new-genre" value={row} className={`${listbox.row} ${styles.row}`}>
+                      <span>
+                        Add <b>{row.name}</b> as a new genre
+                      </span>
+                    </Combobox.Item>
+                  )
+                }
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
     </div>
+  );
+}
+
+function MatchedName({ name, query }: { name: string; query: string }) {
+  const { before, match, after } = splitMatch(name, query);
+  return (
+    <span>
+      {before}
+      {match && <b>{match}</b>}
+      {after}
+    </span>
   );
 }

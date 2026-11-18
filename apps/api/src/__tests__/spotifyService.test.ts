@@ -85,8 +85,8 @@ describe("getAlbum", () => {
       ],
     });
     vi.spyOn(SpotifyClient, "getArtists").mockResolvedValue([{ id: "a1", name: "One", images: [{ url: "a1.jpg", height: 300, width: 300 }] }]);
-    const genres = [{ id: 1, name: "Rock", slug: "rock" }];
-    const genresSpy = vi.spyOn(GenreModel, "getAllGenres").mockResolvedValue(genres as never);
+    const genres = [{ name: "Rock", slug: "rock", albumCount: 3 }];
+    const genresSpy = vi.spyOn(GenreModel, "getGenreCounts").mockResolvedValue(genres);
 
     const result = await SpotifyService.getAlbum("alb");
 
@@ -104,7 +104,7 @@ describe("getAlbum", () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
     vi.spyOn(SpotifyClient, "getAlbum").mockResolvedValue(rawAlbum("alb", "Album"));
     vi.spyOn(SpotifyClient, "getArtists").mockResolvedValue([]);
-    const genresSpy = vi.spyOn(GenreModel, "getAllGenres");
+    const genresSpy = vi.spyOn(GenreModel, "getGenreCounts");
 
     const result = await SpotifyService.getAlbum("alb", false);
 

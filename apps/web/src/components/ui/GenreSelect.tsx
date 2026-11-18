@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Combobox } from "@base-ui/react/combobox";
 import { CaretDownIcon, CheckIcon } from "@phosphor-icons/react";
+import listbox from "@/styles/listbox.module.css";
 import styles from "./GenreSelect.module.css";
 
 import type { GenreCount } from "@shared/types";
@@ -40,18 +41,18 @@ export function GenreSelect({ genres, selected, onChange, variant = "text" }: Ge
         <CaretDownIcon weight="bold" aria-hidden="true" />
       </Combobox.Trigger>
       <Combobox.Portal>
-        <Combobox.Positioner className={styles.positioner} align={isChip ? "start" : "end"} sideOffset={isChip ? 8 : 14} alignOffset={isChip ? 0 : -12}>
-          <Combobox.Popup className={styles.menu} aria-label="Genres">
+        <Combobox.Positioner className={listbox.positioner} align={isChip ? "start" : "end"} sideOffset={isChip ? 8 : 14} alignOffset={isChip ? 0 : -12}>
+          <Combobox.Popup className={`${listbox.popup} ${styles.menu}`} aria-label="Genres">
             <Combobox.Input className={styles.search} placeholder="Find a genre" aria-label="Find a genre" />
-            <Combobox.Empty className={styles.empty}>No genre called that.</Combobox.Empty>
-            <Combobox.List className={styles.list}>
+            <Combobox.Empty className={listbox.empty}>No genre called that.</Combobox.Empty>
+            <Combobox.List className={listbox.list}>
               {(genre: GenreCount) => (
-                <Combobox.Item key={genre.slug} value={genre.slug} className={styles.item}>
+                <Combobox.Item key={genre.slug} value={genre.slug} className={`${listbox.row} ${styles.item}`}>
                   <span className={styles.tick}>
                     <CheckIcon weight="bold" aria-hidden="true" />
                   </span>
                   <span>{genre.name}</span>
-                  <small className={styles.albumCount}>{genre.albumCount}</small>
+                  <small className={listbox.albumCount}>{genre.albumCount}</small>
                 </Combobox.Item>
               )}
             </Combobox.List>

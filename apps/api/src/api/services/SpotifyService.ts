@@ -1,4 +1,4 @@
-import type { AlbumArtist, DisplayAlbum, ExtractedColor, Genre, SearchAlbumsOptions } from "@shared/types";
+import type { AlbumArtist, DisplayAlbum, ExtractedColor, GenreCount, SearchAlbumsOptions } from "@shared/types";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
@@ -43,7 +43,8 @@ export class SpotifyService {
     artists: AlbumArtist[];
     /** The album's unfinished review, or null when it has none */
     draft: AlbumDraft | null;
-    genres?: Genre[];
+    /** Every genre with its album count, most used first */
+    genres?: GenreCount[];
   }> {
     const existing = await AlbumModel.findBySpotifyID(id);
     if (existing) throw new AppError("This album has already been reviewed.", 409);
@@ -72,7 +73,7 @@ export class SpotifyService {
       return { album, artists: albumArtists, draft };
     }
 
-    const genres = await GenreModel.getAllGenres();
+    const genres = await GenreModel.getGenreCounts();
     return { album, artists: albumArtists, draft, genres };
   }
 }

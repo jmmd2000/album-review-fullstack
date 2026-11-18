@@ -1,4 +1,4 @@
-import type { DisplayAlbum, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre, LinkedAlbum } from "@shared/types";
+import type { DisplayAlbum, DisplayTrack, GetPaginatedAlbumsOptions, ReviewedAlbum, ReviewedArtist, PaginatedAlbumsResult, Genre, GenreCount, LinkedAlbum } from "@shared/types";
 import { findLinkedAlbumIDs } from "@shared/helpers/parseReviewContent";
 import { AlbumModel } from "@/api/models/Album";
 import { TrackModel } from "@/api/models/Track";
@@ -8,7 +8,7 @@ import { GenreService } from "@/api/services/GenreService";
 import { AppError } from "@/api/AppError";
 
 export class AlbumService {
-  /** The reviewed album for its page. `allGenres`, every genre for the review form, is only included when asked for. */
+  /** The reviewed album for its page. `allGenres`, every genre with its album count for the review form, is only included when asked for. */
   static async getAlbumByID(
     id: string,
     includeAllGenres: boolean = false
@@ -19,7 +19,7 @@ export class AlbumService {
     /** The reviewed albums the review text links to */
     linkedAlbums: LinkedAlbum[];
     albumGenres: Genre[];
-    allGenres?: Genre[];
+    allGenres?: GenreCount[];
   }> {
     const row = await AlbumModel.findBySpotifyID(id);
     if (!row) throw new AppError("Album not found", 404);
@@ -51,7 +51,7 @@ export class AlbumService {
       return { album, artists, tracks: displayTracks, linkedAlbums, albumGenres };
     }
 
-    const allGenres = await GenreModel.getAllGenres();
+    const allGenres = await GenreModel.getGenreCounts();
 
     return { album, artists, tracks: displayTracks, linkedAlbums, allGenres, albumGenres };
   }

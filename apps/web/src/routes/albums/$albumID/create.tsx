@@ -160,7 +160,7 @@ function CreateReview() {
       cover={album.images[0]}
       albumArtists={artists}
       initialValues={initialValues}
-      genreSuggestions={(data.genres ?? []).map(genre => genre.name)}
+      genreOptions={data.genres ?? []}
       onChange={autosave.change}
       notice={showDraftNotice && <DraftNotice savedAt={new Date(draft.updatedAt)} loaded={draft.formValues !== null} onDiscard={discardDraft} />}
       status={<DraftStatus status={autosave.status} />}

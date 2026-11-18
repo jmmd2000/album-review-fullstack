@@ -103,7 +103,7 @@ function EditReview() {
       cover={album.imageURLs[0]}
       albumArtists={albumArtists}
       initialValues={initialValues}
-      genreSuggestions={(data.allGenres ?? []).map(genre => genre.name)}
+      genreOptions={data.allGenres ?? []}
       onSave={values => save.mutateAsync(values)}
       onCancel={() => {
         if (canGoBack) {

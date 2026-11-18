@@ -24,7 +24,7 @@ import coverColours from "@/styles/coverColours.module.css";
 import styles from "./ReviewForm.module.css";
 
 import type { FormEvent, ReactNode } from "react";
-import type { AlbumArtist, DisplayTrack, SpotifyImage } from "@shared/types";
+import type { AlbumArtist, DisplayTrack, GenreCount, SpotifyImage } from "@shared/types";
 import type { ReviewFormValues } from "@/lib/reviewForm";
 
 interface ReviewFormProps {
@@ -37,8 +37,8 @@ interface ReviewFormProps {
   /** Every artist on the album. With more than one, the form asks which are credited. */
   albumArtists: AlbumArtist[];
   initialValues: ReviewFormValues;
-  /** Every genre name, suggested while typing a genre */
-  genreSuggestions: string[];
+  /** Every genre with its album count, most used first, offered while typing a genre */
+  genreOptions: GenreCount[];
   /** Saves the review. The form shows a toast while it runs. */
   onSave: (values: ReviewFormValues) => Promise<unknown>;
   onCancel: () => void;
@@ -55,7 +55,7 @@ interface ReviewFormProps {
  * then the track ratings, the review text, the cover colours, the genres and the artist options.
  * The page glows in the cover colours as they change.
  */
-export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreSuggestions, onSave, onCancel, onChange, notice, status }: ReviewFormProps) {
+export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreOptions, onSave, onCancel, onChange, notice, status }: ReviewFormProps) {
   const [values, setValues] = useState(initialValues);
   const [saving, setSaving] = useState(false);
   const headRef = useRef<HTMLDivElement>(null);
@@ -123,7 +123,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
 
           <div className={styles.field}>
             <span className={styles.label}>Genres</span>
-            <GenreChips genres={values.genres} suggestions={genreSuggestions} onChange={genres => update({ genres })} />
+            <GenreChips genres={values.genres} options={genreOptions} onChange={genres => update({ genres })} />
           </div>
 
           {albumArtists.length > 1 ? (

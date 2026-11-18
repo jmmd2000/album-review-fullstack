@@ -48,10 +48,13 @@ test("create album review flow", async ({ page }) => {
   await page.getByLabel("Review", { exact: true }).fill(REVIEW_TEXT);
 
   const genre = page.getByLabel("Add a genre");
+  // The faked album reply has no existing genres, so each name is added through its "Add" row
   await genre.fill("r&b");
+  await genre.press("ArrowDown");
   await genre.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove r&b" })).toBeVisible();
   await genre.fill("soul");
-  await genre.press("Enter");
+  await page.getByRole("option", { name: "Add soul as a new genre" }).click();
   await expect(page.getByRole("button", { name: "Remove soul" })).toBeVisible();
 
   await page.getByRole("button", { name: "Add a colour" }).click();

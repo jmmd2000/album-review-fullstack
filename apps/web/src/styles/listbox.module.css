@@ -1,0 +1,40 @@
+.positioner {
+  z-index: var(--z-dropdown);
+}
+
+.popup {
+  padding: var(--space-1);
+  border-radius: var(--radius-menu);
+  background: var(--colour-panel);
+  box-shadow: var(--shadow-float);
+}
+
+.list {
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.row {
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+
+  &[data-highlighted] {
+    background: var(--colour-panel-strong);
+  }
+}
+
+.albumCount {
+  color: var(--colour-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  padding: 10px;
+  color: var(--colour-text-muted);
+
+  &:empty {
+    display: none;
+  }
+}
