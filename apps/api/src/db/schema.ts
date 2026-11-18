@@ -146,6 +146,20 @@ export const bookmarkedAlbums = pgTable("bookmarked_albums", {
     .notNull(),
 });
 
+/** An unfinished review of an album, saved from the review form. `formValues` is checked with Zod when it's read. */
+export const reviewDrafts = pgTable("review_drafts", {
+  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  artistName: varchar("artist_name", { length: 255 }).notNull(),
+  artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
+  releaseYear: integer("release_year").notNull(),
+  imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
+  formValues: jsonb("form_values").$type<unknown>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .default(sql`now()`)
+    .notNull(),
+});
+
 export const concerts = pgTable(
   "concerts",
   {

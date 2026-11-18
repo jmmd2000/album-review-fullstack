@@ -11,5 +11,7 @@ export const resetTables = async (query: (text: string, params?: any[]) => Promi
   // Each worker's copy shares the base test database's name, so checking DATABASE_URL_TEST covers it
   assertTestDatabase(process.env.DATABASE_URL_TEST);
 
-  await query("TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, genres, album_genres, related_genres, settings RESTART IDENTITY CASCADE;");
+  await query(
+    "TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, review_drafts, genres, album_genres, related_genres, settings RESTART IDENTITY CASCADE;"
+  );
 };

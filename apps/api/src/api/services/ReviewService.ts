@@ -9,6 +9,7 @@ import { formatDate } from "@shared/helpers/formatDate";
 import getTotalDuration from "@shared/helpers/formatDuration";
 import { getImageColors } from "@/helpers/getImageColors";
 import { BookmarkedAlbumModel } from "../models/BookmarkedAlbum";
+import { ReviewDraftModel } from "@/api/models/ReviewDraft";
 import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "@/api/services/GenreService";
 import { AppError } from "@/api/AppError";
@@ -125,6 +126,7 @@ export class ReviewService {
       if (isBookmarked) {
         await BookmarkedAlbumModel.removeBookmarkedAlbum(album.spotifyID, tx);
       }
+      await ReviewDraftModel.deleteDraft(album.spotifyID, tx);
 
       await ReviewService.refreshArtists(selectedArtistIDs, tx);
 
@@ -148,6 +150,7 @@ export class ReviewService {
       // Remove tracks and album
       await TrackModel.deleteTracksByAlbumID(id, tx);
       await AlbumModel.deleteAlbum(id, tx);
+      await ReviewDraftModel.deleteDraft(id, tx);
 
       await ReviewService.refreshArtists(artistIDs, tx);
     });
