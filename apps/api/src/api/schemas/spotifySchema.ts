@@ -32,18 +32,30 @@ export const albumSearchResponseSchema = z.object({
   }),
 });
 
+const albumTrackSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  duration_ms: z.number(),
+  artists: z.array(artistSummarySchema),
+});
+
+/** One page of an album's tracks. Spotify sends 50 at a time, and `next` links to the following page, or is null on the last. */
+export const albumTrackPageSchema = z.object({
+  items: z.array(albumTrackSchema),
+  next: z.string().nullable(),
+});
+
+/** An album with every track, as `getAlbum` returns it. */
 export const albumResponseSchema = albumSummarySchema.extend({
   uri: z.string(),
   tracks: z.object({
-    items: z.array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        duration_ms: z.number(),
-        artists: z.array(artistSummarySchema),
-      })
-    ),
+    items: z.array(albumTrackSchema),
   }),
+});
+
+/** The album reply itself, which holds only the first page of tracks. */
+export const albumReplySchema = albumResponseSchema.extend({
+  tracks: albumTrackPageSchema,
 });
 
 export const artistResponseSchema = z.object({

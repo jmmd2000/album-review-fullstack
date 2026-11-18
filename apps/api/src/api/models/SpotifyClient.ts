@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import { AppError } from "../AppError";
 import { env } from "@/config/env";
-import { albumResponseSchema, albumSearchResponseSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
+import { albumReplySchema, albumSearchResponseSchema, albumTrackPageSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
 import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
 
 /**
@@ -48,12 +48,29 @@ export class SpotifyClient {
     }
   }
 
+  /**
+   * Fetches an album with every track. The album reply holds the first 50 tracks, so this follows
+   * each `next` link until the last page.
+   * @throws AppError 404 for an unknown album, 502 when a later page of tracks fails or can't be read.
+   */
   static async getAlbum(albumID: string, accessToken: string): Promise<SpotifyAlbumResponse> {
     try {
       const response = await fetch(`${this.baseURL}/albums/${albumID}`, { headers: this.authHeaders(accessToken) });
       if (!response.ok) throw new AppError("Album not found on Spotify", 404);
 
-      return this.parseReply(albumResponseSchema, await response.json(), "an album");
+      const album = this.parseReply(albumReplySchema, await response.json(), "an album");
+      const tracks = [...album.tracks.items];
+      let nextPage = album.tracks.next;
+      while (nextPage) {
+        const pageResponse = await fetch(nextPage, { headers: this.authHeaders(accessToken) });
+        if (!pageResponse.ok) throw new AppError("Failed to fetch the rest of the album's tracks from Spotify.", 502);
+
+        const page = this.parseReply(albumTrackPageSchema, await pageResponse.json(), "a page of tracks");
+        tracks.push(...page.items);
+        nextPage = page.next;
+      }
+
+      return { ...album, tracks: { items: tracks } };
     } catch (err) {
       if (err instanceof AppError) throw err;
       throw new AppError("Failed to fetch album from Spotify.", 500);

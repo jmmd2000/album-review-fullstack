@@ -14,6 +14,10 @@ const spotifyAlbum = {
   tracks: { items: [{ id: "trk", name: "Track", duration_ms: 200000, artists: [{ id: "art", name: "Artist" }] }] },
 };
 
+const albumReply = { ...spotifyAlbum, tracks: { ...spotifyAlbum.tracks, next: null } };
+
+const track = (id: string) => ({ id, name: `Track ${id}`, duration_ms: 200000, artists: [{ id: "art", name: "Artist" }] });
+
 const stubFetch = (implementation: Mock) => {
   vi.stubGlobal("fetch", implementation);
   return implementation;
@@ -88,14 +92,43 @@ describe("searchAlbums", () => {
 
 describe("getAlbum", () => {
   test("returns the album with only the fields the app reads", async () => {
-    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...spotifyAlbum, label: "Some Label", popularity: 80 })));
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...albumReply, label: "Some Label", popularity: 80 })));
 
     expect(await SpotifyClient.getAlbum("alb", "tok")).toEqual(spotifyAlbum);
   });
 
+  test("follows each next link until every track is in", async () => {
+    const secondPage = "https://api.spotify.com/v1/albums/alb/tracks?offset=50&limit=50";
+    const thirdPage = "https://api.spotify.com/v1/albums/alb/tracks?offset=100&limit=50";
+    const fetchMock = stubFetch(
+      vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse({ ...albumReply, tracks: { items: [track("1")], next: secondPage } }))
+        .mockResolvedValueOnce(jsonResponse({ items: [track("2")], next: thirdPage }))
+        .mockResolvedValueOnce(jsonResponse({ items: [track("3")], next: null }))
+    );
+
+    const album = await SpotifyClient.getAlbum("alb", "tok");
+
+    expect(album.tracks.items.map(item => item.id)).toEqual(["1", "2", "3"]);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, secondPage, { headers: expect.objectContaining({ Authorization: "Bearer tok" }) });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, thirdPage, { headers: expect.objectContaining({ Authorization: "Bearer tok" }) });
+  });
+
+  test("fails instead of returning part of the album when a later page of tracks fails", async () => {
+    stubFetch(
+      vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse({ ...albumReply, tracks: { items: [track("1")], next: "https://api.spotify.com/v1/albums/alb/tracks?offset=50" } }))
+        .mockResolvedValueOnce(jsonResponse({}, false))
+    );
+
+    await expect(SpotifyClient.getAlbum("alb", "tok")).rejects.toMatchObject({ status: 502 });
+  });
+
   test("refuses an album reply with a bad field, and names the field", async () => {
-    const tracks = { items: [{ ...spotifyAlbum.tracks.items[0], duration_ms: "3:20" }] };
-    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...spotifyAlbum, tracks })));
+    const tracks = { items: [{ ...spotifyAlbum.tracks.items[0], duration_ms: "3:20" }], next: null };
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ ...albumReply, tracks })));
 
     await expect(SpotifyClient.getAlbum("alb", "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("tracks.items.0.duration_ms") });
   });
