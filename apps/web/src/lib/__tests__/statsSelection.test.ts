@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { albumMatches, decadeOf, describeSelection, highsAndLows, nameSelection } from "@/lib/statsSelection";
+import { albumMatches, decadeOf, describeSelection, highsAndLows, nameSelection, scoreArtistsInSelection } from "@/lib/statsSelection";
+
+import type { StatsAlbum, StatsArtist } from "@shared/types";
 
 describe("decadeOf", () => {
   it("rounds down to the start of the decade", () => {
@@ -74,5 +76,37 @@ describe("highsAndLows", () => {
     const { highest, lowest } = highsAndLows([60, 20, 80, 40, 70, 50, 30], score);
     expect(highest).toEqual([80, 70, 60, 50, 40]);
     expect(lowest).toEqual([20, 30]);
+  });
+});
+
+describe("scoreArtistsInSelection", () => {
+  const artist = (spotifyID: string, totalScore: number): StatsArtist => ({ spotifyID, name: spotifyID, imageURLs: [], totalScore, albumCount: 4 });
+  const album = (spotifyID: string, finalScore: number, artistSpotifyIDs: string[]): StatsAlbum => ({
+    spotifyID,
+    name: spotifyID,
+    artistName: artistSpotifyIDs[0],
+    releaseYear: 2015,
+    finalScore,
+    imageURLs: [],
+    genres: ["shoegaze"],
+    artistSpotifyIDs,
+  });
+
+  it("ranks artists on their albums in the selection, not their career score", () => {
+    const artists = [artist("career-high", 90), artist("career-low", 40)];
+    const selected = [album("weak", 30, ["career-high"]), album("strong", 85, ["career-low"]), album("solid", 75, ["career-low"])];
+
+    const ranked = highsAndLows(scoreArtistsInSelection(artists, selected), scored => scored.totalScore);
+
+    expect(ranked.highest.map(scored => [scored.spotifyID, scored.totalScore, scored.albumCount])).toEqual([
+      ["career-low", 80, 2],
+      ["career-high", 30, 1],
+    ]);
+  });
+
+  it("leaves out artists with no album in the selection", () => {
+    const scored = scoreArtistsInSelection([artist("in", 60), artist("out", 70)], [album("only", 50, ["in"])]);
+
+    expect(scored.map(each => each.spotifyID)).toEqual(["in"]);
   });
 });

@@ -10,7 +10,7 @@ import type { StatsAlbum, StatsArtist } from "@shared/types";
 interface HighsAndLowsProps {
   /** The albums the filters pick */
   albums: StatsAlbum[];
-  /** The rated artists with an album in the selection */
+  /** The rated artists with an album in the selection, scored on those albums when a filter is on */
   artists: StatsArtist[];
 }
 

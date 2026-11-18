@@ -1,3 +1,5 @@
+import type { StatsAlbum, StatsArtist } from "@shared/types";
+
 export interface StatsFilter {
   /** The picked genre slugs. Albums in any of them match. */
   genres: string[];
@@ -69,4 +71,18 @@ export function highsAndLows<T>(items: T[], scoreOf: (item: T) => number): { hig
     .filter(item => !highest.includes(item))
     .slice(0, 5);
   return { highest, lowest };
+}
+
+/**
+ * Scores each artist on their albums in the selection. `totalScore` becomes the average final score
+ * of those albums and `albumCount` their number. Artists with no album in the selection are left out.
+ */
+export function scoreArtistsInSelection(artists: StatsArtist[], albums: StatsAlbum[]): StatsArtist[] {
+  return artists.flatMap(artist => {
+    const theirAlbums = albums.filter(album => album.artistSpotifyIDs.includes(artist.spotifyID));
+    if (theirAlbums.length === 0) return [];
+
+    const average = theirAlbums.reduce((total, album) => total + album.finalScore, 0) / theirAlbums.length;
+    return [{ ...artist, totalScore: average, albumCount: theirAlbums.length }];
+  });
 }
