@@ -1,11 +1,15 @@
+import { useCallback, useState } from "react";
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { ApiError, client, handle, handleVoid } from "@/lib/client";
 import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { queryKeys } from "@/lib/queryKeys";
 import { toReviewPayload } from "@/lib/reviewForm";
+import { restoreDraft } from "@/lib/reviewDraft";
+import { useDraftAutosave } from "@/hooks/useDraftAutosave";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ReviewForm } from "@/components/form/ReviewForm";
+import { DraftNotice, DraftStatus } from "@/components/form/DraftNotice";
 import { RouteError } from "@/components/ui/RouteError";
 import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -26,7 +30,8 @@ export const Route = createFileRoute("/albums/$albumID/create")({
   ssr: false,
   loader: async ({ params, context }) => {
     try {
-      return await notFoundOn404(context.queryClient.ensureQueryData(spotifyAlbumQueryOptions(params.albumID)));
+      // Always fetched, so the form starts from the latest draft rather than a copy cached on an earlier visit
+      return await notFoundOn404(context.queryClient.fetchQuery(spotifyAlbumQueryOptions(params.albumID)));
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) throw redirect({ to: "/albums/$albumID", params: { albumID: params.albumID } });
       if (error instanceof ApiError && error.status === 401) return undefined;
@@ -65,6 +70,8 @@ function CreateReview() {
   const { albumID } = Route.useParams();
   const { data } = useSuspenseQuery(spotifyAlbumQueryOptions(albumID));
   const { album, artists } = data;
+  const [draft, setDraft] = useState(data.draft);
+  const [formKey, setFormKey] = useState(0);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const router = useRouter();
@@ -85,8 +92,45 @@ function CreateReview() {
     },
   });
 
+  const saveDraft = useCallback(
+    (values: ReviewFormValues, keepalive: boolean) =>
+      handleVoid(
+        client.api.drafts[":albumID"].$put(
+          {
+            param: { albumID },
+            json: {
+              formValues: values,
+              album: {
+                name: album.name,
+                artistName: album.artists[0].name,
+                artistSpotifyID: album.artists[0].id,
+                releaseYear: new Date(album.release_date).getFullYear(),
+                imageURLs: album.images,
+              },
+            },
+          },
+          { init: { keepalive } }
+        )
+      ),
+    [albumID, album]
+  );
+  const autosave = useDraftAutosave(saveDraft);
+
+  const discardDraft = async () => {
+    autosave.stop();
+    try {
+      await handleVoid(client.api.drafts[":albumID"].$delete({ param: { albumID } }));
+      setDraft(null);
+      setFormKey(key => key + 1);
+    } finally {
+      autosave.resume();
+    }
+  };
+  // A change saved over a draft that couldn't be loaded replaces it, so its notice no longer applies
+  const showDraftNotice = draft !== null && (draft.formValues !== null || autosave.status.state !== "saved");
+
   const artistIDs = artists.map(artist => artist.spotifyID);
-  const initialValues: ReviewFormValues = {
+  const freshValues: ReviewFormValues = {
     tracks: album.tracks.items.map(track => ({
       spotifyID: track.id,
       artistSpotifyID: track.artists[0]?.id ?? album.artists[0].id,
@@ -105,9 +149,11 @@ function CreateReview() {
     creditedArtistIDs: artistIDs,
     scoreArtistIDs: artistIDs,
   };
+  const initialValues = draft?.formValues ? restoreDraft(freshValues, draft.formValues) : freshValues;
 
   return (
     <ReviewForm
+      key={formKey}
       albumID={albumID}
       albumName={album.name}
       artistName={album.artists.map(artist => artist.name).join(", ")}
@@ -115,7 +161,18 @@ function CreateReview() {
       albumArtists={artists}
       initialValues={initialValues}
       genreSuggestions={(data.genres ?? []).map(genre => genre.name)}
-      onSave={values => save.mutateAsync(values)}
+      onChange={autosave.change}
+      notice={showDraftNotice && <DraftNotice savedAt={new Date(draft.updatedAt)} loaded={draft.formValues !== null} onDiscard={discardDraft} />}
+      status={<DraftStatus status={autosave.status} />}
+      onSave={async values => {
+        autosave.stop();
+        try {
+          return await save.mutateAsync(values);
+        } catch (error) {
+          autosave.resume();
+          throw error;
+        }
+      }}
       onCancel={() => {
         if (canGoBack) {
           router.history.back();

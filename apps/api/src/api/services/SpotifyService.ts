@@ -4,6 +4,7 @@ import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
 import { GenreModel } from "../models/Genre";
+import { ReviewDraftService, type AlbumDraft } from "@/api/services/ReviewDraftService";
 import { getImageColors } from "@/helpers/getImageColors";
 import { mapSearchResults, enrichAlbumsWithStatus } from "@/helpers/spotifySearch";
 import { AppError } from "../AppError";
@@ -40,6 +41,8 @@ export class SpotifyService {
   ): Promise<{
     album: SpotifyAlbumToReview;
     artists: AlbumArtist[];
+    /** The album's unfinished review, or null when it has none */
+    draft: AlbumDraft | null;
     genres?: Genre[];
   }> {
     const existing = await AlbumModel.findBySpotifyID(id);
@@ -63,12 +66,13 @@ export class SpotifyService {
       };
     });
     const album: SpotifyAlbumToReview = { ...spotifyAlbum, colors, albumArtists };
+    const draft = await ReviewDraftService.getDraft(id);
 
     if (!includeGenres) {
-      return { album, artists: albumArtists };
+      return { album, artists: albumArtists, draft };
     }
 
     const genres = await GenreModel.getAllGenres();
-    return { album, artists: albumArtists, genres };
+    return { album, artists: albumArtists, draft, genres };
   }
 }

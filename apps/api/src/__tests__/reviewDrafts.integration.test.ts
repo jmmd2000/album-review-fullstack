@@ -6,6 +6,7 @@ import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
+import { ReviewDraftService } from "@/api/services/ReviewDraftService";
 
 const authCookie = adminCookie();
 const albumID = mockReviewData.album.id;
@@ -64,4 +65,44 @@ test("saving a review leaves other albums' drafts alone", async () => {
   expect((await api.post("/api/albums/create", mockReviewData, authCookie)).status).toBe(201);
 
   expect(await draftExists("another-album")).toBe(true);
+});
+
+const draftSave = {
+  formValues: {
+    tracks: [{ spotifyID: "track-1", artistSpotifyID: "artist-1", artistName: "Artist", name: "Track", duration: 200000, rating: 7, pick: null, features: [] }],
+    reviewContent: "Half written",
+    bonus: 1,
+    colours: [{ hex: "#112233" }],
+    genres: ["dub"],
+    affectsArtistScore: true,
+    creditedArtistIDs: ["artist-1"],
+    scoreArtistIDs: ["artist-1"],
+  },
+  album: { name: "Album", artistName: "Artist", artistSpotifyID: "artist-1", releaseYear: 2020, imageURLs: [] },
+};
+
+test("a saved draft loads back with its values", async () => {
+  const res = await api.put(`/api/drafts/${albumID}`, draftSave, authCookie);
+  expect(res.status).toBe(204);
+
+  const draft = await ReviewDraftService.getDraft(albumID);
+  expect(draft?.formValues).toEqual(draftSave.formValues);
+});
+
+test("a stored draft that no longer matches the form loads as unreadable", async () => {
+  await saveDraft(albumID);
+
+  const draft = await ReviewDraftService.getDraft(albumID);
+
+  expect(draft).not.toBeNull();
+  expect(draft?.formValues).toBeNull();
+});
+
+test("a draft save for an album that's already reviewed is refused", async () => {
+  expect((await api.post("/api/albums/create", mockReviewData, authCookie)).status).toBe(201);
+
+  const res = await api.put(`/api/drafts/${albumID}`, draftSave, authCookie);
+
+  expect(res.status).toBe(409);
+  expect(await draftExists(albumID)).toBe(false);
 });

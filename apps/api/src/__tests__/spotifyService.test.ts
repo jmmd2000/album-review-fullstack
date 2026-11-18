@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, test, expect, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, test, expect, vi } from "vitest";
 import { closeDatabase } from "@/db/client";
 import type { SpotifyAlbumResponse } from "@/api/schemas/spotifySchema";
 import { SpotifyService } from "@/api/services/SpotifyService";
@@ -7,6 +7,7 @@ import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
 import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
 import { GenreModel } from "@/api/models/Genre";
+import { ReviewDraftService } from "@/api/services/ReviewDraftService";
 
 vi.mock("@/helpers/getImageColors", () => ({
   getImageColors: vi.fn(() => Promise.resolve([])),
@@ -63,6 +64,10 @@ describe("searchAlbums", () => {
 });
 
 describe("getAlbum", () => {
+  beforeEach(() => {
+    vi.spyOn(ReviewDraftService, "getDraft").mockResolvedValue(null);
+  });
+
   test("throws a 409 when the album is already reviewed", async () => {
     vi.spyOn(AlbumModel, "findBySpotifyID").mockResolvedValue({ spotifyID: "alb" } as never);
 

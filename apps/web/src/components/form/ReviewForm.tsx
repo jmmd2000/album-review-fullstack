@@ -23,7 +23,7 @@ import { RollingText } from "@/components/ui/RollingText";
 import coverColours from "@/styles/coverColours.module.css";
 import styles from "./ReviewForm.module.css";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import type { AlbumArtist, DisplayTrack, SpotifyImage } from "@shared/types";
 import type { ReviewFormValues } from "@/lib/reviewForm";
 
@@ -42,6 +42,12 @@ interface ReviewFormProps {
   /** Saves the review. The form shows a toast while it runs. */
   onSave: (values: ReviewFormValues) => Promise<unknown>;
   onCancel: () => void;
+  /** Called with the new values after every change */
+  onChange?: (values: ReviewFormValues) => void;
+  /** Shown under the title, such as the bar for a draft */
+  notice?: ReactNode;
+  /** Shown next to the Save button, such as when the draft last saved */
+  status?: ReactNode;
 }
 
 /**
@@ -49,12 +55,16 @@ interface ReviewFormProps {
  * then the track ratings, the review text, the cover colours, the genres and the artist options.
  * The page glows in the cover colours as they change.
  */
-export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreSuggestions, onSave, onCancel }: ReviewFormProps) {
+export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreSuggestions, onSave, onCancel, onChange, notice, status }: ReviewFormProps) {
   const [values, setValues] = useState(initialValues);
   const [saving, setSaving] = useState(false);
   const headRef = useRef<HTMLDivElement>(null);
 
-  const update = (changes: Partial<ReviewFormValues>) => setValues(current => ({ ...current, ...changes }));
+  const update = (changes: Partial<ReviewFormValues>) => {
+    const next = { ...values, ...changes };
+    setValues(next);
+    onChange?.(next);
+  };
 
   const changeTrack = (index: number, changes: Partial<DisplayTrack>) => update({ tracks: values.tracks.map((track, position) => (position === index ? { ...track, ...changes } : track)) });
 
@@ -94,6 +104,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
               {values.tracks.length} {values.tracks.length === 1 ? "track" : "tracks"}, {runtimeMinutes} min
             </span>
           </p>
+          {notice}
         </div>
 
         <div className={styles.body}>
@@ -135,6 +146,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
             <Button type="submit" variant="primary" disabled={saving}>
               {saving ? "Saving…" : "Save review"}
             </Button>
+            {status}
           </div>
         </div>
       </form>
