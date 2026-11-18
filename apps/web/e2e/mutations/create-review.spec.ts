@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, capturedAlbum, ratingFor } from "../../../api/src/db/fixtures/fixtures";
 import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
-import { cardFor, rateTracks, shownScoreOf } from "../helpers";
+import { cardFor, fakeGenreSuggestions, rateTracks, shownScoreOf } from "../helpers";
 
 const REVIEW_TEXT = "great album, I enjoyed it";
 
@@ -32,6 +32,10 @@ test("create album review flow", async ({ page }) => {
     url => url.pathname === `/api/spotify/albums/${album.spotifyID}`,
     route => route.fulfill({ json: buildSpotifyAlbumResponse(album) })
   );
+  await fakeGenreSuggestions(page, [
+    { name: "neo soul", isNew: false },
+    { name: "quiet storm", isNew: true },
+  ]);
 
   // The seeded bookmark is the unreviewed entry point
   await page.goto("/bookmarks");
@@ -56,6 +60,14 @@ test("create album review flow", async ({ page }) => {
   await genre.fill("soul");
   await page.getByRole("option", { name: "Add soul as a new genre" }).click();
   await expect(page.getByRole("button", { name: "Remove soul" })).toBeVisible();
+
+  // Tapping a suggestion, existing or new, adds it and takes it out of the suggestions
+  const suggestions = page.getByRole("list", { name: "Suggested genres" });
+  await suggestions.getByRole("button", { name: "Add neo soul" }).click();
+  await suggestions.getByRole("button", { name: "Add quiet storm, a new genre" }).click();
+  await expect(page.getByRole("button", { name: "Remove neo soul" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove quiet storm" })).toBeVisible();
+  await expect(suggestions).toBeHidden();
 
   await page.getByRole("button", { name: "Add a colour" }).click();
   await expect(page.getByRole("checkbox", { name: "Counts towards the artist's score" })).toBeChecked();

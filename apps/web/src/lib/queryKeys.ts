@@ -30,6 +30,7 @@ export const queryKeys = {
   drafts: {
     all: ["drafts"] as const,
   },
+  genreSuggestions: (albumID: string) => ["genre-suggestions", albumID] as const,
   bookmarks: {
     all: ["bookmarks"] as const,
     lists: ["bookmarks", "list"] as const,

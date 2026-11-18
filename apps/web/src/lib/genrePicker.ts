@@ -3,6 +3,18 @@ import type { GenreCount } from "@shared/types";
 /** A row in the genre picker's list: a genre that exists, or the offer to add what's typed as a new one. */
 export type PickerRow = { kind: "genre"; genre: GenreCount } | { kind: "create"; name: string };
 
+/**
+ * The form two genre names share when they mean the same thing: lower case, "&" read as "and", and
+ * spaces and hyphens treated as the same. It mirrors the key the API matches suggestions with.
+ */
+export function genreKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /** Whether the picked genres already include this name, ignoring case and spaces at either end. */
 export function hasGenre(picked: string[], name: string): boolean {
   const wanted = name.trim().toLowerCase();

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { BOOKMARKED_IDS, capturedAlbum } from "../../../api/src/db/fixtures/fixtures";
 import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
+import { fakeGenreSuggestions } from "../helpers";
 
 import type { Page } from "@playwright/test";
 
@@ -14,6 +15,7 @@ async function answerAlbumRequest(page: Page, draft: { formValues: unknown; upda
     url => url.pathname === `/api/spotify/albums/${album.spotifyID}`,
     route => route.fulfill({ json: buildSpotifyAlbumResponse(album, draft) })
   );
+  await fakeGenreSuggestions(page, []);
 }
 
 test.afterEach(async ({ page }) => {

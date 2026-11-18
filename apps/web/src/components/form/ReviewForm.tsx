@@ -3,6 +3,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { calculateAlbumScore } from "@shared/helpers/calculateAlbumScore";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useGenreSuggestions } from "@/hooks/useGenreSuggestions";
 import { coverColourStyle } from "@/lib/coverColours";
 import { morphProps } from "@/lib/coverMorph";
 import { tierColourVar } from "@/lib/tierColours";
@@ -57,6 +58,7 @@ interface ReviewFormProps {
  */
 export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists, initialValues, genreOptions, onSave, onCancel, onChange, notice, status }: ReviewFormProps) {
   const [values, setValues] = useState(initialValues);
+  const genreSuggestions = useGenreSuggestions(albumID);
   const [saving, setSaving] = useState(false);
   const headRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +125,7 @@ export function ReviewForm({ albumID, albumName, artistName, cover, albumArtists
 
           <div className={styles.field}>
             <span className={styles.label}>Genres</span>
-            <GenreChips genres={values.genres} options={genreOptions} onChange={genres => update({ genres })} />
+            <GenreChips genres={values.genres} options={genreOptions} suggestions={genreSuggestions} onChange={genres => update({ genres })} />
           </div>
 
           {albumArtists.length > 1 ? (

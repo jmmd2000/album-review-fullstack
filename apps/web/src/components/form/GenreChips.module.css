@@ -65,3 +65,42 @@
     font-weight: var(--font-weight-display);
   }
 }
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+
+.suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-tag);
+  box-shadow: inset 0 0 0 1.5px var(--colour-text-faint);
+  color: var(--colour-text-muted);
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-quick) var(--ease-out),
+    color var(--duration-quick) var(--ease-out);
+
+  & svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  &:hover {
+    background: var(--colour-panel);
+    color: var(--colour-foreground);
+  }
+}
+
+.new {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
