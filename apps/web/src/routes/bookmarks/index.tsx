@@ -8,6 +8,7 @@ import { AdminOnly } from "@/components/admin/AdminOnly";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { BookmarkButton } from "@/components/album/BookmarkButton";
 import { CardGrid } from "@/components/ui/CardGrid";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { Pagination } from "@/components/ui/Pagination";
@@ -15,6 +16,7 @@ import { SearchForm } from "@/components/ui/SearchForm";
 import { SortTabs } from "@/components/ui/SortTabs";
 import { RouteError } from "@/components/ui/RouteError";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import styles from "./index.module.css";
 
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
 import type { SortOption } from "@/components/ui/SortTabs";
@@ -53,13 +55,18 @@ const bookmarksQueryOptions = (options: GetPaginatedBookmarkedAlbumsOptions) =>
     staleTime: 1000 * 60 * 10,
   });
 
+const draftsQueryOptions = queryOptions({
+  queryKey: queryKeys.drafts.all,
+  queryFn: () => handle(client.api.drafts.$get()),
+});
+
 export const Route = createFileRoute("/bookmarks/")({
   validateSearch: bookmarksSearchSchema,
   search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => search,
   // Prefetch, because it doesn't throw. The list needs admin, and visitors should see the log in note, not an error
   loader: async ({ deps, context }) => {
-    await context.queryClient.prefetchQuery(bookmarksQueryOptions(deps));
+    await Promise.all([context.queryClient.prefetchQuery(bookmarksQueryOptions(deps)), context.queryClient.prefetchQuery(draftsQueryOptions)]);
   },
   component: RouteComponent,
   errorComponent: ({ error, reset }) => <RouteError error={error} reset={reset} />,
@@ -79,6 +86,7 @@ function RouteComponent() {
 function Bookmarks() {
   const options = Route.useSearch();
   const { data } = useSuspenseQuery(bookmarksQueryOptions(options));
+  const { data: drafts } = useSuspenseQuery(draftsQueryOptions);
   const navigate = useNavigate({ from: Route.fullPath });
   const { search } = useListControls({ navigate });
 
@@ -102,6 +110,16 @@ function Bookmarks() {
           }}
         />
       </PageHeader>
+      {drafts.albums.length > 0 && (
+        <section className={styles.drafts}>
+          <SectionHeader title="Drafts" aside="Newest first" />
+          <CardGrid>
+            {drafts.albums.map(album => (
+              <AlbumCard key={album.spotifyID} album={album} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
       {data.albums.length === 0 ? (
         options.search ? (
           <PageState title="No bookmarks match that" detail="Try a different search." />

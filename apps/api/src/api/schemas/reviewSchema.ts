@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { MAX_ALBUM_BONUS } from "@shared/constants";
 
-const spotifyImageSchema = z.object({
+export const spotifyImageSchema = z.object({
   height: z.number(),
   url: z.string(),
   width: z.number(),
 });
 
-const featureSchema = z.object({
+export const featureSchema = z.object({
   id: z.string(),
   name: z.string(),
 });

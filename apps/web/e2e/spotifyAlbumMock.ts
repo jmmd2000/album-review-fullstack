@@ -2,7 +2,8 @@ import type { CapturedAlbum } from "../../api/src/db/fixtures/captured";
 
 // Rebuilds what the api's spotify proxy would return for the create page,
 // using the checked in fixture, so the browser call never leaves the app.
-export function buildSpotifyAlbumResponse(album: CapturedAlbum) {
+// The draft is what the api would send for an album with a saved draft.
+export function buildSpotifyAlbumResponse(album: CapturedAlbum, draft: { formValues: unknown; updatedAt: string } | null = null) {
   const artists = album.artists.map(artist => ({ spotifyID: artist.spotifyID, name: artist.name, imageURLs: artist.imageURLs }));
 
   return {
@@ -25,6 +26,7 @@ export function buildSpotifyAlbumResponse(album: CapturedAlbum) {
       },
     },
     artists,
+    draft,
     genres: [],
   };
 }

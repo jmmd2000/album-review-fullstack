@@ -7,7 +7,9 @@ import { assertSafeToWipe } from "@/db/databaseSafety";
 const wipe = async () => {
   assertSafeToWipe(resolveDatabaseURL());
 
-  await query("TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, genres, album_genres, related_genres RESTART IDENTITY CASCADE;");
+  await query(
+    "TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, review_drafts, genres, album_genres, related_genres RESTART IDENTITY CASCADE;"
+  );
   console.log("Wipe: review data cleared.");
   await closeDatabase();
 };

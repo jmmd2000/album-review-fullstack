@@ -20,6 +20,7 @@ import home from "@/api/routes/HomeRoutes";
 import settings from "@/api/routes/SettingsRoutes";
 import spotify from "@/api/routes/SpotifyRoutes";
 import job from "@/api/routes/JobRoutes";
+import drafts from "@/api/routes/ReviewDraftRoutes";
 
 const base = new Hono<{ Variables: { db: Executor; requestID: string } }>();
 
@@ -52,7 +53,8 @@ export const app = base
   .route("/api/home", home)
   .route("/api/settings", settings)
   .route("/api/spotify", spotify)
-  .route("/api/jobs", job);
+  .route("/api/jobs", job)
+  .route("/api/drafts", drafts);
 
 export type AppType = typeof app;
 
