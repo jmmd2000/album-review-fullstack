@@ -1,23 +1,48 @@
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-const attempts = new Map<string, { count: number; resetAt: number }>();
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
 
-// 5 login attempts per client per 15 minutes
-export const loginRateLimiter = createMiddleware(async (c, next) => {
-  if (process.env.NODE_ENV !== "test") {
-    const key = c.req.header("x-forwarded-for") ?? "unknown";
-    const now = Date.now();
+interface RateLimiterOptions {
+  maxAttempts: number;
+  windowMS: number;
+  now?: () => number;
+  attempts?: Map<string, RateLimitEntry>;
+}
+
+/**
+ * Builds middleware that lets each visitor make `maxAttempts` requests per window, then answers 429.
+ * A visitor is the IP address Cloudflare sends in `CF-Connecting-IP`. Cloudflare replaces any value
+ * the client sends, and the server refuses requests that don't come through Cloudflare, so the client
+ * can't choose its own key. Without the header, as in local dev, every request shares one limit.
+ * Each call removes expired entries, so the map only holds visitors inside their window.
+ */
+export function createRateLimiter({ maxAttempts, windowMS, now = Date.now, attempts = new Map() }: RateLimiterOptions) {
+  return createMiddleware(async (c, next) => {
+    const time = now();
+    for (const [key, entry] of attempts) {
+      if (time > entry.resetAt) attempts.delete(key);
+    }
+
+    const key = c.req.header("cf-connecting-ip") ?? "unknown";
     const entry = attempts.get(key);
-    if (!entry || now > entry.resetAt) {
-      attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    } else if (entry.count >= MAX_ATTEMPTS) {
+    if (!entry) {
+      attempts.set(key, { count: 1, resetAt: time + windowMS });
+    } else if (entry.count >= maxAttempts) {
       throw new HTTPException(429, { message: "Too many login attempts, please try again later" });
     } else {
-      entry.count += 1;
+      attempts.set(key, { ...entry, count: entry.count + 1 });
     }
-  }
+    await next();
+  });
+}
+
+const passThrough = createMiddleware(async (_c, next) => {
   await next();
 });
+
+// The API tests log in many times from one client, so the limit is off for them
+export const loginRateLimiter = process.env.NODE_ENV === "test" ? passThrough : createRateLimiter({ maxAttempts: 5, windowMS: 15 * 60 * 1000 });
