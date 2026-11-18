@@ -161,6 +161,12 @@ export interface DisplayAlbum {
   colors?: ExtractedColor[];
 }
 
+/** An album in the Spotify search results. */
+export interface SearchAlbum extends DisplayAlbum {
+  /** Spotify's release type: "album", "single" or "compilation" */
+  releaseType: string;
+}
+
 /**
  * Represents the minimum data needed to display an artist on an `ArtistCard`.
  */

@@ -81,10 +81,14 @@ function SearchResults({ query }: { query: string }) {
         <AlbumCard
           key={album.spotifyID}
           album={album}
-          subtitle={`${album.artistName} · ${album.releaseYear}`}
+          subtitle={`${album.artistName} · ${album.releaseYear} · ${releaseTypeName(album.releaseType)}`}
           action={album.finalScore === null ? <BookmarkButton album={album} bookmarked={album.bookmarked ?? false} /> : undefined}
         />
       ))}
     </CardGrid>
   );
+}
+
+function releaseTypeName(releaseType: string) {
+  return releaseType.charAt(0).toUpperCase() + releaseType.slice(1);
 }

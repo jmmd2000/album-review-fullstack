@@ -19,6 +19,7 @@ const fakeAlbum = {
   ],
   finalScore: null,
   bookmarked: false,
+  releaseType: "album",
   affectsArtistScore: true,
 };
 

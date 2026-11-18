@@ -26,9 +26,14 @@ export const tokenResponseSchema = z.object({
   expires_in: z.number(),
 });
 
+/** A search hit. `album_type` is "album", "single" or "compilation", and Spotify labels an EP as a single. */
+const albumSearchItemSchema = albumSummarySchema.extend({
+  album_type: z.string(),
+});
+
 export const albumSearchResponseSchema = z.object({
   albums: z.object({
-    items: z.array(albumSummarySchema),
+    items: z.array(albumSearchItemSchema),
   }),
 });
 
@@ -86,6 +91,7 @@ export const artistOverviewResponseSchema = z.object({
 });
 
 export type SpotifyAlbumSummary = z.infer<typeof albumSummarySchema>;
+export type SpotifyAlbumSearchItem = z.infer<typeof albumSearchItemSchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;

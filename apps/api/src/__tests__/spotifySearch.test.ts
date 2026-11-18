@@ -1,10 +1,11 @@
 import { describe, test, expect } from "vitest";
-import type { SpotifyAlbumSummary } from "@/api/schemas/spotifySchema";
+import type { SpotifyAlbumSearchItem } from "@/api/schemas/spotifySchema";
 import { mapSearchResults, enrichAlbumsWithStatus } from "@/helpers/spotifySearch";
 
-const rawAlbum = (id: string, name: string): SpotifyAlbumSummary => ({
+const rawAlbum = (id: string, name: string): SpotifyAlbumSearchItem => ({
   id,
   name,
+  album_type: "single",
   artists: [{ id: `${id}-artist`, name: `${name} Artist` }],
   release_date: "2024-05-01",
   images: [{ url: `${id}.jpg`, height: 640, width: 640 }],
@@ -24,6 +25,7 @@ describe("mapSearchResults", () => {
       imageURLs: [{ url: "a1.jpg", height: 640, width: 640 }],
       finalScore: null,
       affectsArtistScore: true,
+      releaseType: "single",
     });
   });
 

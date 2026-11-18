@@ -1,14 +1,14 @@
-import type { DisplayAlbum } from "@shared/types";
+import type { SearchAlbum } from "@shared/types";
 import type { SpotifyAlbumSearchResponse } from "@/api/schemas/spotifySchema";
 
 /**
- * Maps a raw Spotify album search payload into our DisplayAlbum shape. The score
+ * Maps a raw Spotify album search payload into our SearchAlbum shape. The score
  * starts as null, and enrichAlbumsWithStatus fills it in for reviewed albums.
  *
  * @param raw - The Spotify search response.
- * @returns One DisplayAlbum per search hit.
+ * @returns One SearchAlbum per search hit.
  */
-export function mapSearchResults(raw: SpotifyAlbumSearchResponse): DisplayAlbum[] {
+export function mapSearchResults(raw: SpotifyAlbumSearchResponse): SearchAlbum[] {
   return raw.albums.items.map(album => ({
     spotifyID: album.id,
     name: album.name,
@@ -18,6 +18,7 @@ export function mapSearchResults(raw: SpotifyAlbumSearchResponse): DisplayAlbum[
     imageURLs: album.images,
     finalScore: null,
     affectsArtistScore: true,
+    releaseType: album.album_type,
   }));
 }
 
@@ -29,7 +30,7 @@ export function mapSearchResults(raw: SpotifyAlbumSearchResponse): DisplayAlbum[
  * @param bookmarkedIDs - Spotify ids of the albums that are bookmarked.
  * @returns The albums with finalScore and bookmarked filled in. An album with no review keeps a null score.
  */
-export function enrichAlbumsWithStatus(albums: DisplayAlbum[], finalScores: { spotifyID: string; finalScore: number | null }[], bookmarkedIDs: string[]): DisplayAlbum[] {
+export function enrichAlbumsWithStatus(albums: SearchAlbum[], finalScores: { spotifyID: string; finalScore: number | null }[], bookmarkedIDs: string[]): SearchAlbum[] {
   const scoreMap = new Map(finalScores.map(({ spotifyID, finalScore }) => [spotifyID, finalScore]));
   const bookmarkedSet = new Set(bookmarkedIDs);
 

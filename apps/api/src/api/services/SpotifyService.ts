@@ -1,4 +1,4 @@
-import type { AlbumArtist, DisplayAlbum, ExtractedColor, GenreCount, SearchAlbumsOptions } from "@shared/types";
+import type { AlbumArtist, ExtractedColor, GenreCount, SearchAlbum, SearchAlbumsOptions } from "@shared/types";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
@@ -21,7 +21,7 @@ export class SpotifyService {
     return SpotifyTokenCache.getAccessToken();
   }
 
-  static async searchAlbums(query: SearchAlbumsOptions): Promise<DisplayAlbum[]> {
+  static async searchAlbums(query: SearchAlbumsOptions): Promise<SearchAlbum[]> {
     const rawQuery = query.query?.trim();
     if (!rawQuery || rawQuery === "undefined") return [];
 

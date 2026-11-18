@@ -23,6 +23,8 @@ const rawAlbum = (id: string, name: string): SpotifyAlbumResponse => ({
   tracks: { items: [] },
 });
 
+const searchHit = (id: string, name: string) => ({ ...rawAlbum(id, name), album_type: "album" });
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -42,7 +44,7 @@ describe("searchAlbums", () => {
 
   test("enriches search hits with review and bookmark status", async () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
-    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [rawAlbum("a1", "First"), rawAlbum("a2", "Second")] } });
+    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [searchHit("a1", "First"), searchHit("a2", "Second")] } });
     vi.spyOn(AlbumModel, "getFinalScoresByIds").mockResolvedValue([{ spotifyID: "a1", finalScore: 82 }]);
     vi.spyOn(BookmarkedAlbumModel, "getBookmarkedByIds").mockResolvedValue(["a2"]);
 
