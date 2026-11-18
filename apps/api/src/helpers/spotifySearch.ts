@@ -1,4 +1,5 @@
 import type { SearchAlbum } from "@shared/types";
+import { SEARCH_MAX_OFFSET, SEARCH_PAGE_SIZE } from "@/api/models/SpotifyClient";
 import type { SpotifyAlbumSearchResponse } from "@/api/schemas/spotifySchema";
 
 /**
@@ -39,4 +40,16 @@ export function enrichAlbumsWithStatus(albums: SearchAlbum[], finalScores: { spo
     finalScore: scoreMap.get(album.spotifyID) ?? null,
     bookmarked: bookmarkedSet.has(album.spotifyID),
   }));
+}
+
+/**
+ * The offset of the page after this one, or null when there is none.
+ * Spotify can say there is a next page and then send it empty, so an empty page also ends the results.
+ */
+export function nextSearchOffset(offset: number, raw: SpotifyAlbumSearchResponse): number | null {
+  if (raw.albums.next === null || raw.albums.items.length === 0) return null;
+
+  const nextOffset = offset + SEARCH_PAGE_SIZE;
+  if (nextOffset > SEARCH_MAX_OFFSET) return null;
+  return nextOffset;
 }

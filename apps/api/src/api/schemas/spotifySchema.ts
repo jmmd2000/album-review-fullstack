@@ -34,6 +34,7 @@ const albumSearchItemSchema = albumSummarySchema.extend({
 export const albumSearchResponseSchema = z.object({
   albums: z.object({
     items: z.array(albumSearchItemSchema),
+    next: z.string().nullable(),
   }),
 });
 

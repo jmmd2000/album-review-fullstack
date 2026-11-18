@@ -297,6 +297,15 @@ export interface GetPaginatedArtistsOptions {
 export interface SearchAlbumsOptions {
   /** The search query */
   query?: string;
+  /** How many results to skip */
+  offset?: number;
+}
+
+/** One page of Spotify search results. */
+export interface SearchAlbumsPage {
+  albums: SearchAlbum[];
+  /** The offset of the next page, or null when there are no more results */
+  nextOffset: number | null;
 }
 
 export interface Genre {

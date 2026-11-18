@@ -1,4 +1,4 @@
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { client, handle } from "@/lib/client";
@@ -11,7 +11,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { SearchForm } from "@/components/ui/SearchForm";
 import { RouteError } from "@/components/ui/RouteError";
+import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import styles from "./index.module.css";
 
 const defaultSearch = { query: "" } as const;
 
@@ -20,9 +22,11 @@ const searchSchema = z.object({
 });
 
 const searchQueryOptions = (query: string) =>
-  queryOptions({
+  infiniteQueryOptions({
     queryKey: queryKeys.search.results({ query }),
-    queryFn: () => handle(client.api.spotify.albums.search.$get({ query: { query } })),
+    queryFn: ({ pageParam }) => handle(client.api.spotify.albums.search.$get({ query: { query, offset: String(pageParam) } })),
+    initialPageParam: 0,
+    getNextPageParam: lastPage => lastPage.nextOffset ?? undefined,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -31,7 +35,7 @@ export const Route = createFileRoute("/search/")({
   search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => ({ query: search.query }),
   loader: async ({ deps, context }) => {
-    if (deps.query) await context.queryClient.prefetchQuery(searchQueryOptions(deps.query));
+    if (deps.query) await context.queryClient.prefetchInfiniteQuery(searchQueryOptions(deps.query));
   },
   component: RouteComponent,
   errorComponent: ({ error, reset }) => <RouteError error={error} reset={reset} />,
@@ -71,21 +75,31 @@ function SearchPage() {
 }
 
 function SearchResults({ query }: { query: string }) {
-  const { data: albums } = useSuspenseQuery(searchQueryOptions(query));
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery(searchQueryOptions(query));
+  const albums = data.pages.flatMap(page => page.albums);
 
   if (albums.length === 0) return <PageState title="Nothing on Spotify matches that" detail="Check the spelling, or search for the artist instead." />;
 
   return (
-    <CardGrid>
-      {albums.map(album => (
-        <AlbumCard
-          key={album.spotifyID}
-          album={album}
-          subtitle={`${album.artistName} · ${album.releaseYear} · ${releaseTypeName(album.releaseType)}`}
-          action={album.finalScore === null ? <BookmarkButton album={album} bookmarked={album.bookmarked ?? false} /> : undefined}
-        />
-      ))}
-    </CardGrid>
+    <>
+      <CardGrid>
+        {albums.map(album => (
+          <AlbumCard
+            key={album.spotifyID}
+            album={album}
+            subtitle={`${album.artistName} · ${album.releaseYear} · ${releaseTypeName(album.releaseType)}`}
+            action={album.finalScore === null ? <BookmarkButton album={album} bookmarked={album.bookmarked ?? false} /> : undefined}
+          />
+        ))}
+      </CardGrid>
+      {hasNextPage && (
+        <div className={styles.more}>
+          <Button onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
+            Load more
+          </Button>
+        </div>
+      )}
+    </>
   );
 }
 

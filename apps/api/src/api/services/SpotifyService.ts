@@ -1,4 +1,4 @@
-import type { AlbumArtist, ExtractedColor, GenreCount, SearchAlbum, SearchAlbumsOptions } from "@shared/types";
+import type { AlbumArtist, ExtractedColor, GenreCount, SearchAlbumsOptions, SearchAlbumsPage } from "@shared/types";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { AlbumModel } from "@/api/models/Album";
@@ -6,7 +6,7 @@ import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
 import { GenreModel } from "../models/Genre";
 import { ReviewDraftService, type AlbumDraft } from "@/api/services/ReviewDraftService";
 import { getImageColors } from "@/helpers/getImageColors";
-import { mapSearchResults, enrichAlbumsWithStatus } from "@/helpers/spotifySearch";
+import { mapSearchResults, enrichAlbumsWithStatus, nextSearchOffset } from "@/helpers/spotifySearch";
 import { AppError } from "../AppError";
 import type { SpotifyAlbumResponse } from "@/api/schemas/spotifySchema";
 
@@ -21,18 +21,21 @@ export class SpotifyService {
     return SpotifyTokenCache.getAccessToken();
   }
 
-  static async searchAlbums(query: SearchAlbumsOptions): Promise<SearchAlbum[]> {
+  static async searchAlbums(query: SearchAlbumsOptions): Promise<SearchAlbumsPage> {
     const rawQuery = query.query?.trim();
-    if (!rawQuery || rawQuery === "undefined") return [];
+    if (!rawQuery || rawQuery === "undefined") return { albums: [], nextOffset: null };
 
+    const offset = query.offset ?? 0;
     const token = await SpotifyTokenCache.getAccessToken();
-    const albums = mapSearchResults(await SpotifyClient.searchAlbums(rawQuery, token));
-    if (albums.length === 0) return albums;
+    const raw = await SpotifyClient.searchAlbums(rawQuery, offset, token);
+    const nextOffset = nextSearchOffset(offset, raw);
+    const albums = mapSearchResults(raw);
+    if (albums.length === 0) return { albums, nextOffset };
 
     const ids = albums.map(a => a.spotifyID);
     const finalScores = await AlbumModel.getFinalScoresByIds(ids);
     const bookmarkedIDs = await BookmarkedAlbumModel.getBookmarkedByIds(ids);
-    return enrichAlbumsWithStatus(albums, finalScores, bookmarkedIDs);
+    return { albums: enrichAlbumsWithStatus(albums, finalScores, bookmarkedIDs), nextOffset };
   }
 
   static async getAlbum(

@@ -64,29 +64,30 @@ describe("requestToken", () => {
 
 describe("searchAlbums", () => {
   test("searches with the encoded query and bearer token", async () => {
-    const payload = { albums: { items: [] } };
+    const payload = { albums: { items: [], next: null } };
     const fetchMock = stubFetch(vi.fn().mockResolvedValue(jsonResponse(payload)));
 
-    const result = await SpotifyClient.searchAlbums("ok computer", "tok");
+    const result = await SpotifyClient.searchAlbums("ok computer", 20, "tok");
     expect(result).toEqual(payload);
 
     const [url, options] = fetchMock.mock.calls[0];
     expect(url).toContain("q=ok%20computer");
     expect(url).toContain("type=album");
     expect(url).toContain("limit=10");
+    expect(url).toContain("offset=20");
     expect(options.headers.Authorization).toBe("Bearer tok");
   });
 
   test("maps a failed search to a 502", async () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({}, false)));
 
-    await expect(SpotifyClient.searchAlbums("q", "tok")).rejects.toMatchObject({ status: 502, message: "Spotify search failed." });
+    await expect(SpotifyClient.searchAlbums("q", 0, "tok")).rejects.toMatchObject({ status: 502, message: "Spotify search failed." });
   });
 
   test("maps a network failure to a 500", async () => {
     stubFetch(vi.fn().mockRejectedValue(new Error("connection reset")));
 
-    await expect(SpotifyClient.searchAlbums("q", "tok")).rejects.toMatchObject({ status: 500 });
+    await expect(SpotifyClient.searchAlbums("q", 0, "tok")).rejects.toMatchObject({ status: 500 });
   });
 });
 

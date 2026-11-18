@@ -39,7 +39,7 @@ test("a seeded bookmark can be removed", async ({ page }) => {
 test("an album can be bookmarked from search", async ({ page }) => {
   // The search page talks to spotify through the api proxy, answer that one
   // call from the fixture so the run never touches spotify
-  await page.route("**/api/spotify/albums/search**", route => route.fulfill({ json: [fakeAlbum] }));
+  await page.route("**/api/spotify/albums/search**", route => route.fulfill({ json: { albums: [fakeAlbum], nextOffset: null } }));
 
   await page.goto("/search");
   const search = page.getByRole("searchbox", { name: "Search Spotify albums" });

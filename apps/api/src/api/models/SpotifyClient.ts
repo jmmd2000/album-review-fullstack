@@ -4,6 +4,11 @@ import { env } from "@/config/env";
 import { albumReplySchema, albumSearchResponseSchema, albumTrackPageSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
 import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
 
+/** Spotify gives at most 10 search results a request */
+export const SEARCH_PAGE_SIZE = 10;
+/** Spotify refuses a search page that would reach past its 1000th result */
+export const SEARCH_MAX_OFFSET = 1000 - SEARCH_PAGE_SIZE;
+
 /**
  * Raw calls to the Spotify Web API. It authenticates each request with a token it is handed,
  * and checks each reply has the fields the app reads before it returns it.
@@ -35,9 +40,9 @@ export class SpotifyClient {
     }
   }
 
-  static async searchAlbums(query: string, accessToken: string): Promise<SpotifyAlbumSearchResponse> {
+  static async searchAlbums(query: string, offset: number, accessToken: string): Promise<SpotifyAlbumSearchResponse> {
     try {
-      const endpoint = `${this.baseURL}/search?q=${encodeURIComponent(query)}&type=album&limit=10`;
+      const endpoint = `${this.baseURL}/search?q=${encodeURIComponent(query)}&type=album&limit=${SEARCH_PAGE_SIZE}&offset=${offset}`;
       const response = await fetch(endpoint, { headers: this.authHeaders(accessToken) });
       if (!response.ok) throw new AppError("Spotify search failed.", 502);
 
