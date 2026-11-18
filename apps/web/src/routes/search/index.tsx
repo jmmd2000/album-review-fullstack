@@ -3,6 +3,7 @@ import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react
 import { z } from "zod";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { albumIDFromLink } from "@/lib/spotifyLink";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { BookmarkButton } from "@/components/album/BookmarkButton";
@@ -56,10 +57,19 @@ function SearchPage() {
   const { query } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
+  function search(value: string) {
+    const albumID = albumIDFromLink(value);
+    if (albumID) {
+      void navigate({ to: "/albums/$albumID/create", params: { albumID } });
+      return;
+    }
+    void navigate({ search: { query: value } });
+  }
+
   return (
     <>
       <PageHeader title="Review an album">
-        <SearchForm label="Search Spotify albums" defaultValue={query} onSearch={value => void navigate({ search: { query: value } })} />
+        <SearchForm label="Search Spotify albums" defaultValue={query} placeholder="Album, artist or Spotify link" onSearch={search} />
       </PageHeader>
       {query ? (
         <SearchResults query={query} />
