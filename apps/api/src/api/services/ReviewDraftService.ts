@@ -1,3 +1,4 @@
+import type { DisplayAlbum } from "@shared/types";
 import { AlbumModel } from "@/api/models/Album";
 import { ReviewDraftModel } from "@/api/models/ReviewDraft";
 import { AppError } from "@/api/AppError";
@@ -10,6 +11,21 @@ export interface AlbumDraft {
 }
 
 export class ReviewDraftService {
+  /** Every album with a draft, as album cards, the most recently saved first. */
+  static async getDraftAlbums(): Promise<DisplayAlbum[]> {
+    const drafts = await ReviewDraftModel.getDrafts();
+    return drafts.map(draft => ({
+      spotifyID: draft.spotifyID,
+      name: draft.name,
+      artistName: draft.artistName,
+      artistSpotifyID: draft.artistSpotifyID,
+      releaseYear: draft.releaseYear,
+      imageURLs: draft.imageURLs,
+      finalScore: null,
+      affectsArtistScore: true,
+    }));
+  }
+
   /** The album's draft, or null when it has none. */
   static async getDraft(spotifyID: string): Promise<AlbumDraft | null> {
     const row = await ReviewDraftModel.findDraft(spotifyID);

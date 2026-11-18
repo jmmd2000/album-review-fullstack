@@ -1,8 +1,12 @@
-import { eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { reviewDrafts } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 
 export class ReviewDraftModel {
+  static async getDrafts() {
+    return db.select().from(reviewDrafts).orderBy(desc(reviewDrafts.updatedAt));
+  }
+
   static async findDraft(spotifyID: string) {
     return db
       .select()

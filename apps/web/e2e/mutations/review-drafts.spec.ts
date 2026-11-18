@@ -4,8 +4,8 @@ import { buildSpotifyAlbumResponse } from "../spotifyAlbumMock";
 
 import type { Page } from "@playwright/test";
 
-// A seeded album's tracks under an ID no other spec uses, so this spec's drafts can't clash with theirs
-const album = { ...capturedAlbum(BOOKMARKED_IDS[0]), spotifyID: "DraftSpecAlbum00000001" };
+// A seeded album's tracks under an ID and name no other spec uses, so this spec's drafts can't clash with theirs
+const album = { ...capturedAlbum(BOOKMARKED_IDS[0]), spotifyID: "DraftSpecAlbum00000001", name: "Draft Spec Album" };
 const createPage = `/albums/${album.spotifyID}/create`;
 
 async function answerAlbumRequest(page: Page, draft: { formValues: unknown; updatedAt: string } | null) {
@@ -20,7 +20,7 @@ test.afterEach(async ({ page }) => {
   await page.request.delete(`/api/drafts/${album.spotifyID}`);
 });
 
-test("opening the form saves nothing, and the first change saves a draft", async ({ page }) => {
+test("opening the form saves nothing, and the first change saves a draft that shows above the bookmarks", async ({ page }) => {
   await answerAlbumRequest(page, null);
   const draftSaves: string[] = [];
   page.on("request", request => {
@@ -36,6 +36,10 @@ test("opening the form saves nothing, and the first change saves a draft", async
 
   await expect(page.getByText("Draft saved just now")).toBeVisible();
   expect(draftSaves).toHaveLength(1);
+
+  await page.goto("/bookmarks");
+  const draftsRow = page.locator("section", { has: page.getByRole("heading", { name: "Drafts" }) });
+  await expect(draftsRow.getByRole("link", { name: album.name })).toHaveAttribute("href", createPage);
 });
 
 test("a saved draft loads into the form, and discarding it starts the form again", async ({ page }) => {

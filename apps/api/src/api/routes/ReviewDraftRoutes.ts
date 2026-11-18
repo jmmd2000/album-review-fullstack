@@ -8,6 +8,9 @@ import { saveDraftSchema } from "@/api/schemas/reviewDraftSchema";
 // admin only
 const drafts = new Hono()
   .use(requireAdmin)
+  .get("/", async c => {
+    return c.json({ albums: await ReviewDraftService.getDraftAlbums() }, 200);
+  })
   .put("/:albumID", validate("param", albumParamSchema, 404), validate("json", saveDraftSchema), async c => {
     await ReviewDraftService.saveDraft(c.req.valid("param").albumID, c.req.valid("json"));
     return c.body(null, 204);

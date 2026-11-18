@@ -27,6 +27,9 @@ export const queryKeys = {
     list: (options: GetPaginatedArtistsOptions) => ["artists", "list", options] as const,
     detail: (artistID: string) => ["artists", "detail", artistID] as const,
   },
+  drafts: {
+    all: ["drafts"] as const,
+  },
   bookmarks: {
     all: ["bookmarks"] as const,
     lists: ["bookmarks", "list"] as const,
