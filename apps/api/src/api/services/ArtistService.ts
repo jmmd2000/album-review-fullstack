@@ -12,8 +12,7 @@ export class ArtistService {
   }
 
   static async getPaginatedArtists(opts: GetPaginatedArtistsOptions) {
-    const artists = await ArtistModel.getPaginatedArtists(opts);
-    const totalArtistCount = await ArtistModel.getArtistCount();
+    const { artists, totalCount } = await ArtistModel.getPaginatedArtists(opts);
     const furtherPages = artists.length > PAGE_SIZE;
     if (furtherPages) artists.pop();
 
@@ -34,7 +33,7 @@ export class ArtistService {
     return {
       artists: displayArtists,
       furtherPages,
-      totalCount: totalArtistCount,
+      totalCount,
     };
   }
 

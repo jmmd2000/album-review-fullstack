@@ -15,15 +15,21 @@ export class ArtistModel {
     const sortField = validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
+    const searchFilter = search.trim() ? ilike(reviewedArtists.name, `%${search}%`) : undefined;
+    const sortOrder = sortDirection === "asc" ? asc(reviewedArtists[sortField]) : desc(reviewedArtists[sortField]);
 
-    const baseQuery = db
+    // Postgres gives tied rows no fixed order, so ties break on name and then ID to keep pages stable
+    const artists = await db
       .select()
       .from(reviewedArtists)
+      .where(searchFilter)
+      .orderBy(sortOrder, asc(reviewedArtists.name), asc(reviewedArtists.id))
       .limit(PAGE_SIZE + 1)
-      .offset(OFFSET)
-      .orderBy(sortDirection === "asc" ? asc(reviewedArtists[sortField]) : desc(reviewedArtists[sortField]));
+      .offset(OFFSET);
 
-    return search.trim() ? await baseQuery.where(ilike(reviewedArtists.name, `%${search}%`)) : await baseQuery;
+    const [{ count: totalCount }] = await db.select({ count: count() }).from(reviewedArtists).where(searchFilter);
+
+    return { artists, totalCount };
   }
 
   /** Artists whose name contains the query. Names that start with it come first, then the highest scores. */
