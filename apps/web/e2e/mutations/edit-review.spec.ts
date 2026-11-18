@@ -22,7 +22,10 @@ const newScore = shownScoreOf(
 );
 
 test("editing a review recalculates the score", async ({ page }) => {
-  await page.goto(`/albums/${review.spotifyID}/edit`);
+  // Starting on the album page caches it, so this also checks the save replaces the cached copy
+  await page.goto(`/albums/${review.spotifyID}`);
+  await page.getByRole("link", { name: "Edit", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/albums/${review.spotifyID}/edit$`));
   await expect(page.getByRole("heading", { name: album.name, level: 1 })).toBeVisible();
 
   await rateTracks(page, newRatings);

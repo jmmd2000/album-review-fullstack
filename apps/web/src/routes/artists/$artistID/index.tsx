@@ -3,6 +3,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { loadPageQuery } from "@/lib/loadPageQuery";
 import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { preloadImage } from "@/lib/coverMorph";
 import { useAuth } from "@/auth/useAuth";
@@ -35,7 +36,7 @@ const artistQueryOptions = (artistID: string) =>
 export const Route = createFileRoute("/artists/$artistID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    const details = await notFoundOn404(context.queryClient.ensureQueryData(artistQueryOptions(params.artistID)));
+    const details = await notFoundOn404(loadPageQuery(context.queryClient, artistQueryOptions(params.artistID)));
     await preloadImage(details.artist.imageURLs[0]?.url);
     return details;
   },

@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
+import { loadPageQuery } from "@/lib/loadPageQuery";
 import { notFoundOn404 } from "@/lib/notFoundOn404";
 import { coverColourStyle } from "@/lib/coverColours";
 import { morphProps, preloadImage } from "@/lib/coverMorph";
@@ -38,7 +39,7 @@ const reviewQueryOptions = (albumID: string) =>
 export const Route = createFileRoute("/albums/$albumID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    const review = await notFoundOn404(context.queryClient.ensureQueryData(reviewQueryOptions(params.albumID)));
+    const review = await notFoundOn404(loadPageQuery(context.queryClient, reviewQueryOptions(params.albumID)));
     await preloadImage(review.album.imageURLs[0]?.url);
     return review;
   },
