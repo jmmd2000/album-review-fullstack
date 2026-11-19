@@ -126,30 +126,28 @@ export const reviewedArtists = pgTable(
     imageUpdatedAt: timestamp("image_updated_at", { withTimezone: true })
       .default(sql`now()`)
       .notNull(),
-    /** The artist's ID on Deezer, or null until the listener links job finds a match */
-    deezerID: integer("deezer_id"),
   },
   table => [
     index("spotify_id_artist_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
     index("leaderboard_position_artist_idx").on(table.leaderboardPosition), // Index for leaderboard queries
-    uniqueIndex("reviewed_artists_deezer_id_key").on(table.deezerID),
   ]
 );
 
-/** The artists Deezer listeners play alongside a reviewed artist, in Deezer's order. Linked artists don't have to be reviewed. */
+/** The artists Last.fm listeners play alongside a reviewed artist, in Last.fm's order. Linked artists don't have to be reviewed. */
 export const artistListenerLinks = pgTable(
   "artist_listener_links",
   {
     artistSpotifyID: varchar("artist_spotify_id", { length: 255 })
       .notNull()
       .references(() => reviewedArtists.spotifyID, { onDelete: "cascade" }),
-    /** The place in Deezer's list, from 1 for the closest link */
+    /** The place in Last.fm's list, from 1 for the closest link */
     position: integer("position").notNull(),
-    linkedDeezerID: integer("linked_deezer_id").notNull(),
     linkedName: varchar("linked_name", { length: 255 }).notNull(),
+    /** How close Last.fm says the link is, from 0 to 1 */
+    match: real("match").notNull(),
     fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
   },
-  table => [primaryKey({ columns: [table.artistSpotifyID, table.position] }), index("artist_listener_links_linked_deezer_id_idx").on(table.linkedDeezerID)]
+  table => [primaryKey({ columns: [table.artistSpotifyID, table.position] })]
 );
 
 export const bookmarkedAlbums = pgTable("bookmarked_albums", {

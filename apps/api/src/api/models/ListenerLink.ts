@@ -1,24 +1,23 @@
-import { asc, desc, eq, inArray } from "drizzle-orm";
-import { albumArtists, artistListenerLinks, reviewedAlbums, reviewedArtists } from "@/db/schema";
+import { and, asc, eq, inArray, notExists } from "drizzle-orm";
+import { artistListenerLinks, reviewedArtists } from "@/db/schema";
 import { db } from "@/db/client";
 
 /** A reviewed artist with the fields the listener links job reads */
 export interface LinkableArtist {
   spotifyID: string;
   name: string;
-  deezerID: number | null;
   imageURLs: { url: string }[];
 }
 
 export interface NewListenerLink {
-  linkedDeezerID: number;
   linkedName: string;
+  /** How close Last.fm says the link is, from 0 to 1 */
+  match: number;
 }
 
 const linkableArtistColumns = {
   spotifyID: reviewedArtists.spotifyID,
   name: reviewedArtists.name,
-  deezerID: reviewedArtists.deezerID,
   imageURLs: reviewedArtists.imageURLs,
 };
 
@@ -27,35 +26,37 @@ export class ListenerLinkModel {
     return db.select(linkableArtistColumns).from(reviewedArtists).orderBy(asc(reviewedArtists.name));
   }
 
-  static async getArtistsBySpotifyIDs(spotifyIDs: string[]): Promise<LinkableArtist[]> {
+  /** The artists among these that have no saved links. */
+  static async getArtistsWithoutLinks(spotifyIDs: string[]): Promise<LinkableArtist[]> {
     if (spotifyIDs.length === 0) return [];
-    return db.select(linkableArtistColumns).from(reviewedArtists).where(inArray(reviewedArtists.spotifyID, spotifyIDs));
+    return db
+      .select(linkableArtistColumns)
+      .from(reviewedArtists)
+      .where(
+        and(
+          inArray(reviewedArtists.spotifyID, spotifyIDs),
+          notExists(db.select({ spotifyID: artistListenerLinks.artistSpotifyID }).from(artistListenerLinks).where(eq(artistListenerLinks.artistSpotifyID, reviewedArtists.spotifyID)))
+        )
+      );
   }
 
-  /** The names of an artist's reviewed albums, newest first. */
-  static async getAlbumNames(artistSpotifyID: string, limit: number): Promise<string[]> {
+  /** The names of an artist's saved links, in Last.fm's order. */
+  static async getLinkedNames(artistSpotifyID: string): Promise<string[]> {
     const rows = await db
-      .select({ name: reviewedAlbums.name })
-      .from(albumArtists)
-      .innerJoin(reviewedAlbums, eq(albumArtists.albumSpotifyID, reviewedAlbums.spotifyID))
-      .where(eq(albumArtists.artistSpotifyID, artistSpotifyID))
-      .orderBy(desc(reviewedAlbums.releaseYear))
-      .limit(limit);
-    return rows.map(row => row.name);
-  }
-
-  static async setDeezerID(artistSpotifyID: string, deezerID: number): Promise<void> {
-    await db.update(reviewedArtists).set({ deezerID }).where(eq(reviewedArtists.spotifyID, artistSpotifyID));
-  }
-
-  /** The Deezer IDs of an artist's saved links, in Deezer's order. */
-  static async getLinkedDeezerIDs(artistSpotifyID: string): Promise<number[]> {
-    const rows = await db
-      .select({ linkedDeezerID: artistListenerLinks.linkedDeezerID })
+      .select({ linkedName: artistListenerLinks.linkedName })
       .from(artistListenerLinks)
       .where(eq(artistListenerLinks.artistSpotifyID, artistSpotifyID))
       .orderBy(asc(artistListenerLinks.position));
-    return rows.map(row => row.linkedDeezerID);
+    return rows.map(row => row.linkedName);
+  }
+
+  /** The saved links of these artists, with each link's place in its list. */
+  static async getLinks(artistSpotifyIDs: string[]): Promise<{ linkedName: string; position: number }[]> {
+    if (artistSpotifyIDs.length === 0) return [];
+    return db
+      .select({ linkedName: artistListenerLinks.linkedName, position: artistListenerLinks.position })
+      .from(artistListenerLinks)
+      .where(inArray(artistListenerLinks.artistSpotifyID, artistSpotifyIDs));
   }
 
   /**

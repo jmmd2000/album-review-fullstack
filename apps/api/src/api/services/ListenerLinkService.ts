@@ -1,69 +1,30 @@
-import { DeezerClient, DeezerLimitError } from "@/api/models/DeezerClient";
+import { LastFmClient, LastFmLimitError } from "@/api/models/LastFmClient";
 import { ListenerLinkModel, type LinkableArtist } from "@/api/models/ListenerLink";
-import type { DeezerAlbumSearchHit } from "@/api/schemas/deezerSchema";
 import { AlbumModel } from "@/api/models/Album";
 import { reportError } from "@/config/errorReporting";
 import type { JobEmit } from "@/api/services/JobService";
 
-/** How many of an artist's reviewed albums the match tries before it gives up */
-const MAX_ALBUMS_TO_TRY = 3;
-
 /** How a refresh of one artist's links went */
 export type LinkRefreshOutcome = "changed" | "same" | "unmatched";
 
-/**
- * Makes an artist name comparable across services: lower case, no accents, "&" as "and", straight apostrophes and single spaces.
- * For example, "Beyoncé & Jay‐Z" and "beyonce and jay-z" give the same text.
- */
-export function normaliseArtistName(name: string): string {
-  return name.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[‘’]/g, "'").replace(/[‐‑]/g, "-").replace(/&/g, " and ").replace(/\s+/g, " ").trim();
-}
-
-/** The Deezer ID of the first search hit whose artist has this name, or null when no hit does. */
-export function findMatchingArtist(hits: DeezerAlbumSearchHit[], artistName: string): number | null {
-  const wanted = normaliseArtistName(artistName);
-  const match = hits.find(hit => normaliseArtistName(hit.artist.name) === wanted);
-  return match ? match.artist.id : null;
-}
-
-/** Saves, for each reviewed artist, the artists Deezer listeners play alongside them. */
+/** Saves, for each reviewed artist, the artists Last.fm listeners play alongside them. */
 export const ListenerLinkService = {
   /**
-   * Finds the artist on Deezer through their reviewed albums. A search by name alone finds the wrong artist for common names.
-   * @returns The Deezer artist ID, or null when none of the albums gives a match.
-   */
-  async findDeezerID(artist: LinkableArtist): Promise<number | null> {
-    const albumNames = await ListenerLinkModel.getAlbumNames(artist.spotifyID, MAX_ALBUMS_TO_TRY);
-    for (const albumName of albumNames) {
-      const match = findMatchingArtist(await DeezerClient.searchAlbums(albumName, artist.name), artist.name);
-      if (match !== null) return match;
-    }
-    return null;
-  },
-
-  /**
-   * Matches the artist to Deezer if they have no match yet and saves the match, then replaces their saved links with Deezer's current list.
-   * When Deezer has no related artists, the saved links stay.
-   * @throws When Deezer fails, and the saved links stay.
+   * Replaces the artist's saved links with Last.fm's current list of similar artists.
+   * When Last.fm doesn't know the artist or has no similar artists, the saved links stay.
+   * @throws When Last.fm fails, and the saved links stay.
    */
   async refreshArtist(artist: LinkableArtist): Promise<LinkRefreshOutcome> {
-    let deezerID = artist.deezerID;
-    if (deezerID === null) {
-      deezerID = await this.findDeezerID(artist);
-      if (deezerID === null) return "unmatched";
-      await ListenerLinkModel.setDeezerID(artist.spotifyID, deezerID);
-    }
+    const similar = await LastFmClient.getSimilarArtists(artist.name);
+    if (similar === null) return "unmatched";
+    if (similar.length === 0) return "same";
 
-    const related = await DeezerClient.getRelatedArtists(deezerID);
-    if (related.length === 0) return "same";
-
-    const savedIDs = await ListenerLinkModel.getLinkedDeezerIDs(artist.spotifyID);
-    const relatedIDs = related.map(relatedArtist => relatedArtist.id);
-    const isSame = savedIDs.length === relatedIDs.length && savedIDs.every((id, index) => id === relatedIDs[index]);
+    const savedNames = await ListenerLinkModel.getLinkedNames(artist.spotifyID);
+    const isSame = savedNames.length === similar.length && savedNames.every((name, index) => name === similar[index].name);
 
     await ListenerLinkModel.replaceLinks(
       artist.spotifyID,
-      related.map(relatedArtist => ({ linkedDeezerID: relatedArtist.id, linkedName: relatedArtist.name })),
+      similar.map(similarArtist => ({ linkedName: similarArtist.name, match: similarArtist.match })),
       new Date()
     );
     return isSame ? "same" : "changed";
@@ -71,8 +32,8 @@ export const ListenerLinkService = {
 
   /**
    * Refreshes the links of every reviewed artist and reports each one through `emit`.
-   * An artist that fails or has no match is reported and skipped.
-   * @throws DeezerLimitError when Deezer refuses more requests, which stops the run.
+   * An artist that fails or that Last.fm doesn't know is reported and skipped.
+   * @throws LastFmLimitError when Last.fm refuses more requests, which stops the run.
    */
   async refreshAllArtists(emit: JobEmit): Promise<void> {
     const artists = await ListenerLinkModel.getAllArtists();
@@ -83,24 +44,23 @@ export const ListenerLinkService = {
       emit("progress", progress);
       try {
         const outcome = await this.refreshArtist(artist);
-        if (outcome === "unmatched") emit("failed", { ...progress, message: "No match on Deezer" });
+        if (outcome === "unmatched") emit("failed", { ...progress, message: "No match on Last.fm" });
         else emit(outcome, progress);
       } catch (error) {
-        if (error instanceof DeezerLimitError) throw error;
+        if (error instanceof LastFmLimitError) throw error;
         emit("failed", { ...progress, message: (error as Error).message });
       }
     }
   },
 
   /**
-   * Fetches links for the album's artists that have no Deezer match yet. Call it without await after a review saves.
+   * Fetches links for the album's artists that have no saved links yet. Call it without await after a review saves.
    * It never throws. A failure is reported, and the next scheduled run tries the artist again.
    */
-  async linkUnmatchedArtists(albumSpotifyID: string): Promise<void> {
+  async linkNewArtists(albumSpotifyID: string): Promise<void> {
     try {
-      const artists = await ListenerLinkModel.getArtistsBySpotifyIDs(await AlbumModel.getAlbumArtistIDs(albumSpotifyID));
+      const artists = await ListenerLinkModel.getArtistsWithoutLinks(await AlbumModel.getAlbumArtistIDs(albumSpotifyID));
       for (const artist of artists) {
-        if (artist.deezerID !== null) continue;
         await this.refreshArtist(artist);
       }
     } catch (error) {

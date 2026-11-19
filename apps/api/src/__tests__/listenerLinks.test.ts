@@ -1,20 +1,17 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { DeezerClient, DeezerLimitError } from "@/api/models/DeezerClient";
+import { LastFmClient, LastFmLimitError } from "@/api/models/LastFmClient";
 import { ListenerLinkModel, type LinkableArtist } from "@/api/models/ListenerLink";
-import { ListenerLinkService, findMatchingArtist, normaliseArtistName } from "@/api/services/ListenerLinkService";
-import type { JobEmit } from "@/api/services/JobService";
+import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import { AlbumModel } from "@/api/models/Album";
+import { normaliseArtistName } from "@/helpers/artistName";
+import { closestLinkByArtist } from "@/helpers/similarAlbums";
 import * as errorReporting from "@/config/errorReporting";
+import type { JobEmit } from "@/api/services/JobService";
 
-vi.mock("@/helpers/sleep", () => ({ sleep: vi.fn(() => Promise.resolve()) }));
-
-const jsonResponse = (body: unknown) => ({ ok: true, status: 200, json: () => Promise.resolve(body) }) as Response;
-const hit = (title: string, id: number, name: string) => ({ title, artist: { id, name } });
-const artist = (spotifyID: string, deezerID: number | null = null): LinkableArtist => ({ spotifyID, name: spotifyID, deezerID, imageURLs: [] });
+const artist = (name: string): LinkableArtist => ({ spotifyID: name, name, imageURLs: [] });
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.unstubAllGlobals();
 });
 
 describe("normaliseArtistName", () => {
@@ -25,90 +22,69 @@ describe("normaliseArtistName", () => {
   });
 });
 
-describe("findMatchingArtist", () => {
-  test("picks the hit whose artist has the same name, not the first hit", () => {
-    const hits = [hit("Wednesday (Original Soundtrack)", 1, "Wednesday Addams"), hit("Bleeds", 87096062, "Wednesday")];
-    expect(findMatchingArtist(hits, "Wednesday")).toBe(87096062);
-  });
+describe("closestLinkByArtist", () => {
+  test("finds reviewed artists by name and keeps each one's closest place", () => {
+    const links = [
+      { linkedName: "Kim Petras", position: 1 },
+      { linkedName: "SOPHIE", position: 3 },
+      { linkedName: "Not Reviewed", position: 2 },
+      { linkedName: "kim petras", position: 7 },
+    ];
+    const reviewedArtists = [
+      { spotifyID: "kim", name: "Kim Petras" },
+      { spotifyID: "sophie", name: "Sophie" },
+      { spotifyID: "other", name: "Someone Else" },
+    ];
 
-  test("gives null when only a different artist matches the search", () => {
-    expect(findMatchingArtist([hit("Wednesday (Original Soundtrack)", 1, "Wednesday Addams")], "Wednesday")).toBeNull();
-    expect(findMatchingArtist([], "Wednesday")).toBeNull();
-  });
-});
-
-describe("findDeezerID", () => {
-  test("tries the artist's next album when one gives no match", async () => {
-    vi.spyOn(ListenerLinkModel, "getAlbumNames").mockResolvedValue(["Rat Saw God", "Bleeds"]);
-    const search = vi
-      .spyOn(DeezerClient, "searchAlbums")
-      .mockResolvedValueOnce([hit("Rat Saw God", 5, "Someone Else")])
-      .mockResolvedValueOnce([hit("Bleeds", 87096062, "Wednesday")]);
-
-    expect(await ListenerLinkService.findDeezerID({ ...artist("wednesday"), name: "Wednesday" })).toBe(87096062);
-    expect(search).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("DeezerClient", () => {
-  test("an error sent with a 200 status throws, and a quota error throws a DeezerLimitError", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: { type: "Exception", message: "Quota limit exceeded", code: 4 } })));
-    await expect(DeezerClient.getRelatedArtists(1)).rejects.toBeInstanceOf(DeezerLimitError);
-
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: { type: "OAuthException", message: "Invalid query", code: 600 } })));
-    await expect(DeezerClient.getRelatedArtists(1)).rejects.toThrow("Invalid query");
-  });
-
-  test("a 'no data' error gives an empty list", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: { type: "DataException", message: "no data", code: 800 } })));
-    expect(await DeezerClient.getRelatedArtists(1)).toEqual([]);
-  });
-
-  test("a reply without the expected fields throws", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ data: [{ id: "not a number" }] })));
-    await expect(DeezerClient.getRelatedArtists(1)).rejects.toThrow("can't read");
+    expect(closestLinkByArtist(links, reviewedArtists)).toEqual(
+      new Map([
+        ["kim", 1],
+        ["sophie", 3],
+      ])
+    );
   });
 });
 
 describe("refreshAllArtists", () => {
-  test("reports each artist's outcome, and an unmatched artist as failed", async () => {
-    vi.spyOn(ListenerLinkModel, "getAllArtists").mockResolvedValue([artist("matched", 10), artist("unmatched"), artist("broken", 30)]);
-    vi.spyOn(ListenerLinkModel, "getAlbumNames").mockResolvedValue([]);
-    vi.spyOn(ListenerLinkModel, "getLinkedDeezerIDs").mockResolvedValue([]);
+  test("reports each artist's outcome, and an artist Last.fm doesn't know as failed", async () => {
+    vi.spyOn(ListenerLinkModel, "getAllArtists").mockResolvedValue([artist("known"), artist("unknown"), artist("broken")]);
+    vi.spyOn(ListenerLinkModel, "getLinkedNames").mockResolvedValue([]);
     vi.spyOn(ListenerLinkModel, "replaceLinks").mockResolvedValue(true);
-    vi.spyOn(DeezerClient, "getRelatedArtists").mockImplementation(async deezerID => {
-      if (deezerID === 30) throw new Error("Deezer is down");
-      return [{ id: 99, name: "Linked" }];
+    vi.spyOn(LastFmClient, "getSimilarArtists").mockImplementation(async name => {
+      if (name === "unknown") return null;
+      if (name === "broken") throw new Error("Last.fm is down");
+      return [{ name: "Linked", match: 1 }];
     });
     const events: string[] = [];
     const emit: JobEmit = (event, data) => events.push(event === "failed" ? `failed: ${(data as { message: string }).message}` : event);
 
     await ListenerLinkService.refreshAllArtists(emit);
 
-    expect(events.filter(event => event !== "progress")).toEqual(["changed", "failed: No match on Deezer", "failed: Deezer is down"]);
+    expect(events.filter(event => event !== "progress")).toEqual(["changed", "failed: No match on Last.fm", "failed: Last.fm is down"]);
   });
 
-  test("stops the run when Deezer refuses more requests", async () => {
-    vi.spyOn(ListenerLinkModel, "getAllArtists").mockResolvedValue([artist("first", 10), artist("second", 20)]);
-    const related = vi.spyOn(DeezerClient, "getRelatedArtists").mockRejectedValue(new DeezerLimitError("too many"));
+  test("stops the run when Last.fm refuses more requests", async () => {
+    vi.spyOn(ListenerLinkModel, "getAllArtists").mockResolvedValue([artist("first"), artist("second")]);
+    const similar = vi.spyOn(LastFmClient, "getSimilarArtists").mockRejectedValue(new LastFmLimitError("too many"));
 
-    await expect(ListenerLinkService.refreshAllArtists(() => {})).rejects.toBeInstanceOf(DeezerLimitError);
-    expect(related).toHaveBeenCalledTimes(1);
+    await expect(ListenerLinkService.refreshAllArtists(() => {})).rejects.toBeInstanceOf(LastFmLimitError);
+    expect(similar).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("linkUnmatchedArtists", () => {
-  test("refreshes only the album's artists with no Deezer match, and reports a failure instead of throwing", async () => {
-    vi.mocked(ListenerLinkService.linkUnmatchedArtists).mockRestore();
-    vi.spyOn(AlbumModel, "getAlbumArtistIDs").mockResolvedValue(["matched", "unmatched"]);
-    vi.spyOn(ListenerLinkModel, "getArtistsBySpotifyIDs").mockResolvedValue([artist("matched", 10), artist("unmatched")]);
-    const error = new Error("Deezer is down");
+describe("linkNewArtists", () => {
+  test("refreshes only the album's artists with no saved links, and reports a failure instead of throwing", async () => {
+    vi.mocked(ListenerLinkService.linkNewArtists).mockRestore();
+    vi.spyOn(AlbumModel, "getAlbumArtistIDs").mockResolvedValue(["linked", "new"]);
+    const withoutLinks = vi.spyOn(ListenerLinkModel, "getArtistsWithoutLinks").mockResolvedValue([artist("new")]);
+    const error = new Error("Last.fm is down");
     const refresh = vi.spyOn(ListenerLinkService, "refreshArtist").mockRejectedValue(error);
     const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
 
-    await ListenerLinkService.linkUnmatchedArtists("album");
+    await ListenerLinkService.linkNewArtists("album");
 
-    expect(refresh.mock.calls.map(([refreshed]) => refreshed.spotifyID)).toEqual(["unmatched"]);
+    expect(withoutLinks).toHaveBeenCalledWith(["linked", "new"]);
+    expect(refresh.mock.calls.map(([refreshed]) => refreshed.spotifyID)).toEqual(["new"]);
     expect(report).toHaveBeenCalledWith(error, { job: "listener-links" });
   });
 });

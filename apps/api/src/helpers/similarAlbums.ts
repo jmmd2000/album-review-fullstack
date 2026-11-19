@@ -1,9 +1,32 @@
+import { normaliseArtistName } from "@/helpers/artistName";
+
 /** An album by an artist that listeners link to the current album's artists */
 export interface LinkedAlbumCandidate {
   albumSpotifyID: string;
   /** The closest place in a link list, from 1 */
   position: number;
   finalScore: number;
+}
+
+/**
+ * Finds which reviewed artists the links point to, by name, and the closest place each one has in the link lists.
+ * Names are compared without case, accents or the difference between "&" and "and".
+ * @returns The closest link place for each linked reviewed artist, keyed by Spotify ID.
+ */
+export function closestLinkByArtist(links: { linkedName: string; position: number }[], reviewedArtists: { spotifyID: string; name: string }[]): Map<string, number> {
+  const spotifyIDsByName = new Map<string, string[]>();
+  for (const artist of reviewedArtists) {
+    const key = normaliseArtistName(artist.name);
+    spotifyIDsByName.set(key, [...(spotifyIDsByName.get(key) ?? []), artist.spotifyID]);
+  }
+
+  const closest = new Map<string, number>();
+  for (const link of links) {
+    for (const spotifyID of spotifyIDsByName.get(normaliseArtistName(link.linkedName)) ?? []) {
+      closest.set(spotifyID, Math.min(closest.get(spotifyID) ?? Infinity, link.position));
+    }
+  }
+  return closest;
 }
 
 /** An album that shares at least one genre with the current album */

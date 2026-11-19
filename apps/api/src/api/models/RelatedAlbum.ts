@@ -1,8 +1,8 @@
-import { and, count, desc, eq, inArray, min, ne, notExists } from "drizzle-orm";
+import { and, count, desc, eq, inArray, ne, notExists } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { albumArtists, albumGenres, artistListenerLinks, reviewedAlbums, reviewedArtists } from "@/db/schema";
+import { albumArtists, albumGenres, reviewedAlbums } from "@/db/schema";
 import { db } from "@/db/client";
-import type { GenreAlbumCandidate, LinkedAlbumCandidate } from "@/helpers/similarAlbums";
+import type { GenreAlbumCandidate } from "@/helpers/similarAlbums";
 
 const otherAlbumArtists = alias(albumArtists, "other_album_artists");
 
@@ -30,17 +30,14 @@ export class RelatedAlbumModel {
       .then(rows => rows.map(row => row.album));
   }
 
-  /** The albums by artists that listeners link to these artists, with each album's closest link. Albums by these artists are left out. */
-  static async getLinkedAlbums(artistSpotifyIDs: string[]): Promise<LinkedAlbumCandidate[]> {
+  /** The albums by these artists, one row for each album and artist. Albums that also have any of `excludedArtistIDs` are left out. */
+  static async getAlbumsByArtists(artistSpotifyIDs: string[], excludedArtistIDs: string[]) {
     if (artistSpotifyIDs.length === 0) return [];
     return db
-      .select({ albumSpotifyID: reviewedAlbums.spotifyID, position: min(artistListenerLinks.position).mapWith(Number), finalScore: reviewedAlbums.finalScore })
-      .from(artistListenerLinks)
-      .innerJoin(reviewedArtists, eq(reviewedArtists.deezerID, artistListenerLinks.linkedDeezerID))
-      .innerJoin(albumArtists, eq(albumArtists.artistSpotifyID, reviewedArtists.spotifyID))
+      .select({ albumSpotifyID: reviewedAlbums.spotifyID, artistSpotifyID: albumArtists.artistSpotifyID, finalScore: reviewedAlbums.finalScore })
+      .from(albumArtists)
       .innerJoin(reviewedAlbums, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
-      .where(and(inArray(artistListenerLinks.artistSpotifyID, artistSpotifyIDs), hasNoneOfArtists(artistSpotifyIDs)))
-      .groupBy(reviewedAlbums.spotifyID, reviewedAlbums.finalScore);
+      .where(and(inArray(albumArtists.artistSpotifyID, artistSpotifyIDs), hasNoneOfArtists(excludedArtistIDs)));
   }
 
   /** The albums that share a genre with these genres, with the genres they share. Albums by these artists are left out. */
