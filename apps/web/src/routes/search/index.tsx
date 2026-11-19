@@ -1,5 +1,5 @@
-import { infiniteQueryOptions, useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute, stripSearchParams, useNavigate } from "@tanstack/react-router";
+import { infiniteQueryOptions, queryOptions, useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, stripSearchParams, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
 import { SearchForm } from "@/components/ui/SearchForm";
 import { RouteError } from "@/components/ui/RouteError";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import styles from "./index.module.css";
@@ -31,12 +32,18 @@ const searchQueryOptions = (query: string) =>
     staleTime: 1000 * 60 * 5,
   });
 
+const discoverQueryOptions = queryOptions({
+  queryKey: queryKeys.discover,
+  queryFn: () => handle(client.api.discover.$get()),
+});
+
 export const Route = createFileRoute("/search/")({
   validateSearch: searchSchema,
   search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => ({ query: search.query }),
   loader: async ({ deps, context }) => {
     if (deps.query) await context.queryClient.prefetchInfiniteQuery(searchQueryOptions(deps.query));
+    else await context.queryClient.prefetchQuery(discoverQueryOptions);
   },
   component: RouteComponent,
   errorComponent: ({ error, reset }) => <RouteError error={error} reset={reset} />,
@@ -71,16 +78,34 @@ function SearchPage() {
       <PageHeader title="Review an album">
         <SearchForm label="Search Spotify albums" defaultValue={query} placeholder="Album, artist or Spotify link" onSearch={search} />
       </PageHeader>
-      {query ? (
-        <SearchResults query={query} />
-      ) : (
-        <PageState title="Find an album on Spotify" detail="Search for an album or an artist. Pick a result to review it, or bookmark it for later.">
-          <ButtonLink to="/bookmarks" variant="secondary">
-            Bookmarks
-          </ButtonLink>
-        </PageState>
-      )}
+      {query ? <SearchResults query={query} /> : <Discover />}
     </>
+  );
+}
+
+/** The rows that help pick the next album, or the empty state when every row is empty. */
+function Discover() {
+  const { data } = useSuspenseQuery(discoverQueryOptions);
+
+  if (data.upNext.length === 0) {
+    return (
+      <PageState title="Find an album on Spotify" detail="Search for an album or an artist. Pick a result to review it, or bookmark it for later.">
+        <ButtonLink to="/bookmarks" variant="secondary">
+          Bookmarks
+        </ButtonLink>
+      </PageState>
+    );
+  }
+
+  return (
+    <section className={styles.row}>
+      <SectionHeader title="Up next" link={<Link to="/bookmarks">All bookmarks</Link>} />
+      <CardGrid>
+        {data.upNext.map(album => (
+          <AlbumCard key={album.spotifyID} album={album} action={<BookmarkButton album={album} bookmarked />} />
+        ))}
+      </CardGrid>
+    </section>
   );
 }
 

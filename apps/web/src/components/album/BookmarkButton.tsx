@@ -38,7 +38,7 @@ export function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
     },
     onError: () => toast.error("The bookmark couldn't be saved. Try again."),
     // Returning the refetch keeps the mutation pending until the bookmarks list has the new state, so the button doesn't flick back
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all }),
+    onSettled: () => Promise.all([queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all }), queryClient.invalidateQueries({ queryKey: queryKeys.discover })]),
   });
 
   const shownBookmarked = toggle.isPending ? toggle.variables : bookmarked;

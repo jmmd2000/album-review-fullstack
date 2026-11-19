@@ -85,6 +85,7 @@ function CreateReview() {
         queryClient.invalidateQueries({ queryKey: queryKeys.albums.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.artists.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.discover }),
         queryClient.invalidateQueries({ queryKey: queryKeys.stats.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.home.all }),
       ]);

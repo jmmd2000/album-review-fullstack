@@ -161,6 +161,12 @@ export interface DisplayAlbum {
   colors?: ExtractedColor[];
 }
 
+/** The rows on the Review an album page before a search */
+export interface DiscoverRows {
+  /** Bookmarks to review next, up to 10 */
+  upNext: DisplayAlbum[];
+}
+
 /** The rows under an album's review */
 export interface RelatedAlbums {
   /** The main artist's other reviewed albums, newest first */
