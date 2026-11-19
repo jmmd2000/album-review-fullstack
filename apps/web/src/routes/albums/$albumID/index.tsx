@@ -16,6 +16,7 @@ import { CoverToolbar } from "@/components/album/CoverToolbar";
 import { AlbumInfoPanel } from "@/components/album/AlbumInfoPanel";
 import { ReviewContent } from "@/components/album/ReviewContent";
 import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
+import { AlbumRail } from "@/components/album/AlbumRail";
 import { Tracklist } from "@/components/track/Tracklist";
 import { RouteError } from "@/components/ui/RouteError";
 import { NotFound } from "@/components/layout/NotFound";
@@ -36,10 +37,19 @@ const reviewQueryOptions = (albumID: string) =>
     refetchOnWindowFocus: false,
   });
 
+const relatedQueryOptions = (albumID: string) =>
+  queryOptions({
+    queryKey: queryKeys.albums.related(albumID),
+    queryFn: () => handle(client.api.albums[":albumID"].related.$get({ param: { albumID } })),
+  });
+
 export const Route = createFileRoute("/albums/$albumID/")({
   ssr: true,
   loader: async ({ params, context }) => {
-    const review = await notFoundOn404(loadPageQuery(context.queryClient, reviewQueryOptions(params.albumID)));
+    const [review] = await Promise.all([
+      notFoundOn404(loadPageQuery(context.queryClient, reviewQueryOptions(params.albumID))),
+      loadPageQuery(context.queryClient, relatedQueryOptions(params.albumID)),
+    ]);
     await preloadImage(review.album.imageURLs[0]?.url);
     return review;
   },
@@ -75,6 +85,7 @@ function RouteComponent() {
 
   const { data } = useSuspenseQuery(reviewQueryOptions(albumID));
   const { album, artists, tracks, albumGenres, linkedAlbums } = data;
+  const { data: related } = useSuspenseQuery(relatedQueryOptions(albumID));
   const { isAdmin } = useAuth();
   const panelsRef = useRef<HTMLDivElement>(null);
   const cover = album.imageURLs[0];
@@ -107,6 +118,16 @@ function RouteComponent() {
           <Tracklist tracks={tracks} />
         </div>
       </section>
+      <AlbumRail
+        title={`More from ${album.artistName}`}
+        albums={related.moreByArtist}
+        link={
+          <Link to="/artists/$artistID" params={{ artistID: album.artistSpotifyID }} className={styles.link}>
+            Artist page
+          </Link>
+        }
+      />
+      <AlbumRail title="Similar albums" albums={related.similar} />
     </div>
   );
 }

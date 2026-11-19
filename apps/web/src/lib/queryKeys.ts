@@ -19,6 +19,7 @@ export const queryKeys = {
     all: ["albums"] as const,
     list: (options: GetPaginatedAlbumsOptions) => ["albums", "list", options] as const,
     detail: (albumID: string) => ["albums", "detail", albumID] as const,
+    related: (albumID: string) => ["albums", "related", albumID] as const,
     edit: (albumID: string) => ["albums", "edit", albumID] as const,
     create: (albumID: string) => ["albums", "create", albumID] as const,
   },
