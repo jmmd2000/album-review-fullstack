@@ -9,8 +9,8 @@ import { ListenerLinkModel } from "@/api/models/ListenerLink";
 
 const CURRENT = "relatedCurrentAlbum001";
 
-async function seedArtist(spotifyID: string, deezerID: number | null) {
-  await ArtistModel.createArtist({ spotifyID, name: spotifyID, imageURLs: [], headerImage: null, totalScore: 70, reviewCount: 1, unrated: false, leaderboardPosition: null, deezerID });
+async function seedArtist(spotifyID: string) {
+  await ArtistModel.createArtist({ spotifyID, name: spotifyID, imageURLs: [], headerImage: null, totalScore: 70, reviewCount: 1, unrated: false, leaderboardPosition: null });
 }
 
 async function seedAlbum(spotifyID: string, artistSpotifyID: string, releaseYear: number, finalScore: number, genreIDs: number[]) {
@@ -41,11 +41,11 @@ beforeEach(async () => {
   const pop = await GenreModel.createGenre({ name: "pop", slug: "pop" });
   const hyperpop = await GenreModel.createGenre({ name: "hyperpop", slug: "hyperpop" });
 
-  await seedArtist("charli", 1462230);
-  await seedArtist("slayyyter", 500);
-  await seedArtist("ratboys", null);
-  await seedArtist("wednesday", 600);
-  await seedArtist("filler", null);
+  await seedArtist("charli");
+  await seedArtist("slayyyter");
+  await seedArtist("ratboys");
+  await seedArtist("wednesday");
+  await seedArtist("filler");
 
   await seedAlbum(CURRENT, "charli", 2026, 87, [pop.id, hyperpop.id]);
   await seedAlbum("charliOlder", "charli", 2022, 90, [pop.id]);
@@ -57,8 +57,8 @@ beforeEach(async () => {
   await ListenerLinkModel.replaceLinks(
     "charli",
     [
-      { linkedDeezerID: 999, linkedName: "Not reviewed" },
-      { linkedDeezerID: 500, linkedName: "slayyyter" },
+      { linkedName: "Not reviewed", match: 1 },
+      { linkedName: "Slayyyter", match: 0.86 },
     ],
     new Date()
   );

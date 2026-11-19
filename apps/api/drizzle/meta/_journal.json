@@ -57,6 +57,13 @@
       "when": 1795050065096,
       "tag": "0007_listener_links",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795104014394,
+      "tag": "0008_lastfm_links",
+      "breakpoints": true
     }
   ]
 }

@@ -2,19 +2,15 @@ import { afterAll, afterEach, beforeEach, expect, test, vi } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { ArtistModel } from "@/api/models/Artist";
-import { DeezerClient } from "@/api/models/DeezerClient";
-import { ListenerLinkModel } from "@/api/models/ListenerLink";
+import { LastFmClient } from "@/api/models/LastFmClient";
+import { ListenerLinkModel, type LinkableArtist } from "@/api/models/ListenerLink";
 import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 
 const SPOTIFY_ID = "listenerLinkArtist0001";
+const wednesday: LinkableArtist = { spotifyID: SPOTIFY_ID, name: "Wednesday", imageURLs: [] };
 
-async function seedArtist(deezerID: number | null) {
-  await ArtistModel.createArtist({ spotifyID: SPOTIFY_ID, name: "Wednesday", imageURLs: [], headerImage: null, totalScore: 80, reviewCount: 1, unrated: false, leaderboardPosition: null, deezerID });
-}
-
-async function getArtist() {
-  const [artist] = await ListenerLinkModel.getArtistsBySpotifyIDs([SPOTIFY_ID]);
-  return artist;
+async function seedArtist(spotifyID: string) {
+  await ArtistModel.createArtist({ spotifyID, name: spotifyID, imageURLs: [], headerImage: null, totalScore: 80, reviewCount: 1, unrated: false, leaderboardPosition: null });
 }
 
 beforeEach(async () => {
@@ -30,53 +26,48 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("a refresh replaces the saved links with Deezer's list, in order, and says whether it changed", async () => {
-  await seedArtist(87096062);
-  vi.spyOn(DeezerClient, "getRelatedArtists").mockResolvedValue([
-    { id: 1, name: "MJ Lenderman" },
-    { id: 2, name: "Horsegirl" },
+test("a refresh replaces the saved links with Last.fm's list, in order, and says whether it changed", async () => {
+  await seedArtist(SPOTIFY_ID);
+  vi.spyOn(LastFmClient, "getSimilarArtists").mockResolvedValue([
+    { name: "MJ Lenderman", match: 1 },
+    { name: "feeble little horse", match: 0.55 },
   ]);
-  expect(await ListenerLinkService.refreshArtist(await getArtist())).toBe("changed");
-  expect(await ListenerLinkModel.getLinkedDeezerIDs(SPOTIFY_ID)).toEqual([1, 2]);
+  expect(await ListenerLinkService.refreshArtist(wednesday)).toBe("changed");
+  expect(await ListenerLinkModel.getLinkedNames(SPOTIFY_ID)).toEqual(["MJ Lenderman", "feeble little horse"]);
 
-  expect(await ListenerLinkService.refreshArtist(await getArtist())).toBe("same");
+  expect(await ListenerLinkService.refreshArtist(wednesday)).toBe("same");
 
-  vi.spyOn(DeezerClient, "getRelatedArtists").mockResolvedValue([{ id: 3, name: "Geese" }]);
-  expect(await ListenerLinkService.refreshArtist(await getArtist())).toBe("changed");
-  expect(await ListenerLinkModel.getLinkedDeezerIDs(SPOTIFY_ID)).toEqual([3]);
+  vi.spyOn(LastFmClient, "getSimilarArtists").mockResolvedValue([{ name: "Geese", match: 1 }]);
+  expect(await ListenerLinkService.refreshArtist(wednesday)).toBe("changed");
+  expect(await ListenerLinkModel.getLinkedNames(SPOTIFY_ID)).toEqual(["Geese"]);
 });
 
-test("the saved links stay when Deezer fails or has no related artists", async () => {
-  await seedArtist(87096062);
-  await ListenerLinkModel.replaceLinks(SPOTIFY_ID, [{ linkedDeezerID: 1, linkedName: "MJ Lenderman" }], new Date());
+test("the saved links stay when Last.fm fails, doesn't know the artist or has no similar artists", async () => {
+  await seedArtist(SPOTIFY_ID);
+  await ListenerLinkModel.replaceLinks(SPOTIFY_ID, [{ linkedName: "MJ Lenderman", match: 1 }], new Date());
 
-  vi.spyOn(DeezerClient, "getRelatedArtists").mockRejectedValueOnce(new Error("Deezer is down"));
-  await expect(ListenerLinkService.refreshArtist(await getArtist())).rejects.toThrow("Deezer is down");
-  expect(await ListenerLinkModel.getLinkedDeezerIDs(SPOTIFY_ID)).toEqual([1]);
+  vi.spyOn(LastFmClient, "getSimilarArtists").mockRejectedValueOnce(new Error("Last.fm is down"));
+  await expect(ListenerLinkService.refreshArtist(wednesday)).rejects.toThrow("Last.fm is down");
+  expect(await ListenerLinkModel.getLinkedNames(SPOTIFY_ID)).toEqual(["MJ Lenderman"]);
 
-  vi.spyOn(DeezerClient, "getRelatedArtists").mockResolvedValueOnce([]);
-  expect(await ListenerLinkService.refreshArtist(await getArtist())).toBe("same");
-  expect(await ListenerLinkModel.getLinkedDeezerIDs(SPOTIFY_ID)).toEqual([1]);
+  vi.spyOn(LastFmClient, "getSimilarArtists").mockResolvedValueOnce(null);
+  expect(await ListenerLinkService.refreshArtist(wednesday)).toBe("unmatched");
+  expect(await ListenerLinkModel.getLinkedNames(SPOTIFY_ID)).toEqual(["MJ Lenderman"]);
+
+  vi.spyOn(LastFmClient, "getSimilarArtists").mockResolvedValueOnce([]);
+  expect(await ListenerLinkService.refreshArtist(wednesday)).toBe("same");
+  expect(await ListenerLinkModel.getLinkedNames(SPOTIFY_ID)).toEqual(["MJ Lenderman"]);
 });
 
-test("a new match is saved on the artist, and an artist with no match is left without one", async () => {
-  await seedArtist(null);
-  vi.spyOn(ListenerLinkModel, "getAlbumNames").mockResolvedValue(["Bleeds"]);
-  const search = vi.spyOn(DeezerClient, "searchAlbums").mockResolvedValue([{ title: "Bleeds", artist: { id: 87096062, name: "Wednesday" } }]);
-  vi.spyOn(DeezerClient, "getRelatedArtists").mockResolvedValue([{ id: 1, name: "MJ Lenderman" }]);
+test("only artists with no saved links count as new", async () => {
+  await seedArtist(SPOTIFY_ID);
+  await seedArtist("listenerLinkArtist0002");
+  await ListenerLinkModel.replaceLinks(SPOTIFY_ID, [{ linkedName: "MJ Lenderman", match: 1 }], new Date());
 
-  await ListenerLinkService.refreshArtist(await getArtist());
-  expect((await getArtist()).deezerID).toBe(87096062);
-
-  await ListenerLinkService.refreshArtist(await getArtist());
-  expect(search).toHaveBeenCalledTimes(1);
-
-  await query("UPDATE reviewed_artists SET deezer_id = NULL");
-  search.mockResolvedValue([{ title: "Wednesday (Soundtrack)", artist: { id: 5, name: "Wednesday Addams" } }]);
-  expect(await ListenerLinkService.refreshArtist(await getArtist())).toBe("unmatched");
-  expect((await getArtist()).deezerID).toBeNull();
+  const withoutLinks = await ListenerLinkModel.getArtistsWithoutLinks([SPOTIFY_ID, "listenerLinkArtist0002"]);
+  expect(withoutLinks.map(artist => artist.spotifyID)).toEqual(["listenerLinkArtist0002"]);
 });
 
 test("saving links for an artist that no longer exists saves nothing", async () => {
-  expect(await ListenerLinkModel.replaceLinks(SPOTIFY_ID, [{ linkedDeezerID: 1, linkedName: "MJ Lenderman" }], new Date())).toBe(false);
+  expect(await ListenerLinkModel.replaceLinks(SPOTIFY_ID, [{ linkedName: "MJ Lenderman", match: 1 }], new Date())).toBe(false);
 });

@@ -38,7 +38,7 @@ const album = new Hono()
   })
   .post("/create", requireAdmin, validate("json", reviewDataSchema), async c => {
     const reviewedAlbum = await ReviewService.createAlbumReview(c.req.valid("json"));
-    void ListenerLinkService.linkUnmatchedArtists(reviewedAlbum.spotifyID);
+    void ListenerLinkService.linkNewArtists(reviewedAlbum.spotifyID);
     return c.json(reviewedAlbum, 201);
   })
   .delete("/:albumID", requireAdmin, validate("param", albumParamSchema, 404), async c => {
@@ -48,7 +48,7 @@ const album = new Hono()
   .put("/:albumID/edit", requireAdmin, validate("param", albumParamSchema, 404), validate("json", reviewDataSchema), async c => {
     const albumID = c.req.valid("param").albumID;
     const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), albumID);
-    void ListenerLinkService.linkUnmatchedArtists(albumID);
+    void ListenerLinkService.linkNewArtists(albumID);
     return c.json(updated, 200);
   });
 

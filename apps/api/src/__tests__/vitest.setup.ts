@@ -16,8 +16,8 @@ process.env.NODE_ENV = "test";
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
-  // Saving a review starts this in the background, and it calls Deezer. A test that needs it restores the real one.
-  vi.spyOn(ListenerLinkService, "linkUnmatchedArtists").mockResolvedValue();
+  // Saving a review starts this in the background, and it calls Last.fm. A test that needs it restores the real one.
+  vi.spyOn(ListenerLinkService, "linkNewArtists").mockResolvedValue();
 });
 
 afterAll(() => {

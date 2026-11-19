@@ -6,7 +6,8 @@ import { ArtistModel } from "@/api/models/Artist";
 import { GenreModel } from "@/api/models/Genre";
 import { GenreService } from "@/api/services/GenreService";
 import { RelatedAlbumModel } from "@/api/models/RelatedAlbum";
-import { orderSimilarAlbums } from "@/helpers/similarAlbums";
+import { closestLinkByArtist, orderSimilarAlbums, type LinkedAlbumCandidate } from "@/helpers/similarAlbums";
+import { ListenerLinkModel } from "@/api/models/ListenerLink";
 import { AppError } from "@/api/AppError";
 
 const MORE_BY_ARTIST_LIMIT = 12;
@@ -88,7 +89,7 @@ export class AlbumService {
     const genreIDs = await GenreModel.getGenreIDsForAlbum(albumID);
     const [moreByArtist, linked, byGenre, genreAlbumCounts, totalAlbums] = await Promise.all([
       RelatedAlbumModel.getOtherAlbumsByArtist(album.artistSpotifyID, albumID, MORE_BY_ARTIST_LIMIT),
-      RelatedAlbumModel.getLinkedAlbums(artistIDs),
+      this.getListenerLinkedAlbums(artistIDs),
       RelatedAlbumModel.getAlbumsSharingGenres(genreIDs, artistIDs),
       RelatedAlbumModel.getGenreAlbumCounts(genreIDs),
       AlbumModel.getAlbumCount(),
@@ -103,6 +104,21 @@ export class AlbumService {
     });
 
     return { moreByArtist: moreByArtist.map(toDisplayAlbum), similar };
+  }
+
+  /** The albums by artists that listeners link to these artists, with each album's closest link. Albums by these artists are left out. */
+  private static async getListenerLinkedAlbums(artistIDs: string[]): Promise<LinkedAlbumCandidate[]> {
+    const [links, reviewedArtists] = await Promise.all([ListenerLinkModel.getLinks(artistIDs), ListenerLinkModel.getAllArtists()]);
+    const closestLinks = closestLinkByArtist(links, reviewedArtists);
+    const rows = await RelatedAlbumModel.getAlbumsByArtists([...closestLinks.keys()], artistIDs);
+
+    const candidates = new Map<string, LinkedAlbumCandidate>();
+    for (const row of rows) {
+      const position = closestLinks.get(row.artistSpotifyID) ?? Infinity;
+      const existing = candidates.get(row.albumSpotifyID);
+      if (!existing || position < existing.position) candidates.set(row.albumSpotifyID, { albumSpotifyID: row.albumSpotifyID, position, finalScore: row.finalScore });
+    }
+    return [...candidates.values()];
   }
 
   private static async getLinkedAlbums(reviewContent: string | null): Promise<LinkedAlbum[]> {
