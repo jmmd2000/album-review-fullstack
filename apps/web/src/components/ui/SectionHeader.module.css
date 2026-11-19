@@ -24,3 +24,11 @@
 .aside {
   color: var(--colour-text-muted);
 }
+
+.link {
+  color: var(--colour-text-muted);
+
+  & a:hover {
+    color: var(--colour-foreground);
+  }
+}

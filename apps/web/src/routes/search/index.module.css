@@ -3,3 +3,7 @@
   justify-content: center;
   margin-top: var(--space-6);
 }
+
+.row {
+  padding-bottom: var(--space-section);
+}
