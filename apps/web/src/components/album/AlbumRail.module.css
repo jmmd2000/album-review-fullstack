@@ -1,0 +1,36 @@
+.section {
+  padding-top: var(--space-section);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+  padding-bottom: 14px;
+  margin-bottom: var(--space-4);
+  border-bottom: var(--border-thin) solid var(--colour-divider);
+}
+
+.title {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: var(--font-weight-label);
+  letter-spacing: -0.015em;
+}
+
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 190px);
+  gap: var(--space-grid-column);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* room for the card's hover lift and shadow, which the scroll box would cut off */
+  padding-block: 8px;
+
+  & > li {
+    scroll-snap-align: start;
+  }
+}
