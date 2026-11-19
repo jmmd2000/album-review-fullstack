@@ -74,7 +74,7 @@ function Settings() {
           <ArtistJobRow
             job="listener-links"
             title="Listener links"
-            description="Gets the artists Deezer listeners play alongside each artist. This takes a few minutes."
+            description="Gets the artists Last.fm listeners play alongside each artist."
             actionLabel="Update links"
             lastRun={lastRuns.listener_links_last_run ?? null}
             result={null}

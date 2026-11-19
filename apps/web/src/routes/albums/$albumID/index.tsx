@@ -3,6 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
+import { reviewShareText } from "@shared/helpers/reviewShareText";
 import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { loadPageQuery } from "@/lib/loadPageQuery";
@@ -72,7 +73,7 @@ export const Route = createFileRoute("/albums/$albumID/")({
     meta: loaderData
       ? socialMeta({
           title: `${loaderData.album.name} by ${loaderData.album.artistName}`,
-          description: `Scored ${loaderData.album.finalScore} out of 100. Released ${loaderData.album.releaseYear}.`,
+          description: reviewShareText(loaderData.album.reviewContent ?? "") || `Scored ${loaderData.album.finalScore} out of 100. Released ${loaderData.album.releaseYear}.`,
           image: loaderData.album.imageURLs[0]?.url,
         })
       : [],
