@@ -34,7 +34,7 @@ export class RelatedAlbumModel {
   static async getAlbumsByArtists(artistSpotifyIDs: string[], excludedArtistIDs: string[]) {
     if (artistSpotifyIDs.length === 0) return [];
     return db
-      .select({ albumSpotifyID: reviewedAlbums.spotifyID, artistSpotifyID: albumArtists.artistSpotifyID, finalScore: reviewedAlbums.finalScore })
+      .select({ albumSpotifyID: reviewedAlbums.spotifyID, artistSpotifyID: albumArtists.artistSpotifyID, mainArtistSpotifyID: reviewedAlbums.artistSpotifyID, finalScore: reviewedAlbums.finalScore })
       .from(albumArtists)
       .innerJoin(reviewedAlbums, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
       .where(and(inArray(albumArtists.artistSpotifyID, artistSpotifyIDs), hasNoneOfArtists(excludedArtistIDs)));
@@ -44,14 +44,14 @@ export class RelatedAlbumModel {
   static async getAlbumsSharingGenres(genreIDs: number[], artistSpotifyIDs: string[]): Promise<GenreAlbumCandidate[]> {
     if (genreIDs.length === 0) return [];
     const rows = await db
-      .select({ albumSpotifyID: reviewedAlbums.spotifyID, genreID: albumGenres.genreID, finalScore: reviewedAlbums.finalScore })
+      .select({ albumSpotifyID: reviewedAlbums.spotifyID, artistSpotifyID: reviewedAlbums.artistSpotifyID, genreID: albumGenres.genreID, finalScore: reviewedAlbums.finalScore })
       .from(albumGenres)
       .innerJoin(reviewedAlbums, eq(reviewedAlbums.spotifyID, albumGenres.albumSpotifyID))
       .where(and(inArray(albumGenres.genreID, genreIDs), hasNoneOfArtists(artistSpotifyIDs)));
 
     const candidates = new Map<string, GenreAlbumCandidate>();
     for (const row of rows) {
-      const candidate = candidates.get(row.albumSpotifyID) ?? { albumSpotifyID: row.albumSpotifyID, sharedGenreIDs: [], finalScore: row.finalScore };
+      const candidate = candidates.get(row.albumSpotifyID) ?? { albumSpotifyID: row.albumSpotifyID, artistSpotifyID: row.artistSpotifyID, sharedGenreIDs: [], finalScore: row.finalScore };
       candidates.set(row.albumSpotifyID, { ...candidate, sharedGenreIDs: [...candidate.sharedGenreIDs, row.genreID] });
     }
     return [...candidates.values()];

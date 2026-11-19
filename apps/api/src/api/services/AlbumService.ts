@@ -116,7 +116,8 @@ export class AlbumService {
     for (const row of rows) {
       const position = closestLinks.get(row.artistSpotifyID) ?? Infinity;
       const existing = candidates.get(row.albumSpotifyID);
-      if (!existing || position < existing.position) candidates.set(row.albumSpotifyID, { albumSpotifyID: row.albumSpotifyID, position, finalScore: row.finalScore });
+      if (!existing || position < existing.position)
+        candidates.set(row.albumSpotifyID, { albumSpotifyID: row.albumSpotifyID, artistSpotifyID: row.mainArtistSpotifyID, position, finalScore: row.finalScore });
     }
     return [...candidates.values()];
   }
