@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { AlbumService } from "@/api/services/AlbumService";
 import { ReviewService } from "@/api/services/ReviewService";
+import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import { reviewDataSchema } from "@/api/schemas/reviewSchema";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
@@ -34,6 +35,7 @@ const album = new Hono()
   })
   .post("/create", requireAdmin, validate("json", reviewDataSchema), async c => {
     const reviewedAlbum = await ReviewService.createAlbumReview(c.req.valid("json"));
+    void ListenerLinkService.linkUnmatchedArtists(reviewedAlbum.spotifyID);
     return c.json(reviewedAlbum, 201);
   })
   .delete("/:albumID", requireAdmin, validate("param", albumParamSchema, 404), async c => {
@@ -41,7 +43,9 @@ const album = new Hono()
     return c.body(null, 204);
   })
   .put("/:albumID/edit", requireAdmin, validate("param", albumParamSchema, 404), validate("json", reviewDataSchema), async c => {
-    const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), c.req.valid("param").albumID);
+    const albumID = c.req.valid("param").albumID;
+    const updated = await ReviewService.updateAlbumReview(c.req.valid("json"), albumID);
+    void ListenerLinkService.linkUnmatchedArtists(albumID);
     return c.json(updated, 200);
   });
 

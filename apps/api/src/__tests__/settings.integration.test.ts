@@ -92,13 +92,13 @@ test("a job's interval is 7 days until one is saved, and a bad stored value fall
 
 test("saving one job's interval leaves the other jobs alone, and the reply says the schedule is off on this server", async () => {
   const before = await api.get("/api/settings/job-intervals", authCookie);
-  expect(await before.json()).toEqual({ intervals: { "artist-images": 7, "artist-headers": 7 }, scheduleEnabled: false });
+  expect(await before.json()).toEqual({ intervals: { "artist-images": 7, "artist-headers": 7, "listener-links": 7 }, scheduleEnabled: false });
 
   const update = await api.put("/api/settings/job-intervals/artist-headers", { intervalDays: 14 }, authCookie);
   expect(update.status).toBe(200);
 
   const after = await api.get("/api/settings/job-intervals", authCookie);
-  expect((await after.json()).intervals).toEqual({ "artist-images": 7, "artist-headers": 14 });
+  expect((await after.json()).intervals).toEqual({ "artist-images": 7, "artist-headers": 14, "listener-links": 7 });
 });
 
 test("an interval that isn't a whole number of days from 0 to 365 is rejected", async () => {

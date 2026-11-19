@@ -1,4 +1,5 @@
 import { ArtistImageService } from "@/api/services/ArtistImageService";
+import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import type { JobEmit } from "@/api/services/JobService";
 import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
 
@@ -25,6 +26,12 @@ export const scheduledJobs: ScheduledJob[] = [
     settingName: "artist_headers",
     busyMessage: "The artist headers are already updating. Try again when that run finishes.",
     run: (emit, source) => ArtistImageService.updateArtistHeaders(true, undefined, emit, source),
+  },
+  {
+    name: "listener-links",
+    settingName: "listener_links",
+    busyMessage: "The listener links are already updating. Try again when that run finishes.",
+    run: emit => ListenerLinkService.refreshAllArtists(emit),
   },
 ];
 

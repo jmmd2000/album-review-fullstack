@@ -71,6 +71,16 @@ function Settings() {
             intervalDays={jobIntervals.intervals["artist-headers"] ?? 0}
             scheduleEnabled={jobIntervals.scheduleEnabled}
           />
+          <ArtistJobRow
+            job="listener-links"
+            title="Listener links"
+            description="Gets the artists Deezer listeners play alongside each artist. This takes a few minutes."
+            actionLabel="Update links"
+            lastRun={lastRuns.listener_links_last_run ?? null}
+            result={null}
+            intervalDays={jobIntervals.intervals["listener-links"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
+          />
           <RecalculateScoresRow lastRun={lastRuns.artist_scores_last_run ?? null} />
         </div>
       </section>
