@@ -161,6 +161,14 @@ export interface DisplayAlbum {
   colors?: ExtractedColor[];
 }
 
+/** The rows under an album's review */
+export interface RelatedAlbums {
+  /** The main artist's other reviewed albums, newest first */
+  moreByArtist: DisplayAlbum[];
+  /** Reviewed albums like this one, most similar first */
+  similar: DisplayAlbum[];
+}
+
 /** An album in the Spotify search results. */
 export interface SearchAlbum extends DisplayAlbum {
   /** Spotify's release type: "album", "single" or "compilation" */

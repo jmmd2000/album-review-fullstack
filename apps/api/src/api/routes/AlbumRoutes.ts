@@ -23,6 +23,9 @@ const album = new Hono()
     const data = await AlbumService.getAlbumByID(c.req.valid("param").albumID, c.req.valid("query").includeGenres === "true");
     return c.json(data, 200);
   })
+  .get("/:albumID/related", validate("param", albumParamSchema, 404), async c => {
+    return c.json(await AlbumService.getRelatedAlbums(c.req.valid("param").albumID), 200);
+  })
   .get("/", validate("query", paginatedSchema), async c => {
     const { genres, ...opts } = c.req.valid("query");
     const genreList = genres
