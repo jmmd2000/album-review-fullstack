@@ -87,7 +87,7 @@ function SearchPage() {
 function Discover() {
   const { data } = useSuspenseQuery(discoverQueryOptions);
 
-  if (data.upNext.length === 0) {
+  if (data.newAlbums.length === 0 && data.upNext.length === 0) {
     return (
       <PageState title="Find an album on Spotify" detail="Search for an album or an artist. Pick a result to review it, or bookmark it for later.">
         <ButtonLink to="/bookmarks" variant="secondary">
@@ -98,14 +98,28 @@ function Discover() {
   }
 
   return (
-    <section className={styles.row}>
-      <SectionHeader title="Up next" link={<Link to="/bookmarks">All bookmarks</Link>} />
-      <CardGrid>
-        {data.upNext.map(album => (
-          <AlbumCard key={album.spotifyID} album={album} action={<BookmarkButton album={album} bookmarked />} />
-        ))}
-      </CardGrid>
-    </section>
+    <>
+      {data.newAlbums.length > 0 && (
+        <section className={styles.row}>
+          <SectionHeader title="New from artists you've reviewed" />
+          <CardGrid>
+            {data.newAlbums.map(album => (
+              <AlbumCard key={album.spotifyID} album={album} action={<BookmarkButton album={album} bookmarked={false} />} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
+      {data.upNext.length > 0 && (
+        <section className={styles.row}>
+          <SectionHeader title="Up next" link={<Link to="/bookmarks">All bookmarks</Link>} />
+          <CardGrid>
+            {data.upNext.map(album => (
+              <AlbumCard key={album.spotifyID} album={album} action={<BookmarkButton album={album} bookmarked />} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
+    </>
   );
 }
 
