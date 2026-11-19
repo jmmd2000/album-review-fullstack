@@ -1,16 +1,22 @@
-import { afterAll, test, expect, vi } from "vitest";
+import { afterAll, beforeEach, test, expect, vi } from "vitest";
 import type { Progress } from "@shared/types";
 import { closeDatabase } from "@/db/client";
 import { app } from "@/app";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 import { ArtistImageService } from "@/api/services/ArtistImageService";
+import { JobScheduler } from "@/api/services/JobScheduler";
 import { JobService } from "@/api/services/JobService";
 import { ArtistModel } from "@/api/models/Artist";
+import { SettingsService } from "@/api/services/SettingsService";
 
 const authCookie = adminCookie();
 
 const progress = (index: number, total: number): Progress => ({ index, total, spotifyID: "jobTestArtistSpotify01", artistName: "Artist" });
+
+beforeEach(() => {
+  vi.spyOn(SettingsService, "setLastRun").mockResolvedValue();
+});
 
 afterAll(async () => {
   await closeDatabase();
@@ -74,6 +80,11 @@ test("a job that throws surfaces a fatal event before finishing", async () => {
   spy.mockRestore();
 });
 
+test("starting a job that isn't on the list returns 404", async () => {
+  const res = await api.post("/api/jobs/nonsense", undefined, authCookie);
+  expect(res.status).toBe(404);
+});
+
 test("unknown job ids return 404", async () => {
   const res = await api.get("/api/jobs/00000000-0000-4000-8000-000000000000/events", authCookie);
   expect(res.status).toBe(404);
@@ -115,8 +126,8 @@ test("a second run of a job that is still going gets a 409 and doesn't start", a
   releaseArtists([]);
   await (await api.get(`/api/jobs/${jobID}/events`, authCookie)).text();
   await (await api.get(`/api/jobs/${otherJobID}/events`, authCookie)).text();
-  expect(ArtistImageService.isRunning("images")).toBe(false);
-  expect(ArtistImageService.isRunning("headers")).toBe(false);
+  expect(JobScheduler.isRunning("artist-images")).toBe(false);
+  expect(JobScheduler.isRunning("artist-headers")).toBe(false);
 
   spy.mockRestore();
 });

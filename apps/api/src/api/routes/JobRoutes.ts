@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { JobService } from "@/api/services/JobService";
-import { ArtistImageService } from "@/api/services/ArtistImageService";
+import { JobScheduler } from "@/api/services/JobScheduler";
+import { findScheduledJob } from "@/api/services/ScheduledJobs";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
 import { jobParamSchema } from "@/api/schemas/paramSchema";
@@ -9,14 +10,12 @@ import { jobParamSchema } from "@/api/schemas/paramSchema";
 // admin only
 const job = new Hono()
   .use(requireAdmin)
-  .post("/artist-headers", c => {
-    if (ArtistImageService.isRunning("headers")) return c.json({ message: "The artist headers are already updating. Try again when that run finishes." }, 409);
-    const jobID = JobService.create(emit => ArtistImageService.updateArtistHeaders(true, undefined, emit, "manual"));
-    return c.json({ jobID }, 202);
-  })
-  .post("/artist-images", c => {
-    if (ArtistImageService.isRunning("images")) return c.json({ message: "The artist photos are already updating. Try again when that run finishes." }, 409);
-    const jobID = JobService.create(emit => ArtistImageService.updateArtistImages(true, undefined, emit, "manual"));
+  .post("/:name", c => {
+    const scheduledJob = findScheduledJob(c.req.param("name"));
+    if (!scheduledJob) return c.json({ message: "Job not found" }, 404);
+
+    const jobID = JobScheduler.runNow(scheduledJob);
+    if (!jobID) return c.json({ message: scheduledJob.busyMessage }, 409);
     return c.json({ jobID }, 202);
   })
   .get("/:id/events", validate("param", jobParamSchema, 404), c => {

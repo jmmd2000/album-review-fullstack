@@ -43,7 +43,7 @@ export const queryKeys = {
   settings: {
     lastRuns: ["settings", "lastRuns"] as const,
     jobResults: ["settings", "jobResults"] as const,
-    refreshInterval: ["settings", "refreshInterval"] as const,
+    jobIntervals: ["settings", "jobIntervals"] as const,
     buildInfo: ["settings", "buildInfo"] as const,
   },
   stats: {

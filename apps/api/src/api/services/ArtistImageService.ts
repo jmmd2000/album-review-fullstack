@@ -9,37 +9,25 @@ import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
 
 export type ArtistImageJob = "images" | "headers";
 
-const runningJobs = new Set<ArtistImageJob>();
-
 /** Updates artist photos and header images, one at a time or as a batch job that reports its progress. */
 export class ArtistImageService {
-  /** Tells whether a run of the job is going now. */
-  static isRunning(job: ArtistImageJob): boolean {
-    return runningJobs.has(job);
-  }
-
   /**
    * Gets each artist's header from their Spotify page and saves the ones that changed.
-   * Only one run goes at a time. A second run throws a 409 AppError.
    * When the run ends, it saves how the run went, also when it stops early.
    */
   static async updateArtistHeaders(all: boolean, spotifyID: string | undefined, emit: JobEmit, source: ArtistJobSource): Promise<void> {
-    return this.runAlone("headers", source, emit, countingEmit => this.refreshHeaders(all, spotifyID, countingEmit));
+    return this.runAndSaveResult("headers", source, emit, countingEmit => this.refreshHeaders(all, spotifyID, countingEmit));
   }
 
   /**
    * Gets each artist's photos from Spotify and saves the ones that changed.
-   * Only one run goes at a time. A second run throws a 409 AppError.
    * When the run ends, it saves how the run went, also when it stops early.
    */
   static async updateArtistImages(all: boolean, spotifyID: string | undefined, emit: JobEmit, source: ArtistJobSource): Promise<void> {
-    return this.runAlone("images", source, emit, countingEmit => this.refreshImages(all, spotifyID, countingEmit));
+    return this.runAndSaveResult("images", source, emit, countingEmit => this.refreshImages(all, spotifyID, countingEmit));
   }
 
-  private static async runAlone(job: ArtistImageJob, source: ArtistJobSource, emit: JobEmit, run: (countingEmit: JobEmit) => Promise<void>): Promise<void> {
-    if (runningJobs.has(job)) throw new AppError("This job is already running.", 409);
-    runningJobs.add(job);
-
+  private static async runAndSaveResult(job: ArtistImageJob, source: ArtistJobSource, emit: JobEmit, run: (countingEmit: JobEmit) => Promise<void>): Promise<void> {
     const counts = { updated: 0, unchanged: 0, failed: 0 };
     const countingEmit: JobEmit = (event, data) => {
       if (event === "changed") counts.updated++;
@@ -55,8 +43,6 @@ export class ArtistImageService {
     } catch (error) {
       await saveResult(true);
       throw error;
-    } finally {
-      runningJobs.delete(job);
     }
   }
 
@@ -189,8 +175,6 @@ export class ArtistImageService {
         }
       }
     }
-
-    await SettingsService.setLastRun("headers", new Date());
   }
 
   private static async refreshImages(all: boolean, spotifyID: string | undefined, emit: JobEmit): Promise<void> {
@@ -276,7 +260,5 @@ export class ArtistImageService {
         });
       }
     }
-
-    await SettingsService.setLastRun("images", new Date());
   }
 }

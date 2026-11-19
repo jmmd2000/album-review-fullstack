@@ -4,6 +4,7 @@ import { summariseArtistJob, useArtistJob } from "@/hooks/useArtistJob";
 import { describeJobResult, describeLastRun } from "@/lib/jobStatus";
 import { Button } from "@/components/ui/Button";
 import { SettingsRow } from "@/components/settings/SettingsRow";
+import { JobIntervalSelect } from "@/components/settings/JobIntervalSelect";
 import { ResultDetails } from "@/components/settings/ResultDetails";
 import styles from "./ArtistJobRow.module.css";
 
@@ -19,14 +20,19 @@ interface ArtistJobRowProps {
   lastRun: string | null;
   /** How the latest run went, or null if the api has no record of one */
   result: ArtistJobResult | null;
+  /** Days between scheduled runs. 0 means the job only runs by hand. */
+  intervalDays: number;
+  /** False when this server never runs jobs on a schedule */
+  scheduleEnabled: boolean;
 }
 
-/** A settings row for a job that goes through every artist, with live progress and then the results. */
-export function ArtistJobRow({ job, title, description, actionLabel, lastRun, result }: ArtistJobRowProps) {
+/** A settings row for a job that goes through every artist, with its schedule, live progress and then the results. */
+export function ArtistJobRow({ job, title, description, actionLabel, lastRun, result, intervalDays, scheduleEnabled }: ArtistJobRowProps) {
   const { state, start } = useArtistJob(job);
   const isRunning = state.status === "running";
   const details = [describeLastRun(lastRun, isRunning)];
   if (result && !isRunning) details.push(describeJobResult(result));
+  if (!scheduleEnabled) details.push("Scheduled runs are turned off on this server.");
 
   return (
     <SettingsRow
@@ -34,9 +40,12 @@ export function ArtistJobRow({ job, title, description, actionLabel, lastRun, re
       description={description}
       details={details}
       action={
-        <Button onClick={() => void start()} disabled={isRunning}>
-          {isRunning ? "Running…" : actionLabel}
-        </Button>
+        <div className={styles.actions}>
+          <JobIntervalSelect job={job} title={title} intervalDays={intervalDays} />
+          <Button onClick={() => void start()} disabled={isRunning}>
+            {isRunning ? "Running…" : actionLabel}
+          </Button>
+        </div>
       }
     >
       {state.status === "running" && <JobProgress current={state.current} />}

@@ -1,9 +1,7 @@
 import { SettingsModel } from "@/api/models/Settings";
-import { AppError } from "@/api/AppError";
 import { artistJobResultSchema, type ArtistJobResult } from "@/api/schemas/artistJobResultSchema";
 
-const REFRESH_INTERVAL_KEY = "artist_refresh_interval_days";
-const DEFAULT_REFRESH_INTERVAL_DAYS = 7;
+const DEFAULT_INTERVAL_DAYS = 7;
 
 export class SettingsService {
   static async get(key: string): Promise<string | null> {
@@ -15,25 +13,25 @@ export class SettingsService {
     await SettingsModel.upsert(key, value);
   }
 
-  // Artist updates specific methods
-  static async getLastRun(type: "images" | "headers" | "scores"): Promise<Date | null> {
-    if (type !== "images" && type !== "headers" && type !== "scores") {
-      throw new AppError("Type must be 'images', 'headers', or 'scores'", 400);
-    }
-    const result = await this.get(`artist_${type}_last_run`);
+  /** Gets when a job last finished, from the setting `<settingName>_last_run`. */
+  static async getLastRun(settingName: string): Promise<Date | null> {
+    const result = await this.get(`${settingName}_last_run`);
     return result ? new Date(result) : null;
   }
 
-  /** Gets how many days the scheduled artist refresh waits between runs. 0 means the schedule is off. */
-  static async getRefreshIntervalDays(): Promise<number> {
-    const stored = await this.get(REFRESH_INTERVAL_KEY);
-    if (stored === null) return DEFAULT_REFRESH_INTERVAL_DAYS;
+  /**
+   * Gets how many days a scheduled job waits between runs, from the setting `<settingName>_interval_days`.
+   * 0 means the job doesn't run on a schedule. A missing or unreadable value gives 7.
+   */
+  static async getIntervalDays(settingName: string): Promise<number> {
+    const stored = await this.get(`${settingName}_interval_days`);
+    if (stored === null) return DEFAULT_INTERVAL_DAYS;
     const days = Number(stored);
-    return Number.isInteger(days) && days >= 0 ? days : DEFAULT_REFRESH_INTERVAL_DAYS;
+    return Number.isInteger(days) && days >= 0 ? days : DEFAULT_INTERVAL_DAYS;
   }
 
-  static async setRefreshIntervalDays(days: number): Promise<void> {
-    await this.set(REFRESH_INTERVAL_KEY, String(days));
+  static async setIntervalDays(settingName: string, days: number): Promise<void> {
+    await this.set(`${settingName}_interval_days`, String(days));
   }
 
   static async getAllLastRuns(): Promise<Record<string, Date | null>> {
@@ -73,7 +71,7 @@ export class SettingsService {
     return result.success ? result.data : null;
   }
 
-  static async setLastRun(type: "images" | "headers" | "scores", date: Date = new Date()): Promise<void> {
-    await this.set(`artist_${type}_last_run`, date.toISOString());
+  static async setLastRun(settingName: string, date: Date = new Date()): Promise<void> {
+    await this.set(`${settingName}_last_run`, date.toISOString());
   }
 }
