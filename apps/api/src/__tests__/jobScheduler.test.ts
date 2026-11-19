@@ -1,12 +1,27 @@
-import { afterEach, describe, test, expect, vi } from "vitest";
-import { ArtistRefreshScheduler, isRefreshDue } from "@/api/services/ArtistRefreshScheduler";
-import { ArtistImageService } from "@/api/services/ArtistImageService";
+import { afterEach, beforeEach, describe, test, expect, vi, type MockInstance } from "vitest";
+import { JobScheduler, isRefreshDue } from "@/api/services/JobScheduler";
 import { SettingsService } from "@/api/services/SettingsService";
+import type { ScheduledJob } from "@/api/services/ScheduledJobs";
 import * as errorReporting from "@/config/errorReporting";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const threeAM = new Date("2026-10-12T03:00:00Z");
 const daysBefore = (date: Date, days: number) => new Date(date.getTime() - days * DAY_MS);
+
+let calls: string[];
+let setLastRun: MockInstance<typeof SettingsService.setLastRun>;
+
+const fakeJob = (name: string, run: ScheduledJob["run"] = async () => void calls.push(name)): ScheduledJob => ({
+  name,
+  settingName: name,
+  busyMessage: `${name} is busy`,
+  run,
+});
+
+beforeEach(() => {
+  calls = [];
+  setLastRun = vi.spyOn(SettingsService, "setLastRun").mockResolvedValue();
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -32,40 +47,30 @@ describe("isRefreshDue", () => {
   });
 });
 
-describe("runDueRefreshes", () => {
-  const mockJobs = () => {
-    const calls: string[] = [];
-    const images = vi.spyOn(ArtistImageService, "updateArtistImages").mockImplementation(async () => void calls.push("images"));
-    const headers = vi.spyOn(ArtistImageService, "updateArtistHeaders").mockImplementation(async () => void calls.push("headers"));
-    return { calls, images, headers };
-  };
-
+describe("runDueJobs", () => {
   test("does nothing outside 3am", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
-    const { calls } = mockJobs();
 
-    await ArtistRefreshScheduler.runDueRefreshes(new Date("2026-10-12T14:00:00Z"));
+    await JobScheduler.runDueJobs(new Date("2026-10-12T14:00:00Z"), [fakeJob("photos")]);
 
     expect(calls).toEqual([]);
   });
 
-  test("runs the photo refresh and then the header refresh when both are due", async () => {
+  test("runs the due jobs in list order", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(daysBefore(threeAM, 8));
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
-    const { calls } = mockJobs();
 
-    await ArtistRefreshScheduler.runDueRefreshes(threeAM);
+    await JobScheduler.runDueJobs(threeAM, [fakeJob("photos"), fakeJob("headers")]);
 
-    expect(calls).toEqual(["images", "headers"]);
+    expect(calls).toEqual(["photos", "headers"]);
   });
 
   test("runs only the job that is due", async () => {
-    vi.spyOn(SettingsService, "getLastRun").mockImplementation(async job => (job === "images" ? daysBefore(threeAM, 2) : daysBefore(threeAM, 8)));
+    vi.spyOn(SettingsService, "getLastRun").mockImplementation(async settingName => (settingName === "photos" ? daysBefore(threeAM, 2) : daysBefore(threeAM, 8)));
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
-    const { calls } = mockJobs();
 
-    await ArtistRefreshScheduler.runDueRefreshes(threeAM);
+    await JobScheduler.runDueJobs(threeAM, [fakeJob("photos"), fakeJob("headers")]);
 
     expect(calls).toEqual(["headers"]);
   });
@@ -73,34 +78,43 @@ describe("runDueRefreshes", () => {
   test("skips a job that a manual run already started", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
-    vi.spyOn(ArtistImageService, "isRunning").mockImplementation(job => job === "images");
-    const { calls } = mockJobs();
+    let finishManualRun = () => {};
+    const photos = fakeJob("photos", async () => {
+      calls.push("photos");
+      await new Promise<void>(resolve => (finishManualRun = resolve));
+    });
 
-    await ArtistRefreshScheduler.runDueRefreshes(threeAM);
+    expect(JobScheduler.runNow(photos)).not.toBeNull();
+    expect(JobScheduler.runNow(photos)).toBeNull();
+    await JobScheduler.runDueJobs(threeAM, [photos, fakeJob("headers")]);
 
-    expect(calls).toEqual(["headers"]);
+    expect(calls).toEqual(["photos", "headers"]);
+    finishManualRun();
+    await vi.waitFor(() => expect(JobScheduler.isRunning("photos")).toBe(false));
   });
 
-  test("a photo refresh that throws is reported and doesn't stop the header refresh", async () => {
+  test("a job that throws is reported, keeps its old last run time, and doesn't stop the next job", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
     const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
-    const { images, headers } = mockJobs();
     const error = new Error("spotify is down");
-    images.mockRejectedValue(error);
+    const photos = fakeJob("photos", async () => {
+      throw error;
+    });
 
-    await ArtistRefreshScheduler.runDueRefreshes(threeAM);
+    await JobScheduler.runDueJobs(threeAM, [photos, fakeJob("headers")]);
 
-    expect(headers).toHaveBeenCalledTimes(1);
-    expect(report).toHaveBeenCalledWith(error, { job: "images" });
+    expect(calls).toEqual(["headers"]);
+    expect(report).toHaveBeenCalledWith(error, { job: "photos" });
+    expect(setLastRun.mock.calls.map(([settingName]) => settingName)).toEqual(["headers"]);
+    expect(JobScheduler.isRunning("photos")).toBe(false);
   });
 
   test("does nothing when the interval is 0", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
     vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(0);
-    const { calls } = mockJobs();
 
-    await ArtistRefreshScheduler.runDueRefreshes(threeAM);
+    await JobScheduler.runDueJobs(threeAM, [fakeJob("photos")]);
 
     expect(calls).toEqual([]);
   });

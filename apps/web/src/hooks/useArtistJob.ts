@@ -104,7 +104,7 @@ export function useArtistJob(job: ArtistJob) {
   const start = useCallback(async () => {
     setState({ ...IDLE, status: "running" });
     try {
-      const { jobID } = await handle(client.api.jobs[job].$post());
+      const { jobID } = await handle(client.api.jobs[":name"].$post({ param: { name: job } }));
       localStorage.setItem(storageKey, jobID);
       follow(jobID);
     } catch (error) {

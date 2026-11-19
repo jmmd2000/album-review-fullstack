@@ -29,7 +29,7 @@ test("last runs start empty and reflect a recorded run", async () => {
   expect(await empty.json()).toEqual({});
 
   const runDate = new Date("2026-01-02T03:04:05.000Z");
-  await SettingsService.setLastRun("images", runDate);
+  await SettingsService.setLastRun("artist_images", runDate);
 
   const all = await api.get("/api/settings/last-runs", authCookie);
   expect(await all.json()).toEqual({ artist_images_last_run: runDate.toISOString() });
@@ -53,7 +53,7 @@ test("recalculating scores records the run", async () => {
   const res = await api.post("/api/settings/recalculate-scores", undefined, authCookie);
   expect(res.status).toBe(200);
 
-  const lastRun = await SettingsService.getLastRun("scores");
+  const lastRun = await SettingsService.getLastRun("artist_scores");
   expect(lastRun).not.toBeNull();
 });
 

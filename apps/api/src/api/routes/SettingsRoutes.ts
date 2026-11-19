@@ -33,12 +33,12 @@ const settings = new Hono()
     return c.json(await SettingsService.getJobResults(), 200);
   })
   .get("/last-runs/:type", validate("param", lastRunTypeSchema), async c => {
-    const lastRun = await SettingsService.getLastRun(c.req.valid("param").type);
+    const lastRun = await SettingsService.getLastRun(`artist_${c.req.valid("param").type}`);
     return c.json({ lastRun }, 200);
   })
   .post("/recalculate-scores", async c => {
     const result = await ArtistScoreService.recalculateAllArtistScores();
-    await SettingsService.setLastRun("scores");
+    await SettingsService.setLastRun("artist_scores");
     return c.json(result, 200);
   })
   .get("/build-info", async c => {

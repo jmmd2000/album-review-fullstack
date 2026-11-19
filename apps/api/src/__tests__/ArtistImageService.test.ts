@@ -28,7 +28,6 @@ beforeEach(() => {
   events = [];
   vi.spyOn(ArtistModel, "getAllArtists").mockResolvedValue([{ spotifyID, name: "Artist", headerImage: oldHeader, imageURLs: oldPhotos }] as never);
   vi.spyOn(SettingsService, "setJobResult").mockResolvedValue();
-  vi.spyOn(SettingsService, "setLastRun").mockResolvedValue();
   updateArtist = vi.spyOn(ArtistModel, "updateArtist").mockResolvedValue(undefined as never);
 });
 

@@ -1,5 +1,4 @@
 import { SettingsModel } from "@/api/models/Settings";
-import { AppError } from "@/api/AppError";
 import { artistJobResultSchema, type ArtistJobResult } from "@/api/schemas/artistJobResultSchema";
 
 const REFRESH_INTERVAL_KEY = "artist_refresh_interval_days";
@@ -15,12 +14,9 @@ export class SettingsService {
     await SettingsModel.upsert(key, value);
   }
 
-  // Artist updates specific methods
-  static async getLastRun(type: "images" | "headers" | "scores"): Promise<Date | null> {
-    if (type !== "images" && type !== "headers" && type !== "scores") {
-      throw new AppError("Type must be 'images', 'headers', or 'scores'", 400);
-    }
-    const result = await this.get(`artist_${type}_last_run`);
+  /** Gets when a job last finished, from the setting `<settingName>_last_run`. */
+  static async getLastRun(settingName: string): Promise<Date | null> {
+    const result = await this.get(`${settingName}_last_run`);
     return result ? new Date(result) : null;
   }
 
@@ -73,7 +69,7 @@ export class SettingsService {
     return result.success ? result.data : null;
   }
 
-  static async setLastRun(type: "images" | "headers" | "scores", date: Date = new Date()): Promise<void> {
-    await this.set(`artist_${type}_last_run`, date.toISOString());
+  static async setLastRun(settingName: string, date: Date = new Date()): Promise<void> {
+    await this.set(`${settingName}_last_run`, date.toISOString());
   }
 }
