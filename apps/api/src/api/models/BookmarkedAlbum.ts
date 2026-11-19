@@ -1,6 +1,6 @@
-import { desc, eq, ilike, asc, or, count, inArray } from "drizzle-orm";
+import { desc, eq, ilike, asc, or, count, inArray, avg, sql } from "drizzle-orm";
 import type { GetPaginatedBookmarkedAlbumsOptions } from "@shared/types";
-import { bookmarkedAlbums } from "@/db/schema";
+import { albumArtists, bookmarkedAlbums, reviewedAlbums } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
 
@@ -34,6 +34,27 @@ export class BookmarkedAlbumModel {
 
   static async removeBookmarkedAlbum(spotifyID: string, executor: Executor = db) {
     return executor.delete(bookmarkedAlbums).where(eq(bookmarkedAlbums.spotifyID, spotifyID));
+  }
+
+  /**
+   * The bookmarks to review next. Bookmarks by artists already reviewed come first, the highest average album score first.
+   * The rest follow, newest bookmark first.
+   */
+  static async getUpNext(limit: number) {
+    const artistAverages = db
+      .select({ artistSpotifyID: albumArtists.artistSpotifyID, averageScore: avg(reviewedAlbums.finalScore).as("average_score") })
+      .from(albumArtists)
+      .innerJoin(reviewedAlbums, eq(reviewedAlbums.spotifyID, albumArtists.albumSpotifyID))
+      .groupBy(albumArtists.artistSpotifyID)
+      .as("artist_averages");
+
+    const rows = await db
+      .select({ album: bookmarkedAlbums })
+      .from(bookmarkedAlbums)
+      .leftJoin(artistAverages, eq(artistAverages.artistSpotifyID, bookmarkedAlbums.artistSpotifyID))
+      .orderBy(sql`${artistAverages.averageScore} desc nulls last`, desc(bookmarkedAlbums.createdAt))
+      .limit(limit);
+    return rows.map(row => row.album);
   }
 
   static async getAllBookmarkedAlbums() {
