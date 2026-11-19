@@ -51,10 +51,10 @@ export class ListenerLinkModel {
   }
 
   /** The saved links of these artists, with each link's place in its list. */
-  static async getLinks(artistSpotifyIDs: string[]): Promise<{ linkedName: string; position: number }[]> {
+  static async getLinks(artistSpotifyIDs: string[]): Promise<{ artistSpotifyID: string; linkedName: string; position: number }[]> {
     if (artistSpotifyIDs.length === 0) return [];
     return db
-      .select({ linkedName: artistListenerLinks.linkedName, position: artistListenerLinks.position })
+      .select({ artistSpotifyID: artistListenerLinks.artistSpotifyID, linkedName: artistListenerLinks.linkedName, position: artistListenerLinks.position })
       .from(artistListenerLinks)
       .where(inArray(artistListenerLinks.artistSpotifyID, artistSpotifyIDs));
   }

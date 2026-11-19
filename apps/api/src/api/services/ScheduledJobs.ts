@@ -38,7 +38,7 @@ export const scheduledJobs: ScheduledJob[] = [
     name: "album-suggestions",
     settingName: "album_suggestions",
     busyMessage: "The album suggestions are already updating. Try again when that run finishes.",
-    run: emit => SuggestionService.refreshNewAlbums(emit),
+    run: emit => SuggestionService.refreshSuggestions(emit),
   },
 ];
 

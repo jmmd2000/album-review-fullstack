@@ -2,12 +2,13 @@ import type { z } from "zod";
 import { AppError } from "@/api/AppError";
 import { env } from "@/config/env";
 import { sleep } from "@/helpers/sleep";
-import { lastFmErrorSchema, lastFmSimilarArtistsSchema, type LastFmSimilarArtist } from "@/api/schemas/lastFmSchema";
+import { lastFmErrorSchema, lastFmSimilarArtistsSchema, lastFmTopAlbumsSchema, type LastFmSimilarArtist, type LastFmTopAlbum } from "@/api/schemas/lastFmSchema";
 
 const BASE_URL = "https://ws.audioscrobbler.com/2.0/";
 // Last.fm asks each app to send at most 5 requests a second. Every caller shares one queue, so one request each 200ms stays under that.
 const GAP_MS = 200;
 const SIMILAR_ARTIST_LIMIT = 100;
+const TOP_ALBUM_LIMIT = 10;
 const NOT_FOUND_ERROR_CODE = 6;
 const RATE_LIMIT_ERROR_CODE = 29;
 
@@ -31,6 +32,16 @@ export class LastFmClient {
     const query = new URLSearchParams({ method: "artist.getsimilar", artist: artistName, autocorrect: "1", limit: String(SIMILAR_ARTIST_LIMIT) });
     const reply = await this.request(query, lastFmSimilarArtistsSchema);
     return reply ? reply.similarartists.artist : null;
+  }
+
+  /**
+   * An artist's albums, most played first, up to 10.
+   * @returns The albums, or null when Last.fm doesn't know the artist.
+   */
+  static async getTopAlbums(artistName: string): Promise<LastFmTopAlbum[] | null> {
+    const query = new URLSearchParams({ method: "artist.gettopalbums", artist: artistName, autocorrect: "1", limit: String(TOP_ALBUM_LIMIT) });
+    const reply = await this.request(query, lastFmTopAlbumsSchema);
+    return reply ? [...reply.topalbums.album].sort((a, b) => b.playcount - a.playcount) : null;
   }
 
   /**

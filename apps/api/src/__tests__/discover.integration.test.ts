@@ -89,3 +89,14 @@ test("new albums keep the job's order and leave out albums bookmarked since the 
   const { newAlbums } = await (await api.get("/api/discover", authCookie)).json();
   expect(newAlbums.map((album: { spotifyID: string }) => album.spotifyID)).toEqual(["first", "third"]);
 });
+
+test("dismissing a picked album takes it out of the row", async () => {
+  const suggested = (spotifyID: string) => ({ spotifyID, name: spotifyID, artistName: "artist", artistSpotifyID: "artist", imageURLs: [], releaseDate: "2024-03-01", releaseYear: 2024 });
+  await SuggestedAlbumModel.replaceRow("picked", [suggested("phonetics0000000000000"), suggested("manningFireworks000000")]);
+
+  const res = await api.post("/api/discover/dismissed/phonetics0000000000000", undefined, authCookie);
+  expect(res.status).toBe(204);
+
+  const { picked } = await (await api.get("/api/discover", authCookie)).json();
+  expect(picked.map((album: { spotifyID: string }) => album.spotifyID)).toEqual(["manningFireworks000000"]);
+});

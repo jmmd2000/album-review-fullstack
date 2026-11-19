@@ -8,6 +8,8 @@ import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { SuggestedAlbumModel } from "@/api/models/SuggestedAlbum";
 import { SuggestionService } from "@/api/services/SuggestionService";
+import { LastFmClient } from "@/api/models/LastFmClient";
+import { ListenerLinkModel } from "@/api/models/ListenerLink";
 import type { SpotifyArtistAlbum } from "@/api/schemas/spotifySchema";
 
 const now = new Date("2026-11-19T12:00:00Z");
@@ -94,4 +96,65 @@ test("an artist whose albums can't be fetched keeps their albums from the last r
 
   expect(await savedIDs()).toEqual(["likedNew"]);
   expect(failures).toHaveLength(1);
+});
+
+const searchHit = (id: string, artistName: string, albumType = "album") => ({
+  albums: { items: [{ id, name: id, release_date: "2024-03-01", images: [], artists: [{ id: `${artistName}ID`, name: artistName }], album_type: albumType }], next: null },
+});
+
+async function linkLovedTo(names: string[]) {
+  await ListenerLinkModel.replaceLinks(
+    "loved",
+    names.map((linkedName, index) => ({ linkedName, match: 1 - index / 10 })),
+    new Date()
+  );
+}
+
+const pickedIDs = async () => (await SuggestedAlbumModel.getAll("picked")).map(album => album.spotifyID);
+
+test("picks each linked artist's most played studio album on Spotify, skipping live albums, wrong artists and taken albums", async () => {
+  await linkLovedTo(["Horsegirl", "Bookmarked Band", "Wrong Artist Band"]);
+  await BookmarkedAlbumModel.bookmarkAlbum({ spotifyID: "bookmarkedBandAlbum", name: "x", artistSpotifyID: "b", artistName: "Bookmarked Band", releaseYear: 2024, imageURLs: [] });
+  vi.spyOn(LastFmClient, "getTopAlbums").mockImplementation(async artistName =>
+    artistName === "Horsegirl"
+      ? [
+          { name: "Versions of Modern Performance (Live)", playcount: 900 },
+          { name: "Phonetics On and On", playcount: 500 },
+        ]
+      : [{ name: "Their Album", playcount: 100 }]
+  );
+  vi.spyOn(SpotifyClient, "searchAlbums").mockImplementation(async query => {
+    if (query.includes("Horsegirl")) return searchHit("phonetics", "Horsegirl");
+    if (query.includes("Bookmarked Band")) return searchHit("bookmarkedBandAlbum", "Bookmarked Band");
+    return searchHit("someoneElse", "A Different Artist");
+  });
+
+  await SuggestionService.refreshPicks();
+
+  expect(await pickedIDs()).toEqual(["phonetics"]);
+});
+
+test("a dismissed album leaves the row at once and never comes back", async () => {
+  await linkLovedTo(["Horsegirl"]);
+  vi.spyOn(LastFmClient, "getTopAlbums").mockResolvedValue([{ name: "Phonetics On and On", playcount: 500 }]);
+  vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue(searchHit("phonetics", "Horsegirl"));
+  await SuggestionService.refreshPicks();
+  expect(await pickedIDs()).toEqual(["phonetics"]);
+
+  await SuggestedAlbumModel.dismiss("phonetics");
+  expect(await pickedIDs()).toEqual([]);
+
+  await SuggestionService.refreshPicks();
+  expect(await pickedIDs()).toEqual([]);
+});
+
+test("the picked row stays when every artist fails", async () => {
+  await linkLovedTo(["Horsegirl"]);
+  vi.spyOn(LastFmClient, "getTopAlbums").mockResolvedValue([{ name: "Phonetics On and On", playcount: 500 }]);
+  vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue(searchHit("phonetics", "Horsegirl"));
+  await SuggestionService.refreshPicks();
+
+  vi.spyOn(SpotifyClient, "searchAlbums").mockRejectedValue(new Error("Spotify is down"));
+  await expect(SuggestionService.refreshPicks()).rejects.toThrow("Spotify is down");
+  expect(await pickedIDs()).toEqual(["phonetics"]);
 });

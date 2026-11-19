@@ -84,7 +84,7 @@ function Settings() {
           <ArtistJobRow
             job="album-suggestions"
             title="Album suggestions"
-            description="Finds new albums by reviewed artists on Spotify for the Review an album page."
+            description="Finds new albums by reviewed artists, and picks albums by the artists listeners link to your favourites, for the Review an album page."
             actionLabel="Update suggestions"
             lastRun={lastRuns.album_suggestions_last_run ?? null}
             result={null}

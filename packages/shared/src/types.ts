@@ -165,6 +165,8 @@ export interface DisplayAlbum {
 export interface DiscoverRows {
   /** New studio albums by reviewed artists, best artist average first, up to 10 */
   newAlbums: DisplayAlbum[];
+  /** Albums by artists not yet reviewed, picked from the artists listeners link to the highest-rated ones, up to 10 */
+  picked: DisplayAlbum[];
   /** Bookmarks to review next, up to 10 */
   upNext: DisplayAlbum[];
 }
