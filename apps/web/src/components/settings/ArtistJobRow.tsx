@@ -12,6 +12,13 @@ import type { Progress } from "@shared/types";
 import type { ArtistJob, ArtistJobState } from "@/hooks/useArtistJob";
 import type { ArtistJobResult } from "@/lib/jobStatus";
 
+/** The image each changed artist shows in a job's results, or null to show the name only */
+const IMAGE_KINDS: Record<ArtistJob, "photo" | "header" | null> = {
+  "artist-images": "photo",
+  "artist-headers": "header",
+  "listener-links": null,
+};
+
 interface ArtistJobRowProps {
   job: ArtistJob;
   title: string;
@@ -49,7 +56,7 @@ export function ArtistJobRow({ job, title, description, actionLabel, lastRun, re
       }
     >
       {state.status === "running" && <JobProgress current={state.current} />}
-      {state.status === "finished" && <JobResults state={state} imageKind={job === "artist-images" ? "photo" : "header"} />}
+      {state.status === "finished" && <JobResults state={state} imageKind={IMAGE_KINDS[job]} />}
     </SettingsRow>
   );
 }
@@ -81,7 +88,7 @@ function JobProgress({ current }: { current: Progress | null }) {
 
 interface JobResultsProps {
   state: ArtistJobState;
-  imageKind: "photo" | "header";
+  imageKind: "photo" | "header" | null;
 }
 
 function JobResults({ state, imageKind }: JobResultsProps) {
@@ -102,13 +109,14 @@ function JobResults({ state, imageKind }: JobResultsProps) {
             <ul className={styles.changes}>
               {changed.map(entry => (
                 <li key={entry.spotifyID} className={styles.change}>
-                  {imageKind === "photo" ? (
+                  {imageKind === "photo" && (
                     <>
                       <ArtistPhoto url={entry.artistImage} />
                       <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
                       <ArtistPhoto url={entry.newArtistImage} />
                     </>
-                  ) : (
+                  )}
+                  {imageKind === "header" && (
                     <>
                       <HeaderThumbnail url={entry.headerImage} />
                       <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
