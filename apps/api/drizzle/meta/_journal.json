@@ -64,6 +64,13 @@
       "when": 1795104014394,
       "tag": "0008_lastfm_links",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795106643147,
+      "tag": "0009_suggested_albums",
+      "breakpoints": true
     }
   ]
 }

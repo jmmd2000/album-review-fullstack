@@ -52,6 +52,9 @@ export const albumArtists = pgTable(
   ]
 );
 
+/** The rows on the Review an album page that the Album suggestions job fills */
+export const suggestionRow = pgEnum("suggestion_row", ["new"]);
+
 /** A track picked as one of its album's best or worst */
 export const trackPick = pgEnum("track_pick", ["best", "worst"]);
 
@@ -259,3 +262,21 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/** Albums the Album suggestions job picked for the Review an album page, replaced on each run */
+export const suggestedAlbums = pgTable(
+  "suggested_albums",
+  {
+    row: suggestionRow("row").notNull(),
+    /** The place in its row, from 1 */
+    rank: integer("rank").notNull(),
+    spotifyID: varchar("spotify_id", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    artistName: varchar("artist_name", { length: 255 }).notNull(),
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 }).notNull(),
+    imageURLs: jsonb("image_urls").$type<{ url: string; height: number; width: number }[]>().notNull(),
+    releaseDate: varchar("release_date", { length: 10 }).notNull(),
+    releaseYear: integer("release_year").notNull(),
+  },
+  table => [primaryKey({ columns: [table.row, table.spotifyID] })]
+);

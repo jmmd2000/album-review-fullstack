@@ -1,8 +1,8 @@
 import type { z } from "zod";
 import { AppError } from "../AppError";
 import { env } from "@/config/env";
-import { albumReplySchema, albumSearchResponseSchema, albumTrackPageSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
-import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
+import { albumReplySchema, albumSearchResponseSchema, albumTrackPageSchema, artistAlbumsResponseSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
+import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
 
 /** Spotify gives at most 10 search results a request */
 export const SEARCH_PAGE_SIZE = 10;
@@ -98,6 +98,18 @@ export class SpotifyClient {
       if (err instanceof AppError) throw err;
       throw new AppError("Failed to fetch artist data from Spotify.", 502);
     }
+  }
+
+  /**
+   * Fetches the first page of an artist's albums, without singles, compilations or albums they only appear on.
+   * @returns Up to 10 albums, or an empty list when Spotify doesn't know the artist.
+   * @throws AppError 502 when Spotify fails or sends a reply the app can't read.
+   */
+  static async getArtistAlbums(artistID: string, accessToken: string): Promise<SpotifyArtistAlbum[]> {
+    const response = await fetch(`${this.baseURL}/artists/${artistID}/albums?include_groups=album&limit=${SEARCH_PAGE_SIZE}`, { headers: this.authHeaders(accessToken) });
+    if (response.status === 404) return [];
+    if (!response.ok) throw new AppError(`Spotify answered ${response.status} for an artist's albums.`, 502);
+    return this.parseReply(artistAlbumsResponseSchema, await response.json(), "an artist's albums").items;
   }
 
   /**
