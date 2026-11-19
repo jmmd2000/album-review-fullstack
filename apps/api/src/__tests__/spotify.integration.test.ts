@@ -1,7 +1,7 @@
 import { closeDatabase, query } from "@/db/client";
 import { mockReviewData } from "./constants";
 import { resetTables } from "./testUtils";
-import type { DisplayAlbum } from "@shared/types";
+import type { SearchAlbumsPage } from "@shared/types";
 import { beforeEach, afterEach, afterAll, test, expect, vi } from "vitest";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
@@ -13,16 +13,20 @@ vi.mock("../api/services/SpotifyService", async () => {
   return {
     SpotifyService: {
       searchAlbums: vi.fn(() =>
-        Promise.resolve([
-          {
-            spotifyID: "1",
-            name: "Mock Album",
-            artistName: "Mock Artist",
-            artistSpotifyID: "artist1",
-            releaseYear: 2024,
-            imageURLs: [],
-          },
-        ])
+        Promise.resolve({
+          albums: [
+            {
+              spotifyID: "1",
+              name: "Mock Album",
+              artistName: "Mock Artist",
+              artistSpotifyID: "artist1",
+              releaseYear: 2024,
+              imageURLs: [],
+              releaseType: "album",
+            },
+          ],
+          nextOffset: null,
+        })
       ),
       getAlbum: vi.fn(() => Promise.resolve(mockReviewData.album)),
     },
@@ -58,10 +62,16 @@ test("the token route is gone", async () => {
 test("GET /api/spotify/albums/search?query=abba - Should return albums", async () => {
   const response = await api.get("/api/spotify/albums/search?query=abba", authCookie);
   expect(response.status).toBe(200);
-  const data: DisplayAlbum[] = await response.json();
-  expect(Array.isArray(data)).toBe(true);
-  expect(data[0]).toHaveProperty("name");
-  expect(data[0]).toHaveProperty("spotifyID");
+  const data: SearchAlbumsPage = await response.json();
+  expect(data.albums[0]).toHaveProperty("name");
+  expect(data.albums[0]).toHaveProperty("spotifyID");
+});
+
+test("GET /api/spotify/albums/search - An offset Spotify would refuse gets a 400", async () => {
+  for (const offset of ["-10", "1000", "abc"]) {
+    const response = await api.get(`/api/spotify/albums/search?query=abba&offset=${offset}`, authCookie);
+    expect(response.status).toBe(400);
+  }
 });
 
 test("GET /api/spotify/albums/:albumID - Should return album", async () => {

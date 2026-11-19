@@ -6,7 +6,8 @@ import { toast } from "@/lib/toast";
 import { IconButton } from "@/components/ui/IconButton";
 import styles from "./BookmarkButton.module.css";
 
-import type { DisplayAlbum } from "@shared/types";
+import type { InfiniteData } from "@tanstack/react-query";
+import type { DisplayAlbum, SearchAlbumsPage } from "@shared/types";
 
 interface BookmarkButtonProps {
   album: DisplayAlbum;
@@ -26,9 +27,14 @@ export function BookmarkButton({ album, bookmarked }: BookmarkButtonProps) {
         ? handleVoid(client.api.bookmarks[":albumID"].add.$post({ param: { albumID: album.spotifyID }, json: album }))
         : handleVoid(client.api.bookmarks[":albumID"].remove.$delete({ param: { albumID: album.spotifyID } })),
     onSuccess: (_result, next) => {
-      queryClient.setQueriesData<DisplayAlbum[]>({ queryKey: queryKeys.search.all }, results =>
-        results?.map(result => (result.spotifyID === album.spotifyID ? { ...result, bookmarked: next } : result))
-      );
+      queryClient.setQueriesData<InfiniteData<SearchAlbumsPage>>({ queryKey: queryKeys.search.all }, results => {
+        if (!results) return results;
+        const pages = results.pages.map(page => ({
+          ...page,
+          albums: page.albums.map(result => (result.spotifyID === album.spotifyID ? { ...result, bookmarked: next } : result)),
+        }));
+        return { ...results, pages };
+      });
     },
     onError: () => toast.error("The bookmark couldn't be saved. Try again."),
     // Returning the refetch keeps the mutation pending until the bookmarks list has the new state, so the button doesn't flick back

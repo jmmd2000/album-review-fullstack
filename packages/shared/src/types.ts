@@ -161,6 +161,12 @@ export interface DisplayAlbum {
   colors?: ExtractedColor[];
 }
 
+/** An album in the Spotify search results. */
+export interface SearchAlbum extends DisplayAlbum {
+  /** Spotify's release type: "album", "single" or "compilation" */
+  releaseType: string;
+}
+
 /**
  * Represents the minimum data needed to display an artist on an `ArtistCard`.
  */
@@ -291,6 +297,15 @@ export interface GetPaginatedArtistsOptions {
 export interface SearchAlbumsOptions {
   /** The search query */
   query?: string;
+  /** How many results to skip */
+  offset?: number;
+}
+
+/** One page of Spotify search results. */
+export interface SearchAlbumsPage {
+  albums: SearchAlbum[];
+  /** The offset of the next page, or null when there are no more results */
+  nextOffset: number | null;
 }
 
 export interface Genre {

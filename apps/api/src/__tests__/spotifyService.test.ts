@@ -23,6 +23,8 @@ const rawAlbum = (id: string, name: string): SpotifyAlbumResponse => ({
   tracks: { items: [] },
 });
 
+const searchHit = (id: string, name: string) => ({ ...rawAlbum(id, name), album_type: "album" });
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -35,19 +37,20 @@ describe("searchAlbums", () => {
   test("returns empty for a blank query without touching spotify", async () => {
     const tokenSpy = vi.spyOn(SpotifyTokenCache, "getAccessToken");
 
-    expect(await SpotifyService.searchAlbums({ query: "   " })).toEqual([]);
-    expect(await SpotifyService.searchAlbums({ query: "undefined" })).toEqual([]);
+    expect(await SpotifyService.searchAlbums({ query: "   " })).toEqual({ albums: [], nextOffset: null });
+    expect(await SpotifyService.searchAlbums({ query: "undefined" })).toEqual({ albums: [], nextOffset: null });
     expect(tokenSpy).not.toHaveBeenCalled();
   });
 
   test("enriches search hits with review and bookmark status", async () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
-    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [rawAlbum("a1", "First"), rawAlbum("a2", "Second")] } });
+    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [searchHit("a1", "First"), searchHit("a2", "Second")], next: "next-page" } });
     vi.spyOn(AlbumModel, "getFinalScoresByIds").mockResolvedValue([{ spotifyID: "a1", finalScore: 82 }]);
     vi.spyOn(BookmarkedAlbumModel, "getBookmarkedByIds").mockResolvedValue(["a2"]);
 
-    const results = await SpotifyService.searchAlbums({ query: "anything" });
+    const { albums: results, nextOffset } = await SpotifyService.searchAlbums({ query: "anything", offset: 10 });
 
+    expect(nextOffset).toBe(20);
     expect(results).toHaveLength(2);
     expect(results[0]).toMatchObject({ spotifyID: "a1", finalScore: 82, bookmarked: false });
     expect(results[1]).toMatchObject({ spotifyID: "a2", finalScore: null, bookmarked: true });
@@ -55,10 +58,10 @@ describe("searchAlbums", () => {
 
   test("skips the database reads when spotify returns nothing", async () => {
     vi.spyOn(SpotifyTokenCache, "getAccessToken").mockResolvedValue("tok");
-    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [] } });
+    vi.spyOn(SpotifyClient, "searchAlbums").mockResolvedValue({ albums: { items: [], next: null } });
     const scoresSpy = vi.spyOn(AlbumModel, "getFinalScoresByIds");
 
-    expect(await SpotifyService.searchAlbums({ query: "anything" })).toEqual([]);
+    expect(await SpotifyService.searchAlbums({ query: "anything" })).toEqual({ albums: [], nextOffset: null });
     expect(scoresSpy).not.toHaveBeenCalled();
   });
 });

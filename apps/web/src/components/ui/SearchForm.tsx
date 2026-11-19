@@ -4,11 +4,12 @@ import styles from "./SearchForm.module.css";
 interface SearchFormProps {
   label: string;
   defaultValue: string;
+  placeholder?: string;
   onSearch: (value: string) => void;
 }
 
 /** A search box that searches on Enter, and clears the search when emptied. */
-export function SearchForm({ label, defaultValue, onSearch }: SearchFormProps) {
+export function SearchForm({ label, defaultValue, placeholder = "Search", onSearch }: SearchFormProps) {
   return (
     // Keying on defaultValue remounts the field so back/forward navigation,
     // which only changes the URL, resets the box to the active query.
@@ -26,7 +27,7 @@ export function SearchForm({ label, defaultValue, onSearch }: SearchFormProps) {
         type="search"
         defaultValue={defaultValue}
         aria-label={label}
-        placeholder="Search"
+        placeholder={placeholder}
         className={styles.input}
         onChange={event => {
           // The clear button or deleting the text empties the box
