@@ -3,6 +3,8 @@ import { DeezerClient, DeezerLimitError } from "@/api/models/DeezerClient";
 import { ListenerLinkModel, type LinkableArtist } from "@/api/models/ListenerLink";
 import { ListenerLinkService, findMatchingArtist, normaliseArtistName } from "@/api/services/ListenerLinkService";
 import type { JobEmit } from "@/api/services/JobService";
+import { AlbumModel } from "@/api/models/Album";
+import * as errorReporting from "@/config/errorReporting";
 
 vi.mock("@/helpers/sleep", () => ({ sleep: vi.fn(() => Promise.resolve()) }));
 
@@ -92,5 +94,21 @@ describe("refreshAllArtists", () => {
 
     await expect(ListenerLinkService.refreshAllArtists(() => {})).rejects.toBeInstanceOf(DeezerLimitError);
     expect(related).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("linkUnmatchedArtists", () => {
+  test("refreshes only the album's artists with no Deezer match, and reports a failure instead of throwing", async () => {
+    vi.mocked(ListenerLinkService.linkUnmatchedArtists).mockRestore();
+    vi.spyOn(AlbumModel, "getAlbumArtistIDs").mockResolvedValue(["matched", "unmatched"]);
+    vi.spyOn(ListenerLinkModel, "getArtistsBySpotifyIDs").mockResolvedValue([artist("matched", 10), artist("unmatched")]);
+    const error = new Error("Deezer is down");
+    const refresh = vi.spyOn(ListenerLinkService, "refreshArtist").mockRejectedValue(error);
+    const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
+
+    await ListenerLinkService.linkUnmatchedArtists("album");
+
+    expect(refresh.mock.calls.map(([refreshed]) => refreshed.spotifyID)).toEqual(["unmatched"]);
+    expect(report).toHaveBeenCalledWith(error, { job: "listener-links" });
   });
 });

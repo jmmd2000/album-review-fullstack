@@ -1,6 +1,8 @@
 import { DeezerClient, DeezerLimitError } from "@/api/models/DeezerClient";
 import { ListenerLinkModel, type LinkableArtist } from "@/api/models/ListenerLink";
 import type { DeezerAlbumSearchHit } from "@/api/schemas/deezerSchema";
+import { AlbumModel } from "@/api/models/Album";
+import { reportError } from "@/config/errorReporting";
 import type { JobEmit } from "@/api/services/JobService";
 
 /** How many of an artist's reviewed albums the match tries before it gives up */
@@ -87,6 +89,22 @@ export const ListenerLinkService = {
         if (error instanceof DeezerLimitError) throw error;
         emit("failed", { ...progress, message: (error as Error).message });
       }
+    }
+  },
+
+  /**
+   * Fetches links for the album's artists that have no Deezer match yet. Call it without await after a review saves.
+   * It never throws. A failure is reported, and the next scheduled run tries the artist again.
+   */
+  async linkUnmatchedArtists(albumSpotifyID: string): Promise<void> {
+    try {
+      const artists = await ListenerLinkModel.getArtistsBySpotifyIDs(await AlbumModel.getAlbumArtistIDs(albumSpotifyID));
+      for (const artist of artists) {
+        if (artist.deezerID !== null) continue;
+        await this.refreshArtist(artist);
+      }
+    } catch (error) {
+      reportError(error, { job: "listener-links" });
     }
   },
 };
