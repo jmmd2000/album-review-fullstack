@@ -7,6 +7,7 @@ import { albumIDFromLink } from "@/lib/spotifyLink";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { BookmarkButton } from "@/components/album/BookmarkButton";
+import { DismissButton } from "@/components/album/DismissButton";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PageState } from "@/components/ui/PageState";
@@ -87,7 +88,7 @@ function SearchPage() {
 function Discover() {
   const { data } = useSuspenseQuery(discoverQueryOptions);
 
-  if (data.newAlbums.length === 0 && data.upNext.length === 0) {
+  if (data.newAlbums.length === 0 && data.picked.length === 0 && data.upNext.length === 0) {
     return (
       <PageState title="Find an album on Spotify" detail="Search for an album or an artist. Pick a result to review it, or bookmark it for later.">
         <ButtonLink to="/bookmarks" variant="secondary">
@@ -105,6 +106,25 @@ function Discover() {
           <CardGrid>
             {data.newAlbums.map(album => (
               <AlbumCard key={album.spotifyID} album={album} action={<BookmarkButton album={album} bookmarked={false} />} />
+            ))}
+          </CardGrid>
+        </section>
+      )}
+      {data.picked.length > 0 && (
+        <section className={styles.row}>
+          <SectionHeader title="Picked for you" />
+          <CardGrid>
+            {data.picked.map(album => (
+              <AlbumCard
+                key={album.spotifyID}
+                album={album}
+                action={
+                  <div className={styles.actions}>
+                    <BookmarkButton album={album} bookmarked={false} />
+                    <DismissButton album={album} />
+                  </div>
+                }
+              />
             ))}
           </CardGrid>
         </section>

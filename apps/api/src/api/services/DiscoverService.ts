@@ -21,7 +21,16 @@ function toUnreviewedAlbum(album: { spotifyID: string; name: string; imageURLs: 
 /** The rows that help pick the next album to review. */
 export class DiscoverService {
   static async getRows(): Promise<DiscoverRows> {
-    const [newAlbums, upNext] = await Promise.all([SuggestedAlbumModel.getShown("new", ROW_LIMIT), BookmarkedAlbumModel.getUpNext(ROW_LIMIT)]);
-    return { newAlbums: newAlbums.map(toUnreviewedAlbum), upNext: upNext.map(toUnreviewedAlbum) };
+    const [newAlbums, picked, upNext] = await Promise.all([
+      SuggestedAlbumModel.getShown("new", ROW_LIMIT),
+      SuggestedAlbumModel.getShown("picked", ROW_LIMIT),
+      BookmarkedAlbumModel.getUpNext(ROW_LIMIT),
+    ]);
+    return { newAlbums: newAlbums.map(toUnreviewedAlbum), picked: picked.map(toUnreviewedAlbum), upNext: upNext.map(toUnreviewedAlbum) };
+  }
+
+  /** Dismisses a suggested album, so it leaves its row now and is never suggested again. */
+  static async dismiss(albumSpotifyID: string): Promise<void> {
+    await SuggestedAlbumModel.dismiss(albumSpotifyID);
   }
 }
