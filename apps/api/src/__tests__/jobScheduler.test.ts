@@ -48,9 +48,18 @@ describe("isRefreshDue", () => {
 });
 
 describe("runDueJobs", () => {
+  test("checks each job against its own interval", async () => {
+    vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(daysBefore(threeAM, 5));
+    vi.spyOn(SettingsService, "getIntervalDays").mockImplementation(async settingName => (settingName === "photos" ? 3 : 7));
+
+    await JobScheduler.runDueJobs(threeAM, [fakeJob("photos"), fakeJob("headers")]);
+
+    expect(calls).toEqual(["photos"]);
+  });
+
   test("does nothing outside 3am", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(7);
 
     await JobScheduler.runDueJobs(new Date("2026-10-12T14:00:00Z"), [fakeJob("photos")]);
 
@@ -59,7 +68,7 @@ describe("runDueJobs", () => {
 
   test("runs the due jobs in list order", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(daysBefore(threeAM, 8));
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(7);
 
     await JobScheduler.runDueJobs(threeAM, [fakeJob("photos"), fakeJob("headers")]);
 
@@ -68,7 +77,7 @@ describe("runDueJobs", () => {
 
   test("runs only the job that is due", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockImplementation(async settingName => (settingName === "photos" ? daysBefore(threeAM, 2) : daysBefore(threeAM, 8)));
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(7);
 
     await JobScheduler.runDueJobs(threeAM, [fakeJob("photos"), fakeJob("headers")]);
 
@@ -77,7 +86,7 @@ describe("runDueJobs", () => {
 
   test("skips a job that a manual run already started", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(7);
     let finishManualRun = () => {};
     const photos = fakeJob("photos", async () => {
       calls.push("photos");
@@ -95,7 +104,7 @@ describe("runDueJobs", () => {
 
   test("a job that throws is reported, keeps its old last run time, and doesn't stop the next job", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(7);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(7);
     const report = vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
     const error = new Error("spotify is down");
     const photos = fakeJob("photos", async () => {
@@ -112,7 +121,7 @@ describe("runDueJobs", () => {
 
   test("does nothing when the interval is 0", async () => {
     vi.spyOn(SettingsService, "getLastRun").mockResolvedValue(null);
-    vi.spyOn(SettingsService, "getRefreshIntervalDays").mockResolvedValue(0);
+    vi.spyOn(SettingsService, "getIntervalDays").mockResolvedValue(0);
 
     await JobScheduler.runDueJobs(threeAM, [fakeJob("photos")]);
 

@@ -75,36 +75,41 @@ test("build info reports the running versions", async () => {
   expect(info.versions.packages["drizzle-orm"]).toMatch(/^\d+\./);
 });
 
-test("the refresh interval is 7 days until one is saved, and a bad stored value falls back to 7", async () => {
-  expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+test("a job's interval is 7 days until one is saved, and a bad stored value falls back to 7", async () => {
+  expect(await SettingsService.getIntervalDays("artist_images")).toBe(7);
 
-  await SettingsService.set("artist_refresh_interval_days", "14");
-  expect(await SettingsService.getRefreshIntervalDays()).toBe(14);
+  await SettingsService.set("artist_images_interval_days", "14");
+  expect(await SettingsService.getIntervalDays("artist_images")).toBe(14);
 
-  await SettingsService.set("artist_refresh_interval_days", "0");
-  expect(await SettingsService.getRefreshIntervalDays()).toBe(0);
+  await SettingsService.set("artist_images_interval_days", "0");
+  expect(await SettingsService.getIntervalDays("artist_images")).toBe(0);
 
   for (const bad of ["soon", "-3", "2.5"]) {
-    await SettingsService.set("artist_refresh_interval_days", bad);
-    expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+    await SettingsService.set("artist_images_interval_days", bad);
+    expect(await SettingsService.getIntervalDays("artist_images")).toBe(7);
   }
 });
 
-test("the refresh interval can be read and changed, and says the schedule is off on this server", async () => {
-  const before = await api.get("/api/settings/refresh-interval", authCookie);
-  expect(await before.json()).toEqual({ intervalDays: 7, scheduleEnabled: false });
+test("saving one job's interval leaves the other jobs alone, and the reply says the schedule is off on this server", async () => {
+  const before = await api.get("/api/settings/job-intervals", authCookie);
+  expect(await before.json()).toEqual({ intervals: { "artist-images": 7, "artist-headers": 7 }, scheduleEnabled: false });
 
-  const update = await api.put("/api/settings/refresh-interval", { intervalDays: 14 }, authCookie);
+  const update = await api.put("/api/settings/job-intervals/artist-headers", { intervalDays: 14 }, authCookie);
   expect(update.status).toBe(200);
 
-  const after = await api.get("/api/settings/refresh-interval", authCookie);
-  expect((await after.json()).intervalDays).toBe(14);
+  const after = await api.get("/api/settings/job-intervals", authCookie);
+  expect((await after.json()).intervals).toEqual({ "artist-images": 7, "artist-headers": 14 });
 });
 
-test("a refresh interval that isn't a whole number of days from 0 to 365 is rejected", async () => {
+test("an interval that isn't a whole number of days from 0 to 365 is rejected", async () => {
   for (const intervalDays of [-1, 2.5, 366, "7"]) {
-    const res = await api.put("/api/settings/refresh-interval", { intervalDays }, authCookie);
+    const res = await api.put("/api/settings/job-intervals/artist-images", { intervalDays }, authCookie);
     expect(res.status).toBe(400);
   }
-  expect(await SettingsService.getRefreshIntervalDays()).toBe(7);
+  expect(await SettingsService.getIntervalDays("artist_images")).toBe(7);
+});
+
+test("saving an interval for a job that isn't on the list returns 404", async () => {
+  const res = await api.put("/api/settings/job-intervals/nonsense", { intervalDays: 7 }, authCookie);
+  expect(res.status).toBe(404);
 });

@@ -34,7 +34,8 @@ async function runClaimed(job: ScheduledJob, emit: JobEmit, source: ArtistJobSou
   }
 }
 
-async function runIfDue(job: ScheduledJob, intervalDays: number, now: Date): Promise<void> {
+async function runIfDue(job: ScheduledJob, now: Date): Promise<void> {
+  const intervalDays = await SettingsService.getIntervalDays(job.settingName);
   if (!isRefreshDue(await SettingsService.getLastRun(job.settingName), intervalDays, now)) return;
   if (runningJobs.has(job.name)) {
     logger.info({ job: job.name }, "Scheduled job skipped, a run is already going");
@@ -87,13 +88,12 @@ export const JobScheduler = {
   },
 
   /**
-   * Runs each job that is due, one after the other, in list order. Does nothing outside the scheduled hour.
+   * Runs each job that is due on its own interval, one after the other, in list order. Does nothing outside the scheduled hour.
    */
   async runDueJobs(now: Date, jobs: ScheduledJob[] = scheduledJobs): Promise<void> {
     if (now.getUTCHours() !== RUN_HOUR_UTC) return;
-    const intervalDays = await SettingsService.getRefreshIntervalDays();
     for (const job of jobs) {
-      await runIfDue(job, intervalDays, now);
+      await runIfDue(job, now);
     }
   },
 };

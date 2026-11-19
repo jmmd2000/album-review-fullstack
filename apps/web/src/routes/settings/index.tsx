@@ -5,7 +5,6 @@ import { queryKeys } from "@/lib/queryKeys";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ArtistJobRow } from "@/components/settings/ArtistJobRow";
 import { RecalculateScoresRow } from "@/components/settings/RecalculateScoresRow";
-import { RefreshScheduleRow } from "@/components/settings/RefreshScheduleRow";
 import { BuildInfo } from "@/components/settings/BuildInfo";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -14,6 +13,11 @@ import styles from "./index.module.css";
 const lastRunsQueryOptions = queryOptions({
   queryKey: queryKeys.settings.lastRuns,
   queryFn: () => handle(client.api.settings["last-runs"].$get()),
+});
+
+const jobIntervalsQueryOptions = queryOptions({
+  queryKey: queryKeys.settings.jobIntervals,
+  queryFn: () => handle(client.api.settings["job-intervals"].$get()),
 });
 
 const jobResultsQueryOptions = queryOptions({
@@ -39,6 +43,7 @@ function RouteComponent() {
 function Settings() {
   const { data: lastRuns } = useSuspenseQuery(lastRunsQueryOptions);
   const { data: jobResults } = useSuspenseQuery(jobResultsQueryOptions);
+  const { data: jobIntervals } = useSuspenseQuery(jobIntervalsQueryOptions);
 
   return (
     <div className={styles.page}>
@@ -53,6 +58,8 @@ function Settings() {
             actionLabel="Update photos"
             lastRun={lastRuns.artist_images_last_run ?? null}
             result={jobResults.images}
+            intervalDays={jobIntervals.intervals["artist-images"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
           />
           <ArtistJobRow
             job="artist-headers"
@@ -61,8 +68,9 @@ function Settings() {
             actionLabel="Update headers"
             lastRun={lastRuns.artist_headers_last_run ?? null}
             result={jobResults.headers}
+            intervalDays={jobIntervals.intervals["artist-headers"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
           />
-          <RefreshScheduleRow />
           <RecalculateScoresRow lastRun={lastRuns.artist_scores_last_run ?? null} />
         </div>
       </section>
