@@ -23,7 +23,7 @@ describe("isNewStudioAlbum", () => {
     expect(isNewStudioAlbum(album("Next Year's Record", "2026-12-05"), now)).toBe(false);
   });
 
-  test("leaves out live albums, reissues and soundtracks by their name", () => {
+  test("leaves out live albums, reissues, soundtracks and remix albums by their name", () => {
     for (const name of [
       "Live at the Roundhouse",
       "Bleeds (Deluxe)",
@@ -32,6 +32,7 @@ describe("isNewStudioAlbum", () => {
       "Jackie (Original Motion Picture Soundtrack)",
       "Wicked Little Letters (Original Score)",
       "Expanded Universe",
+      "OIL OF EVERY PEARL'S UN-INSIDES NON-STOP REMIX ALBUM",
     ]) {
       expect(isNewStudioAlbum(album(name, "2026-11-01"), now), name).toBe(false);
     }

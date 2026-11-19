@@ -14,3 +14,12 @@ export const lastFmSimilarArtistsSchema = z.object({
 });
 
 export type LastFmSimilarArtist = z.infer<typeof lastFmSimilarArtistsSchema>["similarartists"]["artist"][number];
+
+/** An artist's albums, most played first. `playcount` comes as a string. */
+export const lastFmTopAlbumsSchema = z.object({
+  topalbums: z.object({
+    album: z.array(z.object({ name: z.string(), playcount: z.coerce.number() })),
+  }),
+});
+
+export type LastFmTopAlbum = z.infer<typeof lastFmTopAlbumsSchema>["topalbums"]["album"][number];

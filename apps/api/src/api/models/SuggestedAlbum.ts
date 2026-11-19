@@ -1,5 +1,5 @@
-import { and, asc, avg, eq, notExists } from "drizzle-orm";
-import { albumArtists, bookmarkedAlbums, reviewedAlbums, reviewedArtists, suggestedAlbums } from "@/db/schema";
+import { and, asc, avg, count, eq, notExists } from "drizzle-orm";
+import { albumArtists, bookmarkedAlbums, dismissedAlbums, reviewedAlbums, reviewedArtists, suggestedAlbums } from "@/db/schema";
 import { db } from "@/db/client";
 
 export type SuggestionRow = (typeof suggestedAlbums.$inferSelect)["row"];
@@ -11,6 +11,7 @@ export interface ArtistWithAverage {
   name: string;
   imageURLs: { url: string }[];
   averageScore: number;
+  albumCount: number;
 }
 
 export class SuggestedAlbumModel {
@@ -22,6 +23,7 @@ export class SuggestedAlbumModel {
         name: reviewedArtists.name,
         imageURLs: reviewedArtists.imageURLs,
         averageScore: avg(reviewedAlbums.finalScore).mapWith(Number),
+        albumCount: count(reviewedAlbums.spotifyID),
       })
       .from(reviewedArtists)
       .innerJoin(albumArtists, eq(albumArtists.artistSpotifyID, reviewedArtists.spotifyID))
@@ -30,13 +32,30 @@ export class SuggestedAlbumModel {
       .orderBy(asc(reviewedArtists.name));
   }
 
-  /** The Spotify IDs of every reviewed and every bookmarked album. */
+  /** The average final score of every reviewed album. */
+  static async getOverallAverage(): Promise<number> {
+    const [row] = await db.select({ averageScore: avg(reviewedAlbums.finalScore).mapWith(Number) }).from(reviewedAlbums);
+    return row?.averageScore ?? 0;
+  }
+
+  /** The Spotify IDs of every reviewed, bookmarked and dismissed album. */
   static async getTakenAlbumIDs(): Promise<Set<string>> {
-    const [reviewed, bookmarked] = await Promise.all([
+    const [reviewed, bookmarked, dismissed] = await Promise.all([
       db.select({ spotifyID: reviewedAlbums.spotifyID }).from(reviewedAlbums),
       db.select({ spotifyID: bookmarkedAlbums.spotifyID }).from(bookmarkedAlbums),
+      db.select({ spotifyID: dismissedAlbums.spotifyID }).from(dismissedAlbums),
     ]);
-    return new Set([...reviewed, ...bookmarked].map(row => row.spotifyID));
+    return new Set([...reviewed, ...bookmarked, ...dismissed].map(row => row.spotifyID));
+  }
+
+  /**
+   * Dismisses an album, so no row suggests it again, and takes it out of the saved rows now.
+   */
+  static async dismiss(spotifyID: string): Promise<void> {
+    await db.transaction(async tx => {
+      await tx.insert(dismissedAlbums).values({ spotifyID }).onConflictDoNothing();
+      await tx.delete(suggestedAlbums).where(eq(suggestedAlbums.spotifyID, spotifyID));
+    });
   }
 
   /** Every album saved in a row, in rank order. */

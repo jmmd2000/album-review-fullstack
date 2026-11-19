@@ -53,7 +53,7 @@ export const albumArtists = pgTable(
 );
 
 /** The rows on the Review an album page that the Album suggestions job fills */
-export const suggestionRow = pgEnum("suggestion_row", ["new"]);
+export const suggestionRow = pgEnum("suggestion_row", ["new", "picked"]);
 
 /** A track picked as one of its album's best or worst */
 export const trackPick = pgEnum("track_pick", ["best", "worst"]);
@@ -280,3 +280,11 @@ export const suggestedAlbums = pgTable(
   },
   table => [primaryKey({ columns: [table.row, table.spotifyID] })]
 );
+
+/** Picked albums dismissed from the Review an album page, which never come back */
+export const dismissedAlbums = pgTable("dismissed_albums", {
+  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+  dismissedAt: timestamp("dismissed_at", { withTimezone: true })
+    .default(sql`now()`)
+    .notNull(),
+});
