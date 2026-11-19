@@ -7,7 +7,7 @@ import { formatJobCounts } from "@/lib/jobStatus";
 
 import type { JobEventMap, Progress } from "@shared/types";
 
-export type ArtistJob = "artist-images" | "artist-headers" | "listener-links";
+export type ArtistJob = "artist-images" | "artist-headers" | "listener-links" | "album-suggestions";
 
 export interface ArtistJobState {
   status: "idle" | "running" | "finished";
@@ -26,6 +26,7 @@ const JOB_LABELS: Record<ArtistJob, string> = {
   "artist-images": "Artist photos",
   "artist-headers": "Artist headers",
   "listener-links": "Listener links",
+  "album-suggestions": "Album suggestions",
 };
 
 /** The counts of a job's results, such as "4 updated, 130 unchanged, 2 failed". */
@@ -83,6 +84,7 @@ export function useArtistJob(job: ArtistJob) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.settings.lastRuns });
         void queryClient.invalidateQueries({ queryKey: queryKeys.settings.jobResults });
         void queryClient.invalidateQueries({ queryKey: queryKeys.artists.all });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.discover });
       });
 
       // EventSource retries a dropped connection by itself, and the server resumes after the last event.

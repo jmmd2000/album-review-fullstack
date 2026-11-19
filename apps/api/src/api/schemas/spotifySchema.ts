@@ -31,6 +31,11 @@ const albumSearchItemSchema = albumSummarySchema.extend({
   album_type: z.string(),
 });
 
+/** A page of an artist's albums. `release_date` is "2024", "2024-06" or "2024-06-07", as `release_date_precision` says. */
+export const artistAlbumsResponseSchema = z.object({
+  items: z.array(albumSummarySchema.extend({ release_date_precision: z.enum(["year", "month", "day"]) })),
+});
+
 export const albumSearchResponseSchema = z.object({
   albums: z.object({
     items: z.array(albumSearchItemSchema),
@@ -96,3 +101,5 @@ export type SpotifyAlbumSearchItem = z.infer<typeof albumSearchItemSchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;
+
+export type SpotifyArtistAlbum = z.infer<typeof artistAlbumsResponseSchema>["items"][number];

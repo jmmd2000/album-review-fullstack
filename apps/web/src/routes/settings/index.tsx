@@ -81,6 +81,16 @@ function Settings() {
             intervalDays={jobIntervals.intervals["listener-links"] ?? 0}
             scheduleEnabled={jobIntervals.scheduleEnabled}
           />
+          <ArtistJobRow
+            job="album-suggestions"
+            title="Album suggestions"
+            description="Finds new albums by reviewed artists on Spotify for the Review an album page."
+            actionLabel="Update suggestions"
+            lastRun={lastRuns.album_suggestions_last_run ?? null}
+            result={null}
+            intervalDays={jobIntervals.intervals["album-suggestions"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
+          />
           <RecalculateScoresRow lastRun={lastRuns.artist_scores_last_run ?? null} />
         </div>
       </section>

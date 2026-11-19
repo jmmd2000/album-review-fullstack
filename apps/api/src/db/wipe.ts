@@ -8,7 +8,7 @@ const wipe = async () => {
   assertSafeToWipe(resolveDatabaseURL());
 
   await query(
-    "TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, review_drafts, genres, album_genres, related_genres RESTART IDENTITY CASCADE;"
+    "TRUNCATE reviewed_tracks, reviewed_albums, reviewed_artists, album_artists, track_artists, bookmarked_albums, review_drafts, suggested_albums, genres, album_genres, related_genres RESTART IDENTITY CASCADE;"
   );
   console.log("Wipe: review data cleared.");
   await closeDatabase();

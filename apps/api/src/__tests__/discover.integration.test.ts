@@ -6,6 +6,7 @@ import { adminCookie } from "./adminCookie";
 import { AlbumModel } from "@/api/models/Album";
 import { ArtistModel } from "@/api/models/Artist";
 import { BookmarkedAlbumModel } from "@/api/models/BookmarkedAlbum";
+import { SuggestedAlbumModel } from "@/api/models/SuggestedAlbum";
 
 const authCookie = adminCookie();
 
@@ -78,4 +79,13 @@ test("up next shows at most 10 bookmarks", async () => {
 
   const { upNext } = await (await api.get("/api/discover", authCookie)).json();
   expect(upNext).toHaveLength(10);
+});
+
+test("new albums keep the job's order and leave out albums bookmarked since the job ran", async () => {
+  const suggested = (spotifyID: string) => ({ spotifyID, name: spotifyID, artistName: "artist", artistSpotifyID: "artist", imageURLs: [], releaseDate: "2026-11-01", releaseYear: 2026 });
+  await SuggestedAlbumModel.replaceRow("new", [suggested("first"), suggested("bookmarkedSince"), suggested("third")]);
+  await seedBookmark("bookmarkedSince", "artist", new Date("2026-11-10"));
+
+  const { newAlbums } = await (await api.get("/api/discover", authCookie)).json();
+  expect(newAlbums.map((album: { spotifyID: string }) => album.spotifyID)).toEqual(["first", "third"]);
 });

@@ -163,6 +163,8 @@ export interface DisplayAlbum {
 
 /** The rows on the Review an album page before a search */
 export interface DiscoverRows {
+  /** New studio albums by reviewed artists, best artist average first, up to 10 */
+  newAlbums: DisplayAlbum[];
   /** Bookmarks to review next, up to 10 */
   upNext: DisplayAlbum[];
 }
