@@ -33,3 +33,9 @@ export function describePeriod(period: ListeningPeriod, from?: string, to?: stri
   if (!from || !to) return "";
   return from === to ? `on ${day(from)}` : `from ${day(from)} to ${day(to)}`;
 }
+
+/** The muted line under an entry's name: an artist's album count, or the track or album's artists. */
+export function describeEntry(kind: ListeningKind, entry: TopEntry): string {
+  if (kind === "artists") return entry.albumCount === 1 ? "1 album played" : `${entry.albumCount ?? 0} albums played`;
+  return entry.artistNames.join(", ");
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Dialog } from "@base-ui/react/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
@@ -7,9 +8,13 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TopEntryRow } from "@/components/listening/TopEntryRow";
+import { SelectedEntry } from "@/components/listening/SelectedEntry";
+import dialog from "@/styles/dialog.module.css";
 import styles from "./ListeningView.module.css";
 
 const FIRST_ROWS = 10;
+// Below this width the selected entry opens over the list instead of beside it
+const NARROW_QUERY = "(width < 900px)";
 
 export interface ListeningSelection {
   kind: ListeningKind;
@@ -31,6 +36,8 @@ const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/D
 export function ListeningView({ selection, onChange }: ListeningViewProps) {
   const { kind, period, from, to } = selection;
   const [showAll, setShowAll] = useState(false);
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const customReady = period !== "custom" || (from !== undefined && to !== undefined && from <= to);
 
   const top = useQuery({
@@ -45,6 +52,7 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
 
   function choose(next: Partial<ListeningSelection>) {
     setShowAll(false);
+    setSelectedID(null);
     onChange({ ...selection, ...next });
   }
 
@@ -55,6 +63,12 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
 
   const entries = top.data?.entries ?? [];
   const shown = showAll ? entries : entries.slice(0, FIRST_ROWS);
+  const selected = entries.find(entry => entry.id === selectedID) ?? entries[0];
+
+  function select(id: string) {
+    setSelectedID(id);
+    if (window.matchMedia(NARROW_QUERY).matches) setSheetOpen(true);
+  }
 
   return (
     <div className={styles.view}>
@@ -104,15 +118,30 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
         </p>
       )}
       {top.isSuccess && entries.length === 0 && <p className={styles.state}>Nothing played in this period.</p>}
-      {entries.length > 0 && (
-        <>
-          <ol className={styles.entries}>
-            {shown.map(entry => (
-              <TopEntryRow key={entry.id} kind={kind} entry={entry} />
-            ))}
-          </ol>
-          {!showAll && entries.length > FIRST_ROWS && <Button onClick={() => setShowAll(true)}>Show {entries.length - FIRST_ROWS} more</Button>}
-        </>
+      {selected && (
+        <div className={styles.split}>
+          <div className={styles.selected}>
+            <SelectedEntry selection={selection} entry={selected} />
+          </div>
+          <div className={styles.list}>
+            <ol className={styles.entries}>
+              {shown.map(entry => (
+                <TopEntryRow key={entry.id} kind={kind} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
+              ))}
+            </ol>
+            {!showAll && entries.length > FIRST_ROWS && <Button onClick={() => setShowAll(true)}>Show {entries.length - FIRST_ROWS} more</Button>}
+          </div>
+          <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
+            <Dialog.Portal>
+              <Dialog.Backdrop className={dialog.backdrop} />
+              <Dialog.Popup className={`${dialog.popup} ${styles.sheet}`}>
+                <Dialog.Title className={styles.hidden}>{selected.name}</Dialog.Title>
+                <Dialog.Close render={<Button />}>Close</Dialog.Close>
+                <SelectedEntry selection={selection} entry={selected} />
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>
       )}
     </div>
   );
