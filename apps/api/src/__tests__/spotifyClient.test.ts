@@ -231,6 +231,18 @@ describe("getRecentlyPlayed", () => {
   });
 });
 
+describe("getTracks", () => {
+  test("splits the tracks Spotify has from the ones it doesn't have or sent unreadable", async () => {
+    const [play] = recentlyPlayedReply.items;
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ tracks: [play.track, null, { id: "odd" }] })));
+
+    const result = await SpotifyClient.getTracks([play.track.id, "gone", "odd"], "tok");
+
+    expect(result.found.map(track => track.id)).toEqual([play.track.id]);
+    expect(result.missingIDs).toEqual(["gone", "odd"]);
+  });
+});
+
 describe("a 429 from Spotify", () => {
   const searchReply = { albums: { items: [], next: null } };
 

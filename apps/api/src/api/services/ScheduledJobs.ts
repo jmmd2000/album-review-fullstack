@@ -1,6 +1,7 @@
 import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import { SuggestionService } from "@/api/services/SuggestionService";
+import { PlayedTrackLookupService } from "@/api/services/PlayedTrackLookupService";
 import type { JobEmit } from "@/api/services/JobService";
 import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
 
@@ -39,6 +40,12 @@ export const scheduledJobs: ScheduledJob[] = [
     settingName: "album_suggestions",
     busyMessage: "The album suggestions are already updating. Try again when that run finishes.",
     run: emit => SuggestionService.refreshSuggestions(emit),
+  },
+  {
+    name: "played-tracks",
+    settingName: "played_tracks",
+    busyMessage: "The played tracks are already being looked up. Try again when that run finishes.",
+    run: emit => PlayedTrackLookupService.lookUp(emit),
   },
 ];
 

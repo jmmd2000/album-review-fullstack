@@ -1,24 +1,13 @@
 import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { playedAlbums, playedArtists, playedTrackArtists, playedTracks, plays } from "@/db/schema";
+import { PlayedTrackModel } from "@/api/models/PlayedTrack";
+import { chunks } from "@/helpers/chunks";
+import { uniqueBy } from "@/helpers/uniqueBy";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
-
-/** Keeps one item for each key. A later item with the same key replaces an earlier one. */
-function uniqueBy<Item>(items: Item[], key: (item: Item) => string): Item[] {
-  const byKey = new Map<string, Item>();
-  for (const item of items) byKey.set(key(item), item);
-  return [...byKey.values()];
-}
 
 // Keeps each insert well under Postgres's limit of 65,535 values in one query
 const INSERT_BATCH_SIZE = 5000;
-
-/** Splits a list into lists of at most `size` items. */
-function chunks<Item>(items: Item[], size: number): Item[][] {
-  const result: Item[][] = [];
-  for (let start = 0; start < items.length; start += size) result.push(items.slice(start, start + size));
-  return result;
-}
 
 /** One play from the streaming history export */
 export interface ImportedPlay {
@@ -26,12 +15,6 @@ export interface ImportedPlay {
   msPlayed: number;
   trackSpotifyID: string;
   trackName: string;
-}
-
-/** Picks the cover closest to 300px wide without going over, or the only cover there is. Spotify lists covers largest first. */
-function mediumCoverURL(images: SpotifyPlay["track"]["album"]["images"]): string | null {
-  const medium = images.find(image => image.width <= 300);
-  return (medium ?? images[0])?.url ?? null;
 }
 
 /** A play with its track and the track's artists, for the Settings list */
@@ -127,47 +110,11 @@ export class PlayModel {
   static async savePlays(spotifyPlays: SpotifyPlay[]): Promise<number> {
     if (spotifyPlays.length === 0) return 0;
 
-    const tracks = uniqueBy(
-      spotifyPlays.map(play => play.track),
-      track => track.id
-    );
-    const albums = uniqueBy(
-      tracks.map(track => track.album),
-      album => album.id
-    );
-    const artists = uniqueBy(
-      tracks.flatMap(track => track.artists),
-      artist => artist.id
-    );
-    const trackArtists = uniqueBy(
-      tracks.flatMap(track => track.artists.map((artist, index) => ({ trackSpotifyID: track.id, artistSpotifyID: artist.id, position: index + 1 }))),
-      credit => `${credit.trackSpotifyID}:${credit.artistSpotifyID}`
-    );
-
     return db.transaction(async tx => {
-      await tx
-        .insert(playedArtists)
-        .values(artists.map(artist => ({ spotifyID: artist.id, name: artist.name })))
-        .onConflictDoUpdate({ target: playedArtists.spotifyID, set: { name: sql`excluded.name` } });
-
-      await tx
-        .insert(playedAlbums)
-        .values(albums.map(album => ({ spotifyID: album.id, name: album.name, imageURL: mediumCoverURL(album.images) })))
-        .onConflictDoUpdate({ target: playedAlbums.spotifyID, set: { name: sql`excluded.name`, imageURL: sql`excluded.image_url` } });
-
-      await tx
-        .insert(playedTracks)
-        .values(tracks.map(track => ({ spotifyID: track.id, name: track.name, durationMs: track.duration_ms, albumSpotifyID: track.album.id })))
-        .onConflictDoUpdate({
-          target: playedTracks.spotifyID,
-          set: { name: sql`excluded.name`, durationMs: sql`excluded.duration_ms`, albumSpotifyID: sql`excluded.album_spotify_id` },
-        });
-
-      await tx
-        .insert(playedTrackArtists)
-        .values(trackArtists)
-        .onConflictDoUpdate({ target: [playedTrackArtists.trackSpotifyID, playedTrackArtists.artistSpotifyID], set: { position: sql`excluded.position` } });
-
+      await PlayedTrackModel.saveTracks(
+        spotifyPlays.map(play => play.track),
+        tx
+      );
       const saved = await tx
         .insert(plays)
         .values(spotifyPlays.map(play => ({ trackSpotifyID: play.track.id, playedAt: new Date(play.played_at) })))

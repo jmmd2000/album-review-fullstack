@@ -87,18 +87,31 @@ export const localPlaySchema = z.object({
   track: z.object({ is_local: z.literal(true) }),
 });
 
+/** A track with its album, as the recent plays and the track lookups give it */
+export const playedTrackSchema = albumTrackSchema.extend({ album: albumSummarySchema });
+
 /** `played_at` is an ISO time in UTC. */
 export const playsSchema = z.array(
   z.object({
     played_at: z.string(),
-    track: albumTrackSchema.extend({ album: albumSummarySchema }),
+    track: playedTrackSchema,
   })
 );
+
+/** A lookup of several tracks. Spotify gives null for a track it doesn't have. Each track is checked on its own. */
+export const severalTracksResponseSchema = z.object({
+  tracks: z.array(z.unknown()),
+});
 
 export const artistResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   images: z.array(imageSchema),
+});
+
+/** A lookup of several artists. Spotify gives null for an artist it doesn't have. */
+export const severalArtistsResponseSchema = z.object({
+  artists: z.array(artistResponseSchema.nullable()),
 });
 
 // The artist data the Spotify web player loads. The Web API doesn't give headers, so the scraper reads them from here.
@@ -129,5 +142,6 @@ export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchem
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;
 export type SpotifyPlay = z.infer<typeof playsSchema>[number];
+export type SpotifyPlayedTrack = z.infer<typeof playedTrackSchema>;
 
 export type SpotifyArtistAlbum = z.infer<typeof artistAlbumsResponseSchema>["items"][number];
