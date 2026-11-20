@@ -9,14 +9,19 @@ import {
   artistAlbumsResponseSchema,
   artistResponseSchema,
   localPlaySchema,
+  playedTrackSchema,
   playsSchema,
   recentlyPlayedResponseSchema,
+  severalArtistsResponseSchema,
+  severalTracksResponseSchema,
   tokenErrorSchema,
   tokenResponseSchema,
   userTokenResponseSchema,
 } from "@/api/schemas/spotifySchema";
-import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse, SpotifyPlay } from "@/api/schemas/spotifySchema";
+import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse, SpotifyPlay, SpotifyPlayedTrack } from "@/api/schemas/spotifySchema";
 
+/** Spotify looks up at most 50 tracks or artists in one request */
+export const LOOKUP_BATCH_SIZE = 50;
 /** Spotify gives at most 10 search results a request */
 export const SEARCH_PAGE_SIZE = 10;
 /** Spotify refuses a search page that would reach past its 1000th result */
@@ -184,6 +189,35 @@ export class SpotifyClient {
     const reply = this.parseReply(recentlyPlayedResponseSchema, await response.json(), "recently played tracks");
     const spotifyPlays = reply.items.filter(item => !localPlaySchema.safeParse(item).success);
     return this.parseReply(playsSchema, spotifyPlays, "recently played tracks");
+  }
+
+  /**
+   * Looks up to 50 tracks with their albums and artists.
+   * @returns The tracks Spotify has, and the IDs it doesn't have or sent a track the app can't read for.
+   * @throws AppError 502 when Spotify fails.
+   */
+  static async getTracks(trackIDs: string[], accessToken: string): Promise<{ found: SpotifyPlayedTrack[]; missingIDs: string[] }> {
+    const response = await this.send(`${this.baseURL}/tracks?ids=${trackIDs.join(",")}`, { headers: this.authHeaders(accessToken) });
+    if (!response.ok) throw new AppError(`Spotify answered ${response.status} for a track lookup.`, 502);
+
+    const reply = this.parseReply(severalTracksResponseSchema, await response.json(), "a track lookup");
+    const found: SpotifyPlayedTrack[] = [];
+    for (const item of reply.tracks) {
+      const track = playedTrackSchema.safeParse(item);
+      if (track.success) found.push(track.data);
+    }
+    const foundIDs = new Set(found.map(track => track.id));
+    return { found, missingIDs: trackIDs.filter(id => !foundIDs.has(id)) };
+  }
+
+  /**
+   * Looks up to 50 artists. Gives null in the place of an artist Spotify doesn't have.
+   * @throws AppError 502 when Spotify fails or sends a reply the app can't read.
+   */
+  static async getSeveralArtists(artistIDs: string[], accessToken: string): Promise<(SpotifyArtistResponse | null)[]> {
+    const response = await this.send(`${this.baseURL}/artists?ids=${artistIDs.join(",")}`, { headers: this.authHeaders(accessToken) });
+    if (!response.ok) throw new AppError(`Spotify answered ${response.status} for an artist lookup.`, 502);
+    return this.parseReply(severalArtistsResponseSchema, await response.json(), "an artist lookup").artists;
   }
 
   /**

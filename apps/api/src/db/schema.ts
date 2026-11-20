@@ -293,6 +293,10 @@ export const dismissedAlbums = pgTable("dismissed_albums", {
 export const playedArtists = pgTable("played_artists", {
   spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  /** The artist's photo at about 300px wide, or null when Spotify has none or it isn't looked up yet */
+  imageURL: text("image_url"),
+  /** True once the photo is looked up, so an artist with no photo isn't looked up again */
+  imageLookedUp: boolean("image_looked_up").notNull().default(false),
 });
 
 /** Albums from the admin's Spotify plays. Reviewed albums have their own table. */
@@ -310,6 +314,8 @@ export const playedTracks = pgTable("played_tracks", {
   /** Null for a track from the streaming history export until it is looked up */
   durationMs: integer("duration_ms"),
   albumSpotifyID: varchar("album_spotify_id", { length: 255 }).references(() => playedAlbums.spotifyID),
+  /** True when Spotify no longer has the track, so it isn't looked up again */
+  unavailable: boolean("unavailable").notNull().default(false),
 });
 
 export const playedTrackArtists = pgTable(
