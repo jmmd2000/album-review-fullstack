@@ -1,5 +1,5 @@
 import { afterEach, describe, test, expect, vi, type Mock } from "vitest";
-import { SpotifyClient } from "@/api/models/SpotifyClient";
+import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { AppError } from "@/api/AppError";
 
 const jsonResponse = (body: unknown, ok = true) => ({ ok, json: () => Promise.resolve(body) }) as Response;
@@ -62,6 +62,31 @@ describe("requestToken", () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ token_type: "Bearer", expires_in: 3600 })));
 
     await expect(SpotifyClient.requestToken()).rejects.toMatchObject({ status: 502, message: expect.stringContaining("access_token") });
+  });
+});
+
+describe("refreshUserToken", () => {
+  test("exchanges the refresh token and passes on a replaced one", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(jsonResponse({ access_token: "user", expires_in: 3600, refresh_token: "new" })));
+
+    expect(await SpotifyClient.refreshUserToken("old")).toEqual({ accessToken: "user", expiresIn: 3600, refreshToken: "new" });
+    const body: URLSearchParams = fetchMock.mock.calls[0][1].body;
+    expect(body.get("grant_type")).toBe("refresh_token");
+    expect(body.get("refresh_token")).toBe("old");
+  });
+
+  test("maps a refused refresh token to not connected", async () => {
+    stubFetch(vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({ error: "invalid_grant", error_description: "Refresh token revoked" }) }));
+
+    await expect(SpotifyClient.refreshUserToken("old")).rejects.toBeInstanceOf(SpotifyNotConnectedError);
+  });
+
+  test("maps any other failed exchange to a 502, so a Spotify outage doesn't read as a lost connection", async () => {
+    stubFetch(vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({ error: "invalid_client" }) }));
+
+    const error = await SpotifyClient.refreshUserToken("old").catch(e => e);
+    expect(error).not.toBeInstanceOf(SpotifyNotConnectedError);
+    expect(error).toMatchObject({ status: 502 });
   });
 });
 

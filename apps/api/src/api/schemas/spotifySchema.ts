@@ -26,6 +26,15 @@ export const tokenResponseSchema = z.object({
   expires_in: z.number(),
 });
 
+/** Spotify sends a new refresh token only when it replaces the old one. */
+export const userTokenResponseSchema = tokenResponseSchema.extend({
+  refresh_token: z.string().optional(),
+});
+
+export const tokenErrorSchema = z.object({
+  error: z.string(),
+});
+
 /** A search hit. `album_type` is "album", "single" or "compilation", and Spotify labels an EP as a single. */
 const albumSearchItemSchema = albumSummarySchema.extend({
   album_type: z.string(),

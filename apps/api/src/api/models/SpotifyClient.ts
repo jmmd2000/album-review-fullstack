@@ -2,7 +2,16 @@ import type { z } from "zod";
 import { AppError } from "../AppError";
 import { env } from "@/config/env";
 import { sleep } from "@/helpers/sleep";
-import { albumReplySchema, albumSearchResponseSchema, albumTrackPageSchema, artistAlbumsResponseSchema, artistResponseSchema, tokenResponseSchema } from "@/api/schemas/spotifySchema";
+import {
+  albumReplySchema,
+  albumSearchResponseSchema,
+  albumTrackPageSchema,
+  artistAlbumsResponseSchema,
+  artistResponseSchema,
+  tokenErrorSchema,
+  tokenResponseSchema,
+  userTokenResponseSchema,
+} from "@/api/schemas/spotifySchema";
 import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
 
 /** Spotify gives at most 10 search results a request */
@@ -13,6 +22,13 @@ export const SEARCH_MAX_OFFSET = 1000 - SEARCH_PAGE_SIZE;
 const MAX_RETRY_WAIT_MS = 10_000;
 /** The wait after a 429 that has no usable Retry-After header */
 const DEFAULT_RETRY_WAIT_MS = 1000;
+
+/** The admin's Spotify account can't be read: no refresh token is set, or Spotify refused it. */
+export class SpotifyNotConnectedError extends AppError {
+  constructor() {
+    super("Spotify isn't connected.", 503);
+  }
+}
 
 /** Reads a Retry-After header, which Spotify sends as a number of seconds. */
 function retryWaitMs(header: string | null): number {
@@ -50,6 +66,31 @@ export class SpotifyClient {
       if (err instanceof AppError) throw err;
       throw new AppError("Spotify authentication failed.", 502);
     }
+  }
+
+  /**
+   * Exchanges the admin's refresh token for a fresh access token.
+   * @returns The token, and a new refresh token when Spotify replaces the old one.
+   * @throws SpotifyNotConnectedError when Spotify refuses the refresh token, AppError 502 when the exchange fails.
+   */
+  static async refreshUserToken(refreshToken: string): Promise<{ accessToken: string; expiresIn: number; refreshToken?: string }> {
+    const response = await this.send(this.tokenURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic " + btoa(env.SPOTIFY_CLIENT_ID + ":" + env.SPOTIFY_CLIENT_SECRET),
+      },
+      body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken }),
+    });
+
+    if (response.status === 400) {
+      const refusal = tokenErrorSchema.safeParse(await response.json());
+      if (refusal.success && refusal.data.error === "invalid_grant") throw new SpotifyNotConnectedError();
+    }
+    if (!response.ok) throw new AppError(`Spotify answered ${response.status} to the admin's token refresh.`, 502);
+
+    const data = this.parseReply(userTokenResponseSchema, await response.json(), "a token");
+    return { accessToken: data.access_token, expiresIn: data.expires_in, refreshToken: data.refresh_token };
   }
 
   static async searchAlbums(query: string, offset: number, accessToken: string): Promise<SpotifyAlbumSearchResponse> {

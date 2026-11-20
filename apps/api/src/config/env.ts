@@ -54,6 +54,8 @@ export const env = {
   JWT_SECRET: requireSecret("JWT_SECRET", 32),
   SPOTIFY_CLIENT_ID: requireEnv("SPOTIFY_CLIENT_ID"),
   SPOTIFY_CLIENT_SECRET: requireEnv("SPOTIFY_CLIENT_SECRET"),
+  // Signs in to the admin's own Spotify account. Only production sets it, so nothing else reads the admin's listening.
+  SPOTIFY_REFRESH_TOKEN: process.env.SPOTIFY_REFRESH_TOKEN || undefined,
   LASTFM_API_KEY: requireEnv("LASTFM_API_KEY"),
   // comma-separated production/staging origins, injected per environment.
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
