@@ -5,6 +5,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ArtistJobRow } from "@/components/settings/ArtistJobRow";
 import { RecalculateScoresRow } from "@/components/settings/RecalculateScoresRow";
+import { ListeningRow } from "@/components/settings/ListeningRow";
 import { BuildInfo } from "@/components/settings/BuildInfo";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -23,6 +24,11 @@ const jobIntervalsQueryOptions = queryOptions({
 const jobResultsQueryOptions = queryOptions({
   queryKey: queryKeys.settings.jobResults,
   queryFn: () => handle(client.api.settings["job-results"].$get()),
+});
+
+const listeningQueryOptions = queryOptions({
+  queryKey: queryKeys.settings.listening,
+  queryFn: () => handle(client.api.listening.$get()),
 });
 
 export const Route = createFileRoute("/settings/")({
@@ -44,6 +50,7 @@ function Settings() {
   const { data: lastRuns } = useSuspenseQuery(lastRunsQueryOptions);
   const { data: jobResults } = useSuspenseQuery(jobResultsQueryOptions);
   const { data: jobIntervals } = useSuspenseQuery(jobIntervalsQueryOptions);
+  const { data: listening } = useSuspenseQuery(listeningQueryOptions);
 
   return (
     <div className={styles.page}>
@@ -92,6 +99,12 @@ function Settings() {
             scheduleEnabled={jobIntervals.scheduleEnabled}
           />
           <RecalculateScoresRow lastRun={lastRuns.artist_scores_last_run ?? null} />
+        </div>
+      </section>
+      <section className={styles.section}>
+        <SectionHeader title="Listening" />
+        <div className={styles.body}>
+          <ListeningRow status={listening} />
         </div>
       </section>
       <section className={styles.section}>

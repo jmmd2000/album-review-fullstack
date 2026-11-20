@@ -47,6 +47,7 @@ export const queryKeys = {
     jobResults: ["settings", "jobResults"] as const,
     jobIntervals: ["settings", "jobIntervals"] as const,
     buildInfo: ["settings", "buildInfo"] as const,
+    listening: ["settings", "listening"] as const,
   },
   stats: {
     all: ["stats"] as const,
