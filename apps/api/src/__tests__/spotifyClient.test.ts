@@ -1,6 +1,7 @@
 import { afterEach, describe, test, expect, vi, type Mock } from "vitest";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { AppError } from "@/api/AppError";
+import recentlyPlayedReply from "./fixtures/spotifyRecentlyPlayed.json";
 
 const jsonResponse = (body: unknown, ok = true) => ({ ok, json: () => Promise.resolve(body) }) as Response;
 
@@ -200,6 +201,25 @@ describe("getArtists", () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ id: "odd", name: "Odd" })));
 
     await expect(SpotifyClient.getArtists(["odd"], "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("images") });
+  });
+});
+
+describe("getRecentlyPlayed", () => {
+  test("reads a recorded reply and keeps only the fields the app reads", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(jsonResponse(recentlyPlayedReply)));
+
+    const plays = await SpotifyClient.getRecentlyPlayed("user");
+    expect(plays).toHaveLength(recentlyPlayedReply.items.length);
+    expect(Object.keys(plays[0]).sort()).toEqual(["played_at", "track"]);
+    expect(Object.keys(plays[0].track).sort()).toEqual(["album", "artists", "duration_ms", "id", "name"]);
+    expect(fetchMock.mock.calls[0][0]).toContain("/me/player/recently-played?limit=50");
+  });
+
+  test("refuses a play with no time, and names the field", async () => {
+    const [play] = recentlyPlayedReply.items;
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ items: [{ track: play.track }] })));
+
+    await expect(SpotifyClient.getRecentlyPlayed("user")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("played_at") });
   });
 });
 

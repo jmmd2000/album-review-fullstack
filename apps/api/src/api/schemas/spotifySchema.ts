@@ -77,6 +77,16 @@ export const albumReplySchema = albumResponseSchema.extend({
   tracks: albumTrackPageSchema,
 });
 
+/** The admin's latest plays, newest first. `played_at` is an ISO time in UTC. */
+export const recentlyPlayedResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      played_at: z.string(),
+      track: albumTrackSchema.extend({ album: albumSummarySchema }),
+    })
+  ),
+});
+
 export const artistResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -110,5 +120,6 @@ export type SpotifyAlbumSearchItem = z.infer<typeof albumSearchItemSchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;
+export type SpotifyPlay = z.infer<typeof recentlyPlayedResponseSchema>["items"][number];
 
 export type SpotifyArtistAlbum = z.infer<typeof artistAlbumsResponseSchema>["items"][number];

@@ -8,11 +8,12 @@ import {
   albumTrackPageSchema,
   artistAlbumsResponseSchema,
   artistResponseSchema,
+  recentlyPlayedResponseSchema,
   tokenErrorSchema,
   tokenResponseSchema,
   userTokenResponseSchema,
 } from "@/api/schemas/spotifySchema";
-import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse } from "@/api/schemas/spotifySchema";
+import type { SpotifyAlbumResponse, SpotifyAlbumSearchResponse, SpotifyArtistAlbum, SpotifyArtistResponse, SpotifyPlay } from "@/api/schemas/spotifySchema";
 
 /** Spotify gives at most 10 search results a request */
 export const SEARCH_PAGE_SIZE = 10;
@@ -168,6 +169,17 @@ export class SpotifyClient {
     if (response.status === 404) return [];
     if (!response.ok) throw new AppError(`Spotify answered ${response.status} for an artist's albums.`, 502);
     return this.parseReply(artistAlbumsResponseSchema, await response.json(), "an artist's albums").items;
+  }
+
+  /**
+   * Fetches the admin's latest 50 plays, newest first, which is as many as Spotify gives.
+   * @param accessToken A token for the admin's account, from SpotifyUserTokenCache.
+   * @throws AppError 502 when Spotify fails or sends a reply the app can't read.
+   */
+  static async getRecentlyPlayed(accessToken: string): Promise<SpotifyPlay[]> {
+    const response = await this.send(`${this.baseURL}/me/player/recently-played?limit=50`, { headers: this.authHeaders(accessToken) });
+    if (!response.ok) throw new AppError(`Spotify answered ${response.status} for recently played tracks.`, 502);
+    return this.parseReply(recentlyPlayedResponseSchema, await response.json(), "recently played tracks").items;
   }
 
   /**
