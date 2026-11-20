@@ -297,6 +297,8 @@ export const playedArtists = pgTable("played_artists", {
   imageURL: text("image_url"),
   /** True once the photo is looked up, so an artist with no photo isn't looked up again */
   imageLookedUp: boolean("image_looked_up").notNull().default(false),
+  /** True once the genres are looked up, so an artist with no matching genre isn't looked up again */
+  genresLookedUp: boolean("genres_looked_up").notNull().default(false),
 });
 
 /** Albums from the admin's Spotify plays. Reviewed albums have their own table. */
@@ -346,4 +348,20 @@ export const plays = pgTable(
     msPlayed: integer("ms_played"),
   },
   table => [uniqueIndex("plays_track_played_at_key").on(table.trackSpotifyID, table.playedAt), index("plays_played_at_idx").on(table.playedAt)]
+);
+
+/** The genres Last.fm listeners tag each played artist with, matched to the genre list */
+export const playedArtistGenres = pgTable(
+  "played_artist_genres",
+  {
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => playedArtists.spotifyID, { onDelete: "cascade" }),
+    genreID: integer("genre_id")
+      .notNull()
+      .references(() => genres.id, { onDelete: "cascade" }),
+    /** The genre's place among the artist's genres, most tagged first, from 1 */
+    position: integer("position").notNull(),
+  },
+  table => [primaryKey({ columns: [table.artistSpotifyID, table.genreID] }), index("played_artist_genres_genre_idx").on(table.genreID)]
 );
