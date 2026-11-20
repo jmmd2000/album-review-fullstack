@@ -215,6 +215,14 @@ describe("getRecentlyPlayed", () => {
     expect(fetchMock.mock.calls[0][0]).toContain("/me/player/recently-played?limit=50");
   });
 
+  test("leaves out plays of local files, which have no Spotify IDs", async () => {
+    const localPlay = { played_at: "2026-11-20T10:00:00.000Z", track: { id: null, name: "Demo", is_local: true, album: { id: null }, artists: [{ id: null, name: "Me" }] } };
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ items: [localPlay, ...recentlyPlayedReply.items] })));
+
+    const plays = await SpotifyClient.getRecentlyPlayed("user");
+    expect(plays.map(play => play.track.id)).toEqual(recentlyPlayedReply.items.map(item => item.track.id));
+  });
+
   test("refuses a play with no time, and names the field", async () => {
     const [play] = recentlyPlayedReply.items;
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ items: [{ track: play.track }] })));

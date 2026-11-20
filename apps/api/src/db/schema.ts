@@ -288,3 +288,53 @@ export const dismissedAlbums = pgTable("dismissed_albums", {
     .default(sql`now()`)
     .notNull(),
 });
+
+/** Artists from the admin's Spotify plays. Reviewed artists have their own table. */
+export const playedArtists = pgTable("played_artists", {
+  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+});
+
+/** Albums from the admin's Spotify plays. Reviewed albums have their own table. */
+export const playedAlbums = pgTable("played_albums", {
+  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  /** The album's largest cover, or null when Spotify has none */
+  imageURL: text("image_url"),
+});
+
+/** Tracks from the admin's Spotify plays, shared by every play of the track */
+export const playedTracks = pgTable("played_tracks", {
+  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  durationMs: integer("duration_ms").notNull(),
+  albumSpotifyID: varchar("album_spotify_id", { length: 255 }).references(() => playedAlbums.spotifyID),
+});
+
+export const playedTrackArtists = pgTable(
+  "played_track_artists",
+  {
+    trackSpotifyID: varchar("track_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => playedTracks.spotifyID, { onDelete: "cascade" }),
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => playedArtists.spotifyID, { onDelete: "cascade" }),
+    /** The artist's place in the track's credits, from 1 */
+    position: integer("position").notNull(),
+  },
+  table => [primaryKey({ columns: [table.trackSpotifyID, table.artistSpotifyID] }), index("played_track_artists_artist_idx").on(table.artistSpotifyID)]
+);
+
+/** Each time the admin played a track on Spotify */
+export const plays = pgTable(
+  "plays",
+  {
+    id: serial("id").primaryKey(),
+    trackSpotifyID: varchar("track_spotify_id", { length: 255 })
+      .notNull()
+      .references(() => playedTracks.spotifyID),
+    playedAt: timestamp("played_at", { withTimezone: true }).notNull(),
+  },
+  table => [uniqueIndex("plays_track_played_at_key").on(table.trackSpotifyID, table.playedAt), index("plays_played_at_idx").on(table.playedAt)]
+);
