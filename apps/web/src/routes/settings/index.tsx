@@ -106,6 +106,7 @@ function Settings() {
         <SectionHeader title="Listening" />
         <div className={styles.body}>
           <ListeningRow status={listening} />
+          <StreamingHistoryRow />
           <ArtistJobRow
             job="played-tracks"
             title="Played tracks"
@@ -116,7 +117,16 @@ function Settings() {
             intervalDays={jobIntervals.intervals["played-tracks"] ?? 0}
             scheduleEnabled={jobIntervals.scheduleEnabled}
           />
-          <StreamingHistoryRow />
+          <ArtistJobRow
+            job="played-genres"
+            title="Played artist genres"
+            description="Gives each new played artist up to 3 genres from the tags Last.fm listeners use most for them."
+            actionLabel="Look up genres"
+            lastRun={lastRuns.played_genres_last_run ?? null}
+            result={null}
+            intervalDays={jobIntervals.intervals["played-genres"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
+          />
         </div>
       </section>
       <section className={styles.section}>
