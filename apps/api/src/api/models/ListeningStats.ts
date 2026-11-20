@@ -1,4 +1,4 @@
-import { sql, type SQL } from "drizzle-orm";
+import { sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
 
 export type TopKind = "artists" | "tracks" | "albums" | "genres";
@@ -206,6 +206,23 @@ async function countAlbumsPlayed(artistIDs: string[], period: Period): Promise<M
     WHERE main.album_type = 'album' AND main.artist_spotify_id IN (${sql.join(artistIDs, sql`, `)}) AND ${inPeriod(period)} AND ${STREAM_CONDITION}
     GROUP BY main.artist_spotify_id`);
   return new Map((result.rows as unknown as { id: string; albums: number }[]).map(row => [row.id, row.albums]));
+}
+
+/**
+ * All-time plays of a reviewed album, as an SQL value for sorting. Its other copies, deluxe editions, clean versions
+ * and singles count too, the same as in the listening stats.
+ */
+export function albumPlaysSQL(albumSpotifyID: SQL | AnyColumn): SQL {
+  return sql`(
+    SELECT count(*) FROM plays p
+    JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+    JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+    WHERE (al.reviewed_spotify_id = ${albumSpotifyID} OR al.spotify_id = ${albumSpotifyID}) AND ${STREAM_CONDITION})`;
+}
+
+/** All-time plays credited to a reviewed artist, as an SQL value for sorting */
+export function artistPlaysSQL(artistSpotifyID: SQL | AnyColumn): SQL {
+  return sql`(SELECT count(*) FROM plays p JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id WHERE ta.artist_spotify_id = ${artistSpotifyID} AND ${STREAM_CONDITION})`;
 }
 
 export class ListeningStatsModel {
