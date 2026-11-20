@@ -1,5 +1,5 @@
 import { AppError } from "@/api/AppError";
-import { ListeningStatsModel, type PeriodName, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
+import { ListeningStatsModel, type Period, type PeriodName, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
 import { PlayModel, type ImportedPlay, type RecentPlay } from "@/api/models/Play";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
@@ -21,6 +21,17 @@ export interface ListeningStatus {
   lastCollected: Date | null;
   lastError: string | null;
   recentPlays: RecentPlay[];
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Days for up to about 2 months, weeks for up to about 6 months, then months. */
+export function timelineUnit(period: Period, firstPlayAt: Date | null): TimelineUnit {
+  const start = period.from ?? firstPlayAt ?? period.to;
+  const days = (period.to.getTime() - start.getTime()) / DAY_MS;
+  if (days <= 62) return "day";
+  if (days <= 190) return "week";
+  return "month";
 }
 
 /** One ranked entry, with its change in rank since the period before */
@@ -110,6 +121,15 @@ export class ListeningService {
 
     const topTracks = kind === "tracks" ? [] : await ListeningStatsModel.getTopTracks(kind, id, period);
     return { firstPlayedAt, weeklyPlays, link, topTracks, topArtists: [], share: null };
+  }
+
+  /** Plays over time for the period, in days, weeks or months to suit its length, and plays in each hour of each weekday. */
+  static async getOverTime(periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+    const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
+    const firstPlayAt = period.from === null ? await ListeningStatsModel.getFirstPlayAt() : null;
+    const unit = timelineUnit(period, firstPlayAt);
+    const [timeline, clock] = await Promise.all([ListeningStatsModel.getTimeline(period, unit), ListeningStatsModel.getClock(period)]);
+    return { unit, timeline, clock };
   }
 
   static async countPlaysInRange(from: Date, to: Date): Promise<number> {

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TopEntryRow } from "@/components/listening/TopEntryRow";
 import { SelectedEntry } from "@/components/listening/SelectedEntry";
+import { OverTime } from "@/components/listening/OverTime";
 import dialog from "@/styles/dialog.module.css";
 import styles from "./ListeningView.module.css";
 
@@ -143,6 +144,7 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
           </Dialog.Root>
         </div>
       )}
+      {entries.length > 0 && <OverTime selection={selection} />}
     </div>
   );
 }

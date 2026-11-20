@@ -33,4 +33,8 @@ const customPeriodRule = {
 
 export const topQuerySchema = periodQuerySchema.refine(customPeriodRule.check, { error: customPeriodRule.error });
 
+export const overTimeQuerySchema = periodQuerySchema.omit({ kind: true }).refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), {
+  error: customPeriodRule.error,
+});
+
 export const entryQuerySchema = periodQuerySchema.extend({ id: z.string().min(1).max(255) }).refine(customPeriodRule.check, { error: customPeriodRule.error });
