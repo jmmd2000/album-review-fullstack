@@ -299,7 +299,7 @@ export const playedArtists = pgTable("played_artists", {
 export const playedAlbums = pgTable("played_albums", {
   spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  /** The album's largest cover, or null when Spotify has none */
+  /** The album's cover at about 300px wide, or null when Spotify has none */
   imageURL: text("image_url"),
 });
 

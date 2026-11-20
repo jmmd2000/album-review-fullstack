@@ -9,20 +9,38 @@
 .plays {
   display: grid;
   gap: var(--space-2);
-  max-width: 60ch;
+  max-width: 640px;
 }
 
 .play {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.track {
+.cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: var(--colour-panel);
+  object-fit: cover;
+}
+
+.text {
+  display: grid;
   min-width: 0;
+}
+
+.track,
+.artists {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.track {
+  font-weight: var(--font-weight-label);
 }
 
 .artists {
@@ -30,7 +48,8 @@
 }
 
 .time {
-  flex-shrink: 0;
   color: var(--colour-text-muted);
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

@@ -10,11 +10,18 @@ function uniqueBy<Item>(items: Item[], key: (item: Item) => string): Item[] {
   return [...byKey.values()];
 }
 
+/** Picks the cover closest to 300px wide without going over, or the only cover there is. Spotify lists covers largest first. */
+function mediumCoverURL(images: SpotifyPlay["track"]["album"]["images"]): string | null {
+  const medium = images.find(image => image.width <= 300);
+  return (medium ?? images[0])?.url ?? null;
+}
+
 /** A play with its track and the track's artists, for the Settings list */
 export interface RecentPlay {
   id: number;
   playedAt: Date;
   trackName: string;
+  albumImageURL: string | null;
   /** In credit order */
   artistNames: string[];
 }
@@ -23,9 +30,10 @@ export class PlayModel {
   /** The latest plays, newest first. */
   static async getRecent(limit: number): Promise<RecentPlay[]> {
     const rows = await db
-      .select({ id: plays.id, playedAt: plays.playedAt, trackSpotifyID: plays.trackSpotifyID, trackName: playedTracks.name })
+      .select({ id: plays.id, playedAt: plays.playedAt, trackSpotifyID: plays.trackSpotifyID, trackName: playedTracks.name, albumImageURL: playedAlbums.imageURL })
       .from(plays)
       .innerJoin(playedTracks, eq(playedTracks.spotifyID, plays.trackSpotifyID))
+      .leftJoin(playedAlbums, eq(playedAlbums.spotifyID, playedTracks.albumSpotifyID))
       .orderBy(desc(plays.playedAt))
       .limit(limit);
     if (rows.length === 0) return [];
@@ -46,6 +54,7 @@ export class PlayModel {
       id: row.id,
       playedAt: row.playedAt,
       trackName: row.trackName,
+      albumImageURL: row.albumImageURL,
       artistNames: credits.filter(credit => credit.trackSpotifyID === row.trackSpotifyID).map(credit => credit.name),
     }));
   }
@@ -83,7 +92,7 @@ export class PlayModel {
 
       await tx
         .insert(playedAlbums)
-        .values(albums.map(album => ({ spotifyID: album.id, name: album.name, imageURL: album.images[0]?.url ?? null })))
+        .values(albums.map(album => ({ spotifyID: album.id, name: album.name, imageURL: mediumCoverURL(album.images) })))
         .onConflictDoUpdate({ target: playedAlbums.spotifyID, set: { name: sql`excluded.name`, imageURL: sql`excluded.image_url` } });
 
       await tx

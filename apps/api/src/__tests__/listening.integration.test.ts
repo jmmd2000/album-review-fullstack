@@ -146,3 +146,18 @@ describe("the listening routes", () => {
     expect(response.status).toBe(503);
   });
 });
+
+test("saves each album's medium cover, and falls back to the only cover there is", async () => {
+  const covers = (sizes: number[]) => sizes.map(size => ({ url: `${size}.jpg`, width: size, height: size }));
+  const withCovers = (spotifyPlay: SpotifyPlay, sizes: number[]): SpotifyPlay => ({ ...spotifyPlay, track: { ...spotifyPlay.track, album: { ...spotifyPlay.track.album, images: covers(sizes) } } });
+  vi.spyOn(SpotifyClient, "getRecentlyPlayed").mockResolvedValue([
+    withCovers(play("track1", "2026-11-20T10:00:00.000Z", "album1"), [640, 300, 64]),
+    withCovers(play("track2", "2026-11-20T09:56:00.000Z", "album2"), [640]),
+    withCovers(play("track3", "2026-11-20T09:50:00.000Z", "album3"), []),
+  ]);
+
+  await ListeningService.collect();
+
+  const status = await ListeningService.getStatus();
+  expect(status.recentPlays.map(recent => recent.albumImageURL)).toEqual(["300.jpg", "640.jpg", null]);
+});

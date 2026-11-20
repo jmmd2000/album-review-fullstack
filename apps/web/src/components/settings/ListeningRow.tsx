@@ -51,9 +51,10 @@ export function ListeningRow({ status }: { status: ListeningStatus }) {
         <ol className={styles.plays}>
           {status.recentPlays.map(play => (
             <li key={play.id} className={styles.play}>
-              <span className={styles.track}>
-                {play.trackName}
-                <span className={styles.artists}> · {play.artistNames.join(", ")}</span>
+              {play.albumImageURL ? <img className={styles.cover} src={play.albumImageURL} alt="" width={48} height={48} loading="lazy" /> : <span className={styles.cover} />}
+              <span className={styles.text}>
+                <span className={styles.track}>{play.trackName}</span>
+                <span className={styles.artists}>{play.artistNames.join(", ")}</span>
               </span>
               <time className={styles.time} dateTime={play.playedAt}>
                 {timeAgo(play.playedAt)}
