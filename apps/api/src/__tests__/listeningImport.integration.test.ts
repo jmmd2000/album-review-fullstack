@@ -1,6 +1,8 @@
-import { afterAll, beforeEach, expect, test } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 import { PlayModel, type ImportedPlay } from "@/api/models/Play";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
 
@@ -84,4 +86,44 @@ test("counts the saved plays in a range, both ends included", async () => {
   await PlayModel.savePlays([livePlay("track1", "2026-01-01T09:00:00.000Z"), livePlay("track2", "2026-01-02T09:00:00.000Z"), livePlay("track3", "2026-01-03T09:00:00.000Z")]);
 
   expect(await PlayModel.countInRange(new Date("2026-01-01T09:00:00.000Z"), new Date("2026-01-02T09:00:00.000Z"))).toBe(2);
+});
+
+describe("the import routes", () => {
+  const authCookie = adminCookie();
+  const body = { plays: [{ playedAt: "2026-01-05T09:00:00.000Z", msPlayed: 180000, trackSpotifyID: "track1", trackName: "Track 1" }] };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test("require admin", async () => {
+    expect((await api.get("/api/listening/plays/count?from=2026-01-01T00:00:00.000Z&to=2026-02-01T00:00:00.000Z")).status).toBe(401);
+    expect((await api.post("/api/listening/import", body)).status).toBe(401);
+  });
+
+  test("an import saves the plays, and the count route sees them", async () => {
+    const imported = await api.post("/api/listening/import", body, authCookie);
+    expect(await imported.json()).toEqual({ removed: 0, saved: 1 });
+
+    const counted = await api.get("/api/listening/plays/count?from=2026-01-01T00:00:00.000Z&to=2026-02-01T00:00:00.000Z", authCookie);
+    expect(await counted.json()).toEqual({ count: 1 });
+  });
+
+  test("a play without a track name is refused", async () => {
+    const response = await api.post("/api/listening/import", { plays: [{ ...body.plays[0], trackName: "" }] }, authCookie);
+    expect(response.status).toBe(400);
+  });
+
+  test("a second import while one runs is refused", async () => {
+    let finish: (result: { removed: number; saved: number }) => void = () => {};
+    vi.spyOn(PlayModel, "replaceRange").mockReturnValueOnce(new Promise(resolve => (finish = resolve)));
+
+    const first = api.post("/api/listening/import", body, authCookie);
+    await vi.waitFor(() => expect(PlayModel.replaceRange).toHaveBeenCalled());
+    const second = await api.post("/api/listening/import", body, authCookie);
+    finish({ removed: 0, saved: 1 });
+
+    expect(second.status).toBe(409);
+    expect((await first).status).toBe(200);
+  });
 });

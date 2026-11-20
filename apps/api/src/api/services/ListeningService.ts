@@ -1,4 +1,5 @@
-import { PlayModel, type RecentPlay } from "@/api/models/Play";
+import { AppError } from "@/api/AppError";
+import { PlayModel, type ImportedPlay, type RecentPlay } from "@/api/models/Play";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
 import { SettingsService } from "@/api/services/SettingsService";
@@ -28,6 +29,7 @@ export class ListeningService {
   private static disconnected = false;
   /** Set once a failure is reported, so a run of failures sends one report */
   private static failureReported = false;
+  private static importing = false;
 
   /**
    * Collects plays now, then every 15 minutes. Does nothing unless SCHEDULED_REFRESH is on and SPOTIFY_REFRESH_TOKEN is set.
@@ -52,6 +54,26 @@ export class ListeningService {
       lastError: await SettingsService.get(LAST_ERROR_KEY),
       recentPlays: await PlayModel.getRecent(RECENT_PLAY_COUNT),
     };
+  }
+
+  static async countPlaysInRange(from: Date, to: Date): Promise<number> {
+    return PlayModel.countInRange(from, to);
+  }
+
+  /**
+   * Replaces the saved plays in the import's date range with the imported plays.
+   * @returns How many saved plays it removed, and how many imported plays it saved.
+   * @throws AppError 409 when another import is running.
+   */
+  static async importPlays(importedPlays: ImportedPlay[]): Promise<{ removed: number; saved: number }> {
+    if (this.importing) throw new AppError("An import is already running. Try again when it finishes.", 409);
+
+    this.importing = true;
+    try {
+      return await PlayModel.replaceRange(importedPlays);
+    } finally {
+      this.importing = false;
+    }
   }
 
   /** Runs one scheduled collection. Skips it while Spotify is disconnected. A failure is saved and reported by collect. */
