@@ -77,15 +77,23 @@ export const albumReplySchema = albumResponseSchema.extend({
   tracks: albumTrackPageSchema,
 });
 
-/** The admin's latest plays, newest first. `played_at` is an ISO time in UTC. */
+/** The admin's latest plays, newest first. Each item is checked on its own, after local files are taken out. */
 export const recentlyPlayedResponseSchema = z.object({
-  items: z.array(
-    z.object({
-      played_at: z.string(),
-      track: albumTrackSchema.extend({ album: albumSummarySchema }),
-    })
-  ),
+  items: z.array(z.unknown()),
 });
+
+/** A play of a local file, which has no Spotify IDs */
+export const localPlaySchema = z.object({
+  track: z.object({ is_local: z.literal(true) }),
+});
+
+/** `played_at` is an ISO time in UTC. */
+export const playsSchema = z.array(
+  z.object({
+    played_at: z.string(),
+    track: albumTrackSchema.extend({ album: albumSummarySchema }),
+  })
+);
 
 export const artistResponseSchema = z.object({
   id: z.string(),
@@ -120,6 +128,6 @@ export type SpotifyAlbumSearchItem = z.infer<typeof albumSearchItemSchema>;
 export type SpotifyAlbumSearchResponse = z.infer<typeof albumSearchResponseSchema>;
 export type SpotifyAlbumResponse = z.infer<typeof albumResponseSchema>;
 export type SpotifyArtistResponse = z.infer<typeof artistResponseSchema>;
-export type SpotifyPlay = z.infer<typeof recentlyPlayedResponseSchema>["items"][number];
+export type SpotifyPlay = z.infer<typeof playsSchema>[number];
 
 export type SpotifyArtistAlbum = z.infer<typeof artistAlbumsResponseSchema>["items"][number];

@@ -8,6 +8,8 @@ import {
   albumTrackPageSchema,
   artistAlbumsResponseSchema,
   artistResponseSchema,
+  localPlaySchema,
+  playsSchema,
   recentlyPlayedResponseSchema,
   tokenErrorSchema,
   tokenResponseSchema,
@@ -172,14 +174,16 @@ export class SpotifyClient {
   }
 
   /**
-   * Fetches the admin's latest 50 plays, newest first, which is as many as Spotify gives.
+   * Fetches the admin's latest 50 plays, newest first, which is as many as Spotify gives. Plays of local files are left out.
    * @param accessToken A token for the admin's account, from SpotifyUserTokenCache.
    * @throws AppError 502 when Spotify fails or sends a reply the app can't read.
    */
   static async getRecentlyPlayed(accessToken: string): Promise<SpotifyPlay[]> {
     const response = await this.send(`${this.baseURL}/me/player/recently-played?limit=50`, { headers: this.authHeaders(accessToken) });
     if (!response.ok) throw new AppError(`Spotify answered ${response.status} for recently played tracks.`, 502);
-    return this.parseReply(recentlyPlayedResponseSchema, await response.json(), "recently played tracks").items;
+    const reply = this.parseReply(recentlyPlayedResponseSchema, await response.json(), "recently played tracks");
+    const spotifyPlays = reply.items.filter(item => !localPlaySchema.safeParse(item).success);
+    return this.parseReply(playsSchema, spotifyPlays, "recently played tracks");
   }
 
   /**
