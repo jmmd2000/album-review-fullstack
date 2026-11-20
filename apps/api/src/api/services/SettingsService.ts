@@ -13,6 +13,10 @@ export class SettingsService {
     await SettingsModel.upsert(key, value);
   }
 
+  static async delete(key: string): Promise<void> {
+    await SettingsModel.delete(key);
+  }
+
   /** Gets when a job last finished, from the setting `<settingName>_last_run`. */
   static async getLastRun(settingName: string): Promise<Date | null> {
     const result = await this.get(`${settingName}_last_run`);
