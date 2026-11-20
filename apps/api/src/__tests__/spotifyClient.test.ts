@@ -1,6 +1,7 @@
 import { afterEach, describe, test, expect, vi, type Mock } from "vitest";
-import { SpotifyClient } from "@/api/models/SpotifyClient";
+import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { AppError } from "@/api/AppError";
+import recentlyPlayedReply from "./fixtures/spotifyRecentlyPlayed.json";
 
 const jsonResponse = (body: unknown, ok = true) => ({ ok, json: () => Promise.resolve(body) }) as Response;
 
@@ -18,6 +19,8 @@ const albumReply = { ...spotifyAlbum, tracks: { ...spotifyAlbum.tracks, next: nu
 
 const track = (id: string) => ({ id, name: `Track ${id}`, duration_ms: 200000, artists: [{ id: "art", name: "Artist" }] });
 
+const tooManyRequests = (retryAfter: string | null) => ({ ok: false, status: 429, headers: new Headers(retryAfter === null ? {} : { "Retry-After": retryAfter }) }) as Response;
+
 const stubFetch = (implementation: Mock) => {
   vi.stubGlobal("fetch", implementation);
   return implementation;
@@ -25,6 +28,7 @@ const stubFetch = (implementation: Mock) => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("requestToken", () => {
@@ -59,6 +63,31 @@ describe("requestToken", () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ token_type: "Bearer", expires_in: 3600 })));
 
     await expect(SpotifyClient.requestToken()).rejects.toMatchObject({ status: 502, message: expect.stringContaining("access_token") });
+  });
+});
+
+describe("refreshUserToken", () => {
+  test("exchanges the refresh token and passes on a replaced one", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(jsonResponse({ access_token: "user", expires_in: 3600, refresh_token: "new" })));
+
+    expect(await SpotifyClient.refreshUserToken("old")).toEqual({ accessToken: "user", expiresIn: 3600, refreshToken: "new" });
+    const body: URLSearchParams = fetchMock.mock.calls[0][1].body;
+    expect(body.get("grant_type")).toBe("refresh_token");
+    expect(body.get("refresh_token")).toBe("old");
+  });
+
+  test("maps a refused refresh token to not connected", async () => {
+    stubFetch(vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({ error: "invalid_grant", error_description: "Refresh token revoked" }) }));
+
+    await expect(SpotifyClient.refreshUserToken("old")).rejects.toBeInstanceOf(SpotifyNotConnectedError);
+  });
+
+  test("maps any other failed exchange to a 502, so a Spotify outage doesn't read as a lost connection", async () => {
+    stubFetch(vi.fn().mockResolvedValue({ ok: false, status: 400, json: () => Promise.resolve({ error: "invalid_client" }) }));
+
+    const error = await SpotifyClient.refreshUserToken("old").catch(e => e);
+    expect(error).not.toBeInstanceOf(SpotifyNotConnectedError);
+    expect(error).toMatchObject({ status: 502 });
   });
 });
 
@@ -172,5 +201,64 @@ describe("getArtists", () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ id: "odd", name: "Odd" })));
 
     await expect(SpotifyClient.getArtists(["odd"], "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("images") });
+  });
+});
+
+describe("getRecentlyPlayed", () => {
+  test("reads a recorded reply and keeps only the fields the app reads", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(jsonResponse(recentlyPlayedReply)));
+
+    const plays = await SpotifyClient.getRecentlyPlayed("user");
+    expect(plays).toHaveLength(recentlyPlayedReply.items.length);
+    expect(Object.keys(plays[0]).sort()).toEqual(["played_at", "track"]);
+    expect(Object.keys(plays[0].track).sort()).toEqual(["album", "artists", "duration_ms", "id", "name"]);
+    expect(fetchMock.mock.calls[0][0]).toContain("/me/player/recently-played?limit=50");
+  });
+
+  test("refuses a play with no time, and names the field", async () => {
+    const [play] = recentlyPlayedReply.items;
+    stubFetch(vi.fn().mockResolvedValue(jsonResponse({ items: [{ track: play.track }] })));
+
+    await expect(SpotifyClient.getRecentlyPlayed("user")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("played_at") });
+  });
+});
+
+describe("a 429 from Spotify", () => {
+  const searchReply = { albums: { items: [], next: null } };
+
+  test("waits for the Retry-After time, then tries once more", async () => {
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(vi.fn().mockResolvedValueOnce(tooManyRequests("2")).mockResolvedValueOnce(jsonResponse(searchReply)));
+
+    const search = SpotifyClient.searchAlbums("q", 0, "tok");
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await search).toEqual(searchReply);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("waits a second when the reply has no Retry-After header", async () => {
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(vi.fn().mockResolvedValueOnce(tooManyRequests(null)).mockResolvedValueOnce(jsonResponse(searchReply)));
+
+    const search = SpotifyClient.searchAlbums("q", 0, "tok");
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await search).toEqual(searchReply);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("gives up straight away with a 503 when the wait is longer than 10 seconds", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(tooManyRequests("11")));
+
+    await expect(SpotifyClient.searchAlbums("q", 0, "tok")).rejects.toMatchObject({ status: 503 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("passes the 503 through a call that drops failed lookups", async () => {
+    stubFetch(vi.fn().mockResolvedValue(tooManyRequests("60")));
+
+    await expect(SpotifyClient.getArtists(["a", "b"], "tok")).rejects.toMatchObject({ status: 503 });
   });
 });
