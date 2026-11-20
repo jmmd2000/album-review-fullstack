@@ -19,13 +19,18 @@ export const importPlaysSchema = z.object({
 
 const dateSchema = z.iso.date({ error: "Give dates as YYYY-MM-DD." });
 
-export const topQuerySchema = z
-  .object({
-    kind: z.enum(["artists", "tracks", "albums", "genres"]),
-    period: z.enum(["4-weeks", "6-months", "year", "all", "custom"]).default("4-weeks"),
-    from: dateSchema.optional(),
-    to: dateSchema.optional(),
-  })
-  .refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), {
-    error: "A custom period needs a start date on or before its end date.",
-  });
+const periodQuerySchema = z.object({
+  kind: z.enum(["artists", "tracks", "albums", "genres"]),
+  period: z.enum(["4-weeks", "6-months", "year", "all", "custom"]).default("4-weeks"),
+  from: dateSchema.optional(),
+  to: dateSchema.optional(),
+});
+
+const customPeriodRule = {
+  check: (query: z.infer<typeof periodQuerySchema>) => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to),
+  error: "A custom period needs a start date on or before its end date.",
+};
+
+export const topQuerySchema = periodQuerySchema.refine(customPeriodRule.check, { error: customPeriodRule.error });
+
+export const entryQuerySchema = periodQuerySchema.extend({ id: z.string().min(1).max(255) }).refine(customPeriodRule.check, { error: customPeriodRule.error });

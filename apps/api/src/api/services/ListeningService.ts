@@ -87,6 +87,31 @@ export class ListeningService {
     return { from: period.from, to: period.to, totals, entries };
   }
 
+  /**
+   * More about one entry: its first play, its plays in each of the last 12 weeks, its top tracks or a genre's top artists
+   * and share of all plays in the period, and where it links.
+   */
+  static async getEntry(kind: TopKind, id: string, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+    const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
+    const [firstPlayedAt, weeklyPlays, link] = await Promise.all([
+      ListeningStatsModel.getFirstPlay(kind, id),
+      ListeningStatsModel.getWeeklyPlays(kind, id, now),
+      ListeningStatsModel.getLink(kind, id),
+    ]);
+
+    if (kind === "genres") {
+      const [topArtists, genrePlays, totals] = await Promise.all([
+        ListeningStatsModel.getGenreArtists(id, period),
+        ListeningStatsModel.countEntryPlays(kind, id, period),
+        ListeningStatsModel.getTotals(period),
+      ]);
+      return { firstPlayedAt, weeklyPlays, link, topTracks: [], topArtists, share: totals.plays > 0 ? genrePlays / totals.plays : 0 };
+    }
+
+    const topTracks = kind === "tracks" ? [] : await ListeningStatsModel.getTopTracks(kind, id, period);
+    return { firstPlayedAt, weeklyPlays, link, topTracks, topArtists: [], share: null };
+  }
+
   static async countPlaysInRange(from: Date, to: Date): Promise<number> {
     return PlayModel.countInRange(from, to);
   }

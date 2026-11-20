@@ -39,6 +39,21 @@ interface RankedRow {
 const STREAM_CONDITION = sql`(p.ms_played IS NULL OR p.ms_played >= 30000)`;
 const PLAY_MS = sql`coalesce(p.ms_played, t.duration_ms, 0)`;
 const TOP_LIMIT = 50;
+const DETAIL_LIMIT = 5;
+const WEEK_COUNT = 12;
+
+/** Where a listening entry links */
+export type EntryLink = { type: "artist" | "album" | "review"; id: string } | { type: "search"; query: string };
+
+/** Picks the plays of one artist, track, album or genre. Plays join played tracks as `t`. */
+function entryCondition(kind: TopKind, id: string): SQL {
+  if (kind === "tracks") return sql`p.track_spotify_id = ${id}`;
+  if (kind === "albums") return sql`t.album_spotify_id = ${id}`;
+  if (kind === "artists") return sql`EXISTS (SELECT 1 FROM played_track_artists ta WHERE ta.track_spotify_id = p.track_spotify_id AND ta.artist_spotify_id = ${id})`;
+  return sql`EXISTS (
+    SELECT 1 FROM played_track_artists ta JOIN played_artist_genres pag ON pag.artist_spotify_id = ta.artist_spotify_id
+    WHERE ta.track_spotify_id = p.track_spotify_id AND pag.genre_id::text = ${id})`;
+}
 
 function inPeriod(period: Period): SQL {
   if (period.from === null) return sql`p.played_at < ${period.to}`;
@@ -239,5 +254,90 @@ export class ListeningStatsModel {
       images.set(row.genre_id, entry);
     }
     return images;
+  }
+
+  /** How many plays of the entry counted in the period. */
+  static async countEntryPlays(kind: TopKind, id: string, period: Period): Promise<number> {
+    const result = await db.execute(sql`
+      SELECT count(*)::int AS plays FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      WHERE ${entryCondition(kind, id)} AND ${inPeriod(period)} AND ${STREAM_CONDITION}`);
+    return (result.rows[0] as { plays: number }).plays;
+  }
+
+  /** When the entry was first played, at any time, or null when it never was. */
+  static async getFirstPlay(kind: TopKind, id: string): Promise<Date | null> {
+    const result = await db.execute(sql`
+      SELECT min(p.played_at) AS first FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      WHERE ${entryCondition(kind, id)} AND ${STREAM_CONDITION}`);
+    const row = result.rows[0] as { first: Date | string | null };
+    return row.first === null ? null : new Date(row.first);
+  }
+
+  /** The entry's plays in each of the 12 weeks up to `now`, oldest week first. A week is the 7 days up to that point. */
+  static async getWeeklyPlays(kind: TopKind, id: string, now: Date): Promise<number[]> {
+    const result = await db.execute(sql`
+      SELECT floor(extract(epoch FROM (${now}::timestamptz - p.played_at)) / 604800)::int AS weeks_ago, count(*)::int AS plays
+      FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      WHERE ${entryCondition(kind, id)} AND ${STREAM_CONDITION} AND p.played_at > ${now}::timestamptz - interval '84 days' AND p.played_at <= ${now}::timestamptz
+      GROUP BY weeks_ago`);
+    const weeks = new Array<number>(WEEK_COUNT).fill(0);
+    for (const row of result.rows as unknown as { weeks_ago: number; plays: number }[]) {
+      if (row.weeks_ago >= 0 && row.weeks_ago < WEEK_COUNT) weeks[WEEK_COUNT - 1 - row.weeks_ago] = row.plays;
+    }
+    return weeks;
+  }
+
+  /** An artist's or album's most played tracks in the period, with their covers. */
+  static async getTopTracks(kind: "artists" | "albums", id: string, period: Period): Promise<{ id: string; name: string; imageURL: string | null; plays: number }[]> {
+    const result = await db.execute(sql`
+      SELECT t.spotify_id AS id, t.name, al.image_url, count(*)::int AS plays
+      FROM plays p
+      JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      LEFT JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      WHERE ${entryCondition(kind, id)} AND ${inPeriod(period)} AND ${STREAM_CONDITION}
+      GROUP BY t.spotify_id, t.name, al.image_url
+      ORDER BY plays DESC, sum(${PLAY_MS}) DESC, t.name
+      LIMIT ${DETAIL_LIMIT}`);
+    return (result.rows as unknown as { id: string; name: string; image_url: string | null; plays: number }[]).map(row => ({ id: row.id, name: row.name, imageURL: row.image_url, plays: row.plays }));
+  }
+
+  /** A genre's most played artists in the period, with their photos. */
+  static async getGenreArtists(genreID: string, period: Period): Promise<{ id: string; name: string; imageURL: string | null; plays: number }[]> {
+    const result = await db.execute(sql`
+      SELECT a.spotify_id AS id, a.name, a.image_url, count(*)::int AS plays
+      FROM plays p
+      JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      JOIN played_track_artists ta ON ta.track_spotify_id = t.spotify_id
+      JOIN played_artists a ON a.spotify_id = ta.artist_spotify_id
+      JOIN played_artist_genres pag ON pag.artist_spotify_id = a.spotify_id AND pag.genre_id::text = ${genreID}
+      WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}
+      GROUP BY a.spotify_id, a.name, a.image_url
+      ORDER BY plays DESC, a.name
+      LIMIT ${DETAIL_LIMIT}`);
+    return (result.rows as unknown as { id: string; name: string; image_url: string | null; plays: number }[]).map(row => ({ id: row.id, name: row.name, imageURL: row.image_url, plays: row.plays }));
+  }
+
+  /** Where the entry links: the reviewed artist or album, the album to review, or a search for the artist. */
+  static async getLink(kind: TopKind, id: string): Promise<EntryLink | null> {
+    if (kind === "genres") return null;
+
+    if (kind === "artists") {
+      const result = await db.execute(sql`
+        SELECT a.name, (ra.spotify_id IS NOT NULL) AS reviewed FROM played_artists a LEFT JOIN reviewed_artists ra ON ra.spotify_id = a.spotify_id WHERE a.spotify_id = ${id}`);
+      const row = result.rows[0] as { name: string; reviewed: boolean } | undefined;
+      if (!row) return null;
+      return row.reviewed ? { type: "artist", id } : { type: "search", query: row.name };
+    }
+
+    const albumID = kind === "albums" ? id : await this.getTrackAlbumID(id);
+    if (!albumID) return null;
+    const reviewed = await db.execute(sql`SELECT 1 FROM reviewed_albums WHERE spotify_id = ${albumID}`);
+    return reviewed.rows.length > 0 ? { type: "album", id: albumID } : { type: "review", id: albumID };
+  }
+
+  private static async getTrackAlbumID(trackID: string): Promise<string | null> {
+    const result = await db.execute(sql`SELECT album_spotify_id FROM played_tracks WHERE spotify_id = ${trackID}`);
+    const row = result.rows[0] as { album_spotify_id: string | null } | undefined;
+    return row?.album_spotify_id ?? null;
   }
 }
