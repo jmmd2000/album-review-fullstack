@@ -2,6 +2,7 @@
   display: grid;
   gap: var(--space-4);
   justify-items: start;
+  max-width: 1228px;
 }
 
 .notice {
@@ -85,8 +86,8 @@
 
 .split {
   display: grid;
-  grid-template-columns: minmax(260px, 2fr) minmax(0, 3fr);
-  gap: clamp(28px, 4vw, 72px);
+  grid-template-columns: minmax(260px, 420px) minmax(0, 760px);
+  gap: clamp(24px, 3vw, 48px);
   align-items: start;
   width: 100%;
 
