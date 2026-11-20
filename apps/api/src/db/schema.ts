@@ -307,7 +307,8 @@ export const playedAlbums = pgTable("played_albums", {
 export const playedTracks = pgTable("played_tracks", {
   spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  durationMs: integer("duration_ms").notNull(),
+  /** Null for a track from the streaming history export until it is looked up */
+  durationMs: integer("duration_ms"),
   albumSpotifyID: varchar("album_spotify_id", { length: 255 }).references(() => playedAlbums.spotifyID),
 });
 
@@ -335,6 +336,8 @@ export const plays = pgTable(
       .notNull()
       .references(() => playedTracks.spotifyID),
     playedAt: timestamp("played_at", { withTimezone: true }).notNull(),
+    /** How long the track played, from the streaming history export. Null for plays from the recent list, which don't say. */
+    msPlayed: integer("ms_played"),
   },
   table => [uniqueIndex("plays_track_played_at_key").on(table.trackSpotifyID, table.playedAt), index("plays_played_at_idx").on(table.playedAt)]
 );
