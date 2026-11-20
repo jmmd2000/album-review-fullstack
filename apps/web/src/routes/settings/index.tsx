@@ -6,6 +6,7 @@ import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ArtistJobRow } from "@/components/settings/ArtistJobRow";
 import { RecalculateScoresRow } from "@/components/settings/RecalculateScoresRow";
 import { ListeningRow } from "@/components/settings/ListeningRow";
+import { StreamingHistoryRow } from "@/components/settings/StreamingHistoryRow";
 import { BuildInfo } from "@/components/settings/BuildInfo";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -105,6 +106,7 @@ function Settings() {
         <SectionHeader title="Listening" />
         <div className={styles.body}>
           <ListeningRow status={listening} />
+          <StreamingHistoryRow />
         </div>
       </section>
       <section className={styles.section}>

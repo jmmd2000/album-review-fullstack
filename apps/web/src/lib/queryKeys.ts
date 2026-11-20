@@ -43,11 +43,13 @@ export const queryKeys = {
     results: (options: SearchAlbumsOptions) => ["search", options] as const,
   },
   settings: {
+    all: ["settings"] as const,
     lastRuns: ["settings", "lastRuns"] as const,
     jobResults: ["settings", "jobResults"] as const,
     jobIntervals: ["settings", "jobIntervals"] as const,
     buildInfo: ["settings", "buildInfo"] as const,
     listening: ["settings", "listening"] as const,
+    playsInRange: (from: string, to: string) => ["settings", "playsInRange", from, to] as const,
   },
   stats: {
     all: ["stats"] as const,
