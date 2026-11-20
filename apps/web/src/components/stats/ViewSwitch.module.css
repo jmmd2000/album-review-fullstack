@@ -1,0 +1,23 @@
+.switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+}
+
+.option {
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  color: var(--colour-text-muted);
+  font-weight: var(--font-weight-label);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--colour-foreground);
+    color: var(--colour-background);
+  }
+}

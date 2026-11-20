@@ -9,6 +9,9 @@ import { albumMatches, decadeOf, describeSelection, isFiltered, nameSelection, s
 import { tierColourVar } from "@/lib/tierColours";
 import { AlbumDots } from "@/components/stats/AlbumDots";
 import { HighsAndLows } from "@/components/stats/HighsAndLows";
+import { ViewSwitch } from "@/components/stats/ViewSwitch";
+import { ListeningView, type ListeningSelection } from "@/components/listening/ListeningView";
+import { useAuth } from "@/auth/useAuth";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { GenreSelect } from "@/components/ui/GenreSelect";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -26,7 +29,7 @@ const statsQueryOptions = queryOptions({
   queryFn: fetchStats,
 });
 
-const defaultSearch = { genres: "" } as const;
+const defaultSearch = { genres: "", view: "scores", kind: "artists", period: "4-weeks" } as const;
 
 const statsSearchSchema = z.object({
   // A comma-separated list of genre slugs
@@ -35,6 +38,11 @@ const statsSearchSchema = z.object({
     .default(defaultSearch.genres)
     .catch(defaultSearch.genres),
   decade: z.coerce.number().int().multipleOf(10).optional().catch(undefined),
+  view: z.enum(["scores", "listening"]).default(defaultSearch.view).catch(defaultSearch.view),
+  kind: z.enum(["artists", "tracks", "albums", "genres"]).default(defaultSearch.kind).catch(defaultSearch.kind),
+  period: z.enum(["4-weeks", "6-months", "year", "all", "custom"]).default(defaultSearch.period).catch(defaultSearch.period),
+  from: z.iso.date().optional().catch(undefined),
+  to: z.iso.date().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/stats/")({
@@ -52,6 +60,32 @@ export const Route = createFileRoute("/stats/")({
 });
 
 function RouteComponent() {
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { isAdmin } = useAuth();
+  const showListening = isAdmin && search.view === "listening";
+
+  const setListening = ({ kind, period, from, to }: ListeningSelection) => {
+    void navigate({ search: previous => ({ ...previous, kind, period, from, to }), replace: true, resetScroll: false });
+  };
+
+  return (
+    <>
+      <PageHeader title="Stats">
+        {isAdmin && <ViewSwitch view={search.view} onChange={view => void navigate({ search: previous => ({ ...previous, view }), replace: true, resetScroll: false })} />}
+      </PageHeader>
+      {showListening ? (
+        <div className={styles.body}>
+          <ListeningView selection={{ kind: search.kind, period: search.period, from: search.from, to: search.to }} onChange={setListening} />
+        </div>
+      ) : (
+        <ScoresView />
+      )}
+    </>
+  );
+}
+
+function ScoresView() {
   const { data } = useSuspenseQuery(statsQueryOptions);
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -59,7 +93,7 @@ function RouteComponent() {
   const filter: StatsFilter = { genres: search.genres ? search.genres.split(",") : [], decade: search.decade ?? null };
   const setFilter = (next: Partial<StatsFilter>) => {
     const { genres, decade } = { ...filter, ...next };
-    void navigate({ search: { genres: genres.join(","), decade: decade ?? undefined }, replace: true, resetScroll: false });
+    void navigate({ search: previous => ({ ...previous, genres: genres.join(","), decade: decade ?? undefined }), replace: true, resetScroll: false });
   };
 
   const selected = data.albums.filter(album => albumMatches(album, filter));
@@ -70,7 +104,6 @@ function RouteComponent() {
 
   return (
     <>
-      <PageHeader title="Stats" />
       <div className={styles.body}>
         <p className={styles.tally}>
           <b>{data.albums.length}</b> albums from <b>{data.artistCount}</b> artists across <b>{data.genres.length}</b> genres, with <b>{data.ratedTrackCount.toLocaleString("en-GB")}</b> tracks rated.

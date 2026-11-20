@@ -51,6 +51,9 @@ export const queryKeys = {
     listening: ["settings", "listening"] as const,
     playsInRange: (from: string, to: string) => ["settings", "playsInRange", from, to] as const,
   },
+  listening: {
+    top: (kind: string, period: string, from?: string, to?: string) => ["listening", "top", kind, period, from ?? "", to ?? ""] as const,
+  },
   stats: {
     all: ["stats"] as const,
     overview: ["stats", "overview"] as const,
