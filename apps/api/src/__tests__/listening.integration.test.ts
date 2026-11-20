@@ -1,6 +1,8 @@
-import { afterAll, afterEach, beforeEach, expect, test, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
+import { api } from "./apiRequest";
+import { adminCookie } from "./adminCookie";
 import * as errorReporting from "@/config/errorReporting";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
@@ -111,4 +113,36 @@ test("collecting while a collection runs waits for it instead of starting anothe
 
   expect(getRecentlyPlayed).toHaveBeenCalledTimes(1);
   expect(results).toEqual([{ saved: 1 }, { saved: 1 }]);
+});
+
+describe("the listening routes", () => {
+  const authCookie = adminCookie();
+
+  test("require admin", async () => {
+    expect((await api.get("/api/listening")).status).toBe(401);
+    expect((await api.post("/api/listening/collect")).status).toBe(401);
+  });
+
+  test("Collect now saves plays, and the status lists them newest first with their artists in credit order", async () => {
+    vi.spyOn(SpotifyClient, "getRecentlyPlayed").mockResolvedValue([play("track2", "2026-11-20T10:00:00.000Z", "album1", ["artist2", "artist1"]), play("track1", "2026-11-20T09:56:00.000Z")]);
+
+    const collected = await api.post("/api/listening/collect", undefined, authCookie);
+    expect(await collected.json()).toEqual({ saved: 2 });
+
+    const status = await (await api.get("/api/listening", authCookie)).json();
+    expect(status.lastError).toBeNull();
+    expect(status.lastCollected).not.toBeNull();
+    expect(status.recentPlays.map((recent: { trackName: string; artistNames: string[] }) => [recent.trackName, recent.artistNames])).toEqual([
+      ["Track track2", ["Artist artist2", "Artist artist1"]],
+      ["Track track1", ["Artist artist1"]],
+    ]);
+  });
+
+  test("Collect now answers 503 when Spotify isn't connected", async () => {
+    vi.spyOn(errorReporting, "reportError").mockImplementation(() => {});
+    vi.spyOn(SpotifyUserTokenCache, "getAccessToken").mockRejectedValue(new SpotifyNotConnectedError());
+
+    const response = await api.post("/api/listening/collect", undefined, authCookie);
+    expect(response.status).toBe(503);
+  });
 });

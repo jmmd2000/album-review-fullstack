@@ -1,4 +1,4 @@
-import { PlayModel } from "@/api/models/Play";
+import { PlayModel, type RecentPlay } from "@/api/models/Play";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
 import { SettingsService } from "@/api/services/SettingsService";
@@ -8,6 +8,18 @@ import { logger } from "@/config/logger";
 
 const COLLECT_INTERVAL_MS = 15 * 60 * 1000;
 const LAST_ERROR_KEY = "listening_last_error";
+const RECENT_PLAY_COUNT = 20;
+
+/** How collection is going, for the Settings page */
+export interface ListeningStatus {
+  /** True when this server collects plays every 15 minutes by itself */
+  scheduled: boolean;
+  /** False when SPOTIFY_REFRESH_TOKEN isn't set or Spotify refused it */
+  connected: boolean;
+  lastCollected: Date | null;
+  lastError: string | null;
+  recentPlays: RecentPlay[];
+}
 
 /** The admin's Spotify listening: collecting plays from Spotify and reading them back. */
 export class ListeningService {
@@ -29,6 +41,17 @@ export class ListeningService {
     void this.collectOnSchedule();
     setInterval(() => void this.collectOnSchedule(), COLLECT_INTERVAL_MS);
     logger.info("Listening collection is on");
+  }
+
+  static async getStatus(): Promise<ListeningStatus> {
+    const connected = Boolean(env.SPOTIFY_REFRESH_TOKEN) && !this.disconnected;
+    return {
+      scheduled: env.SCHEDULED_REFRESH && Boolean(env.SPOTIFY_REFRESH_TOKEN),
+      connected,
+      lastCollected: await SettingsService.getLastRun("listening"),
+      lastError: await SettingsService.get(LAST_ERROR_KEY),
+      recentPlays: await PlayModel.getRecent(RECENT_PLAY_COUNT),
+    };
   }
 
   /** Runs one scheduled collection. Skips it while Spotify is disconnected. A failure is saved and reported by collect. */

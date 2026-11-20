@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { playedAlbums, playedArtists, playedTrackArtists, playedTracks, plays } from "@/db/schema";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
@@ -10,7 +10,46 @@ function uniqueBy<Item>(items: Item[], key: (item: Item) => string): Item[] {
   return [...byKey.values()];
 }
 
+/** A play with its track and the track's artists, for the Settings list */
+export interface RecentPlay {
+  id: number;
+  playedAt: Date;
+  trackName: string;
+  /** In credit order */
+  artistNames: string[];
+}
+
 export class PlayModel {
+  /** The latest plays, newest first. */
+  static async getRecent(limit: number): Promise<RecentPlay[]> {
+    const rows = await db
+      .select({ id: plays.id, playedAt: plays.playedAt, trackSpotifyID: plays.trackSpotifyID, trackName: playedTracks.name })
+      .from(plays)
+      .innerJoin(playedTracks, eq(playedTracks.spotifyID, plays.trackSpotifyID))
+      .orderBy(desc(plays.playedAt))
+      .limit(limit);
+    if (rows.length === 0) return [];
+
+    const credits = await db
+      .select({ trackSpotifyID: playedTrackArtists.trackSpotifyID, name: playedArtists.name })
+      .from(playedTrackArtists)
+      .innerJoin(playedArtists, eq(playedArtists.spotifyID, playedTrackArtists.artistSpotifyID))
+      .where(
+        inArray(
+          playedTrackArtists.trackSpotifyID,
+          rows.map(row => row.trackSpotifyID)
+        )
+      )
+      .orderBy(asc(playedTrackArtists.position));
+
+    return rows.map(row => ({
+      id: row.id,
+      playedAt: row.playedAt,
+      trackName: row.trackName,
+      artistNames: credits.filter(credit => credit.trackSpotifyID === row.trackSpotifyID).map(credit => credit.name),
+    }));
+  }
+
   /**
    * Saves plays with their tracks, albums and artists, in one transaction.
    * A track, album or artist that is already saved gets its name and details updated.
