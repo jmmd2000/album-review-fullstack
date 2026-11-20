@@ -18,6 +18,8 @@ const albumReply = { ...spotifyAlbum, tracks: { ...spotifyAlbum.tracks, next: nu
 
 const track = (id: string) => ({ id, name: `Track ${id}`, duration_ms: 200000, artists: [{ id: "art", name: "Artist" }] });
 
+const tooManyRequests = (retryAfter: string | null) => ({ ok: false, status: 429, headers: new Headers(retryAfter === null ? {} : { "Retry-After": retryAfter }) }) as Response;
+
 const stubFetch = (implementation: Mock) => {
   vi.stubGlobal("fetch", implementation);
   return implementation;
@@ -25,6 +27,7 @@ const stubFetch = (implementation: Mock) => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("requestToken", () => {
@@ -172,5 +175,45 @@ describe("getArtists", () => {
     stubFetch(vi.fn().mockResolvedValue(jsonResponse({ id: "odd", name: "Odd" })));
 
     await expect(SpotifyClient.getArtists(["odd"], "tok")).rejects.toMatchObject({ status: 502, message: expect.stringContaining("images") });
+  });
+});
+
+describe("a 429 from Spotify", () => {
+  const searchReply = { albums: { items: [], next: null } };
+
+  test("waits for the Retry-After time, then tries once more", async () => {
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(vi.fn().mockResolvedValueOnce(tooManyRequests("2")).mockResolvedValueOnce(jsonResponse(searchReply)));
+
+    const search = SpotifyClient.searchAlbums("q", 0, "tok");
+    await vi.advanceTimersByTimeAsync(1999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await search).toEqual(searchReply);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("waits a second when the reply has no Retry-After header", async () => {
+    vi.useFakeTimers();
+    const fetchMock = stubFetch(vi.fn().mockResolvedValueOnce(tooManyRequests(null)).mockResolvedValueOnce(jsonResponse(searchReply)));
+
+    const search = SpotifyClient.searchAlbums("q", 0, "tok");
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await search).toEqual(searchReply);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test("gives up straight away with a 503 when the wait is longer than 10 seconds", async () => {
+    const fetchMock = stubFetch(vi.fn().mockResolvedValue(tooManyRequests("11")));
+
+    await expect(SpotifyClient.searchAlbums("q", 0, "tok")).rejects.toMatchObject({ status: 503 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("passes the 503 through a call that drops failed lookups", async () => {
+    stubFetch(vi.fn().mockResolvedValue(tooManyRequests("60")));
+
+    await expect(SpotifyClient.getArtists(["a", "b"], "tok")).rejects.toMatchObject({ status: 503 });
   });
 });
