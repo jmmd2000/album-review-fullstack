@@ -39,3 +39,20 @@ export function describeEntry(kind: ListeningKind, entry: TopEntry): string {
   if (kind === "artists") return entry.albumCount === 1 ? "1 album played" : `${entry.albumCount ?? 0} albums played`;
   return entry.artistNames.join(", ");
 }
+
+/** A round number at or just above the most plays, so the chart's top line reads cleanly. */
+export function roundedTop(most: number): number {
+  if (most <= 0) return 0;
+  const magnitude = 10 ** Math.floor(Math.log10(most));
+  for (const step of [1, 2, 5, 10]) {
+    if (most <= step * magnitude) return step * magnitude;
+  }
+  return 10 * magnitude;
+}
+
+/** A chart label for a bucket starting on a YYYY-MM-DD day: "3 Mar" for days and weeks, "Mar 26" for months. `full` adds the year. */
+export function bucketLabel(start: string, unit: "day" | "week" | "month", full: boolean): string {
+  const date = new Date(`${start}T12:00:00Z`);
+  if (unit === "month") return date.toLocaleDateString("en-GB", { month: "short", year: full ? "numeric" : "2-digit", timeZone: "UTC" });
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(full ? { year: "numeric" } : {}), timeZone: "UTC" });
+}
