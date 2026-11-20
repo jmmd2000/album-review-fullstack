@@ -18,6 +18,7 @@ const IMAGE_KINDS: Record<ArtistJob, "photo" | "header" | null> = {
   "artist-headers": "header",
   "listener-links": null,
   "album-suggestions": null,
+  "played-tracks": null,
 };
 
 interface ArtistJobRowProps {

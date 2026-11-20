@@ -106,6 +106,16 @@ function Settings() {
         <SectionHeader title="Listening" />
         <div className={styles.body}>
           <ListeningRow status={listening} />
+          <ArtistJobRow
+            job="played-tracks"
+            title="Played tracks"
+            description="Looks up the album and artists of each played track that has none, and each played artist's photo. It makes at most 200 Spotify requests a run."
+            actionLabel="Look up tracks"
+            lastRun={lastRuns.played_tracks_last_run ?? null}
+            result={null}
+            intervalDays={jobIntervals.intervals["played-tracks"] ?? 0}
+            scheduleEnabled={jobIntervals.scheduleEnabled}
+          />
           <StreamingHistoryRow />
         </div>
       </section>

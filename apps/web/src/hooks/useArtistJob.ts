@@ -7,7 +7,7 @@ import { formatJobCounts } from "@/lib/jobStatus";
 
 import type { JobEventMap, Progress } from "@shared/types";
 
-export type ArtistJob = "artist-images" | "artist-headers" | "listener-links" | "album-suggestions";
+export type ArtistJob = "artist-images" | "artist-headers" | "listener-links" | "album-suggestions" | "played-tracks";
 
 export interface ArtistJobState {
   status: "idle" | "running" | "finished";
@@ -27,6 +27,7 @@ const JOB_LABELS: Record<ArtistJob, string> = {
   "artist-headers": "Artist headers",
   "listener-links": "Listener links",
   "album-suggestions": "Album suggestions",
+  "played-tracks": "Played tracks",
 };
 
 /** The counts of a job's results, such as "4 updated, 130 unchanged, 2 failed". */
