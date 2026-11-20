@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { ListeningService } from "@/api/services/ListeningService";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
-import { entryQuerySchema, importPlaysSchema, playCountQuerySchema, topQuerySchema } from "@/api/schemas/listeningSchema";
+import { entryQuerySchema, importPlaysSchema, overTimeQuerySchema, playCountQuerySchema, topQuerySchema } from "@/api/schemas/listeningSchema";
 
 // admin only
 const listening = new Hono()
@@ -16,6 +16,10 @@ const listening = new Hono()
   .get("/top", validate("query", topQuerySchema), async c => {
     const { kind, period, from, to } = c.req.valid("query");
     return c.json(await ListeningService.getTop(kind, period, from, to), 200);
+  })
+  .get("/over-time", validate("query", overTimeQuerySchema), async c => {
+    const { period, from, to } = c.req.valid("query");
+    return c.json(await ListeningService.getOverTime(period, from, to), 200);
   })
   .get("/entry", validate("query", entryQuerySchema), async c => {
     const { kind, id, period, from, to } = c.req.valid("query");
