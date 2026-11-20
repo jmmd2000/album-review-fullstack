@@ -81,18 +81,23 @@ export class SpotifyClient {
     }
   }
 
+  /**
+   * Fetches one artist.
+   * @returns The artist, or null when Spotify answers with an error.
+   * @throws AppError 502 when Spotify sends a reply the app can't read.
+   */
+  static async getArtist(artistID: string, accessToken: string): Promise<SpotifyArtistResponse | null> {
+    const response = await fetch(`${this.baseURL}/artists/${artistID}`, { headers: this.authHeaders(accessToken) });
+    if (!response.ok) return null;
+    return this.parseReply(artistResponseSchema, await response.json(), "an artist");
+  }
+
   static async getArtists(ids: string[], accessToken: string): Promise<SpotifyArtistResponse[]> {
     if (ids.length === 0) return [];
 
     try {
       // A failed lookup drops out, but a reply the app can't read fails the whole call
-      const results = await Promise.all(
-        ids.map(async id => {
-          const response = await fetch(`${this.baseURL}/artists/${id}`, { headers: this.authHeaders(accessToken) });
-          if (!response.ok) return null;
-          return this.parseReply(artistResponseSchema, await response.json(), "an artist");
-        })
-      );
+      const results = await Promise.all(ids.map(id => this.getArtist(id, accessToken)));
       return results.filter(artist => artist !== null);
     } catch (err) {
       if (err instanceof AppError) throw err;
