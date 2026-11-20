@@ -6,8 +6,10 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("GET /api/health returns 200 with ok true", async () => {
+test("GET /api/health answers with the build and nothing else", async () => {
   const res = await app.request("/api/health");
+  const body = await res.json();
   expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ ok: true });
+  expect(Object.keys(body).sort()).toEqual(["builtAt", "gitSHA", "status", "version"]);
+  expect(body.status).toBe("ok");
 });

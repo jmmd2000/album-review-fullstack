@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { APP_VERSION } from "@/config/appVersion";
 import { CORS_ORIGINS } from "@/config/cors";
 import { logger } from "@/config/logger";
 import { reportError } from "@/config/errorReporting";
@@ -37,12 +38,15 @@ base.use("*", async (c, next) => {
 
 // Routes are chained so their types accumulate into AppType for the RPC client.
 export const app = base
+  // Public, so it gives the build and nothing more. The deploy and the uptime checks ask it
   .get("/api/health", async c => {
+    const build = { version: APP_VERSION, gitSHA: process.env.GIT_SHA ?? "dev", builtAt: process.env.BUILT_AT || null };
     try {
       await query("SELECT 1");
-      return c.json({ ok: true }, 200);
-    } catch {
-      return c.json({ ok: false }, 503);
+      return c.json({ status: "ok", ...build }, 200);
+    } catch (error) {
+      logger.error({ err: error }, "Health check failed: the database can't be reached");
+      return c.json({ status: "unhealthy", ...build }, 503);
     }
   })
   .route("/api/auth", auth)
