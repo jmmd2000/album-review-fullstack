@@ -1,4 +1,5 @@
 import { AppError } from "@/api/AppError";
+import { ListeningStatsModel, type PeriodName, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
 import { PlayModel, type ImportedPlay, type RecentPlay } from "@/api/models/Play";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
@@ -20,6 +21,12 @@ export interface ListeningStatus {
   lastCollected: Date | null;
   lastError: string | null;
   recentPlays: RecentPlay[];
+}
+
+/** One ranked entry, with its change in rank since the period before */
+export interface RankedEntry extends TopEntry {
+  /** Places moved up since the period before (negative is down), "new" when it wasn't played then, or null for all time */
+  change: number | "new" | null;
 }
 
 /** The admin's Spotify listening: collecting plays from Spotify and reading them back. */
@@ -54,6 +61,30 @@ export class ListeningService {
       lastError: await SettingsService.get(LAST_ERROR_KEY),
       recentPlays: await PlayModel.getRecent(RECENT_PLAY_COUNT),
     };
+  }
+
+  /**
+   * The 50 most played artists, tracks, albums or genres in a period, with the period's totals.
+   * Each entry's change compares it with the period of the same length just before.
+   */
+  static async getTop(kind: TopKind, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+    const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
+    const previous = ListeningStatsModel.previousPeriod(period);
+    const [top, totals] = await Promise.all([ListeningStatsModel.getTop(kind, period), ListeningStatsModel.getTotals(period)]);
+    const previousRanks = previous
+      ? await ListeningStatsModel.getRanks(
+          kind,
+          previous,
+          top.map(entry => entry.id)
+        )
+      : null;
+
+    const entries: RankedEntry[] = top.map(entry => {
+      if (!previousRanks) return { ...entry, change: null };
+      const previousRank = previousRanks.get(entry.id);
+      return { ...entry, change: previousRank === undefined ? "new" : previousRank - entry.rank };
+    });
+    return { from: period.from, to: period.to, totals, entries };
   }
 
   static async countPlaysInRange(from: Date, to: Date): Promise<number> {

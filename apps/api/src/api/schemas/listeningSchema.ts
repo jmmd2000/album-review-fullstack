@@ -16,3 +16,16 @@ const importedPlaySchema = z.object({
 export const importPlaysSchema = z.object({
   plays: z.array(importedPlaySchema).min(1, { error: "The import has no plays." }),
 });
+
+const dateSchema = z.iso.date({ error: "Give dates as YYYY-MM-DD." });
+
+export const topQuerySchema = z
+  .object({
+    kind: z.enum(["artists", "tracks", "albums", "genres"]),
+    period: z.enum(["4-weeks", "6-months", "year", "all", "custom"]).default("4-weeks"),
+    from: dateSchema.optional(),
+    to: dateSchema.optional(),
+  })
+  .refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), {
+    error: "A custom period needs a start date on or before its end date.",
+  });

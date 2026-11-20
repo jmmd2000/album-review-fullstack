@@ -1,0 +1,89 @@
+.view {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+.notice {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--colour-panel);
+  color: var(--colour-worst);
+  font-size: 0.875rem;
+}
+
+.tally {
+  max-width: 46ch;
+  min-height: 1.5em;
+  color: var(--colour-text-muted);
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  text-wrap: balance;
+
+  & b {
+    color: var(--colour-foreground);
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  width: 100%;
+}
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.kind {
+  color: var(--colour-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--colour-foreground);
+  }
+
+  &[aria-pressed="true"] {
+    color: var(--colour-foreground);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 8px;
+  }
+}
+
+.periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+
+  & label {
+    display: grid;
+    gap: 4px;
+    color: var(--colour-text-muted);
+    font-size: 0.875rem;
+  }
+}
+
+.state {
+  color: var(--colour-text-muted);
+}
+
+.entries {
+  width: 100%;
+  max-width: 760px;
+}
