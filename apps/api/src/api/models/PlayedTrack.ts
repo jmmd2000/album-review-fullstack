@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db, type Executor } from "@/db/client";
-import { playedAlbums, playedArtists, playedTrackArtists, playedTracks } from "@/db/schema";
+import { playedAlbums, playedArtistGenres, playedArtists, playedTrackArtists, playedTracks } from "@/db/schema";
 import { mediumImageURL } from "@/helpers/mediumImageURL";
 import { uniqueBy } from "@/helpers/uniqueBy";
 import type { SpotifyArtistResponse, SpotifyPlayedTrack } from "@/api/schemas/spotifySchema";
@@ -87,6 +87,22 @@ export class PlayedTrackModel {
           .where(eq(playedArtists.spotifyID, artist.id));
       }
       await tx.update(playedArtists).set({ imageLookedUp: true }).where(inArray(playedArtists.spotifyID, artistIDs));
+    });
+  }
+
+  /** The artists whose genres aren't looked up yet. */
+  static async getArtistsWithoutGenres(limit: number): Promise<{ spotifyID: string; name: string }[]> {
+    return db.select({ spotifyID: playedArtists.spotifyID, name: playedArtists.name }).from(playedArtists).where(eq(playedArtists.genresLookedUp, false)).orderBy(playedArtists.spotifyID).limit(limit);
+  }
+
+  /** Replaces an artist's genres, in the order given, and marks the artist as looked up. */
+  static async saveGenres(artistSpotifyID: string, genreIDs: number[]): Promise<void> {
+    await db.transaction(async tx => {
+      await tx.delete(playedArtistGenres).where(eq(playedArtistGenres.artistSpotifyID, artistSpotifyID));
+      if (genreIDs.length > 0) {
+        await tx.insert(playedArtistGenres).values(genreIDs.map((genreID, index) => ({ artistSpotifyID, genreID, position: index + 1 })));
+      }
+      await tx.update(playedArtists).set({ genresLookedUp: true }).where(eq(playedArtists.spotifyID, artistSpotifyID));
     });
   }
 }

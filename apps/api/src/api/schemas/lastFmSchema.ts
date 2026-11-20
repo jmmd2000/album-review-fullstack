@@ -23,3 +23,12 @@ export const lastFmTopAlbumsSchema = z.object({
 });
 
 export type LastFmTopAlbum = z.infer<typeof lastFmTopAlbumsSchema>["topalbums"]["album"][number];
+
+/** The tags Last.fm listeners give an artist, most used first. `count` runs from 0 to 100, relative to the top tag. */
+export const lastFmTopTagsSchema = z.object({
+  toptags: z.object({
+    tag: z.array(z.object({ name: z.string(), count: z.coerce.number() })),
+  }),
+});
+
+export type LastFmTag = z.infer<typeof lastFmTopTagsSchema>["toptags"]["tag"][number];

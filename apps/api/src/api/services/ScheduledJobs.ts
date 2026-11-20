@@ -2,6 +2,7 @@ import { ArtistImageService } from "@/api/services/ArtistImageService";
 import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import { SuggestionService } from "@/api/services/SuggestionService";
 import { PlayedTrackLookupService } from "@/api/services/PlayedTrackLookupService";
+import { PlayedArtistGenreService } from "@/api/services/PlayedArtistGenreService";
 import type { JobEmit } from "@/api/services/JobService";
 import type { ArtistJobSource } from "@/api/schemas/artistJobResultSchema";
 
@@ -46,6 +47,12 @@ export const scheduledJobs: ScheduledJob[] = [
     settingName: "played_tracks",
     busyMessage: "The played tracks are already being looked up. Try again when that run finishes.",
     run: emit => PlayedTrackLookupService.lookUp(emit),
+  },
+  {
+    name: "played-genres",
+    settingName: "played_genres",
+    busyMessage: "The played artists' genres are already being looked up. Try again when that run finishes.",
+    run: emit => PlayedArtistGenreService.lookUpGenres(emit),
   },
 ];
 

@@ -2,7 +2,7 @@ import type { z } from "zod";
 import { AppError } from "@/api/AppError";
 import { env } from "@/config/env";
 import { sleep } from "@/helpers/sleep";
-import { lastFmErrorSchema, lastFmSimilarArtistsSchema, lastFmTopAlbumsSchema, type LastFmSimilarArtist, type LastFmTopAlbum } from "@/api/schemas/lastFmSchema";
+import { lastFmErrorSchema, lastFmSimilarArtistsSchema, lastFmTopAlbumsSchema, lastFmTopTagsSchema, type LastFmSimilarArtist, type LastFmTag, type LastFmTopAlbum } from "@/api/schemas/lastFmSchema";
 
 const BASE_URL = "https://ws.audioscrobbler.com/2.0/";
 // Last.fm asks each app to send at most 5 requests a second. Every caller shares one queue, so one request each 200ms stays under that.
@@ -42,6 +42,16 @@ export class LastFmClient {
     const query = new URLSearchParams({ method: "artist.gettopalbums", artist: artistName, autocorrect: "1", limit: String(TOP_ALBUM_LIMIT) });
     const reply = await this.request(query, lastFmTopAlbumsSchema);
     return reply ? [...reply.topalbums.album].sort((a, b) => b.playcount - a.playcount) : null;
+  }
+
+  /**
+   * The tags listeners give an artist, most used first.
+   * @returns The tags, or null when Last.fm doesn't know the artist.
+   */
+  static async getTopTags(artistName: string): Promise<LastFmTag[] | null> {
+    const query = new URLSearchParams({ method: "artist.gettoptags", artist: artistName, autocorrect: "1" });
+    const reply = await this.request(query, lastFmTopTagsSchema);
+    return reply ? reply.toptags.tag : null;
   }
 
   /**
