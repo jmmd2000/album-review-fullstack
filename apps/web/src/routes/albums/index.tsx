@@ -8,6 +8,8 @@ import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { groupBySeparator, letterSeparator, scoreSeparator, yearSeparator } from "@/lib/separators";
 import { useListControls } from "@/hooks/useListControls";
+import { useAuth } from "@/auth/useAuth";
+import { describePlays } from "@/lib/listening";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -31,7 +33,7 @@ const defaultSearch = { page: 1, search: "", orderBy: "createdAt", order: "desc"
 const albumsSearchSchema = z.object({
   page: z.coerce.number().int().positive().default(defaultSearch.page).catch(defaultSearch.page),
   search: z.coerce.string().default(defaultSearch.search).catch(defaultSearch.search),
-  orderBy: z.enum(["createdAt", "finalScore", "releaseYear", "name"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
+  orderBy: z.enum(["createdAt", "finalScore", "releaseYear", "name", "plays"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
   order: z.enum(["asc", "desc"]).default(defaultSearch.order).catch(defaultSearch.order),
   // Genre slugs joined with commas. Older links wrote them as an array, so that's read too
   genres: z
@@ -41,6 +43,8 @@ const albumsSearchSchema = z.object({
   // "off" hides the separator tiles. It only changes the page, so it isn't sent to the API
   groups: z.enum(["on", "off"]).default(defaultSearch.groups).catch(defaultSearch.groups),
 });
+
+const MOST_PLAYED: SortOption = { label: "Most played", value: "plays", direction: "desc" };
 
 const sortOptions: SortOption[] = [
   { label: "Newest", value: "createdAt", direction: "desc" },
@@ -73,7 +77,8 @@ const albumQueryOptions = (options: GetPaginatedAlbumsOptions) =>
   });
 
 export const Route = createFileRoute("/albums/")({
-  ssr: true,
+  // The plays sort is for the admin, and the server render can't send the login cookie, so that sort renders in the browser
+  ssr: ({ search }) => !(search.status === "success" && search.value.orderBy === "plays"),
   validateSearch: albumsSearchSchema,
   search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => ({
@@ -119,6 +124,7 @@ function RouteComponent() {
   const deps = Route.useLoaderDeps();
   const { data } = useSuspenseQuery(albumQueryOptions(deps));
   const navigate = useNavigate({ from: Route.fullPath });
+  const { isAdmin } = useAuth();
 
   const { search } = useListControls({ navigate });
 
@@ -130,7 +136,7 @@ function RouteComponent() {
       <PageHeader title="Albums" count={data.totalCount}>
         <SearchForm label="Search albums" defaultValue={options.search} onSearch={search} />
         <SortTabs
-          options={sortOptions}
+          options={isAdmin ? [...sortOptions, MOST_PLAYED] : sortOptions}
           value={orderBy}
           direction={order}
           onSortChange={(value, direction) => {
@@ -168,7 +174,7 @@ function RouteComponent() {
               <Fragment key={index}>
                 {group.separator && <SeparatorTile {...group.separator} />}
                 {group.items.map(album => (
-                  <AlbumCard key={album.spotifyID} album={album} />
+                  <AlbumCard key={album.spotifyID} album={album} subtitle={album.plays === undefined ? undefined : describePlays(album.plays)} />
                 ))}
               </Fragment>
             ))}

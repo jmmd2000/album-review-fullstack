@@ -8,6 +8,8 @@ import { socialMeta } from "@/lib/socialMeta";
 import { client, handle } from "@/lib/client";
 import { groupBySeparator, letterSeparator, scoreSeparator } from "@/lib/separators";
 import { useListControls } from "@/hooks/useListControls";
+import { useAuth } from "@/auth/useAuth";
+import { describePlays } from "@/lib/listening";
 import { ArtistCard } from "@/components/artist/ArtistCard";
 import { CardGrid } from "@/components/ui/CardGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -31,11 +33,13 @@ const defaultSearch = { page: 1, search: "", orderBy: "totalScore", order: "desc
 const artistsSearchSchema = z.object({
   page: z.coerce.number().int().positive().default(defaultSearch.page).catch(defaultSearch.page),
   search: z.coerce.string().default(defaultSearch.search).catch(defaultSearch.search),
-  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
+  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "plays"]).default(defaultSearch.orderBy).catch(defaultSearch.orderBy),
   order: z.enum(["asc", "desc"]).default(defaultSearch.order).catch(defaultSearch.order),
   // "off" hides the separator tiles. It only changes the page, so it isn't sent to the API
   groups: z.enum(["on", "off"]).default(defaultSearch.groups).catch(defaultSearch.groups),
 });
+
+const MOST_PLAYED: SortOption = { label: "Most played", value: "plays", direction: "desc" };
 
 const sortOptions: SortOption[] = [
   { label: "Score", value: "totalScore", direction: "desc" },
@@ -66,7 +70,8 @@ const artistQueryOptions = (options: GetPaginatedArtistsOptions) =>
   });
 
 export const Route = createFileRoute("/artists/")({
-  ssr: true,
+  // The plays sort is for the admin, and the server render can't send the login cookie, so that sort renders in the browser
+  ssr: ({ search }) => !(search.status === "success" && search.value.orderBy === "plays"),
   validateSearch: artistsSearchSchema,
   search: { middlewares: [stripSearchParams(defaultSearch)] },
   loaderDeps: ({ search }) => ({
@@ -129,6 +134,7 @@ function RouteComponent() {
   const options = Route.useSearch();
   const { data } = useSuspenseQuery(artistQueryOptions(Route.useLoaderDeps()));
   const navigate = useNavigate({ from: Route.fullPath });
+  const { isAdmin } = useAuth();
 
   const { search } = useListControls({ navigate });
   const { orderBy, order } = options;
@@ -141,7 +147,7 @@ function RouteComponent() {
       <PageHeader title="Artists" count={data.totalCount}>
         <SearchForm label="Search artists" defaultValue={options.search} onSearch={search} />
         <SortTabs
-          options={sortOptions}
+          options={isAdmin ? [...sortOptions, MOST_PLAYED] : sortOptions}
           value={orderBy}
           direction={order}
           onSortChange={(value, direction) => {
@@ -171,6 +177,7 @@ function RouteComponent() {
                     artist={artist}
                     position={artist.unrated || !showPosition ? null : firstPosition + data.artists.indexOf(artist) + 1}
                     score={artistScore(artist, orderBy)}
+                    subtitle={artist.plays === undefined ? undefined : describePlays(artist.plays)}
                   />
                 ))}
               </Fragment>
