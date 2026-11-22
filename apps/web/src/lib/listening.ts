@@ -63,3 +63,13 @@ export function bucketLabel(start: string, unit: "day" | "week" | "month", full:
 export function describePlays(plays: number): string {
   return plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`;
 }
+
+/** A minute count with its word, such as "1 minute" or "1,204 minutes". */
+export function describeMinutes(minutes: number): string {
+  return minutes === 1 ? "1 minute" : `${minutes.toLocaleString("en-GB")} minutes`;
+}
+
+/** Plays or minutes with their word, to match a plays or minutes switch. */
+export function describeAmount(amount: number, by: RankBy): string {
+  return by === "plays" ? describePlays(amount) : describeMinutes(amount);
+}

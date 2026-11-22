@@ -37,9 +37,9 @@ describe("Dublin time across the clock changes", () => {
 
     const clock = await ListeningStatsModel.getClock({ from: null, to: new Date("2027-01-01T00:00:00Z") });
 
-    expect(clock[sunday][0]).toBe(1);
-    expect(clock[sunday][1]).toBe(0);
-    expect(clock[sunday][2]).toBe(1);
+    expect(clock.plays[sunday][0]).toBe(1);
+    expect(clock.plays[sunday][1]).toBe(0);
+    expect(clock.plays[sunday][2]).toBe(1);
   });
 
   test("in October, 01:00 to 01:59 happens twice and both count as 1am", async () => {
@@ -48,7 +48,7 @@ describe("Dublin time across the clock changes", () => {
 
     const clock = await ListeningStatsModel.getClock({ from: null, to: new Date("2027-01-01T00:00:00Z") });
 
-    expect(clock[sunday][1]).toBe(2);
+    expect(clock.plays[sunday][1]).toBe(2);
   });
 
   test("a play at 23:30 UTC in summer falls on the next Dublin day", async () => {
@@ -57,8 +57,8 @@ describe("Dublin time across the clock changes", () => {
     const timeline = await ListeningStatsModel.getTimeline({ from: new Date("2026-10-23T23:00:00Z"), to: new Date("2026-10-26T00:00:00Z") }, "day");
 
     expect(timeline).toEqual([
-      { start: "2026-10-24", plays: 0 },
-      { start: "2026-10-25", plays: 1 },
+      { start: "2026-10-24", plays: 0, minutes: 0 },
+      { start: "2026-10-25", plays: 1, minutes: 3 },
     ]);
   });
 });
@@ -69,9 +69,9 @@ test("weeks start on a Monday, and empty weeks are filled in", async () => {
   const timeline = await ListeningStatsModel.getTimeline({ from: new Date("2026-01-05T00:00:00Z"), to: new Date("2026-01-25T00:00:00Z") }, "week");
 
   expect(timeline).toEqual([
-    { start: "2026-01-05", plays: 1 },
-    { start: "2026-01-12", plays: 0 },
-    { start: "2026-01-19", plays: 1 },
+    { start: "2026-01-05", plays: 1, minutes: 3 },
+    { start: "2026-01-12", plays: 0, minutes: 0 },
+    { start: "2026-01-19", plays: 1, minutes: 3 },
   ]);
 });
 
@@ -82,7 +82,7 @@ test("an entry narrows the timeline and clock to its plays, and all time starts 
 
   expect(overTime.timeline.map(bucket => bucket.start)[0]).toBe("2026-03-02");
   expect(overTime.timeline.reduce((total, bucket) => total + bucket.plays, 0)).toBe(2);
-  expect(overTime.clock.flat().reduce((total, plays) => total + plays, 0)).toBe(2);
+  expect(overTime.clock.plays.flat().reduce((total, plays) => total + plays, 0)).toBe(2);
 });
 
 test("picks days, weeks or months to suit the period's length", () => {
@@ -96,6 +96,6 @@ test("the over-time route is for the admin only and answers both views", async (
   expect((await api.get("/api/listening/over-time")).status).toBe(401);
 
   const body = await (await api.get("/api/listening/over-time?period=all", adminCookie())).json();
-  expect(body.clock).toHaveLength(7);
+  expect(body.clock.plays).toHaveLength(7);
   expect(body.timeline).toEqual([]);
 });

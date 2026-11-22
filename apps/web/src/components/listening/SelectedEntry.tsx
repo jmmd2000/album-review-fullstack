@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { morphProps } from "@/lib/coverMorph";
-import { describeEntry, describePeriod, type ListeningKind, type TopEntry } from "@/lib/listening";
+import { describeAmount, describeEntry, describePeriod, type ListeningKind, type TopEntry } from "@/lib/listening";
 import { EntryImage, EntryScore, RankChange } from "@/components/listening/TopEntryRow";
 import styles from "./SelectedEntry.module.css";
 
@@ -20,7 +20,6 @@ const LIST_TITLES: Record<ListeningKind, string> = { artists: "Top tracks", albu
 const LIST_LENGTH = 5;
 
 const day = (date: Date | string) => new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Dublin" });
-const countPlays = (plays: number) => (plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`);
 
 /**
  * More about one listening entry, as a band above the list: its image, rank, name, plays, minutes and first play,
@@ -30,8 +29,8 @@ const countPlays = (plays: number) => (plays === 1 ? "1 play" : `${plays.toLocal
 export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
   const { kind, period, by, from, to } = selection;
   const details = useQuery({
-    queryKey: queryKeys.listening.entry(kind, entry.id, period, from, to),
-    queryFn: () => handle(client.api.listening.entry.$get({ query: { kind, id: entry.id, period, ...(period === "custom" ? { from, to } : {}) } })),
+    queryKey: queryKeys.listening.entry(kind, entry.id, period, by, from, to),
+    queryFn: () => handle(client.api.listening.entry.$get({ query: { kind, id: entry.id, period, by, ...(period === "custom" ? { from, to } : {}) } })),
     placeholderData: keepPreviousData,
   });
   // The last entry's details show while the next load, but its link must not
@@ -91,7 +90,7 @@ export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
                   <span className={kind === "genres" ? styles.round : undefined} />
                 )}
                 <span className={styles.itemName}>{item.name}</span>
-                <span className={styles.itemPlays}>{countPlays(item.plays)}</span>
+                <span className={styles.itemPlays}>{describeAmount(item[by], by)}</span>
               </li>
             ))}
           </ol>

@@ -47,4 +47,6 @@ export const overTimeQuerySchema = periodQuerySchema
   .refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), { error: customPeriodRule.error })
   .refine(query => (query.kind === undefined) === (query.id === undefined), { error: "Give both kind and id, or neither." });
 
-export const entryQuerySchema = periodQuerySchema.extend({ id: z.string().min(1).max(255) }).refine(customPeriodRule.check, { error: customPeriodRule.error });
+export const entryQuerySchema = periodQuerySchema
+  .extend({ id: z.string().min(1).max(255), by: z.enum(["plays", "minutes"]).default("plays") })
+  .refine(customPeriodRule.check, { error: customPeriodRule.error });

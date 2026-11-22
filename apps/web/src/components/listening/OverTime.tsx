@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { bucketLabel, roundedTop, type ListeningKind } from "@/lib/listening";
+import { bucketLabel, describeAmount, roundedTop, type ListeningKind, type RankBy } from "@/lib/listening";
 import switchStyles from "@/components/stats/ViewSwitch.module.css";
 import styles from "./OverTime.module.css";
 
@@ -14,7 +14,6 @@ const WEEKDAY_NAMES = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Friday
 const BUCKET_PREFIXES = { day: "", week: "week of ", month: "" } as const;
 const MAX_LABELS = 6;
 
-const countPlays = (plays: number) => (plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`);
 const hourName = (hour: number) => (hour === 0 ? "midnight" : hour === 12 ? "noon" : hour < 12 ? `${hour}am` : `${hour - 12}pm`);
 
 const ENTRY_LABELS: Record<ListeningKind, string> = { artists: "This artist", tracks: "This track", albums: "This album", genres: "This genre" };
@@ -28,11 +27,11 @@ interface OverTimeProps {
 }
 
 /**
- * Plays in each day, week or month of the period, then the listening clock: plays in each hour of each weekday.
- * They show the selected entry's plays, or all plays when `follow` is off.
+ * Plays or minutes in each day, week or month of the period, then the listening clock: plays or minutes in each hour of each weekday.
+ * They follow the plays and minutes switch, and show the selected entry's listening, or all listening when `follow` is off.
  */
 export function OverTime({ selection, entry, follow, onFollowChange }: OverTimeProps) {
-  const { period, from, to } = selection;
+  const { period, by, from, to } = selection;
   const focus = follow ? entry : null;
   const overTime = useQuery({
     queryKey: queryKeys.listening.overTime(period, from, to, focus?.kind, focus?.id),
@@ -57,17 +56,18 @@ export function OverTime({ selection, entry, follow, onFollowChange }: OverTimeP
             </div>
           )}
         </div>
-        <PlaysChart unit={overTime.data.unit} timeline={overTime.data.timeline} />
+        <TimelineChart unit={overTime.data.unit} timeline={overTime.data.timeline.map(bucket => ({ start: bucket.start, amount: bucket[by] }))} by={by} />
       </section>
       <section className={styles.section}>
         <h2 className={styles.title}>{focus ? `When I listen to ${focus.name}` : "When I listen"}</h2>
-        <ListeningClock clock={overTime.data.clock} />
+        <ListeningClock clock={overTime.data.clock[by]} by={by} />
       </section>
     </div>
   );
 }
 
-type Bucket = { start: string; plays: number };
+/** A day, week or month, with its plays or minutes */
+type Bucket = { start: string; amount: number };
 type Unit = "day" | "week" | "month";
 
 /** A bucket's name, such as "week of 2 Nov 2026" or "Mar 2026" */
@@ -75,30 +75,30 @@ function bucketName(bucket: Bucket, unit: Unit): string {
   return `${BUCKET_PREFIXES[unit]}${bucketLabel(bucket.start, unit, true)}`;
 }
 
-/** A bucket's name and plays, such as "Week of 2 Nov 2026: 605 plays" */
-function describeBucket(bucket: Bucket, unit: Unit): string {
+/** A bucket's name and amount, such as "Week of 2 Nov 2026: 605 plays" */
+function describeBucket(bucket: Bucket, unit: Unit, by: RankBy): string {
   const name = bucketName(bucket, unit);
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)}: ${countPlays(bucket.plays)}`;
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)}: ${describeAmount(bucket.amount, by)}`;
 }
 
-function describeHour(clock: number[][], weekday: number, hour: number): string {
-  return `${WEEKDAY_NAMES[weekday]} at ${hourName(hour)}: ${countPlays(clock[weekday][hour])}`;
+function describeHour(clock: number[][], weekday: number, hour: number, by: RankBy): string {
+  return `${WEEKDAY_NAMES[weekday]} at ${hourName(hour)}: ${describeAmount(clock[weekday][hour], by)}`;
 }
 
-/** Bars of plays over the period. Pointing at a bar shows its plays, and otherwise the busiest one shows. */
-function PlaysChart({ unit, timeline }: { unit: Unit; timeline: Bucket[] }) {
+/** Bars of plays or minutes over the period. Pointing at a bar shows its amount, and otherwise the busiest one shows. */
+function TimelineChart({ unit, timeline, by }: { unit: Unit; timeline: Bucket[]; by: RankBy }) {
   const [pointed, setPointed] = useState<number | null>(null);
-  const most = Math.max(0, ...timeline.map(bucket => bucket.plays));
-  const busiest = timeline.find(bucket => bucket.plays === most);
+  const most = Math.max(0, ...timeline.map(bucket => bucket.amount));
+  const busiest = timeline.find(bucket => bucket.amount === most);
 
   let readout = "No plays in this period";
-  if (pointed !== null && timeline[pointed]) readout = describeBucket(timeline[pointed], unit);
-  else if (busiest && most > 0) readout = `Busiest: ${bucketName(busiest, unit)}, ${countPlays(most)}`;
+  if (pointed !== null && timeline[pointed]) readout = describeBucket(timeline[pointed], unit, by);
+  else if (busiest && most > 0) readout = `Busiest: ${bucketName(busiest, unit)}, ${describeAmount(most, by)}`;
 
   return (
     <div className={styles.chartArea}>
       <p className={styles.readout}>{readout}</p>
-      <PlaysBars unit={unit} timeline={timeline} onPoint={setPointed} />
+      <TimelineBars unit={unit} timeline={timeline} by={by} onPoint={setPointed} />
     </div>
   );
 }
@@ -107,8 +107,8 @@ function PlaysChart({ unit, timeline }: { unit: Unit; timeline: Bucket[] }) {
  * The bars themselves. They don't re-render when the pointer moves between them, only the readout does,
  * and the fade on the other bars is plain CSS.
  */
-const PlaysBars = memo(function PlaysBars({ unit, timeline, onPoint }: { unit: Unit; timeline: Bucket[]; onPoint: (index: number | null) => void }) {
-  const top = roundedTop(Math.max(0, ...timeline.map(bucket => bucket.plays)));
+const TimelineBars = memo(function TimelineBars({ unit, timeline, by, onPoint }: { unit: Unit; timeline: Bucket[]; by: RankBy; onPoint: (index: number | null) => void }) {
+  const top = roundedTop(Math.max(0, ...timeline.map(bucket => bucket.amount)));
   const labelEvery = Math.ceil(timeline.length / MAX_LABELS);
 
   return (
@@ -120,8 +120,8 @@ const PlaysBars = memo(function PlaysBars({ unit, timeline, onPoint }: { unit: U
       </div>
       <ol className={styles.bars} onMouseLeave={() => onPoint(null)}>
         {timeline.map((bucket, index) => (
-          <li key={bucket.start} tabIndex={0} aria-label={describeBucket(bucket, unit)} onMouseEnter={() => onPoint(index)} onFocus={() => onPoint(index)} onBlur={() => onPoint(null)}>
-            <span className={styles.bar} style={{ height: `${top > 0 ? (bucket.plays / top) * 100 : 0}%` }} />
+          <li key={bucket.start} tabIndex={0} aria-label={describeBucket(bucket, unit, by)} onMouseEnter={() => onPoint(index)} onFocus={() => onPoint(index)} onBlur={() => onPoint(null)}>
+            <span className={styles.bar} style={{ height: `${top > 0 ? (bucket.amount / top) * 100 : 0}%` }} />
             <span className={styles.label}>{index % labelEvery === 0 ? bucketLabel(bucket.start, unit, false) : ""}</span>
           </li>
         ))}
@@ -130,26 +130,26 @@ const PlaysBars = memo(function PlaysBars({ unit, timeline, onPoint }: { unit: U
   );
 });
 
-/** Plays in each hour of each weekday, darker for more. Pointing at an hour shows its plays, and otherwise the busiest hour shows. */
-function ListeningClock({ clock }: { clock: number[][] }) {
+/** Plays or minutes in each hour of each weekday, darker for more. Pointing at an hour shows its amount, and otherwise the busiest hour shows. */
+function ListeningClock({ clock, by }: { clock: number[][]; by: RankBy }) {
   const [pointed, setPointed] = useState<{ weekday: number; hour: number } | null>(null);
   const most = Math.max(0, ...clock.flat());
   const busiestWeekday = clock.findIndex(hours => hours.includes(most));
 
   let readout = "No plays in this period";
-  if (pointed !== null) readout = describeHour(clock, pointed.weekday, pointed.hour);
-  else if (most > 0) readout = `Busiest hour: ${describeHour(clock, busiestWeekday, clock[busiestWeekday].indexOf(most))}`;
+  if (pointed !== null) readout = describeHour(clock, pointed.weekday, pointed.hour, by);
+  else if (most > 0) readout = `Busiest hour: ${describeHour(clock, busiestWeekday, clock[busiestWeekday].indexOf(most), by)}`;
 
   return (
     <div className={styles.chartArea}>
       <p className={styles.readout}>{readout}</p>
-      <ClockCells clock={clock} onPoint={setPointed} />
+      <ClockCells clock={clock} by={by} onPoint={setPointed} />
     </div>
   );
 }
 
 /** The clock's cells. Like the bars, they don't re-render when the pointer moves, and the outline is plain CSS. */
-const ClockCells = memo(function ClockCells({ clock, onPoint }: { clock: number[][]; onPoint: (pointed: { weekday: number; hour: number } | null) => void }) {
+const ClockCells = memo(function ClockCells({ clock, by, onPoint }: { clock: number[][]; by: RankBy; onPoint: (pointed: { weekday: number; hour: number } | null) => void }) {
   const most = Math.max(1, ...clock.flat());
 
   return (
@@ -157,13 +157,13 @@ const ClockCells = memo(function ClockCells({ clock, onPoint }: { clock: number[
       {clock.map((hours, weekday) => (
         <div key={WEEKDAYS[weekday]} className={styles.clockRow}>
           <span className={styles.weekday}>{WEEKDAYS[weekday]}</span>
-          {hours.map((plays, hour) => (
+          {hours.map((amount, hour) => (
             <span
               key={hour}
               className={styles.cell}
               tabIndex={0}
-              aria-label={describeHour(clock, weekday, hour)}
-              style={{ opacity: plays === 0 ? 0.06 : 0.15 + (plays / most) * 0.85 }}
+              aria-label={describeHour(clock, weekday, hour, by)}
+              style={{ opacity: amount === 0 ? 0.06 : 0.15 + (amount / most) * 0.85 }}
               onMouseEnter={() => onPoint({ weekday, hour })}
               onFocus={() => onPoint({ weekday, hour })}
               onBlur={() => onPoint(null)}
