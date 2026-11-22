@@ -51,6 +51,9 @@ export const queryKeys = {
     listening: ["settings", "listening"] as const,
     playsInRange: (from: string, to: string) => ["settings", "playsInRange", from, to] as const,
   },
+  jobs: {
+    running: ["jobs", "running"] as const,
+  },
   listening: {
     top: (kind: string, period: string, from?: string, to?: string) => ["listening", "top", kind, period, from ?? "", to ?? ""] as const,
     overTime: (period: string, from?: string, to?: string) => ["listening", "overTime", period, from ?? "", to ?? ""] as const,

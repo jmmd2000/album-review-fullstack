@@ -106,7 +106,7 @@ function Settings() {
         <SectionHeader title="Listening" />
         <div className={styles.body}>
           <ListeningRow status={listening} />
-          <StreamingHistoryRow />
+          <StreamingHistoryRow lastImport={listening.lastImport} />
           <ArtistJobRow
             job="played-tracks"
             title="Played tracks"

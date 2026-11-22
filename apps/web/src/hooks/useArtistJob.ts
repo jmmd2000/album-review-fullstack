@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
@@ -41,19 +41,29 @@ function listen<Name extends keyof JobEventMap>(source: EventSource, name: Name,
   source.addEventListener(name, event => handler(JSON.parse((event as MessageEvent<string>).data) as JobEventMap[Name]));
 }
 
+// How often a row asks the server whether its job was started somewhere else, such as by an import
+const RUNNING_CHECK_MS = 10_000;
+
 /**
- * Starts an artist job and follows its progress events. The job ID is kept in local storage,
- * so the page follows a job that is still running when it opens again. When the job finishes,
+ * Starts an artist job and follows its progress events. The row also asks the server which jobs are running,
+ * so it follows a run started before a refresh, on another device or by an import. When the job finishes,
  * it shows a toast and refreshes the artists and the last run times.
  */
 export function useArtistJob(job: ArtistJob) {
   const queryClient = useQueryClient();
   const [state, setState] = useState<ArtistJobState>(IDLE);
   const sourceRef = useRef<EventSource | null>(null);
-  const storageKey = `jobID:${job}`;
+  const followedJobIDRef = useRef<string | null>(null);
+  const running = useQuery({
+    queryKey: queryKeys.jobs.running,
+    queryFn: () => handle(client.api.jobs.running.$get()),
+    refetchInterval: RUNNING_CHECK_MS,
+  });
+  const runningJobID = running.data?.running[job] ?? null;
 
   const follow = useCallback(
     (jobID: string) => {
+      followedJobIDRef.current = jobID;
       sourceRef.current?.close();
       const source = new EventSource(`/api/jobs/${jobID}/events`, { withCredentials: true });
       sourceRef.current = source;
@@ -75,7 +85,6 @@ export function useArtistJob(job: ArtistJob) {
 
       listen(source, "done", () => {
         source.close();
-        localStorage.removeItem(storageKey);
         update({ status: "finished", current: null });
 
         if (latest.error) {
@@ -93,30 +102,28 @@ export function useArtistJob(job: ArtistJob) {
       // It only closes when the job is gone, such as after a server restart.
       source.onerror = () => {
         if (source.readyState !== EventSource.CLOSED) return;
-        localStorage.removeItem(storageKey);
         setState(IDLE);
       };
     },
-    [job, storageKey, queryClient]
+    [job, queryClient]
   );
 
   useEffect(() => {
-    const runningJobID = localStorage.getItem(storageKey);
-    if (runningJobID) follow(runningJobID);
-    return () => sourceRef.current?.close();
-  }, [storageKey, follow]);
+    if (runningJobID && runningJobID !== followedJobIDRef.current) follow(runningJobID);
+  }, [runningJobID, follow]);
+
+  useEffect(() => () => sourceRef.current?.close(), []);
 
   const start = useCallback(async () => {
     setState({ ...IDLE, status: "running" });
     try {
       const { jobID } = await handle(client.api.jobs[":name"].$post({ param: { name: job } }));
-      localStorage.setItem(storageKey, jobID);
       follow(jobID);
     } catch (error) {
       const message = error instanceof ApiError && error.status === 409 ? error.message : "The job couldn't start. Try again.";
       setState({ ...IDLE, status: "finished", error: message });
     }
-  }, [job, storageKey, follow]);
+  }, [job, follow]);
 
   return { state, start };
 }

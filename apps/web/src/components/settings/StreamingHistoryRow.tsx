@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { timeAgo } from "@shared/helpers/formatDate";
 import { readStreamingHistory, summariseStreamingHistory, type StreamingHistory } from "@/lib/streamingHistory";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -25,8 +26,20 @@ async function readFiles(fileList: FileList): Promise<StreamingHistory> {
   return readStreamingHistory(files);
 }
 
+interface LastImport {
+  importedAt: string;
+  saved: number;
+  from: string;
+  to: string;
+}
+
+function describeLastImport(lastImport: LastImport | null): string[] {
+  if (!lastImport) return ["Never imported"];
+  return [`Last import ${timeAgo(lastImport.importedAt)}: ${count(lastImport.saved)} plays from ${day(lastImport.from)} to ${day(lastImport.to)}`];
+}
+
 /** The settings row that imports Spotify's extended streaming history. It shows a dry run before anything is saved. */
-export function StreamingHistoryRow() {
+export function StreamingHistoryRow({ lastImport }: { lastImport: LastImport | null }) {
   const queryClient = useQueryClient();
   const [history, setHistory] = useState<StreamingHistory | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
@@ -42,6 +55,8 @@ export function StreamingHistoryRow() {
     mutationFn: (plays: StreamingHistory["plays"]) => handle(client.api.listening.import.$post({ json: { plays } })),
     onSuccess: () => {
       setHistory(null);
+      // The import starts the track and genre lookups, so their rows pick them up straight away
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobs.running });
       return queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
     },
   });
@@ -64,7 +79,7 @@ export function StreamingHistoryRow() {
     <SettingsRow
       title="Streaming history"
       description="Imports every play from Spotify's extended streaming history. Choose the Streaming_History_Audio files from the export."
-      details={[]}
+      details={describeLastImport(lastImport)}
       action={
         summary && (
           <Button onClick={() => importing.mutate(history?.plays ?? [])} disabled={importing.isPending || !savedInRange.isSuccess}>

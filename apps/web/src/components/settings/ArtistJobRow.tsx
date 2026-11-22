@@ -13,13 +13,33 @@ import type { ArtistJob, ArtistJobState } from "@/hooks/useArtistJob";
 import type { ArtistJobResult } from "@/lib/jobStatus";
 
 /** The image each changed artist shows in a job's results, or null to show the name only */
-const IMAGE_KINDS: Record<ArtistJob, "photo" | "header" | null> = {
+const IMAGE_KINDS: Record<ArtistJob, "photo" | "header" | "thumbnail" | null> = {
   "artist-images": "photo",
   "artist-headers": "header",
   "listener-links": null,
   "album-suggestions": null,
-  "played-tracks": null,
+  "played-tracks": "thumbnail",
   "played-genres": null,
+};
+
+/** The label of a finished job's list of results */
+const RESULT_LABELS: Record<ArtistJob, string> = {
+  "artist-images": "Show the updated and failed artists",
+  "artist-headers": "Show the updated and failed artists",
+  "listener-links": "Show the updated and failed artists",
+  "album-suggestions": "Show the updated and failed artists",
+  "played-tracks": "Show the tracks and artists looked up",
+  "played-genres": "Show the artists given genres",
+};
+
+/** The jobs whose results are reviewed artists, so each name links to the artist's page */
+const LINKS_TO_ARTISTS: Record<ArtistJob, boolean> = {
+  "artist-images": true,
+  "artist-headers": true,
+  "listener-links": true,
+  "album-suggestions": true,
+  "played-tracks": false,
+  "played-genres": false,
 };
 
 interface ArtistJobRowProps {
@@ -59,7 +79,7 @@ export function ArtistJobRow({ job, title, description, actionLabel, lastRun, re
       }
     >
       {state.status === "running" && <JobProgress current={state.current} />}
-      {state.status === "finished" && <JobResults state={state} imageKind={IMAGE_KINDS[job]} />}
+      {state.status === "finished" && <JobResults state={state} imageKind={IMAGE_KINDS[job]} label={RESULT_LABELS[job]} linksToArtists={LINKS_TO_ARTISTS[job]} />}
     </SettingsRow>
   );
 }
@@ -91,10 +111,12 @@ function JobProgress({ current }: { current: Progress | null }) {
 
 interface JobResultsProps {
   state: ArtistJobState;
-  imageKind: "photo" | "header" | null;
+  imageKind: "photo" | "header" | "thumbnail" | null;
+  label: string;
+  linksToArtists: boolean;
 }
 
-function JobResults({ state, imageKind }: JobResultsProps) {
+function JobResults({ state, imageKind, label, linksToArtists }: JobResultsProps) {
   const { changed, failed, unchangedCount, error } = state;
   const processedCount = changed.length + failed.length + unchangedCount;
 
@@ -107,49 +129,53 @@ function JobResults({ state, imageKind }: JobResultsProps) {
       )}
       {processedCount > 0 && <p>{summariseArtistJob(state)}</p>}
       {(changed.length > 0 || failed.length > 0) && (
-        <ResultDetails label="Show the updated and failed artists">
-          {changed.length > 0 && (
-            <ul className={styles.changes}>
-              {changed.map(entry => (
-                <li key={entry.spotifyID} className={styles.change}>
-                  {imageKind === "photo" && (
-                    <>
-                      <ArtistPhoto url={entry.artistImage} />
-                      <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
-                      <ArtistPhoto url={entry.newArtistImage} />
-                    </>
-                  )}
-                  {imageKind === "header" && (
-                    <>
-                      <HeaderThumbnail url={entry.headerImage} />
-                      <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
-                      <HeaderThumbnail url={entry.newHeaderImage} />
-                    </>
-                  )}
-                  <ArtistLink entry={entry} />
-                </li>
-              ))}
-            </ul>
-          )}
-          {failed.length > 0 && (
-            <div className={styles.failed}>
-              <h4 className={styles.failedTitle}>Failed</h4>
-              <ul className={styles.failedList}>
-                {failed.map(entry => (
-                  <li key={entry.spotifyID}>
-                    <ArtistLink entry={entry} />
+        <ResultDetails label={label}>
+          <div className={styles.scroll}>
+            {changed.length > 0 && (
+              <ul className={styles.changes}>
+                {changed.map(entry => (
+                  <li key={entry.spotifyID} className={styles.change}>
+                    {imageKind === "photo" && (
+                      <>
+                        <ArtistPhoto url={entry.artistImage} />
+                        <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
+                        <ArtistPhoto url={entry.newArtistImage} />
+                      </>
+                    )}
+                    {imageKind === "thumbnail" && <ArtistPhoto url={entry.artistImage} />}
+                    {imageKind === "header" && (
+                      <>
+                        <HeaderThumbnail url={entry.headerImage} />
+                        <ArrowRightIcon className={styles.arrow} weight="bold" aria-hidden="true" />
+                        <HeaderThumbnail url={entry.newHeaderImage} />
+                      </>
+                    )}
+                    <EntryName entry={entry} linksToArtist={linksToArtists} />
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            )}
+            {failed.length > 0 && (
+              <div className={styles.failed}>
+                <h4 className={styles.failedTitle}>Failed</h4>
+                <ul className={styles.failedList}>
+                  {failed.map(entry => (
+                    <li key={entry.spotifyID}>
+                      <EntryName entry={entry} linksToArtist={linksToArtists} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </ResultDetails>
       )}
     </div>
   );
 }
 
-function ArtistLink({ entry }: { entry: Progress }) {
+function EntryName({ entry, linksToArtist }: { entry: Progress; linksToArtist: boolean }) {
+  if (!linksToArtist) return <span>{entry.artistName}</span>;
   return (
     <Link to="/artists/$artistID" params={{ artistID: entry.spotifyID }} className={styles.artistLink}>
       {entry.artistName}
