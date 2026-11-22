@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { playedAlbums, playedArtists, playedTrackArtists, playedTracks, plays } from "@/db/schema";
 import { PlayedTrackModel } from "@/api/models/PlayedTrack";
@@ -8,6 +8,14 @@ import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
 
 // Keeps each insert well under Postgres's limit of 65,535 values in one query
 const INSERT_BATCH_SIZE = 5000;
+
+/**
+ * The moment just after the whole second `time` falls in. The streaming history export gives times
+ * in whole seconds, but a play saved from the recent list has milliseconds, so the same play can land just after the export's last second.
+ */
+function endOfSecond(time: Date): Date {
+  return new Date(Math.floor(time.getTime() / 1000) * 1000 + 1000);
+}
 
 /** One play from the streaming history export */
 export interface ImportedPlay {
@@ -28,17 +36,17 @@ export interface RecentPlay {
 }
 
 export class PlayModel {
-  /** Counts the saved plays from `from` to `to`, both included. */
+  /** Counts the saved plays from `from` to the end of the second `to` falls in. */
   static async countInRange(from: Date, to: Date): Promise<number> {
     const [row] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(plays)
-      .where(and(gte(plays.playedAt, from), lte(plays.playedAt, to)));
+      .where(and(gte(plays.playedAt, from), lt(plays.playedAt, endOfSecond(to))));
     return row?.count ?? 0;
   }
 
   /**
-   * Replaces every saved play from the first to the last imported play with the imported plays, in one transaction.
+   * Replaces every saved play from the first imported play to the end of the last one's second with the imported plays, in one transaction.
    * A track that is already saved keeps its details. A new track is saved with only its name.
    * A second play of the same track at the same time in the import is dropped.
    * @returns How many saved plays it removed, and how many imported plays it saved.
@@ -59,7 +67,7 @@ export class PlayModel {
     }
 
     return db.transaction(async tx => {
-      const deleted = await tx.delete(plays).where(and(gte(plays.playedAt, from), lte(plays.playedAt, to)));
+      const deleted = await tx.delete(plays).where(and(gte(plays.playedAt, from), lt(plays.playedAt, endOfSecond(to))));
       for (const batch of chunks(tracks, INSERT_BATCH_SIZE)) {
         await tx.insert(playedTracks).values(batch).onConflictDoNothing();
       }

@@ -52,6 +52,16 @@ test("replaces the saved plays inside the import's range and keeps the ones befo
   ]);
 });
 
+test("replaces a live play saved a fraction of a second after the import's last play, so the play isn't counted twice", async () => {
+  await PlayModel.savePlays([livePlay("last", "2026-11-20T21:57:45.106Z"), livePlay("later", "2026-11-20T21:57:46.000Z")]);
+
+  const result = await PlayModel.replaceRange([importedPlay("first", "2026-11-20T21:50:47.000Z"), importedPlay("last", "2026-11-20T21:57:45.000Z")]);
+
+  expect(result).toEqual({ removed: 1, saved: 2 });
+  expect(await savedPlays()).toEqual(["first 2026-11-20T21:50:47.000Z 180000", "last 2026-11-20T21:57:45.000Z 180000", "later 2026-11-20T21:57:46.000Z null"]);
+  expect(await PlayModel.countInRange(new Date("2026-11-20T21:50:47.000Z"), new Date("2026-11-20T21:57:45.000Z"))).toBe(2);
+});
+
 test("running the same import twice leaves the same plays and tracks", async () => {
   const plays = [importedPlay("track1", "2026-01-05T09:00:00.000Z"), importedPlay("track2", "2026-01-06T09:00:00.000Z", 12000)];
 
