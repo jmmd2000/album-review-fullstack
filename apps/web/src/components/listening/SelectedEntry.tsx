@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { morphProps } from "@/lib/coverMorph";
 import { describeEntry, describePeriod, type ListeningKind, type TopEntry } from "@/lib/listening";
 import { EntryImage, EntryScore, RankChange } from "@/components/listening/TopEntryRow";
 import styles from "./SelectedEntry.module.css";
@@ -37,10 +38,15 @@ export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
   const current = details.isPlaceholderData ? undefined : details.data;
   const items = kind === "genres" ? (details.data?.topArtists ?? []) : (details.data?.topTracks ?? []);
   const imageURLs = entry.largeImageURL ? [entry.largeImageURL] : entry.imageURLs;
+  const link = current?.link ?? null;
+  // The image flies into the artist or album page, the same as from a card elsewhere
+  let morph: ReturnType<typeof morphProps> | undefined;
+  if (link?.type === "artist") morph = morphProps("artist", link.id);
+  if (link?.type === "album") morph = morphProps("album", link.id);
 
   return (
     <article className={styles.entry}>
-      <EntryImage kind={kind} imageURLs={imageURLs} large />
+      <EntryImage kind={kind} imageURLs={imageURLs} large morph={morph} />
 
       <div className={styles.text}>
         <p className={styles.rank}>
@@ -48,7 +54,7 @@ export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
           {entry.score !== null && <EntryScore kind={kind} score={entry.score} />}
         </p>
         <h2 className={styles.name}>
-          <EntryName name={entry.name} link={current?.link ?? null} />
+          <EntryName name={entry.name} link={link} />
         </h2>
         <p className={styles.detail}>{describeEntry(kind, entry)}</p>
         <dl className={styles.figures}>

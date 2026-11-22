@@ -2,6 +2,7 @@ import { scoreTier } from "@shared/helpers/ratingTiers";
 import { ScoreChip } from "@/components/ui/ScoreChip";
 import { TierWordChip } from "@/components/ui/TierWordChip";
 import { describeEntry, type ListeningKind, type RankBy, type TopEntry } from "@/lib/listening";
+import type { morphProps } from "@/lib/coverMorph";
 import styles from "./TopEntryRow.module.css";
 
 interface TopEntryRowProps {
@@ -55,8 +56,16 @@ export function EntryScore({ kind, score }: { kind: ListeningKind; score: number
   return <ScoreChip score={score} />;
 }
 
+interface EntryImageProps {
+  kind: ListeningKind;
+  imageURLs: string[];
+  large?: boolean;
+  /** Lets the image fly to or from the artist or album page */
+  morph?: ReturnType<typeof morphProps>;
+}
+
 /** An entry's photo or cover, or a 2 by 2 grid of a genre's top artists. `large` fills its column. */
-export function EntryImage({ kind, imageURLs, large = false }: { kind: ListeningKind; imageURLs: string[]; large?: boolean }) {
+export function EntryImage({ kind, imageURLs, large = false, morph }: EntryImageProps) {
   if (kind === "genres") {
     return (
       <span className={`${styles.grid} ${large ? styles.large : ""}`} aria-hidden="true">
@@ -65,5 +74,5 @@ export function EntryImage({ kind, imageURLs, large = false }: { kind: Listening
     );
   }
   const className = `${kind === "artists" ? styles.photo : styles.cover} ${large ? styles.large : ""}`;
-  return imageURLs[0] ? <img className={className} src={imageURLs[0]} alt="" width={48} height={48} loading="lazy" /> : <span className={className} aria-hidden="true" />;
+  return imageURLs[0] ? <img className={className} src={imageURLs[0]} alt="" width={48} height={48} loading="lazy" {...morph} /> : <span className={className} aria-hidden="true" />;
 }
