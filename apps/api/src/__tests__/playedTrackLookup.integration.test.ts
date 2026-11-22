@@ -128,7 +128,7 @@ test("looks up each reviewed track's ISRC once, and groups the copies at the end
   expect(copy.rows[0].reviewed_spotify_id).toBe("reviewed");
 });
 
-test("after each batch, a progress event shows the last track looked up with its cover", async () => {
+test("after each batch, a progress event shows the last track looked up with its album cover", async () => {
   await importTracks(["track1"]);
   vi.spyOn(SpotifyClient, "getTracks").mockResolvedValue({ found: [spotifyTrack("track1")], missingIDs: [] });
   vi.spyOn(SpotifyClient, "getSeveralArtists").mockResolvedValue([]);
@@ -138,7 +138,8 @@ test("after each batch, a progress event shows the last track looked up with its
     if (event === "progress") progress.push(data as Progress);
   });
 
-  expect(progress[1]).toMatchObject({ index: 1, artistName: "Track track1 by Artist track1", artistImage: "300.jpg" });
+  expect(progress[1]).toMatchObject({ index: 1, artistName: "Track track1 by Artist track1", coverImage: "300.jpg" });
+  expect(progress[1].artistImage).toBeUndefined();
 });
 
 test("a Spotify failure stops the run, and the tracks left are looked up next time", async () => {

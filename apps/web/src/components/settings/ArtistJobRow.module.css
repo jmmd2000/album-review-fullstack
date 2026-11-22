@@ -90,6 +90,19 @@
   object-fit: cover;
 }
 
+.cover {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-tag);
+  background: var(--colour-panel-strong);
+  object-fit: cover;
+}
+
+.more {
+  justify-self: start;
+}
+
 .header {
   flex: none;
   width: 96px;

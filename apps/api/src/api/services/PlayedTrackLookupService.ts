@@ -17,6 +17,9 @@ interface Waiting {
   imageURL: string | null;
 }
 
+/** Tracks show their album's cover, and artists their photo */
+type ImageField = "coverImage" | "artistImage";
+
 const describeTrack = (track: SpotifyPlayedTrack) => `${track.name} by ${track.artists.map(artist => artist.name).join(", ")}`;
 
 export const PlayedTrackLookupService = {
@@ -36,18 +39,18 @@ export const PlayedTrackLookupService = {
     let done = 0;
     let requestCount = 0;
 
-    const beforeRequest = async (batch: Waiting[]) => {
-      emit("progress", { index: done + 1, total, spotifyID: batch[0].spotifyID, artistName: batch[0].name, artistImage: batch[0].imageURL ?? undefined });
+    const beforeRequest = async (batch: Waiting[], imageField: ImageField) => {
+      emit("progress", { index: done + 1, total, spotifyID: batch[0].spotifyID, artistName: batch[0].name, [imageField]: batch[0].imageURL ?? undefined });
       if (requestCount > 0) await sleep(REQUEST_GAP_MS);
       requestCount++;
     };
-    const afterRequest = (batchSize: number, last: { spotifyID: string; name: string; imageURL: string | null } | undefined) => {
+    const afterRequest = (batchSize: number, last: Waiting | undefined, imageField: ImageField) => {
       done += batchSize;
-      if (last) emit("progress", { index: done, total, spotifyID: last.spotifyID, artistName: last.name, artistImage: last.imageURL ?? undefined });
+      if (last) emit("progress", { index: done, total, spotifyID: last.spotifyID, artistName: last.name, [imageField]: last.imageURL ?? undefined });
     };
 
     for (const batch of chunks(tracks, LOOKUP_BATCH_SIZE)) {
-      await beforeRequest(batch);
+      await beforeRequest(batch, "coverImage");
       const { found, missingIDs } = await SpotifyClient.getTracks(
         batch.map(track => track.spotifyID),
         accessToken
@@ -56,29 +59,28 @@ export const PlayedTrackLookupService = {
       await PlayedTrackModel.markUnavailable(missingIDs);
 
       for (const [position, track] of found.entries()) {
-        emit("changed", { index: done + position + 1, total, spotifyID: track.id, artistName: describeTrack(track), artistImage: mediumImageURL(track.album.images) ?? undefined });
+        emit("changed", { index: done + position + 1, total, spotifyID: track.id, artistName: describeTrack(track), coverImage: mediumImageURL(track.album.images) ?? undefined });
       }
       for (const [position, spotifyID] of missingIDs.entries()) {
         const name = batch.find(track => track.spotifyID === spotifyID)?.name ?? spotifyID;
         emit("failed", { index: done + found.length + position + 1, total, spotifyID, artistName: name, message: "Spotify no longer has this track" });
       }
       const last = found[found.length - 1];
-      afterRequest(batch.length, last && { spotifyID: last.id, name: describeTrack(last), imageURL: mediumImageURL(last.album.images) });
+      afterRequest(batch.length, last && { spotifyID: last.id, name: describeTrack(last), imageURL: mediumImageURL(last.album.images) }, "coverImage");
     }
 
     for (const batch of chunks(reviewedTracks, LOOKUP_BATCH_SIZE)) {
-      await beforeRequest(batch);
+      await beforeRequest(batch, "coverImage");
       const batchIDs = batch.map(track => track.spotifyID);
       const { found } = await SpotifyClient.getTracks(batchIDs, accessToken);
       await PlayedTrackModel.saveReviewedISRCs(batchIDs, found);
-      const last = batch[batch.length - 1];
-      afterRequest(batch.length, last);
+      afterRequest(batch.length, batch[batch.length - 1], "coverImage");
     }
 
     const artists = await PlayedTrackModel.getArtistsToLookUp();
     total = done + artists.length;
     for (const batch of chunks(artists, LOOKUP_BATCH_SIZE)) {
-      await beforeRequest(batch);
+      await beforeRequest(batch, "artistImage");
       const batchIDs = batch.map(artist => artist.spotifyID);
       const found = (await SpotifyClient.getSeveralArtists(batchIDs, accessToken)).filter(artist => artist !== null);
       await PlayedTrackModel.savePhotos(batchIDs, found);
@@ -88,7 +90,7 @@ export const PlayedTrackLookupService = {
         emit(artist.images.length > 0 ? "changed" : "same", progress);
       }
       const last = found[found.length - 1];
-      afterRequest(batch.length, last && { spotifyID: last.id, name: last.name, imageURL: mediumImageURL(last.images) });
+      afterRequest(batch.length, last && { spotifyID: last.id, name: last.name, imageURL: mediumImageURL(last.images) }, "artistImage");
     }
 
     await PlayedGroupModel.groupAll();

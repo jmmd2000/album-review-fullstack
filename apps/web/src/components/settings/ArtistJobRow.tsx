@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon } from "@phosphor-icons/react";
 import { summariseArtistJob, useArtistJob } from "@/hooks/useArtistJob";
@@ -11,6 +12,9 @@ import styles from "./ArtistJobRow.module.css";
 import type { Progress } from "@shared/types";
 import type { ArtistJob, ArtistJobState } from "@/hooks/useArtistJob";
 import type { ArtistJobResult } from "@/lib/jobStatus";
+
+/** How many results show at first, and how many more each press of the button adds */
+const RESULTS_STEP = 100;
 
 /** The image each changed artist shows in a job's results, or null to show the name only */
 const IMAGE_KINDS: Record<ArtistJob, "photo" | "header" | "thumbnail" | null> = {
@@ -95,7 +99,7 @@ function JobProgress({ current }: { current: Progress | null }) {
       <div className={styles.current}>
         {current ? (
           <>
-            <ArtistPhoto url={current.artistImage} />
+            <EntryImage entry={current} />
             <span className={styles.currentName}>{current.artistName}</span>
             <span className={styles.count}>
               {current.index} of {current.total}
@@ -116,9 +120,14 @@ interface JobResultsProps {
   linksToArtists: boolean;
 }
 
+/** A finished job's counts, then its changed and failed entries. A long list shows 100 at a time, so a big run doesn't put thousands of rows on the page. */
 function JobResults({ state, imageKind, label, linksToArtists }: JobResultsProps) {
   const { changed, failed, unchangedCount, error } = state;
   const processedCount = changed.length + failed.length + unchangedCount;
+  const [shownCount, setShownCount] = useState(RESULTS_STEP);
+  const hiddenCount = changed.length + failed.length - shownCount;
+  const shownChanged = changed.slice(0, shownCount);
+  const shownFailed = failed.slice(0, Math.max(0, shownCount - changed.length));
 
   return (
     <div className={styles.results}>
@@ -131,9 +140,9 @@ function JobResults({ state, imageKind, label, linksToArtists }: JobResultsProps
       {(changed.length > 0 || failed.length > 0) && (
         <ResultDetails label={label}>
           <div className={styles.scroll}>
-            {changed.length > 0 && (
+            {shownChanged.length > 0 && (
               <ul className={styles.changes}>
-                {changed.map(entry => (
+                {shownChanged.map(entry => (
                   <li key={entry.spotifyID} className={styles.change}>
                     {imageKind === "photo" && (
                       <>
@@ -142,7 +151,7 @@ function JobResults({ state, imageKind, label, linksToArtists }: JobResultsProps
                         <ArtistPhoto url={entry.newArtistImage} />
                       </>
                     )}
-                    {imageKind === "thumbnail" && <ArtistPhoto url={entry.artistImage} />}
+                    {imageKind === "thumbnail" && <EntryImage entry={entry} />}
                     {imageKind === "header" && (
                       <>
                         <HeaderThumbnail url={entry.headerImage} />
@@ -155,17 +164,22 @@ function JobResults({ state, imageKind, label, linksToArtists }: JobResultsProps
                 ))}
               </ul>
             )}
-            {failed.length > 0 && (
+            {shownFailed.length > 0 && (
               <div className={styles.failed}>
                 <h4 className={styles.failedTitle}>Failed</h4>
                 <ul className={styles.failedList}>
-                  {failed.map(entry => (
+                  {shownFailed.map(entry => (
                     <li key={entry.spotifyID}>
                       <EntryName entry={entry} linksToArtist={linksToArtists} />
                     </li>
                   ))}
                 </ul>
               </div>
+            )}
+            {hiddenCount > 0 && (
+              <Button className={styles.more} onClick={() => setShownCount(shownCount + RESULTS_STEP)}>
+                Show {Math.min(RESULTS_STEP, hiddenCount)} more
+              </Button>
             )}
           </div>
         </ResultDetails>
@@ -181,6 +195,12 @@ function EntryName({ entry, linksToArtist }: { entry: Progress; linksToArtist: b
       {entry.artistName}
     </Link>
   );
+}
+
+/** An entry's album cover, square, or its artist photo, round */
+function EntryImage({ entry }: { entry: Progress }) {
+  if (entry.coverImage) return <img className={styles.cover} src={entry.coverImage} alt="" />;
+  return <ArtistPhoto url={entry.artistImage} />;
 }
 
 function ArtistPhoto({ url }: { url?: string }) {

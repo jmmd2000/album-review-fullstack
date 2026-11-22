@@ -467,6 +467,8 @@ export type Progress = {
   spotifyID: string;
   artistName: string;
   artistImage?: string;
+  /** An album cover, which shows square where an artist photo shows round */
+  coverImage?: string;
   newArtistImage?: string;
   headerImage?: string;
   newHeaderImage?: string;
