@@ -217,13 +217,16 @@ export function albumPlaysSQL(albumSpotifyID: SQL | AnyColumn): SQL {
     SELECT count(*) FROM plays p
     JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
     JOIN played_albums al ON al.spotify_id = t.album_spotify_id
-    WHERE (al.reviewed_spotify_id = ${albumSpotifyID} OR al.spotify_id = ${albumSpotifyID}) AND ${STREAM_CONDITION})`;
+    WHERE ${REVIEWED_ALBUM_MATCH(albumSpotifyID)} AND ${STREAM_CONDITION})`;
 }
 
 /** All-time plays credited to a reviewed artist, as an SQL value for sorting */
 export function artistPlaysSQL(artistSpotifyID: SQL | AnyColumn): SQL {
   return sql`(SELECT count(*) FROM plays p JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id WHERE ta.artist_spotify_id = ${artistSpotifyID} AND ${STREAM_CONDITION})`;
 }
+
+/** Plays of a reviewed album, as an SQL condition on played albums `al`: the album itself and its merged copies */
+const REVIEWED_ALBUM_MATCH = (albumID: SQL | AnyColumn | string) => sql`(al.reviewed_spotify_id = ${albumID} OR al.spotify_id = ${albumID})`;
 
 /** Plays of reviewed tracks, as an SQL condition on played tracks `t`: the track itself and its merged copies */
 const REVIEWED_TRACK_MATCH = (trackID: SQL | AnyColumn) => sql`(t.reviewed_spotify_id = ${trackID} OR t.spotify_id = ${trackID})`;
@@ -494,6 +497,31 @@ export class ListeningStatsModel {
       )
       SELECT to_char(month, 'YYYY-MM') AS month, plays, rank FROM ranked WHERE artist_spotify_id = ${artistID} ORDER BY month`);
     return result.rows as unknown as { month: string; plays: number; rank: number }[];
+  }
+
+  /** A reviewed album's plays in each month it was played, counting its merged copies, oldest first */
+  static async getAlbumMonths(albumID: string): Promise<{ month: string; plays: number }[]> {
+    const result = await db.execute(sql`
+      SELECT to_char(date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin'), 'YYYY-MM') AS month, count(*)::int AS plays
+      FROM plays p
+      JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      WHERE ${REVIEWED_ALBUM_MATCH(albumID)} AND ${STREAM_CONDITION}
+      GROUP BY 1
+      ORDER BY 1`);
+    return result.rows as unknown as { month: string; plays: number }[];
+  }
+
+  /** When a reviewed album or one of its merged copies was first played, or null when it never was */
+  static async getAlbumFirstPlay(albumID: string): Promise<Date | null> {
+    const result = await db.execute(sql`
+      SELECT min(p.played_at) AS first
+      FROM plays p
+      JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      WHERE ${REVIEWED_ALBUM_MATCH(albumID)} AND ${STREAM_CONDITION}`);
+    const row = result.rows[0] as { first: Date | string | null };
+    return row.first === null ? null : new Date(row.first);
   }
 
   /** All-time plays of each of the given reviewed tracks, counting their merged copies. A track with no plays is left out. */

@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { ListeningService } from "@/api/services/ListeningService";
+import { AlbumListeningService } from "@/api/services/AlbumListeningService";
 import { ArtistListeningService } from "@/api/services/ArtistListeningService";
-import { artistParamSchema } from "@/api/schemas/paramSchema";
+import { albumParamSchema, artistParamSchema } from "@/api/schemas/paramSchema";
 import { requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
 import { entryQuerySchema, importPlaysSchema, overTimeQuerySchema, playCountQuerySchema, topQuerySchema } from "@/api/schemas/listeningSchema";
@@ -30,6 +31,9 @@ const listening = new Hono()
   })
   .get("/artist/:artistID", validate("param", artistParamSchema, 404), async c => {
     return c.json(await ArtistListeningService.getArtistListening(c.req.valid("param").artistID), 200);
+  })
+  .get("/album/:albumID", validate("param", albumParamSchema, 404), async c => {
+    return c.json(await AlbumListeningService.getAlbumListening(c.req.valid("param").albumID), 200);
   })
   .get("/plays/count", validate("query", playCountQuerySchema), async c => {
     const { from, to } = c.req.valid("query");

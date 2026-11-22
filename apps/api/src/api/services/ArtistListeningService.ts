@@ -2,6 +2,7 @@ import { AlbumModel } from "@/api/models/Album";
 import { ConcertModel } from "@/api/models/Concert";
 import { ListeningStatsModel } from "@/api/models/ListeningStats";
 import { TrackModel } from "@/api/models/Track";
+import { monthsBetween } from "@/helpers/monthsBetween";
 
 export interface ListeningMonth {
   /** YYYY-MM */
@@ -9,22 +10,6 @@ export interface ListeningMonth {
   plays: number;
   /** The artist's rank among every artist played that month, or null when they weren't played */
   rank: number | null;
-}
-
-/** Every month from the first to the last, as YYYY-MM, in order. */
-export function monthsBetween(first: string, last: string): string[] {
-  const months: string[] = [];
-  let [year, month] = first.split("-").map(Number);
-  const [lastYear, lastMonth] = last.split("-").map(Number);
-  while (year < lastYear || (year === lastYear && month <= lastMonth)) {
-    months.push(`${year}-${String(month).padStart(2, "0")}`);
-    month++;
-    if (month > 12) {
-      month = 1;
-      year++;
-    }
-  }
-  return months;
 }
 
 export const ArtistListeningService = {
