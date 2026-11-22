@@ -140,7 +140,7 @@ type EntryDetails = Pick<TopEntry, "artistNames" | "albumCount" | "imageURLs" | 
 
 // A reviewed album's or artist's images are listed largest first
 const REVIEWED_LARGE_IMAGE = (column: SQL) => sql`${column}->0->>'url'`;
-const REVIEWED_MEDIUM_IMAGE = (column: SQL) => sql`coalesce(${column}->1->>'url', ${column}->0->>'url')`;
+export const REVIEWED_MEDIUM_IMAGE = (column: SQL) => sql`coalesce(${column}->1->>'url', ${column}->0->>'url')`;
 
 /** The details each kind shows beside its name, for the given IDs */
 async function detailsFor(kind: TopKind, ids: string[], period: Period): Promise<Map<string, EntryDetails>> {

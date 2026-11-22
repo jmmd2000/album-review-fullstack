@@ -1,6 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
-import { ALBUM_GROUP, PLAY_MS, STREAM_CONDITION, TRACK_GROUP, type Period } from "@/api/models/ListeningStats";
+import { ALBUM_GROUP, PLAY_MS, REVIEWED_MEDIUM_IMAGE, STREAM_CONDITION, TRACK_GROUP, type Period } from "@/api/models/ListeningStats";
 
 /** The Irish-time date of a play, as YYYY-MM-DD. Plays join as `p`. */
 const PLAY_DAY = sql`(p.played_at AT TIME ZONE 'Europe/Dublin')::date::text`;
@@ -14,12 +14,13 @@ export interface DayTotals {
   minutes: number;
 }
 
-/** A day's most played artist, track or album. `artist` is null for an artist. */
+/** One of a day's most played artists, tracks or albums. `artist` is null for an artist, and `imageURL` for a track. */
 export interface DayTop {
   date: string;
   name: string;
   artist: string | null;
   plays: number;
+  imageURL: string | null;
 }
 
 /** An album reviewed on a day */
@@ -27,6 +28,9 @@ export interface DayReview {
   date: string;
   album: string;
   artist: string;
+  /** The reviewed album's Spotify ID, which its review page uses */
+  spotifyID: string;
+  imageURL: string | null;
 }
 
 /** A gig on a day */
@@ -37,18 +41,21 @@ export interface DayGig {
   city: string;
 }
 
+/** How many artists and albums each day lists */
+export const TOP_PER_DAY = 5;
+
 /**
- * The top entry of each day, from rows grouped by day and entry. Ranks by plays, then listening time, then name,
- * like the listening stats.
+ * The top `limit` entries of each day, from rows grouped by day and entry, in date order and then rank order. Ranks
+ * by plays, then listening time, then name, like the listening stats.
  */
-async function topPerDay(grouped: SQL): Promise<DayTop[]> {
+async function topPerDay(grouped: SQL, limit: number): Promise<DayTop[]> {
   const result = await db.execute(sql`
-    SELECT date, name, artist, plays FROM (
+    SELECT date, name, artist, plays, image_url AS "imageURL" FROM (
       SELECT grouped.*, row_number() OVER (PARTITION BY date ORDER BY plays DESC, ms DESC, name) AS place
       FROM (${grouped}) grouped
     ) ranked
-    WHERE place = 1
-    ORDER BY date`);
+    WHERE place <= ${limit}
+    ORDER BY date, place`);
   return result.rows as unknown as DayTop[];
 }
 
@@ -65,48 +72,58 @@ export class ListeningSummaryModel {
     return result.rows as unknown as DayTotals[];
   }
 
-  /** Each day's most played artist. A play with two artists counts once for each. */
+  /** Each day's most played artists, with their photos. A play with two artists counts once for each. */
   static async getTopArtists(period: Period): Promise<DayTop[]> {
-    return topPerDay(sql`
-      SELECT ${PLAY_DAY} AS date, a.name, NULL::text AS artist, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
+    return topPerDay(
+      sql`
+      SELECT ${PLAY_DAY} AS date, a.name, NULL::text AS artist, a.image_url, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
       JOIN played_track_artists ta ON ta.track_spotify_id = t.spotify_id
       JOIN played_artists a ON a.spotify_id = ta.artist_spotify_id
       WHERE ${inPeriod(period)}
-      GROUP BY 1, a.spotify_id, a.name`);
+      GROUP BY 1, a.spotify_id, a.name, a.image_url`,
+      TOP_PER_DAY
+    );
   }
 
   /** Each day's most played track, with its first artist. Copies of one recording count as one. */
   static async getTopTracks(period: Period): Promise<DayTop[]> {
-    return topPerDay(sql`
-      SELECT ${PLAY_DAY} AS date, main.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms,
+    return topPerDay(
+      sql`
+      SELECT ${PLAY_DAY} AS date, main.name, NULL::text AS image_url, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms,
         (SELECT a.name FROM played_track_artists ta JOIN played_artists a ON a.spotify_id = ta.artist_spotify_id
           WHERE ta.track_spotify_id = main.spotify_id ORDER BY ta.position LIMIT 1) AS artist
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
       JOIN played_tracks main ON main.spotify_id = ${TRACK_GROUP}
       WHERE ${inPeriod(period)}
-      GROUP BY 1, main.spotify_id, main.name`);
+      GROUP BY 1, main.spotify_id, main.name`,
+      1
+    );
   }
 
-  /** Each day's most played album, with its first artist. An album's copies count as one. */
+  /** Each day's most played albums, with their first artist and cover. An album's copies count as one. */
   static async getTopAlbums(period: Period): Promise<DayTop[]> {
-    return topPerDay(sql`
-      SELECT ${PLAY_DAY} AS date, main.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms,
+    return topPerDay(
+      sql`
+      SELECT ${PLAY_DAY} AS date, main.name, main.image_url, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms,
         (SELECT a.name FROM played_artists a WHERE a.spotify_id = main.artist_spotify_id) AS artist
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
       JOIN played_albums al ON al.spotify_id = t.album_spotify_id
       JOIN played_albums main ON main.spotify_id = ${ALBUM_GROUP}
       WHERE ${inPeriod(period)}
-      GROUP BY 1, main.spotify_id, main.name, main.artist_spotify_id`);
+      GROUP BY 1, main.spotify_id, main.name, main.image_url, main.artist_spotify_id`,
+      TOP_PER_DAY
+    );
   }
 
-  /** The albums reviewed in the period, on the Irish-time day each was written. */
+  /** The albums reviewed in the period, on the Irish-time day each was written, with their covers. */
   static async getReviews(period: Period): Promise<DayReview[]> {
     const result = await db.execute(sql`
-      SELECT (created_at AT TIME ZONE 'Europe/Dublin')::date::text AS date, name AS album, artist_name AS artist
+      SELECT (created_at AT TIME ZONE 'Europe/Dublin')::date::text AS date, name AS album, artist_name AS artist,
+        spotify_id AS "spotifyID", ${REVIEWED_MEDIUM_IMAGE(sql`image_urls`)} AS "imageURL"
       FROM reviewed_albums
       WHERE created_at >= ${period.from} AND created_at < ${period.to}
       ORDER BY created_at`);

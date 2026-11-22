@@ -52,6 +52,8 @@ describe("GET /api/summary/days", () => {
           topArtist: { name: "Artist", plays: 1 },
           topAlbum: { name: "Album", artist: "Artist", plays: 1 },
           topTrack: { name: "Song", artist: "Artist", plays: 1 },
+          topArtists: [{ name: "Artist", plays: 1, imageURL: null }],
+          topAlbums: [{ name: "Album", artist: "Artist", plays: 1, imageURL: null }],
           reviews: [],
           gigs: [],
         },
