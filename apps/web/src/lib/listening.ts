@@ -58,3 +58,8 @@ export function bucketLabel(start: string, unit: "day" | "week" | "month", full:
   if (unit === "month") return date.toLocaleDateString("en-GB", { month: "short", year: full ? "numeric" : "2-digit", timeZone: "UTC" });
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(full ? { year: "numeric" } : {}), timeZone: "UTC" });
 }
+
+/** A play count with its word, such as "1 play" or "1,204 plays". */
+export function describePlays(plays: number): string {
+  return plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`;
+}

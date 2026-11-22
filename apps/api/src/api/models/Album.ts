@@ -1,8 +1,9 @@
-import { desc, eq, asc, count, inArray, sql, and, isNull, ilike, or } from "drizzle-orm";
-import type { DisplayAlbum, GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
+import { desc, eq, asc, count, getTableColumns, inArray, sql, and, isNull, ilike, or } from "drizzle-orm";
+import type { GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
+import { albumPlaysSQL } from "@/api/models/ListeningStats";
 
 export class AlbumModel {
   static async findBySpotifyID(id: string) {
@@ -85,7 +86,10 @@ export class AlbumModel {
     const searchFilter = search.trim() ? sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})` : undefined;
 
     let baseOrder;
-    if (orderBy === "releaseYear") {
+    if (orderBy === "plays") {
+      const plays = albumPlaysSQL(reviewedAlbums.spotifyID);
+      baseOrder = order === "asc" ? [asc(plays), asc(reviewedAlbums.name)] : [desc(plays), asc(reviewedAlbums.name)];
+    } else if (orderBy === "releaseYear") {
       // When sorting by year, always use a secondary sort (default to finalScore if not provided)
       const validSecondaryOrderBy = ["finalScore", "name", "createdAt"] as const;
       const secondaryField = validSecondaryOrderBy.includes(secondaryOrderBy || "finalScore") ? secondaryOrderBy || "finalScore" : "finalScore";
@@ -101,8 +105,8 @@ export class AlbumModel {
       baseOrder = order === "asc" ? [asc(reviewedAlbums[orderBy]), asc(reviewedAlbums.name)] : [desc(reviewedAlbums[orderBy]), desc(reviewedAlbums.name)];
     }
 
-    const albums: DisplayAlbum[] = await db
-      .select()
+    const albums = await db
+      .select({ ...getTableColumns(reviewedAlbums), plays: sql<number>`${albumPlaysSQL(reviewedAlbums.spotifyID)}::int` })
       .from(reviewedAlbums)
       .where(and(genreFilter, searchFilter))
       .orderBy(...baseOrder)

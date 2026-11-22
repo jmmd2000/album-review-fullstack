@@ -4,13 +4,13 @@ import { AlbumService } from "@/api/services/AlbumService";
 import { ReviewService } from "@/api/services/ReviewService";
 import { ListenerLinkService } from "@/api/services/ListenerLinkService";
 import { reviewDataSchema } from "@/api/schemas/reviewSchema";
-import { requireAdmin } from "@/api/middleware/requireAdmin";
+import { isAdminRequest, requireAdmin } from "@/api/middleware/requireAdmin";
 import { validate } from "@/api/middleware/validate";
 import { albumParamSchema, includeGenresSchema } from "@/api/schemas/paramSchema";
 
 const paginatedSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
-  orderBy: z.enum(["finalScore", "releaseYear", "name", "createdAt"]).optional(),
+  orderBy: z.enum(["finalScore", "releaseYear", "name", "createdAt", "plays"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
   search: z.string().optional(),
   genres: z.string().optional(),
@@ -28,6 +28,7 @@ const album = new Hono()
   })
   .get("/", validate("query", paginatedSchema), async c => {
     const { genres, ...opts } = c.req.valid("query");
+    if (opts.orderBy === "plays" && !isAdminRequest(c)) return c.json({ message: "Only the admin can sort by plays." }, 401);
     const genreList = genres
       ? genres
           .split(",")
