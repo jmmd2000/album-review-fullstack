@@ -69,6 +69,17 @@ test("gives a genre's top artists and its share of all plays in the period", asy
   expect(entry.topArtists.map(artist => [artist.name, artist.plays])).toEqual([["rocker", 2]]);
 });
 
+test("a track shows the top tracks of its album in the period", async () => {
+  await PlayModel.savePlays([play("single", "2026-02-28T10:00:00Z"), play("album-cut", "2026-02-27T10:00:00Z"), play("album-cut", "2026-02-26T10:00:00Z")]);
+
+  const entry = await ListeningService.getEntry("tracks", "single", "4-weeks", undefined, undefined, now);
+
+  expect(entry.topTracks.map(track => [track.name, track.plays])).toEqual([
+    ["album-cut", 2],
+    ["single", 1],
+  ]);
+});
+
 test("links a reviewed artist to its page and an unreviewed one to a search, and a track to its album to review", async () => {
   await PlayModel.savePlays([play("track1", "2026-02-28T10:00:00Z", "reviewed"), play("track2", "2026-02-28T11:00:00Z", "unreviewed", "album2")]);
   await ArtistModel.createArtist({ spotifyID: "reviewed", name: "reviewed", imageURLs: [], headerImage: null, totalScore: 0, reviewCount: 1, unrated: false, leaderboardPosition: null });

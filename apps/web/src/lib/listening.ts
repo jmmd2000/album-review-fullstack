@@ -3,6 +3,8 @@ import type { client } from "@/lib/client";
 
 export type ListeningKind = "artists" | "tracks" | "albums" | "genres";
 export type ListeningPeriod = "4-weeks" | "6-months" | "year" | "all" | "custom";
+/** What the top lists rank by */
+export type RankBy = "plays" | "minutes";
 
 export type TopListening = InferResponseType<typeof client.api.listening.top.$get, 200>;
 export type TopEntry = TopListening["entries"][number];

@@ -1,11 +1,12 @@
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { ScoreChip } from "@/components/ui/ScoreChip";
 import { TierWordChip } from "@/components/ui/TierWordChip";
-import { describeEntry, type ListeningKind, type TopEntry } from "@/lib/listening";
+import { describeEntry, type ListeningKind, type RankBy, type TopEntry } from "@/lib/listening";
 import styles from "./TopEntryRow.module.css";
 
 interface TopEntryRowProps {
   kind: ListeningKind;
+  by: RankBy;
   entry: TopEntry;
   selected: boolean;
   onSelect: () => void;
@@ -20,8 +21,10 @@ export function RankChange({ change }: { change: TopEntry["change"] }) {
   return <span className={styles.down}>▼ {-change}</span>;
 }
 
-/** One ranked artist, track, album or genre: its rank and change, image, name, plays and score. Selecting it shows the entry. */
-export function TopEntryRow({ kind, entry, selected, onSelect }: TopEntryRowProps) {
+/** One ranked artist, track, album or genre: its rank and change, image, name, plays or minutes, and score. Selecting it shows the entry. */
+export function TopEntryRow({ kind, by, entry, selected, onSelect }: TopEntryRowProps) {
+  const value = by === "plays" ? entry.plays : entry.minutes;
+  const unit = by === "plays" ? (value === 1 ? "play" : "plays") : "min";
   return (
     <li>
       <button type="button" className={styles.row} aria-pressed={selected} onClick={onSelect}>
@@ -35,7 +38,7 @@ export function TopEntryRow({ kind, entry, selected, onSelect }: TopEntryRowProp
           <span className={styles.detail}>{describeEntry(kind, entry)}</span>
         </span>
         <span className={styles.plays}>
-          <b>{entry.plays.toLocaleString("en-GB")}</b> {entry.plays === 1 ? "play" : "plays"}
+          <b>{value.toLocaleString("en-GB")}</b> {unit}
         </span>
         <span className={styles.score}>{entry.score !== null && <EntryScore kind={kind} score={entry.score} />}</span>
       </button>

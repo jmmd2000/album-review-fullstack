@@ -14,8 +14,8 @@ const listening = new Hono()
     return c.json(await ListeningService.collect(), 200);
   })
   .get("/top", validate("query", topQuerySchema), async c => {
-    const { kind, period, from, to } = c.req.valid("query");
-    return c.json(await ListeningService.getTop(kind, period, from, to), 200);
+    const { kind, period, from, to, by, show } = c.req.valid("query");
+    return c.json(await ListeningService.getTop(kind, period, from, to, new Date(), by, show === "all"), 200);
   })
   .get("/over-time", validate("query", overTimeQuerySchema), async c => {
     const { period, from, to } = c.req.valid("query");

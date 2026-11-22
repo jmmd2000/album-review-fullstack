@@ -55,7 +55,7 @@ export const queryKeys = {
     running: ["jobs", "running"] as const,
   },
   listening: {
-    top: (kind: string, period: string, from?: string, to?: string) => ["listening", "top", kind, period, from ?? "", to ?? ""] as const,
+    top: (kind: string, period: string, by: string, show: string, from?: string, to?: string) => ["listening", "top", kind, period, by, show, from ?? "", to ?? ""] as const,
     overTime: (period: string, from?: string, to?: string) => ["listening", "overTime", period, from ?? "", to ?? ""] as const,
     entry: (kind: string, id: string, period: string, from?: string, to?: string) => ["listening", "entry", kind, id, period, from ?? "", to ?? ""] as const,
   },

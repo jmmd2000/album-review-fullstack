@@ -29,7 +29,7 @@ const statsQueryOptions = queryOptions({
   queryFn: fetchStats,
 });
 
-const defaultSearch = { genres: "", view: "scores", kind: "artists", period: "4-weeks" } as const;
+const defaultSearch = { genres: "", view: "scores", kind: "artists", period: "4-weeks", by: "minutes" } as const;
 
 const statsSearchSchema = z.object({
   // A comma-separated list of genre slugs
@@ -41,6 +41,7 @@ const statsSearchSchema = z.object({
   view: z.enum(["scores", "listening"]).default(defaultSearch.view).catch(defaultSearch.view),
   kind: z.enum(["artists", "tracks", "albums", "genres"]).default(defaultSearch.kind).catch(defaultSearch.kind),
   period: z.enum(["4-weeks", "6-months", "year", "all", "custom"]).default(defaultSearch.period).catch(defaultSearch.period),
+  by: z.enum(["plays", "minutes"]).default(defaultSearch.by).catch(defaultSearch.by),
   from: z.iso.date().optional().catch(undefined),
   to: z.iso.date().optional().catch(undefined),
 });
@@ -65,8 +66,8 @@ function RouteComponent() {
   const { isAdmin } = useAuth();
   const showListening = isAdmin && search.view === "listening";
 
-  const setListening = ({ kind, period, from, to }: ListeningSelection) => {
-    void navigate({ search: previous => ({ ...previous, kind, period, from, to }), replace: true, resetScroll: false });
+  const setListening = ({ kind, period, by, from, to }: ListeningSelection) => {
+    void navigate({ search: previous => ({ ...previous, kind, period, by, from, to }), replace: true, resetScroll: false });
   };
 
   return (
@@ -76,7 +77,7 @@ function RouteComponent() {
       </PageHeader>
       {showListening ? (
         <div className={styles.body}>
-          <ListeningView selection={{ kind: search.kind, period: search.period, from: search.from, to: search.to }} onChange={setListening} />
+          <ListeningView selection={{ kind: search.kind, period: search.period, by: search.by, from: search.from, to: search.to }} onChange={setListening} />
         </div>
       ) : (
         <ScoresView />

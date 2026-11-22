@@ -1,18 +1,13 @@
-.section {
+.sections {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-7);
   width: 100%;
-  margin-top: var(--space-6);
+  margin-top: var(--space-7);
 }
 
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
+.section {
+  display: grid;
   gap: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: var(--border-thin) solid var(--colour-divider);
 }
 
 .title {
@@ -20,24 +15,15 @@
   font-size: clamp(1.5rem, 3vw, 2rem);
 }
 
-.tabs {
-  display: flex;
+.chartArea {
+  display: grid;
   gap: var(--space-3);
-  color: var(--colour-text-muted);
+}
 
-  & button {
-    cursor: pointer;
-
-    &:hover,
-    &[aria-pressed="true"] {
-      color: var(--colour-foreground);
-    }
-
-    &[aria-pressed="true"] {
-      text-decoration: underline;
-      text-underline-offset: 6px;
-    }
-  }
+.readout {
+  min-height: 1.5em;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart {
@@ -65,9 +51,21 @@
 
   & li {
     display: grid;
+    /* The column may be narrower than its date label, which hangs past the bar instead of widening it */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) 1.5rem;
     flex: 1;
     min-width: 0;
+
+    &:focus-visible {
+      outline: 2px solid var(--colour-foreground);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Pointing at one bar fades the others */
+  &[data-pointing="true"] li:not([data-pointed="true"]) .bar {
+    opacity: 0.25;
   }
 }
 
@@ -75,6 +73,7 @@
   align-self: end;
   min-height: 1px;
   background: var(--colour-foreground);
+  transition: opacity var(--duration-quick) var(--ease-out);
 }
 
 .label {
@@ -85,17 +84,18 @@
   white-space: nowrap;
 }
 
+/* The clock runs the full width, with cells a little wider than tall */
 .clock {
   display: grid;
-  gap: 3px;
-  max-width: 800px;
+  gap: 4px;
   overflow-x: auto;
 }
 
 .clockRow {
   display: grid;
-  grid-template-columns: 2.5rem repeat(24, minmax(8px, 1fr));
-  gap: 3px;
+  grid-template-columns: 2.5rem repeat(24, minmax(14px, 1fr));
+  gap: 4px;
+  align-items: center;
 }
 
 .weekday,
@@ -109,7 +109,13 @@
 }
 
 .cell {
-  aspect-ratio: 1;
-  border-radius: 3px;
+  aspect-ratio: 3 / 2;
+  border-radius: 4px;
   background: var(--colour-foreground);
+
+  &[data-pointed="true"],
+  &:focus-visible {
+    outline: 2px solid var(--colour-foreground);
+    outline-offset: 2px;
+  }
 }

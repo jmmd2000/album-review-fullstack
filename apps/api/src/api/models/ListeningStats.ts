@@ -4,6 +4,8 @@ import { db } from "@/db/client";
 export type TopKind = "artists" | "tracks" | "albums" | "genres";
 export type PeriodName = "4-weeks" | "6-months" | "year" | "all" | "custom";
 export type TimelineUnit = "day" | "week" | "month";
+/** What the top lists rank by: the number of plays, or the time listened */
+export type RankBy = "plays" | "minutes";
 
 /** A stretch of time. `from` is null for all time. `to` is not included. */
 export interface Period {
@@ -67,11 +69,11 @@ function inPeriod(period: Period): SQL {
 }
 
 /**
- * Every artist, track, album or genre played in the period with its plays and milliseconds, ranked by plays,
- * then by listening time, then by name. A play with two artists counts once for each artist,
+ * Every artist, track, album or genre played in the period with its plays and milliseconds, ranked by plays then listening time,
+ * or by listening time then plays, then by name. A play with two artists counts once for each artist,
  * and a play counts once for each of its artists' genres.
  */
-function rankedQuery(kind: TopKind, period: Period): SQL {
+function rankedQuery(kind: TopKind, period: Period, by: RankBy): SQL {
   const where = sql`${inPeriod(period)} AND ${STREAM_CONDITION}`;
   const grouped = {
     artists: sql`
@@ -111,8 +113,9 @@ function rankedQuery(kind: TopKind, period: Period): SQL {
       GROUP BY g.id, g.name`,
   }[kind];
 
+  const order = by === "plays" ? sql`grouped.plays DESC, grouped.ms DESC` : sql`grouped.ms DESC, grouped.plays DESC`;
   return sql`
-    SELECT (row_number() OVER (ORDER BY grouped.plays DESC, grouped.ms DESC, grouped.name ASC))::int AS rank, grouped.*
+    SELECT (row_number() OVER (ORDER BY ${order}, grouped.name ASC))::int AS rank, grouped.*
     FROM (${grouped}) grouped`;
 }
 
@@ -222,9 +225,10 @@ export class ListeningStatsModel {
     return { from: new Date(period.from.getTime() - length), to: period.from };
   }
 
-  /** The 50 most played artists, tracks, albums or genres in the period, with their details. */
-  static async getTop(kind: TopKind, period: Period): Promise<TopEntry[]> {
-    const result = await db.execute(sql`SELECT * FROM (${rankedQuery(kind, period)}) ranked ORDER BY rank LIMIT ${TOP_LIMIT}`);
+  /** The 50 most played artists, tracks, albums or genres in the period with their details, or every one when `all` is true. */
+  static async getTop(kind: TopKind, period: Period, by: RankBy = "plays", all = false): Promise<TopEntry[]> {
+    const limit = all ? sql`` : sql`LIMIT ${TOP_LIMIT}`;
+    const result = await db.execute(sql`SELECT * FROM (${rankedQuery(kind, period, by)}) ranked ORDER BY rank ${limit}`);
     const rows = result.rows as unknown as RankedRow[];
     const ids = rows.map(row => row.id);
     const details = await detailsFor(kind, ids, period);
@@ -249,9 +253,9 @@ export class ListeningStatsModel {
   }
 
   /** Where each of the given IDs ranked in the period. An ID that wasn't played is left out. */
-  static async getRanks(kind: TopKind, period: Period, ids: string[]): Promise<Map<string, number>> {
+  static async getRanks(kind: TopKind, period: Period, ids: string[], by: RankBy = "plays"): Promise<Map<string, number>> {
     if (ids.length === 0) return new Map();
-    const result = await db.execute(sql`SELECT id, rank FROM (${rankedQuery(kind, period)}) ranked WHERE id IN (${sql.join(ids, sql`, `)})`);
+    const result = await db.execute(sql`SELECT id, rank FROM (${rankedQuery(kind, period, by)}) ranked WHERE id IN (${sql.join(ids, sql`, `)})`);
     return new Map((result.rows as unknown as { id: string; rank: number }[]).map(row => [row.id, row.rank]));
   }
 
@@ -380,6 +384,16 @@ export class ListeningStatsModel {
     const row = result.rows[0] as { main_id: string; reviewed_id: string | null } | undefined;
     if (!row) return { type: "review", id: albumID };
     return row.reviewed_id ? { type: "album", id: row.reviewed_id } : { type: "review", id: row.main_id };
+  }
+
+  /** The album a track's group shows on, as the album group's main album. */
+  static async getTrackAlbumGroupID(trackID: string): Promise<string | null> {
+    const result = await db.execute(sql`
+      SELECT coalesce(al.main_spotify_id, al.spotify_id) AS album_id
+      FROM played_tracks t JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      WHERE t.spotify_id = ${trackID}`);
+    const row = result.rows[0] as { album_id: string } | undefined;
+    return row?.album_id ?? null;
   }
 
   private static async getTrackAlbumID(trackID: string): Promise<string | null> {

@@ -31,7 +31,12 @@ const customPeriodRule = {
   error: "A custom period needs a start date on or before its end date.",
 };
 
-export const topQuerySchema = periodQuerySchema.refine(customPeriodRule.check, { error: customPeriodRule.error });
+export const topQuerySchema = periodQuerySchema
+  .extend({
+    by: z.enum(["plays", "minutes"]).default("plays"),
+    show: z.enum(["top", "all"]).default("top"),
+  })
+  .refine(customPeriodRule.check, { error: customPeriodRule.error });
 
 export const overTimeQuerySchema = periodQuerySchema.omit({ kind: true }).refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), {
   error: customPeriodRule.error,

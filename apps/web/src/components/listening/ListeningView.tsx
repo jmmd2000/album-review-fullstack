@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { describePeriod, KIND_LABELS, PERIOD_LABELS, type ListeningKind, type ListeningPeriod } from "@/lib/listening";
+import { describePeriod, KIND_LABELS, PERIOD_LABELS, type ListeningKind, type ListeningPeriod, type RankBy } from "@/lib/listening";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TopEntryRow } from "@/components/listening/TopEntryRow";
 import { SelectedEntry } from "@/components/listening/SelectedEntry";
 import { OverTime } from "@/components/listening/OverTime";
+import { RankBySwitch } from "@/components/listening/RankBySwitch";
 import dialog from "@/styles/dialog.module.css";
 import styles from "./ListeningView.module.css";
 
-const FIRST_ROWS = 10;
-// Below this width the selected entry opens over the list instead of beside it
+const FIRST_ROWS = 20;
+// Below this width the selected entry opens over the list instead of above it
 const NARROW_QUERY = "(width < 900px)";
 
 export interface ListeningSelection {
   kind: ListeningKind;
   period: ListeningPeriod;
+  by: RankBy;
   /** A custom period's first day, as YYYY-MM-DD */
   from?: string;
   /** A custom period's last day, as YYYY-MM-DD */
@@ -33,18 +35,23 @@ interface ListeningViewProps {
 
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Dublin" });
 
-/** The admin's most played artists, tracks, albums or genres for a period, from their Spotify plays. */
+/**
+ * The admin's most played artists, tracks, albums or genres for a period, from their Spotify plays, ranked by plays or minutes.
+ * While a new list loads, the last one stays on screen, so the page doesn't jump.
+ */
 export function ListeningView({ selection, onChange }: ListeningViewProps) {
-  const { kind, period, from, to } = selection;
+  const { kind, period, by, from, to } = selection;
   const [showAll, setShowAll] = useState(false);
   const [selectedID, setSelectedID] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const customReady = period !== "custom" || (from !== undefined && to !== undefined && from <= to);
+  const show = showAll ? "all" : "top";
 
   const top = useQuery({
-    queryKey: queryKeys.listening.top(kind, period, from, to),
-    queryFn: () => handle(client.api.listening.top.$get({ query: { kind, period, ...(period === "custom" ? { from, to } : {}) } })),
+    queryKey: queryKeys.listening.top(kind, period, by, show, from, to),
+    queryFn: () => handle(client.api.listening.top.$get({ query: { kind, period, by, show, ...(period === "custom" ? { from, to } : {}) } })),
     enabled: customReady,
+    placeholderData: keepPreviousData,
   });
   const status = useQuery({
     queryKey: queryKeys.settings.listening,
@@ -62,14 +69,20 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
     choose({ period: "custom", from: from ?? lastDay, to: lastDay });
   }
 
+  // The list on screen can be the last one while the next loads, so it renders as the kind and measure it was loaded for
+  const shownKind = top.data?.kind ?? kind;
+  const shownBy = top.data?.by ?? by;
   const entries = top.data?.entries ?? [];
   const shown = showAll ? entries : entries.slice(0, FIRST_ROWS);
   const selected = entries.find(entry => entry.id === selectedID) ?? entries[0];
+  const half = Math.ceil(shown.length / 2);
 
   function select(id: string) {
     setSelectedID(id);
     if (window.matchMedia(NARROW_QUERY).matches) setSheetOpen(true);
   }
+
+  const shownSelection = { ...selection, kind: shownKind, by: shownBy };
 
   return (
     <div className={styles.view}>
@@ -92,10 +105,13 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
             </button>
           ))}
         </div>
-        <div className={styles.periods} role="group" aria-label="Period">
-          {(Object.keys(PERIOD_LABELS) as ListeningPeriod[]).map(option => (
-            <FilterChip key={option} label={PERIOD_LABELS[option]} pressed={option === period} onClick={() => (option === "custom" ? chooseCustom() : choose({ period: option }))} />
-          ))}
+        <div className={styles.controlsEnd}>
+          <div className={styles.periods} role="group" aria-label="Period">
+            {(Object.keys(PERIOD_LABELS) as ListeningPeriod[]).map(option => (
+              <FilterChip key={option} label={PERIOD_LABELS[option]} pressed={option === period} onClick={() => (option === "custom" ? chooseCustom() : choose({ period: option }))} />
+            ))}
+          </div>
+          <RankBySwitch by={by} onChange={next => choose({ by: next })} />
         </div>
       </div>
 
@@ -118,27 +134,32 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
           The listening stats couldn't load. {top.error.message}
         </p>
       )}
-      {top.isSuccess && entries.length === 0 && <p className={styles.state}>Nothing played in this period.</p>}
+      {top.isSuccess && !top.isPlaceholderData && entries.length === 0 && <p className={styles.state}>Nothing played in this period.</p>}
       {selected && (
-        <div className={styles.split}>
+        <div className={styles.body} data-loading={top.isPlaceholderData}>
           <div className={styles.selected}>
-            <SelectedEntry selection={selection} entry={selected} />
+            <SelectedEntry selection={shownSelection} entry={selected} />
           </div>
-          <div className={styles.list}>
+          <div className={styles.columns}>
             <ol className={styles.entries}>
-              {shown.map(entry => (
-                <TopEntryRow key={entry.id} kind={kind} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
+              {shown.slice(0, half).map(entry => (
+                <TopEntryRow key={entry.id} kind={shownKind} by={shownBy} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
               ))}
             </ol>
-            {!showAll && entries.length > FIRST_ROWS && <Button onClick={() => setShowAll(true)}>Show {entries.length - FIRST_ROWS} more</Button>}
+            <ol className={styles.entries} start={half + 1}>
+              {shown.slice(half).map(entry => (
+                <TopEntryRow key={entry.id} kind={shownKind} by={shownBy} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
+              ))}
+            </ol>
           </div>
+          {!showAll && entries.length > FIRST_ROWS && <Button onClick={() => setShowAll(true)}>Show all</Button>}
           <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
             <Dialog.Portal>
               <Dialog.Backdrop className={dialog.backdrop} />
               <Dialog.Popup className={`${dialog.popup} ${styles.sheet}`}>
                 <Dialog.Title className={styles.hidden}>{selected.name}</Dialog.Title>
                 <Dialog.Close render={<Button />}>Close</Dialog.Close>
-                <SelectedEntry selection={selection} entry={selected} />
+                <SelectedEntry selection={shownSelection} entry={selected} />
               </Dialog.Popup>
             </Dialog.Portal>
           </Dialog.Root>

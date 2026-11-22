@@ -90,6 +90,36 @@ test("each entry's change compares its rank with the period before, and all time
   expect(allTimeTop.entries.every(entry => entry.change === null)).toBe(true);
 });
 
+test("ranking by minutes puts the longest listened first, and the change compares minutes ranks", async () => {
+  const now = new Date("2026-03-01T12:00:00Z");
+  await PlayModel.savePlays([
+    // The period before: "short" leads on plays, "long" on minutes
+    play("long", "2026-01-20T10:00:00Z", ["artist1"], 600000),
+    play("short", "2026-01-20T11:00:00Z", ["artist1"], 60000),
+    play("short", "2026-01-21T11:00:00Z", ["artist1"], 60000),
+    // This period: "short" has more plays, "long" more minutes
+    play("short", "2026-02-20T10:00:00Z", ["artist1"], 60000),
+    play("short", "2026-02-21T10:00:00Z", ["artist1"], 60000),
+    play("long", "2026-02-22T10:00:00Z", ["artist1"], 600000),
+  ]);
+
+  const byPlays = await ListeningService.getTop("tracks", "4-weeks", undefined, undefined, now, "plays");
+  const byMinutes = await ListeningService.getTop("tracks", "4-weeks", undefined, undefined, now, "minutes");
+
+  expect(byPlays.entries.map(entry => entry.name)).toEqual(["short", "long"]);
+  expect(byMinutes.entries.map(entry => [entry.name, entry.change])).toEqual([
+    ["long", 0],
+    ["short", 0],
+  ]);
+});
+
+test("the full list goes past the top 50", async () => {
+  await PlayModel.savePlays(Array.from({ length: 55 }, (_, index) => play(`track${index}`, `2026-01-01T10:${String(index).padStart(2, "0")}:00Z`)));
+
+  expect((await ListeningService.getTop("tracks", "all")).entries).toHaveLength(50);
+  expect((await ListeningService.getTop("tracks", "all", undefined, undefined, new Date(), "plays", true)).entries).toHaveLength(55);
+});
+
 test("a custom period runs from midnight to midnight in Dublin time", async () => {
   // 23:30 UTC on 30 June is 00:30 on 1 July in Dublin
   await PlayModel.savePlays([play("first-of-july", "2026-06-30T23:30:00Z"), play("thirtieth", "2026-06-30T22:30:00Z")]);

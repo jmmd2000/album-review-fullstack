@@ -1,5 +1,5 @@
 import { AppError } from "@/api/AppError";
-import { ListeningStatsModel, type Period, type PeriodName, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
+import { ListeningStatsModel, type Period, type PeriodName, type RankBy, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
 import { PlayModel, type ImportedPlay, type ImportResult, type RecentPlay } from "@/api/models/Play";
 import { JobScheduler } from "@/api/services/JobScheduler";
 import { findScheduledJob } from "@/api/services/ScheduledJobs";
@@ -91,18 +91,19 @@ export class ListeningService {
   }
 
   /**
-   * The 50 most played artists, tracks, albums or genres in a period, with the period's totals.
-   * Each entry's change compares it with the period of the same length just before.
+   * The 50 most played artists, tracks, albums or genres in a period, or every one when `all` is true, with the period's totals.
+   * They rank by plays or by minutes. Each entry's change compares its rank with the period of the same length just before, ranked the same way.
    */
-  static async getTop(kind: TopKind, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+  static async getTop(kind: TopKind, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date(), by: RankBy = "plays", all = false) {
     const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
     const previous = ListeningStatsModel.previousPeriod(period);
-    const [top, totals] = await Promise.all([ListeningStatsModel.getTop(kind, period), ListeningStatsModel.getTotals(period)]);
+    const [top, totals] = await Promise.all([ListeningStatsModel.getTop(kind, period, by, all), ListeningStatsModel.getTotals(period)]);
     const previousRanks = previous
       ? await ListeningStatsModel.getRanks(
           kind,
           previous,
-          top.map(entry => entry.id)
+          top.map(entry => entry.id),
+          by
         )
       : null;
 
@@ -111,7 +112,7 @@ export class ListeningService {
       const previousRank = previousRanks.get(entry.id);
       return { ...entry, change: previousRank === undefined ? "new" : previousRank - entry.rank };
     });
-    return { from: period.from, to: period.to, totals, entries };
+    return { kind, by, from: period.from, to: period.to, totals, entries };
   }
 
   /**
@@ -135,7 +136,9 @@ export class ListeningService {
       return { firstPlayedAt, weeklyPlays, link, topTracks: [], topArtists, share: totals.plays > 0 ? genrePlays / totals.plays : 0 };
     }
 
-    const topTracks = kind === "tracks" ? [] : await ListeningStatsModel.getTopTracks(kind, id, period);
+    // A track shows the top tracks of its album, so every kind but genres has a list of tracks
+    const albumID = kind === "tracks" ? await ListeningStatsModel.getTrackAlbumGroupID(id) : null;
+    const topTracks = kind === "tracks" ? (albumID ? await ListeningStatsModel.getTopTracks("albums", albumID, period) : []) : await ListeningStatsModel.getTopTracks(kind, id, period);
     return { firstPlayedAt, weeklyPlays, link, topTracks, topArtists: [], share: null };
   }
 
