@@ -14,6 +14,8 @@ const RUN_HOUR_UTC = 3;
 const DUE_SLACK_MS = DAY_MS / 2;
 
 const runningJobs = new Set<string>();
+/** The background job ID of each run that a person or an import started, by job name, so a page can follow it */
+const runningJobIDs = new Map<string, string>();
 
 /**
  * Tells whether a job is due. A job that never ran is due. An interval of 0 days means the schedule is off.
@@ -31,6 +33,7 @@ async function runClaimed(job: ScheduledJob, emit: JobEmit, source: ArtistJobSou
     await SettingsService.setLastRun(job.settingName);
   } finally {
     runningJobs.delete(job.name);
+    runningJobIDs.delete(job.name);
   }
 }
 
@@ -79,7 +82,34 @@ export const JobScheduler = {
   runNow(job: ScheduledJob): string | null {
     if (runningJobs.has(job.name)) return null;
     runningJobs.add(job.name);
-    return JobService.create(emit => runClaimed(job, emit, "manual"));
+    const jobID = JobService.create(emit => runClaimed(job, emit, "manual"));
+    runningJobIDs.set(job.name, jobID);
+    return jobID;
+  },
+
+  /**
+   * Starts a run of the job in the background, like runNow, and waits for it to finish.
+   * @returns False when a run of the job was already going, so this one didn't start.
+   */
+  async runAndWait(job: ScheduledJob): Promise<boolean> {
+    if (runningJobs.has(job.name)) return false;
+    runningJobs.add(job.name);
+    await new Promise<void>(resolve => {
+      const jobID = JobService.create(async emit => {
+        try {
+          await runClaimed(job, emit, "manual");
+        } finally {
+          resolve();
+        }
+      });
+      runningJobIDs.set(job.name, jobID);
+    });
+    return true;
+  },
+
+  /** The background job ID of each job a person or an import started that is still running, by job name. */
+  getRunningJobIDs(): Record<string, string> {
+    return Object.fromEntries(runningJobIDs);
   },
 
   /** Tells whether a run of the job is going now. */

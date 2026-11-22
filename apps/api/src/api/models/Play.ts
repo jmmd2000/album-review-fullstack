@@ -17,6 +17,16 @@ function endOfSecond(time: Date): Date {
   return new Date(Math.floor(time.getTime() / 1000) * 1000 + 1000);
 }
 
+/** What an import did */
+export interface ImportResult {
+  removed: number;
+  saved: number;
+  /** The first imported play's time, or null when the import had no plays */
+  from: Date | null;
+  /** The last imported play's time, or null when the import had no plays */
+  to: Date | null;
+}
+
 /** One play from the streaming history export */
 export interface ImportedPlay {
   playedAt: Date;
@@ -49,10 +59,10 @@ export class PlayModel {
    * Replaces every saved play from the first imported play to the end of the last one's second with the imported plays, in one transaction.
    * A track that is already saved keeps its details. A new track is saved with only its name.
    * A second play of the same track at the same time in the import is dropped.
-   * @returns How many saved plays it removed, and how many imported plays it saved.
+   * @returns How many saved plays it removed, how many imported plays it saved, and the first and last imported play's times.
    */
-  static async replaceRange(importedPlays: ImportedPlay[]): Promise<{ removed: number; saved: number }> {
-    if (importedPlays.length === 0) return { removed: 0, saved: 0 };
+  static async replaceRange(importedPlays: ImportedPlay[]): Promise<ImportResult> {
+    if (importedPlays.length === 0) return { removed: 0, saved: 0, from: null, to: null };
 
     const uniquePlays = uniqueBy(importedPlays, play => `${play.trackSpotifyID}:${play.playedAt.toISOString()}`);
     const tracks = uniqueBy(
@@ -74,7 +84,7 @@ export class PlayModel {
       for (const batch of chunks(uniquePlays, INSERT_BATCH_SIZE)) {
         await tx.insert(plays).values(batch.map(play => ({ trackSpotifyID: play.trackSpotifyID, playedAt: play.playedAt, msPlayed: play.msPlayed })));
       }
-      return { removed: deleted.rowCount ?? 0, saved: uniquePlays.length };
+      return { removed: deleted.rowCount ?? 0, saved: uniquePlays.length, from, to };
     });
   }
 

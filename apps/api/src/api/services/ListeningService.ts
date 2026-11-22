@@ -1,6 +1,10 @@
 import { AppError } from "@/api/AppError";
 import { ListeningStatsModel, type Period, type PeriodName, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
-import { PlayModel, type ImportedPlay, type RecentPlay } from "@/api/models/Play";
+import { PlayModel, type ImportedPlay, type ImportResult, type RecentPlay } from "@/api/models/Play";
+import { PlayedTrackModel } from "@/api/models/PlayedTrack";
+import { JobScheduler } from "@/api/services/JobScheduler";
+import { findScheduledJob } from "@/api/services/ScheduledJobs";
+import { z } from "zod";
 import { SpotifyClient, SpotifyNotConnectedError } from "@/api/models/SpotifyClient";
 import { SpotifyUserTokenCache } from "@/api/models/SpotifyUserTokenCache";
 import { SettingsService } from "@/api/services/SettingsService";
@@ -11,6 +15,17 @@ import { logger } from "@/config/logger";
 const COLLECT_INTERVAL_MS = 15 * 60 * 1000;
 const LAST_ERROR_KEY = "listening_last_error";
 const RECENT_PLAY_COUNT = 20;
+const LAST_IMPORT_KEY = "listening_last_import";
+
+const lastImportSchema = z.object({
+  importedAt: z.coerce.date(),
+  saved: z.number(),
+  from: z.coerce.date(),
+  to: z.coerce.date(),
+});
+
+/** When the last streaming history import ran, how many plays it saved, and the dates it covered */
+export type LastImport = z.infer<typeof lastImportSchema>;
 
 /** How collection is going, for the Settings page */
 export interface ListeningStatus {
@@ -21,6 +36,7 @@ export interface ListeningStatus {
   lastCollected: Date | null;
   lastError: string | null;
   recentPlays: RecentPlay[];
+  lastImport: LastImport | null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -71,6 +87,7 @@ export class ListeningService {
       lastCollected: await SettingsService.getLastRun("listening"),
       lastError: await SettingsService.get(LAST_ERROR_KEY),
       recentPlays: await PlayModel.getRecent(RECENT_PLAY_COUNT),
+      lastImport: await SettingsService.getParsed(LAST_IMPORT_KEY, lastImportSchema),
     };
   }
 
@@ -141,14 +158,47 @@ export class ListeningService {
    * @returns How many saved plays it removed, and how many imported plays it saved.
    * @throws AppError 409 when another import is running.
    */
-  static async importPlays(importedPlays: ImportedPlay[]): Promise<{ removed: number; saved: number }> {
+  static async importPlays(importedPlays: ImportedPlay[]): Promise<ImportResult> {
     if (this.importing) throw new AppError("An import is already running. Try again when it finishes.", 409);
 
     this.importing = true;
+    let result: ImportResult;
     try {
-      return await PlayModel.replaceRange(importedPlays);
+      result = await PlayModel.replaceRange(importedPlays);
     } finally {
       this.importing = false;
+    }
+
+    if (result.from && result.to) {
+      await SettingsService.set(LAST_IMPORT_KEY, JSON.stringify({ importedAt: new Date(), saved: result.saved, from: result.from, to: result.to }));
+    }
+    void this.lookUpAfterImport().catch(error => {
+      logger.error({ error }, "Looking up imported tracks stopped early");
+      reportError(error, { job: "lookups after import" });
+    });
+    return result;
+  }
+
+  /**
+   * Runs the Played tracks lookup until no tracks or artist photos are waiting, then the Played artist genres lookup until no artists are waiting.
+   * Each is a normal run that Settings can follow. It stops a job early when a run leaves as much waiting as before, such as when Spotify refuses,
+   * and stops when a person already started a run of that job.
+   */
+  static async lookUpAfterImport(): Promise<void> {
+    const steps = [
+      { job: findScheduledJob("played-tracks"), countWaiting: () => PlayedTrackModel.countLookupsWaiting() },
+      { job: findScheduledJob("played-genres"), countWaiting: () => PlayedTrackModel.countGenresWaiting() },
+    ];
+    for (const { job, countWaiting } of steps) {
+      if (!job) continue;
+      let waiting = await countWaiting();
+      while (waiting > 0) {
+        const started = await JobScheduler.runAndWait(job);
+        if (!started) return;
+        const stillWaiting = await countWaiting();
+        if (stillWaiting >= waiting) break;
+        waiting = stillWaiting;
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { LOOKUP_BATCH_SIZE, SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { PlayedTrackModel } from "@/api/models/PlayedTrack";
 import { chunks } from "@/helpers/chunks";
+import { mediumImageURL } from "@/helpers/mediumImageURL";
 import { sleep } from "@/helpers/sleep";
 import type { JobEmit } from "@/api/services/JobService";
 
@@ -34,7 +35,13 @@ export const PlayedTrackLookupService = {
       await PlayedTrackModel.markUnavailable(missingIDs);
 
       for (const [position, track] of found.entries()) {
-        emit("changed", { index: firstIndex + position + 1, total: tracks.length, spotifyID: track.id, artistName: `${track.name} by ${track.artists.map(artist => artist.name).join(", ")}` });
+        emit("changed", {
+          index: firstIndex + position + 1,
+          total: tracks.length,
+          spotifyID: track.id,
+          artistName: `${track.name} by ${track.artists.map(artist => artist.name).join(", ")}`,
+          artistImage: mediumImageURL(track.album.images) ?? undefined,
+        });
       }
       for (const spotifyID of missingIDs) {
         const name = batch.find(track => track.spotifyID === spotifyID)?.name ?? spotifyID;
@@ -55,7 +62,7 @@ export const PlayedTrackLookupService = {
       await PlayedTrackModel.savePhotos(batchIDs, found);
 
       for (const [position, artist] of found.entries()) {
-        const progress = { index: firstIndex + position + 1, total: artists.length, spotifyID: artist.id, artistName: artist.name, artistImage: artist.images[0]?.url };
+        const progress = { index: firstIndex + position + 1, total: artists.length, spotifyID: artist.id, artistName: artist.name, artistImage: mediumImageURL(artist.images) ?? undefined };
         emit(artist.images.length > 0 ? "changed" : "same", progress);
       }
     }

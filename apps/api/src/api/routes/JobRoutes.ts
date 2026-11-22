@@ -10,6 +10,9 @@ import { jobParamSchema } from "@/api/schemas/paramSchema";
 // admin only
 const job = new Hono()
   .use(requireAdmin)
+  .get("/running", c => {
+    return c.json({ running: JobScheduler.getRunningJobIDs() }, 200);
+  })
   .post("/:name", c => {
     const scheduledJob = findScheduledJob(c.req.param("name"));
     if (!scheduledJob) return c.json({ message: "Job not found" }, 404);

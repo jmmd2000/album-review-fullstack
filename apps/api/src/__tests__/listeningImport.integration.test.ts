@@ -3,7 +3,8 @@ import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
-import { PlayModel, type ImportedPlay } from "@/api/models/Play";
+import { PlayModel, type ImportedPlay, type ImportResult } from "@/api/models/Play";
+import { ListeningService } from "@/api/services/ListeningService";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
 
 const livePlay = (trackID: string, playedAt: string): SpotifyPlay => ({
@@ -43,7 +44,7 @@ test("replaces the saved plays inside the import's range and keeps the ones befo
 
   const result = await PlayModel.replaceRange([importedPlay("imported", "2026-01-05T09:00:00.000Z"), importedPlay("imported", "2026-01-20T09:00:00.000Z")]);
 
-  expect(result).toEqual({ removed: 1, saved: 2 });
+  expect(result).toMatchObject({ removed: 1, saved: 2 });
   expect(await savedPlays()).toEqual([
     "before 2026-01-01T09:00:00.000Z null",
     "imported 2026-01-05T09:00:00.000Z 180000",
@@ -57,7 +58,7 @@ test("replaces a live play saved a fraction of a second after the import's last 
 
   const result = await PlayModel.replaceRange([importedPlay("first", "2026-11-20T21:50:47.000Z"), importedPlay("last", "2026-11-20T21:57:45.000Z")]);
 
-  expect(result).toEqual({ removed: 1, saved: 2 });
+  expect(result).toMatchObject({ removed: 1, saved: 2 });
   expect(await savedPlays()).toEqual(["first 2026-11-20T21:50:47.000Z 180000", "last 2026-11-20T21:57:45.000Z 180000", "later 2026-11-20T21:57:46.000Z null"]);
   expect(await PlayModel.countInRange(new Date("2026-11-20T21:50:47.000Z"), new Date("2026-11-20T21:57:45.000Z"))).toBe(2);
 });
@@ -69,7 +70,7 @@ test("running the same import twice leaves the same plays and tracks", async () 
   const playsAfterFirst = await savedPlays();
   const tracksAfterFirst = (await query("SELECT * FROM played_tracks ORDER BY spotify_id")).rows;
 
-  expect(await PlayModel.replaceRange(plays)).toEqual({ removed: 2, saved: 2 });
+  expect(await PlayModel.replaceRange(plays)).toMatchObject({ removed: 2, saved: 2 });
   expect(await savedPlays()).toEqual(playsAfterFirst);
   expect((await query("SELECT * FROM played_tracks ORDER BY spotify_id")).rows).toEqual(tracksAfterFirst);
 });
@@ -89,7 +90,7 @@ test("a track that is already saved keeps its album and length, and a new track 
 test("a play that appears twice in the import is saved once", async () => {
   const play = importedPlay("track1", "2026-01-05T09:00:00.000Z");
 
-  expect(await PlayModel.replaceRange([play, { ...play }])).toEqual({ removed: 0, saved: 1 });
+  expect(await PlayModel.replaceRange([play, { ...play }])).toMatchObject({ removed: 0, saved: 1 });
 });
 
 test("counts the saved plays in a range, both ends included", async () => {
@@ -102,6 +103,10 @@ describe("the import routes", () => {
   const authCookie = adminCookie();
   const body = { plays: [{ playedAt: "2026-01-05T09:00:00.000Z", msPlayed: 180000, trackSpotifyID: "track1", trackName: "Track 1" }] };
 
+  beforeEach(() => {
+    vi.spyOn(ListeningService, "lookUpAfterImport").mockResolvedValue();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -113,7 +118,7 @@ describe("the import routes", () => {
 
   test("an import saves the plays, and the count route sees them", async () => {
     const imported = await api.post("/api/listening/import", body, authCookie);
-    expect(await imported.json()).toEqual({ removed: 0, saved: 1 });
+    expect(await imported.json()).toMatchObject({ removed: 0, saved: 1 });
 
     const counted = await api.get("/api/listening/plays/count?from=2026-01-01T00:00:00.000Z&to=2026-02-01T00:00:00.000Z", authCookie);
     expect(await counted.json()).toEqual({ count: 1 });
@@ -125,13 +130,13 @@ describe("the import routes", () => {
   });
 
   test("a second import while one runs is refused", async () => {
-    let finish: (result: { removed: number; saved: number }) => void = () => {};
+    let finish: (result: ImportResult) => void = () => {};
     vi.spyOn(PlayModel, "replaceRange").mockReturnValueOnce(new Promise(resolve => (finish = resolve)));
 
     const first = api.post("/api/listening/import", body, authCookie);
     await vi.waitFor(() => expect(PlayModel.replaceRange).toHaveBeenCalled());
     const second = await api.post("/api/listening/import", body, authCookie);
-    finish({ removed: 0, saved: 1 });
+    finish({ removed: 0, saved: 1, from: null, to: null });
 
     expect(second.status).toBe(409);
     expect((await first).status).toBe(200);

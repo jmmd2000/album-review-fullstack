@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { SettingsModel } from "@/api/models/Settings";
 import { artistJobResultSchema, type ArtistJobResult } from "@/api/schemas/artistJobResultSchema";
 
@@ -62,8 +63,13 @@ export class SettingsService {
   }
 
   private static async getJobResult(job: "images" | "headers"): Promise<ArtistJobResult | null> {
+    return this.getParsed(`artist_${job}_last_result`, artistJobResultSchema);
+  }
+
+  /** Reads a setting saved as JSON and checks it against a schema. A missing value, or one the app can't read, gives null. */
+  static async getParsed<Schema extends z.ZodType>(key: string, schema: Schema): Promise<z.output<Schema> | null> {
     // Drizzle parses a jsonb string again when the string holds JSON, so the value can arrive as an object
-    let stored: unknown = await this.get(`artist_${job}_last_result`);
+    let stored: unknown = await this.get(key);
     if (typeof stored === "string") {
       try {
         stored = JSON.parse(stored);
@@ -71,7 +77,7 @@ export class SettingsService {
         return null;
       }
     }
-    const result = artistJobResultSchema.safeParse(stored);
+    const result = schema.safeParse(stored);
     return result.success ? result.data : null;
   }
 
