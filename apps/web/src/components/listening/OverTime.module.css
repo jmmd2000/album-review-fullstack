@@ -98,18 +98,26 @@
   white-space: nowrap;
 }
 
-/* The clock runs the full width, with cells a little wider than tall */
+/* The clock runs the full width, with cells a little wider than tall. On a phone the cells shrink to fit, so all 24 hours show. */
 .clock {
   display: grid;
   gap: 4px;
-  overflow-x: auto;
+
+  @media (width < 600px) {
+    gap: 2px;
+  }
 }
 
 .clockRow {
   display: grid;
-  grid-template-columns: 2.5rem repeat(24, minmax(14px, 1fr));
+  grid-template-columns: 2.5rem repeat(24, minmax(0, 1fr));
   gap: 4px;
   align-items: center;
+
+  @media (width < 600px) {
+    grid-template-columns: 2rem repeat(24, minmax(0, 1fr));
+    gap: 2px;
+  }
 }
 
 .weekday,
@@ -120,12 +128,24 @@
 
 .hour {
   white-space: nowrap;
+
+  /* On a phone only every 6th hour is labelled, so the labels don't run into each other */
+  &[data-minor] {
+    @media (width < 600px) {
+      visibility: hidden;
+    }
+  }
 }
 
 .cell {
   aspect-ratio: 3 / 2;
   border-radius: 4px;
   background: var(--colour-foreground);
+
+  @media (width < 600px) {
+    aspect-ratio: 2 / 3;
+    border-radius: 2px;
+  }
 
   &:hover,
   &:focus-visible {

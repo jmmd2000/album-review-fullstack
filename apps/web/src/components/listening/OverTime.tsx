@@ -174,7 +174,7 @@ const ClockCells = memo(function ClockCells({ clock, onPoint }: { clock: number[
       <div className={styles.clockRow} aria-hidden="true">
         <span className={styles.weekday} />
         {Array.from({ length: 24 }, (_, hour) => (
-          <span key={hour} className={styles.hour}>
+          <span key={hour} className={styles.hour} data-minor={hour % 6 !== 0 || undefined}>
             {hour % 3 === 0 ? hourName(hour) : ""}
           </span>
         ))}
