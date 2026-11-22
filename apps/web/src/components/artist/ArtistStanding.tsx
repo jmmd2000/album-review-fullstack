@@ -22,13 +22,17 @@ interface ArtistStandingProps {
   rankedArtistCount: number;
   albumCount: number;
   ratedTrackCount: number;
+  /** The admin's all-time plays of the artist and their first play, null while they load. Visitors get none. */
+  listening?: { plays: number | null; firstPlayedAt: string | null };
 }
+
+const firstPlayDate = (date: string) => new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Dublin" });
 
 /**
  * The artist's score with a note on how scores work, then one strip of their ranks and counts.
- * An unrated artist has no score or ranks, so the strip shows only the counts.
+ * An unrated artist has no score or ranks, so the strip shows only the counts. The admin also sees their plays and first play.
  */
-export function ArtistStanding({ artist, rankedArtistCount, albumCount, ratedTrackCount }: ArtistStandingProps) {
+export function ArtistStanding({ artist, rankedArtistCount, albumCount, ratedTrackCount, listening }: ArtistStandingProps) {
   return (
     <div className={styles.standing}>
       {!artist.unrated && (
@@ -61,6 +65,18 @@ export function ArtistStanding({ artist, rankedArtistCount, albumCount, ratedTra
           <dt>Tracks rated</dt>
           <dd>{ratedTrackCount}</dd>
         </div>
+        {listening && (
+          <>
+            <div>
+              <dt>Plays</dt>
+              <dd>{listening.plays === null ? "–" : listening.plays.toLocaleString("en-GB")}</dd>
+            </div>
+            <div>
+              <dt>First play</dt>
+              <dd>{listening.firstPlayedAt ? firstPlayDate(listening.firstPlayedAt) : "–"}</dd>
+            </div>
+          </>
+        )}
       </dl>
     </div>
   );

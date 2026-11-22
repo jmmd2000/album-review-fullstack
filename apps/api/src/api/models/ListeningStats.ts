@@ -225,6 +225,9 @@ export function artistPlaysSQL(artistSpotifyID: SQL | AnyColumn): SQL {
   return sql`(SELECT count(*) FROM plays p JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id WHERE ta.artist_spotify_id = ${artistSpotifyID} AND ${STREAM_CONDITION})`;
 }
 
+/** Plays of reviewed tracks, as an SQL condition on played tracks `t`: the track itself and its merged copies */
+const REVIEWED_TRACK_MATCH = (trackID: SQL | AnyColumn) => sql`(t.reviewed_spotify_id = ${trackID} OR t.spotify_id = ${trackID})`;
+
 export class ListeningStatsModel {
   /**
    * Works out a period's start and end. Days run from midnight to midnight in Europe/Dublin time.
@@ -470,5 +473,49 @@ export class ListeningStatsModel {
     const result = await db.execute(sql`SELECT min(played_at) AS first FROM plays`);
     const row = result.rows[0] as { first: Date | string | null };
     return row.first === null ? null : new Date(row.first);
+  }
+
+  /**
+   * The artist's plays in each month they were played, in Europe/Dublin time, with their rank among every artist played that month.
+   * Artists with the same plays share a rank. Months without plays are left out.
+   * @returns Each month as YYYY-MM, oldest first.
+   */
+  static async getArtistMonths(artistID: string): Promise<{ month: string; plays: number; rank: number }[]> {
+    const result = await db.execute(sql`
+      WITH monthly AS (
+        SELECT date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin') AS month, ta.artist_spotify_id, count(*)::int AS plays
+        FROM plays p
+        JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id
+        WHERE ${STREAM_CONDITION}
+        GROUP BY 1, 2
+      ),
+      ranked AS (
+        SELECT month, artist_spotify_id, plays, rank() OVER (PARTITION BY month ORDER BY plays DESC)::int AS rank FROM monthly
+      )
+      SELECT to_char(month, 'YYYY-MM') AS month, plays, rank FROM ranked WHERE artist_spotify_id = ${artistID} ORDER BY month`);
+    return result.rows as unknown as { month: string; plays: number; rank: number }[];
+  }
+
+  /** All-time plays of each of the given reviewed tracks, counting their merged copies. A track with no plays is left out. */
+  static async getTrackPlays(trackIDs: string[]): Promise<Map<string, number>> {
+    if (trackIDs.length === 0) return new Map();
+    const result = await db.execute(sql`
+      SELECT rt.spotify_id AS id, count(*)::int AS plays
+      FROM reviewed_tracks rt
+      JOIN played_tracks t ON ${REVIEWED_TRACK_MATCH(sql`rt.spotify_id`)}
+      JOIN plays p ON p.track_spotify_id = t.spotify_id
+      WHERE rt.spotify_id IN (${sql.join(trackIDs, sql`, `)}) AND ${STREAM_CONDITION}
+      GROUP BY rt.spotify_id`);
+    return new Map((result.rows as unknown as { id: string; plays: number }[]).map(row => [row.id, row.plays]));
+  }
+
+  /** All-time plays of each of the given reviewed albums, counting their merged copies. */
+  static async getAlbumPlays(albumIDs: string[]): Promise<Map<string, number>> {
+    if (albumIDs.length === 0) return new Map();
+    const result = await db.execute(sql`
+      SELECT ra.spotify_id AS id, ${albumPlaysSQL(sql`ra.spotify_id`)}::int AS plays
+      FROM reviewed_albums ra
+      WHERE ra.spotify_id IN (${sql.join(albumIDs, sql`, `)})`);
+    return new Map((result.rows as unknown as { id: string; plays: number }[]).map(row => [row.id, row.plays]));
   }
 }
