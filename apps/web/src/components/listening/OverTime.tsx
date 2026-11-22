@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
@@ -67,96 +67,118 @@ export function OverTime({ selection, entry, follow, onFollowChange }: OverTimeP
   );
 }
 
+type Bucket = { start: string; plays: number };
+type Unit = "day" | "week" | "month";
+
+/** A bucket's name, such as "week of 2 Nov 2026" or "Mar 2026" */
+function bucketName(bucket: Bucket, unit: Unit): string {
+  return `${BUCKET_PREFIXES[unit]}${bucketLabel(bucket.start, unit, true)}`;
+}
+
+/** A bucket's name and plays, such as "Week of 2 Nov 2026: 605 plays" */
+function describeBucket(bucket: Bucket, unit: Unit): string {
+  const name = bucketName(bucket, unit);
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)}: ${countPlays(bucket.plays)}`;
+}
+
+function describeHour(clock: number[][], weekday: number, hour: number): string {
+  return `${WEEKDAY_NAMES[weekday]} at ${hourName(hour)}: ${countPlays(clock[weekday][hour])}`;
+}
+
 /** Bars of plays over the period. Pointing at a bar shows its plays, and otherwise the busiest one shows. */
-function PlaysChart({ unit, timeline }: { unit: "day" | "week" | "month"; timeline: { start: string; plays: number }[] }) {
+function PlaysChart({ unit, timeline }: { unit: Unit; timeline: Bucket[] }) {
   const [pointed, setPointed] = useState<number | null>(null);
   const most = Math.max(0, ...timeline.map(bucket => bucket.plays));
-  const top = roundedTop(most);
-  const labelEvery = Math.ceil(timeline.length / MAX_LABELS);
-  const busiest = timeline.findIndex(bucket => bucket.plays === most);
-  const bucketName = (index: number) => `${BUCKET_PREFIXES[unit]}${bucketLabel(timeline[index].start, unit, true)}`;
-  const describe = (index: number) => {
-    const name = bucketName(index);
-    return `${name.charAt(0).toUpperCase()}${name.slice(1)}: ${countPlays(timeline[index].plays)}`;
-  };
+  const busiest = timeline.find(bucket => bucket.plays === most);
 
   let readout = "No plays in this period";
-  if (pointed !== null) readout = describe(pointed);
-  else if (most > 0) readout = `Busiest: ${bucketName(busiest)}, ${countPlays(most)}`;
+  if (pointed !== null && timeline[pointed]) readout = describeBucket(timeline[pointed], unit);
+  else if (busiest && most > 0) readout = `Busiest: ${bucketName(busiest, unit)}, ${countPlays(most)}`;
 
   return (
     <div className={styles.chartArea}>
       <p className={styles.readout}>{readout}</p>
-      <div className={styles.chart}>
-        <div className={styles.axis} aria-hidden="true">
-          <span>{top.toLocaleString("en-GB")}</span>
-          <span>{(top / 2).toLocaleString("en-GB")}</span>
-          <span>0</span>
-        </div>
-        <ol className={styles.bars} data-pointing={pointed !== null} onMouseLeave={() => setPointed(null)}>
-          {timeline.map((bucket, index) => (
-            <li
-              key={bucket.start}
-              tabIndex={0}
-              aria-label={describe(index)}
-              data-pointed={pointed === index}
-              onMouseEnter={() => setPointed(index)}
-              onFocus={() => setPointed(index)}
-              onBlur={() => setPointed(null)}
-            >
-              <span className={styles.bar} style={{ height: `${top > 0 ? (bucket.plays / top) * 100 : 0}%` }} />
-              <span className={styles.label}>{index % labelEvery === 0 ? bucketLabel(bucket.start, unit, false) : ""}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      <PlaysBars unit={unit} timeline={timeline} onPoint={setPointed} />
     </div>
   );
 }
+
+/**
+ * The bars themselves. They don't re-render when the pointer moves between them, only the readout does,
+ * and the fade on the other bars is plain CSS.
+ */
+const PlaysBars = memo(function PlaysBars({ unit, timeline, onPoint }: { unit: Unit; timeline: Bucket[]; onPoint: (index: number | null) => void }) {
+  const top = roundedTop(Math.max(0, ...timeline.map(bucket => bucket.plays)));
+  const labelEvery = Math.ceil(timeline.length / MAX_LABELS);
+
+  return (
+    <div className={styles.chart}>
+      <div className={styles.axis} aria-hidden="true">
+        <span>{top.toLocaleString("en-GB")}</span>
+        <span>{(top / 2).toLocaleString("en-GB")}</span>
+        <span>0</span>
+      </div>
+      <ol className={styles.bars} onMouseLeave={() => onPoint(null)}>
+        {timeline.map((bucket, index) => (
+          <li key={bucket.start} tabIndex={0} aria-label={describeBucket(bucket, unit)} onMouseEnter={() => onPoint(index)} onFocus={() => onPoint(index)} onBlur={() => onPoint(null)}>
+            <span className={styles.bar} style={{ height: `${top > 0 ? (bucket.plays / top) * 100 : 0}%` }} />
+            <span className={styles.label}>{index % labelEvery === 0 ? bucketLabel(bucket.start, unit, false) : ""}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+});
 
 /** Plays in each hour of each weekday, darker for more. Pointing at an hour shows its plays, and otherwise the busiest hour shows. */
 function ListeningClock({ clock }: { clock: number[][] }) {
   const [pointed, setPointed] = useState<{ weekday: number; hour: number } | null>(null);
   const most = Math.max(0, ...clock.flat());
   const busiestWeekday = clock.findIndex(hours => hours.includes(most));
-  const busiest = { weekday: busiestWeekday, hour: clock[busiestWeekday]?.indexOf(most) ?? 0 };
-  const describe = ({ weekday, hour }: { weekday: number; hour: number }) => `${WEEKDAY_NAMES[weekday]} at ${hourName(hour)}: ${countPlays(clock[weekday][hour])}`;
 
   let readout = "No plays in this period";
-  if (pointed !== null) readout = describe(pointed);
-  else if (most > 0) readout = `Busiest hour: ${describe(busiest)}`;
+  if (pointed !== null) readout = describeHour(clock, pointed.weekday, pointed.hour);
+  else if (most > 0) readout = `Busiest hour: ${describeHour(clock, busiestWeekday, clock[busiestWeekday].indexOf(most))}`;
 
   return (
     <div className={styles.chartArea}>
       <p className={styles.readout}>{readout}</p>
-      <div className={styles.clock} data-pointing={pointed !== null} onMouseLeave={() => setPointed(null)}>
-        {clock.map((hours, weekday) => (
-          <div key={WEEKDAYS[weekday]} className={styles.clockRow}>
-            <span className={styles.weekday}>{WEEKDAYS[weekday]}</span>
-            {hours.map((plays, hour) => (
-              <span
-                key={hour}
-                className={styles.cell}
-                tabIndex={0}
-                aria-label={describe({ weekday, hour })}
-                data-pointed={pointed?.weekday === weekday && pointed.hour === hour}
-                style={{ opacity: plays === 0 ? 0.06 : 0.15 + (plays / Math.max(1, most)) * 0.85 }}
-                onMouseEnter={() => setPointed({ weekday, hour })}
-                onFocus={() => setPointed({ weekday, hour })}
-                onBlur={() => setPointed(null)}
-              />
-            ))}
-          </div>
-        ))}
-        <div className={styles.clockRow} aria-hidden="true">
-          <span className={styles.weekday} />
-          {Array.from({ length: 24 }, (_, hour) => (
-            <span key={hour} className={styles.hour}>
-              {hour % 3 === 0 ? hourName(hour) : ""}
-            </span>
-          ))}
-        </div>
-      </div>
+      <ClockCells clock={clock} onPoint={setPointed} />
     </div>
   );
 }
+
+/** The clock's cells. Like the bars, they don't re-render when the pointer moves, and the outline is plain CSS. */
+const ClockCells = memo(function ClockCells({ clock, onPoint }: { clock: number[][]; onPoint: (pointed: { weekday: number; hour: number } | null) => void }) {
+  const most = Math.max(1, ...clock.flat());
+
+  return (
+    <div className={styles.clock} onMouseLeave={() => onPoint(null)}>
+      {clock.map((hours, weekday) => (
+        <div key={WEEKDAYS[weekday]} className={styles.clockRow}>
+          <span className={styles.weekday}>{WEEKDAYS[weekday]}</span>
+          {hours.map((plays, hour) => (
+            <span
+              key={hour}
+              className={styles.cell}
+              tabIndex={0}
+              aria-label={describeHour(clock, weekday, hour)}
+              style={{ opacity: plays === 0 ? 0.06 : 0.15 + (plays / most) * 0.85 }}
+              onMouseEnter={() => onPoint({ weekday, hour })}
+              onFocus={() => onPoint({ weekday, hour })}
+              onBlur={() => onPoint(null)}
+            />
+          ))}
+        </div>
+      ))}
+      <div className={styles.clockRow} aria-hidden="true">
+        <span className={styles.weekday} />
+        {Array.from({ length: 24 }, (_, hour) => (
+          <span key={hour} className={styles.hour}>
+            {hour % 3 === 0 ? hourName(hour) : ""}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+});

@@ -79,7 +79,7 @@
   }
 
   /* Pointing at one bar fades the others */
-  &[data-pointing="true"] li:not([data-pointed="true"]) .bar {
+  &:has(li:hover, li:focus-visible) li:not(:hover, :focus-visible) .bar {
     opacity: 0.25;
   }
 }
@@ -88,7 +88,6 @@
   align-self: end;
   min-height: 1px;
   background: var(--colour-foreground);
-  transition: opacity var(--duration-quick) var(--ease-out);
 }
 
 .label {
@@ -128,7 +127,7 @@
   border-radius: 4px;
   background: var(--colour-foreground);
 
-  &[data-pointed="true"],
+  &:hover,
   &:focus-visible {
     outline: 2px solid var(--colour-foreground);
     outline-offset: 2px;
