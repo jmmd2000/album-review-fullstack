@@ -96,6 +96,8 @@ const MonthBars = memo(function MonthBars({ months, view, onPoint }: MonthBarsPr
   };
 
   const label = (month: Month, index: number) => {
+    // A label runs to the right of its month, so the last two months have no room for one
+    if (index >= months.length - 2) return "";
     if (labelEvery === null) return month.month.endsWith("-01") ? month.month.slice(0, 4) : "";
     return index % labelEvery === 0 ? monthName(month.month) : "";
   };
@@ -114,7 +116,9 @@ const MonthBars = memo(function MonthBars({ months, view, onPoint }: MonthBarsPr
               <span className={styles.barArea}>
                 <span className={styles.bar} style={{ height: `${barHeight(month) * 100}%` }} />
               </span>
-              <span className={styles.label}>{label(month, index)}</span>
+              <span className={styles.label} data-minor={(labelEvery !== null && !month.month.endsWith("-01")) || undefined}>
+                {label(month, index)}
+              </span>
             </li>
           );
         })}
