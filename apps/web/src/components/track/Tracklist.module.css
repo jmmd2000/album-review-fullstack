@@ -55,8 +55,11 @@
   font-weight: var(--font-weight-body);
 }
 
+/* Wide enough for "999 plays", so the names don't rewrap when the plays load */
 .plays {
+  min-width: 9ch;
   font-size: 0.9rem;
+  text-align: end;
   white-space: nowrap;
 }
 
