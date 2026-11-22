@@ -5,6 +5,7 @@ import { PlayModel } from "@/api/models/Play";
 import { SpotifyClient } from "@/api/models/SpotifyClient";
 import { SpotifyTokenCache } from "@/api/models/SpotifyTokenCache";
 import { PlayedTrackLookupService } from "@/api/services/PlayedTrackLookupService";
+import type { Progress } from "@shared/types";
 import type { SpotifyArtistResponse, SpotifyPlayedTrack } from "@/api/schemas/spotifySchema";
 
 vi.mock("@/helpers/sleep", () => ({ sleep: vi.fn(() => Promise.resolve()) }));
@@ -91,4 +92,22 @@ test("a Spotify failure stops the run, and the tracks left are looked up next ti
 
   const track = await query("SELECT unavailable, album_spotify_id FROM played_tracks WHERE spotify_id = 'track1'");
   expect(track.rows[0]).toEqual({ unavailable: false, album_spotify_id: null });
+});
+
+test("sends a progress event with the first track's name before each batch's request", async () => {
+  await importTracks(Array.from({ length: 60 }, (_, index) => `track${String(index).padStart(2, "0")}`));
+  const events: string[] = [];
+  vi.spyOn(SpotifyClient, "getTracks").mockImplementation(async ids => {
+    events.push(`request ${ids.length}`);
+    return { found: [], missingIDs: [] };
+  });
+  vi.spyOn(SpotifyClient, "getSeveralArtists").mockResolvedValue([]);
+
+  await PlayedTrackLookupService.lookUp((event, data) => {
+    if (event !== "progress") return;
+    const progress = data as Progress;
+    events.push(`progress ${progress.index} of ${progress.total}: ${progress.artistName}`);
+  });
+
+  expect(events).toEqual(["progress 1 of 60: track00", "request 50", "progress 51 of 60: track50", "request 10"]);
 });

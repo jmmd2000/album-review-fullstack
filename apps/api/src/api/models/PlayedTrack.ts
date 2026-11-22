@@ -52,15 +52,14 @@ export class PlayedTrackModel {
       .onConflictDoUpdate({ target: [playedTrackArtists.trackSpotifyID, playedTrackArtists.artistSpotifyID], set: { position: sql`excluded.position` } });
   }
 
-  /** The IDs of tracks with no album that Spotify hasn't said it no longer has. */
-  static async getTracksToLookUp(limit: number): Promise<string[]> {
-    const rows = await db
-      .select({ spotifyID: playedTracks.spotifyID })
+  /** The tracks with no album that Spotify hasn't said it no longer has. */
+  static async getTracksToLookUp(limit: number): Promise<{ spotifyID: string; name: string }[]> {
+    return db
+      .select({ spotifyID: playedTracks.spotifyID, name: playedTracks.name })
       .from(playedTracks)
       .where(and(isNull(playedTracks.albumSpotifyID), eq(playedTracks.unavailable, false)))
       .orderBy(playedTracks.spotifyID)
       .limit(limit);
-    return rows.map(row => row.spotifyID);
   }
 
   static async markUnavailable(trackIDs: string[]): Promise<void> {
@@ -68,10 +67,31 @@ export class PlayedTrackModel {
     await db.update(playedTracks).set({ unavailable: true }).where(inArray(playedTracks.spotifyID, trackIDs));
   }
 
-  /** The IDs of artists whose photo isn't looked up yet. */
-  static async getArtistsToLookUp(limit: number): Promise<string[]> {
-    const rows = await db.select({ spotifyID: playedArtists.spotifyID }).from(playedArtists).where(eq(playedArtists.imageLookedUp, false)).orderBy(playedArtists.spotifyID).limit(limit);
-    return rows.map(row => row.spotifyID);
+  /** The artists whose photo isn't looked up yet. */
+  static async getArtistsToLookUp(limit: number): Promise<{ spotifyID: string; name: string }[]> {
+    return db.select({ spotifyID: playedArtists.spotifyID, name: playedArtists.name }).from(playedArtists).where(eq(playedArtists.imageLookedUp, false)).orderBy(playedArtists.spotifyID).limit(limit);
+  }
+
+  /** How many tracks and artist photos are waiting to be looked up on Spotify. */
+  static async countLookupsWaiting(): Promise<number> {
+    const [tracks] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(playedTracks)
+      .where(and(isNull(playedTracks.albumSpotifyID), eq(playedTracks.unavailable, false)));
+    const [artists] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(playedArtists)
+      .where(eq(playedArtists.imageLookedUp, false));
+    return (tracks?.count ?? 0) + (artists?.count ?? 0);
+  }
+
+  /** How many artists are waiting for their genres to be looked up on Last.fm. */
+  static async countGenresWaiting(): Promise<number> {
+    const [row] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(playedArtists)
+      .where(eq(playedArtists.genresLookedUp, false));
+    return row?.count ?? 0;
   }
 
   /**
