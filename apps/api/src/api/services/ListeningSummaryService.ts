@@ -1,5 +1,6 @@
 import { ListeningStatsModel } from "@/api/models/ListeningStats";
 import { ListeningSummaryModel, type DayTop } from "@/api/models/ListeningSummary";
+import { SITE_ORIGIN } from "@/config/cors";
 
 interface TopEntry {
   name: string;
@@ -18,7 +19,8 @@ export interface DaySummary {
   topArtists: (TopEntry & { imageURL: string | null })[];
   /** Up to 5, the most played first */
   topAlbums: (TopEntry & { artist: string | null; imageURL: string | null })[];
-  reviews: { album: string; artist: string }[];
+  /** `url` is the review's page on this site */
+  reviews: { album: string; artist: string; imageURL: string | null; url: string }[];
   gigs: { artist: string; venue: string; city: string }[];
 }
 
@@ -66,7 +68,9 @@ export class ListeningSummaryService {
         topTrack: withArtist(tracksByDate.get(date)?.[0]),
         topArtists: dayArtists.map(artist => ({ name: artist.name, plays: artist.plays, imageURL: artist.imageURL })),
         topAlbums: dayAlbums.map(album => ({ name: album.name, artist: album.artist, plays: album.plays, imageURL: album.imageURL })),
-        reviews: reviews.filter(review => review.date === date).map(review => ({ album: review.album, artist: review.artist })),
+        reviews: reviews
+          .filter(review => review.date === date)
+          .map(review => ({ album: review.album, artist: review.artist, imageURL: review.imageURL, url: `${SITE_ORIGIN}/albums/${review.spotifyID}` })),
         gigs: gigs.filter(gig => gig.date === date).map(gig => ({ artist: gig.artist, venue: gig.venue, city: gig.city })),
       };
     });

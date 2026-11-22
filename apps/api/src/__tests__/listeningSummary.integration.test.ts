@@ -3,6 +3,7 @@ import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { PlayModel } from "@/api/models/Play";
 import { ListeningSummaryService } from "@/api/services/ListeningSummaryService";
+import { SITE_ORIGIN } from "@/config/cors";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
 
 const play = (trackID: string, playedAt: string, artistIDs: string[] = ["artist1"], durationMs = 180000): SpotifyPlay => ({
@@ -71,17 +72,30 @@ test("lists each day's top 5 artists and albums in rank order, with their images
   expect(day.topArtist).toEqual({ name: "a1", plays: 3 });
 });
 
-test("adds reviews and gigs on their Irish-time day, even with no plays, and leaves out empty days", async () => {
+test("adds reviews with their medium cover and page, and gigs, on their Irish-time day, even with no plays, and leaves out empty days", async () => {
   await query(`INSERT INTO reviewed_artists (spotify_id, name, image_urls, total_score, review_count, unrated) VALUES ('band', 'The Band', '[]', 0, 1, false)`);
   await query(`INSERT INTO reviewed_albums (artist_spotify_id, artist_name, name, spotify_id, release_date, release_year, image_urls, runtime, review_score, final_score, colors, genres, created_at)
-    VALUES ('band', 'The Band', 'First Album', 'first-album', '2024-01-01', 2024, '[]', '40 minutes', 80, 80, '[]', '{}', '2026-07-03T23:15:00Z')`);
+    VALUES ('band', 'The Band', 'First Album', 'first-album', '2024-01-01', 2024,
+      '[{"url": "https://images.example/640.jpg", "width": 640, "height": 640}, {"url": "https://images.example/300.jpg", "width": 300, "height": 300}]',
+      '40 minutes', 80, 80, '[]', '{}', '2026-07-03T23:15:00Z')`);
   await query(`INSERT INTO concerts (artist_spotify_id, show_name, date, venue, city, image_url, setlist_link, support_artists)
     VALUES ('band', 'The Tour', '2026-07-06T19:30:00Z', 'Vicar Street', 'Dublin', '', '', '[]')`);
 
   const days = await ListeningSummaryService.getDays("2026-07-01", "2026-07-31");
 
   expect(days).toEqual([
-    { date: "2026-07-04", plays: 0, minutes: 0, topArtist: null, topAlbum: null, topTrack: null, topArtists: [], topAlbums: [], reviews: [{ album: "First Album", artist: "The Band" }], gigs: [] },
+    {
+      date: "2026-07-04",
+      plays: 0,
+      minutes: 0,
+      topArtist: null,
+      topAlbum: null,
+      topTrack: null,
+      topArtists: [],
+      topAlbums: [],
+      reviews: [{ album: "First Album", artist: "The Band", imageURL: "https://images.example/300.jpg", url: `${SITE_ORIGIN}/albums/first-album` }],
+      gigs: [],
+    },
     {
       date: "2026-07-06",
       plays: 0,

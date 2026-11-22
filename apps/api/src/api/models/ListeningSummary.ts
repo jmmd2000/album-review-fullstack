@@ -1,6 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
-import { ALBUM_GROUP, PLAY_MS, STREAM_CONDITION, TRACK_GROUP, type Period } from "@/api/models/ListeningStats";
+import { ALBUM_GROUP, PLAY_MS, REVIEWED_MEDIUM_IMAGE, STREAM_CONDITION, TRACK_GROUP, type Period } from "@/api/models/ListeningStats";
 
 /** The Irish-time date of a play, as YYYY-MM-DD. Plays join as `p`. */
 const PLAY_DAY = sql`(p.played_at AT TIME ZONE 'Europe/Dublin')::date::text`;
@@ -28,6 +28,9 @@ export interface DayReview {
   date: string;
   album: string;
   artist: string;
+  /** The reviewed album's Spotify ID, which its review page uses */
+  spotifyID: string;
+  imageURL: string | null;
 }
 
 /** A gig on a day */
@@ -116,10 +119,11 @@ export class ListeningSummaryModel {
     );
   }
 
-  /** The albums reviewed in the period, on the Irish-time day each was written. */
+  /** The albums reviewed in the period, on the Irish-time day each was written, with their covers. */
   static async getReviews(period: Period): Promise<DayReview[]> {
     const result = await db.execute(sql`
-      SELECT (created_at AT TIME ZONE 'Europe/Dublin')::date::text AS date, name AS album, artist_name AS artist
+      SELECT (created_at AT TIME ZONE 'Europe/Dublin')::date::text AS date, name AS album, artist_name AS artist,
+        spotify_id AS "spotifyID", ${REVIEWED_MEDIUM_IMAGE(sql`image_urls`)} AS "imageURL"
       FROM reviewed_albums
       WHERE created_at >= ${period.from} AND created_at < ${period.to}
       ORDER BY created_at`);
