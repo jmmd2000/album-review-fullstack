@@ -31,6 +31,13 @@ function optionalPort(key: string, fallback: number): number {
   return port;
 }
 
+function optionalSecret(key: string, minLength: number): string | undefined {
+  const value = process.env[key];
+  if (value === undefined || value === "") return undefined;
+  if (value.length < minLength) throw new Error(`Environment variable ${key} must be at least ${minLength} characters long`);
+  return value;
+}
+
 function isDSN(value: string): boolean {
   if (!URL.canParse(value)) return false;
   const url = new URL(value);
@@ -67,6 +74,8 @@ export const env = {
   // Error reporting is off without a DSN. The environment names where events come from, such as production or staging.
   GLITCHTIP_DSN: glitchTipDSN,
   GLITCHTIP_ENVIRONMENT: glitchTipDSN ? requireEnv("GLITCHTIP_ENVIRONMENT") : undefined,
+  // Lets other personal tools read the daily listening summary. The summary is off without it.
+  SUMMARY_TOKEN: optionalSecret("SUMMARY_TOKEN", 32),
   // Baked into the image by the docker build, "dev" outside a built image
   GIT_SHA: process.env.GIT_SHA ?? "dev",
 };
