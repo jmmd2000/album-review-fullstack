@@ -32,7 +32,7 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("gives an artist's first play, plays in each of the last 12 weeks, and top tracks in the period", async () => {
+test("gives an artist's first play and top tracks in the period", async () => {
   await PlayModel.savePlays([
     play("old", "2025-06-01T10:00:00Z"),
     play("hit", "2026-02-28T10:00:00Z"),
@@ -44,9 +44,6 @@ test("gives an artist's first play, plays in each of the last 12 weeks, and top 
   const entry = await ListeningService.getEntry("artists", "artist1", "4-weeks", undefined, undefined, now);
 
   expect(entry.firstPlayedAt?.toISOString()).toBe("2025-06-01T10:00:00.000Z");
-  expect(entry.weeklyPlays).toHaveLength(12);
-  expect(entry.weeklyPlays.slice(-2)).toEqual([1, 2]);
-  expect(entry.weeklyPlays.reduce((total, plays) => total + plays, 0)).toBe(4);
   expect(entry.topTracks.map(track => [track.name, track.plays])).toEqual([
     ["hit", 2],
     ["deep-cut", 1],

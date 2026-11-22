@@ -44,6 +44,7 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
   const [showAll, setShowAll] = useState(false);
   const [selectedID, setSelectedID] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [chartsFollow, setChartsFollow] = useState(true);
   const customReady = period !== "custom" || (from !== undefined && to !== undefined && from <= to);
   const show = showAll ? "all" : "top";
 
@@ -165,7 +166,9 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
           </Dialog.Root>
         </div>
       )}
-      {entries.length > 0 && <OverTime selection={selection} />}
+      {entries.length > 0 && (
+        <OverTime selection={selection} entry={selected ? { kind: shownKind, id: selected.id, name: selected.name } : null} follow={chartsFollow} onFollowChange={setChartsFollow} />
+      )}
     </div>
   );
 }

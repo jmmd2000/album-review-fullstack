@@ -4,6 +4,12 @@ import { db } from "@/db/client";
 export type TopKind = "artists" | "tracks" | "albums" | "genres";
 export type PeriodName = "4-weeks" | "6-months" | "year" | "all" | "custom";
 export type TimelineUnit = "day" | "week" | "month";
+/** One artist, track, album or genre, to narrow the charts to its plays */
+export interface EntryFilter {
+  kind: TopKind;
+  id: string;
+}
+
 /** What the top lists rank by: the number of plays, or the time listened */
 export type RankBy = "plays" | "minutes";
 
@@ -45,7 +51,6 @@ const STREAM_CONDITION = sql`(p.ms_played IS NULL OR p.ms_played >= 30000)`;
 const PLAY_MS = sql`coalesce(p.ms_played, t.duration_ms, 0)`;
 const TOP_LIMIT = 50;
 const DETAIL_LIMIT = 5;
-const WEEK_COUNT = 12;
 // Copies of one recording or album count as one, under the copy their group shows as. A copy not grouped yet counts as itself.
 const TRACK_GROUP = sql`coalesce(t.main_spotify_id, t.spotify_id)`;
 const ALBUM_GROUP = sql`coalesce(al.main_spotify_id, al.spotify_id)`;
@@ -61,6 +66,12 @@ function entryCondition(kind: TopKind, id: string): SQL {
   return sql`EXISTS (
     SELECT 1 FROM played_track_artists ta JOIN played_artist_genres pag ON pag.artist_spotify_id = ta.artist_spotify_id
     WHERE ta.track_spotify_id = p.track_spotify_id AND pag.genre_id::text = ${id})`;
+}
+
+/** The join and condition that narrow plays to one entry, or nothing when there's no entry */
+function entryFilter(entry: EntryFilter | undefined): { join: SQL; condition: SQL } {
+  if (!entry) return { join: sql``, condition: sql`` };
+  return { join: sql`JOIN played_tracks t ON t.spotify_id = p.track_spotify_id`, condition: sql`AND ${entryCondition(entry.kind, entry.id)}` };
 }
 
 function inPeriod(period: Period): SQL {
@@ -317,20 +328,6 @@ export class ListeningStatsModel {
     return row.first === null ? null : new Date(row.first);
   }
 
-  /** The entry's plays in each of the 12 weeks up to `now`, oldest week first. A week is the 7 days up to that point. */
-  static async getWeeklyPlays(kind: TopKind, id: string, now: Date): Promise<number[]> {
-    const result = await db.execute(sql`
-      SELECT floor(extract(epoch FROM (${now}::timestamptz - p.played_at)) / 604800)::int AS weeks_ago, count(*)::int AS plays
-      FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
-      WHERE ${entryCondition(kind, id)} AND ${STREAM_CONDITION} AND p.played_at > ${now}::timestamptz - interval '84 days' AND p.played_at <= ${now}::timestamptz
-      GROUP BY weeks_ago`);
-    const weeks = new Array<number>(WEEK_COUNT).fill(0);
-    for (const row of result.rows as unknown as { weeks_ago: number; plays: number }[]) {
-      if (row.weeks_ago >= 0 && row.weeks_ago < WEEK_COUNT) weeks[WEEK_COUNT - 1 - row.weeks_ago] = row.plays;
-    }
-    return weeks;
-  }
-
   /** An artist's or album's most played tracks in the period, with their covers. */
   static async getTopTracks(kind: "artists" | "albums", id: string, period: Period): Promise<{ id: string; name: string; imageURL: string | null; plays: number }[]> {
     const result = await db.execute(sql`
@@ -403,12 +400,13 @@ export class ListeningStatsModel {
   }
 
   /**
-   * Plays in each day, week or month of the period, in Europe/Dublin time, with empty buckets filled in.
+   * Plays in each day, week or month of the period, in Europe/Dublin time, with empty buckets filled in. An entry narrows them to its plays.
    * All time starts at the first play. A week starts on a Monday.
    * @returns Each bucket's first day as YYYY-MM-DD, oldest first.
    */
-  static async getTimeline(period: Period, unit: TimelineUnit): Promise<{ start: string; plays: number }[]> {
-    const firstPlay = period.from ?? (await this.getFirstPlayAt());
+  static async getTimeline(period: Period, unit: TimelineUnit, entry?: EntryFilter): Promise<{ start: string; plays: number }[]> {
+    const firstPlay = period.from ?? (entry ? await this.getFirstPlay(entry.kind, entry.id) : await this.getFirstPlayAt());
+    const filter = entryFilter(entry);
     if (!firstPlay) return [];
 
     const step = { day: sql`interval '1 day'`, week: sql`interval '1 week'`, month: sql`interval '1 month'` }[unit];
@@ -423,8 +421,8 @@ export class ListeningStatsModel {
       ),
       counted AS (
         SELECT date_trunc(${unitName}, p.played_at AT TIME ZONE 'Europe/Dublin') AS start, count(*)::int AS plays
-        FROM plays p
-        WHERE p.played_at >= ${firstPlay}::timestamptz AND p.played_at < ${period.to}::timestamptz AND ${STREAM_CONDITION}
+        FROM plays p ${filter.join}
+        WHERE p.played_at >= ${firstPlay}::timestamptz AND p.played_at < ${period.to}::timestamptz AND ${STREAM_CONDITION} ${filter.condition}
         GROUP BY 1
       )
       SELECT to_char(buckets.start, 'YYYY-MM-DD') AS start, coalesce(counted.plays, 0)::int AS plays
@@ -433,14 +431,15 @@ export class ListeningStatsModel {
     return result.rows as unknown as { start: string; plays: number }[];
   }
 
-  /** Plays in each hour of each weekday in the period, in Europe/Dublin time. Rows run Monday to Sunday, columns from midnight. */
-  static async getClock(period: Period): Promise<number[][]> {
+  /** Plays in each hour of each weekday in the period, in Europe/Dublin time, narrowed to an entry's plays if given. Rows run Monday to Sunday, columns from midnight. */
+  static async getClock(period: Period, entry?: EntryFilter): Promise<number[][]> {
+    const filter = entryFilter(entry);
     const result = await db.execute(sql`
       SELECT extract(isodow FROM p.played_at AT TIME ZONE 'Europe/Dublin')::int AS weekday,
         extract(hour FROM p.played_at AT TIME ZONE 'Europe/Dublin')::int AS hour,
         count(*)::int AS plays
-      FROM plays p
-      WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}
+      FROM plays p ${filter.join}
+      WHERE ${inPeriod(period)} AND ${STREAM_CONDITION} ${filter.condition}
       GROUP BY 1, 2`);
     const clock = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
     for (const row of result.rows as unknown as { weekday: number; hour: number; plays: number }[]) {

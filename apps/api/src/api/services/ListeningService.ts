@@ -1,5 +1,5 @@
 import { AppError } from "@/api/AppError";
-import { ListeningStatsModel, type Period, type PeriodName, type RankBy, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
+import { ListeningStatsModel, type Period, type EntryFilter, type PeriodName, type RankBy, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
 import { PlayModel, type ImportedPlay, type ImportResult, type RecentPlay } from "@/api/models/Play";
 import { JobScheduler } from "@/api/services/JobScheduler";
 import { findScheduledJob } from "@/api/services/ScheduledJobs";
@@ -121,11 +121,7 @@ export class ListeningService {
    */
   static async getEntry(kind: TopKind, id: string, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
     const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
-    const [firstPlayedAt, weeklyPlays, link] = await Promise.all([
-      ListeningStatsModel.getFirstPlay(kind, id),
-      ListeningStatsModel.getWeeklyPlays(kind, id, now),
-      ListeningStatsModel.getLink(kind, id),
-    ]);
+    const [firstPlayedAt, link] = await Promise.all([ListeningStatsModel.getFirstPlay(kind, id), ListeningStatsModel.getLink(kind, id)]);
 
     if (kind === "genres") {
       const [topArtists, genrePlays, totals] = await Promise.all([
@@ -133,21 +129,22 @@ export class ListeningService {
         ListeningStatsModel.countEntryPlays(kind, id, period),
         ListeningStatsModel.getTotals(period),
       ]);
-      return { firstPlayedAt, weeklyPlays, link, topTracks: [], topArtists, share: totals.plays > 0 ? genrePlays / totals.plays : 0 };
+      return { firstPlayedAt, link, topTracks: [], topArtists, share: totals.plays > 0 ? genrePlays / totals.plays : 0 };
     }
 
     // A track shows the top tracks of its album, so every kind but genres has a list of tracks
     const albumID = kind === "tracks" ? await ListeningStatsModel.getTrackAlbumGroupID(id) : null;
     const topTracks = kind === "tracks" ? (albumID ? await ListeningStatsModel.getTopTracks("albums", albumID, period) : []) : await ListeningStatsModel.getTopTracks(kind, id, period);
-    return { firstPlayedAt, weeklyPlays, link, topTracks, topArtists: [], share: null };
+    return { firstPlayedAt, link, topTracks, topArtists: [], share: null };
   }
 
   /** Plays over time for the period, in days, weeks or months to suit its length, and plays in each hour of each weekday. */
-  static async getOverTime(periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+  static async getOverTime(periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date(), entry?: EntryFilter) {
     const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
-    const firstPlayAt = period.from === null ? await ListeningStatsModel.getFirstPlayAt() : null;
+    let firstPlayAt: Date | null = null;
+    if (period.from === null) firstPlayAt = entry ? await ListeningStatsModel.getFirstPlay(entry.kind, entry.id) : await ListeningStatsModel.getFirstPlayAt();
     const unit = timelineUnit(period, firstPlayAt);
-    const [timeline, clock] = await Promise.all([ListeningStatsModel.getTimeline(period, unit), ListeningStatsModel.getClock(period)]);
+    const [timeline, clock] = await Promise.all([ListeningStatsModel.getTimeline(period, unit, entry), ListeningStatsModel.getClock(period, entry)]);
     return { unit, timeline, clock };
   }
 

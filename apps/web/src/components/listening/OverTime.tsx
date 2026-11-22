@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { client, handle } from "@/lib/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { bucketLabel, roundedTop } from "@/lib/listening";
+import { bucketLabel, roundedTop, type ListeningKind } from "@/lib/listening";
+import switchStyles from "@/components/stats/ViewSwitch.module.css";
 import styles from "./OverTime.module.css";
 
 import type { ListeningSelection } from "@/components/listening/ListeningView";
@@ -16,23 +17,50 @@ const MAX_LABELS = 6;
 const countPlays = (plays: number) => (plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`);
 const hourName = (hour: number) => (hour === 0 ? "midnight" : hour === 12 ? "noon" : hour < 12 ? `${hour}am` : `${hour - 12}pm`);
 
-/** Plays in each day, week or month of the period, then the listening clock: plays in each hour of each weekday. */
-export function OverTime({ selection }: { selection: ListeningSelection }) {
+const ENTRY_LABELS: Record<ListeningKind, string> = { artists: "This artist", tracks: "This track", albums: "This album", genres: "This genre" };
+
+interface OverTimeProps {
+  selection: ListeningSelection;
+  /** The selected entry, which the charts follow when `follow` is true */
+  entry: { kind: ListeningKind; id: string; name: string } | null;
+  follow: boolean;
+  onFollowChange: (follow: boolean) => void;
+}
+
+/**
+ * Plays in each day, week or month of the period, then the listening clock: plays in each hour of each weekday.
+ * They show the selected entry's plays, or all plays when `follow` is off.
+ */
+export function OverTime({ selection, entry, follow, onFollowChange }: OverTimeProps) {
   const { period, from, to } = selection;
+  const focus = follow ? entry : null;
   const overTime = useQuery({
-    queryKey: queryKeys.listening.overTime(period, from, to),
-    queryFn: () => handle(client.api.listening["over-time"].$get({ query: { period, ...(period === "custom" ? { from, to } : {}) } })),
+    queryKey: queryKeys.listening.overTime(period, from, to, focus?.kind, focus?.id),
+    queryFn: () => handle(client.api.listening["over-time"].$get({ query: { period, ...(period === "custom" ? { from, to } : {}), ...(focus ? { kind: focus.kind, id: focus.id } : {}) } })),
+    placeholderData: keepPreviousData,
   });
 
   if (!overTime.data) return null;
   return (
-    <div className={styles.sections}>
+    <div className={styles.sections} data-loading={overTime.isPlaceholderData}>
       <section className={styles.section}>
-        <h2 className={styles.title}>Over time</h2>
+        <div className={styles.header}>
+          <h2 className={styles.title}>{focus ? `${focus.name} over time` : "Over time"}</h2>
+          {entry && (
+            <div className={switchStyles.switch} role="group" aria-label="Charts show">
+              <button type="button" className={switchStyles.option} aria-pressed={follow} onClick={() => onFollowChange(true)}>
+                {ENTRY_LABELS[entry.kind]}
+              </button>
+              <button type="button" className={switchStyles.option} aria-pressed={!follow} onClick={() => onFollowChange(false)}>
+                All listening
+              </button>
+            </div>
+          )}
+        </div>
         <PlaysChart unit={overTime.data.unit} timeline={overTime.data.timeline} />
       </section>
       <section className={styles.section}>
-        <h2 className={styles.title}>When I listen</h2>
+        <h2 className={styles.title}>{focus ? `When I listen to ${focus.name}` : "When I listen"}</h2>
         <ListeningClock clock={overTime.data.clock} />
       </section>
     </div>

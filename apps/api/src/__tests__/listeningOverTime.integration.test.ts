@@ -5,17 +5,17 @@ import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
 import { PlayModel } from "@/api/models/Play";
 import { ListeningStatsModel } from "@/api/models/ListeningStats";
-import { timelineUnit } from "@/api/services/ListeningService";
+import { ListeningService, timelineUnit } from "@/api/services/ListeningService";
 import type { SpotifyPlay } from "@/api/schemas/spotifySchema";
 
-const play = (trackID: string, playedAt: string): SpotifyPlay => ({
+const play = (trackID: string, playedAt: string, artistID = "artist1"): SpotifyPlay => ({
   played_at: playedAt,
   track: {
     id: trackID,
     name: trackID,
     duration_ms: 200000,
-    artists: [{ id: "artist1", name: "artist1" }],
-    album: { id: "album1", name: "album1", release_date: "2024-01-01", images: [], artists: [{ id: "artist1", name: "artist1" }] },
+    artists: [{ id: artistID, name: artistID }],
+    album: { id: "album1", name: "album1", release_date: "2024-01-01", images: [], artists: [{ id: artistID, name: artistID }] },
   },
 });
 
@@ -73,6 +73,16 @@ test("weeks start on a Monday, and empty weeks are filled in", async () => {
     { start: "2026-01-12", plays: 0 },
     { start: "2026-01-19", plays: 1 },
   ]);
+});
+
+test("an entry narrows the timeline and clock to its plays, and all time starts at its first play", async () => {
+  await PlayModel.savePlays([play("other", "2026-01-05T10:00:00Z", "someone else"), play("mine", "2026-03-02T10:00:00Z"), play("mine", "2026-03-02T15:00:00Z")]);
+
+  const overTime = await ListeningService.getOverTime("all", undefined, undefined, new Date("2026-03-04T12:00:00Z"), { kind: "artists", id: "artist1" });
+
+  expect(overTime.timeline.map(bucket => bucket.start)[0]).toBe("2026-03-02");
+  expect(overTime.timeline.reduce((total, bucket) => total + bucket.plays, 0)).toBe(2);
+  expect(overTime.clock.flat().reduce((total, plays) => total + plays, 0)).toBe(2);
 });
 
 test("picks days, weeks or months to suit the period's length", () => {

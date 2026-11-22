@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { client, handle } from "@/lib/client";
@@ -18,15 +17,13 @@ type EntryLink = { type: "artist"; id: string } | { type: "album"; id: string } 
 
 const LIST_TITLES: Record<ListeningKind, string> = { artists: "Top tracks", albums: "Top tracks", tracks: "Top tracks on its album", genres: "Top artists" };
 const LIST_LENGTH = 5;
-const DAY_MS = 86400000;
 
 const day = (date: Date | string) => new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Dublin" });
-const shortDay = (date: Date) => date.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Europe/Dublin" });
 const countPlays = (plays: number) => (plays === 1 ? "1 play" : `${plays.toLocaleString("en-GB")} plays`);
 
 /**
  * More about one listening entry, as a band above the list: its image, rank, name, plays, minutes and first play,
- * then its last 12 weeks and its top tracks or artists. The name links to the artist or album page.
+ * then its top tracks or artists. The name links to the artist or album page.
  * The band keeps its height from one entry to the next, so the list below it doesn't move.
  */
 export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
@@ -77,7 +74,6 @@ export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
       </div>
 
       <div className={styles.side}>
-        <WeeklyPlays weeks={details.data?.weeklyPlays ?? []} />
         <div className={styles.list}>
           <p className={styles.label}>{LIST_TITLES[kind]}</p>
           <ol>
@@ -127,44 +123,5 @@ function EntryName({ name, link }: { name: string; link: EntryLink | null }) {
     <Link className={styles.nameLink} to="/search" search={{ query: link.query }}>
       {name}
     </Link>
-  );
-}
-
-/** Plays in each of the last 12 weeks. Pointing at a week shows its plays, and otherwise the busiest week shows. */
-function WeeklyPlays({ weeks }: { weeks: number[] }) {
-  const [pointed, setPointed] = useState<number | null>(null);
-  const [now] = useState(() => Date.now());
-  const most = Math.max(0, ...weeks);
-  const busiest = weeks.indexOf(most);
-  // A week is the 7 days up to that point, and the last one ends now
-  const weekEnd = (index: number) => new Date(now - (weeks.length - 1 - index) * 7 * DAY_MS);
-  const describeWeek = (index: number) => `Week to ${shortDay(weekEnd(index))}: ${countPlays(weeks[index])}`;
-
-  let readout = "No plays in the last 12 weeks";
-  if (pointed !== null) readout = describeWeek(pointed);
-  else if (most > 0) readout = `Busiest week to ${shortDay(weekEnd(busiest))}: ${countPlays(most)}`;
-
-  return (
-    <div className={styles.weeks}>
-      <div className={styles.labelRow}>
-        <span className={styles.label}>Plays each week</span>
-        <output className={styles.readout}>{weeks.length > 0 ? readout : ""}</output>
-      </div>
-      <ol className={styles.bars} data-pointing={pointed !== null} onMouseLeave={() => setPointed(null)}>
-        {weeks.map((plays, index) => (
-          <li
-            key={index}
-            tabIndex={0}
-            aria-label={describeWeek(index)}
-            data-pointed={pointed === index}
-            onMouseEnter={() => setPointed(index)}
-            onFocus={() => setPointed(index)}
-            onBlur={() => setPointed(null)}
-          >
-            <span style={{ height: `${most > 0 ? (plays / most) * 100 : 0}%` }} />
-          </li>
-        ))}
-      </ol>
-    </div>
   );
 }

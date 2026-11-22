@@ -38,8 +38,13 @@ export const topQuerySchema = periodQuerySchema
   })
   .refine(customPeriodRule.check, { error: customPeriodRule.error });
 
-export const overTimeQuerySchema = periodQuerySchema.omit({ kind: true }).refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), {
-  error: customPeriodRule.error,
-});
+/** `kind` and `id` together narrow the charts to one entry's plays */
+export const overTimeQuerySchema = periodQuerySchema
+  .extend({
+    kind: periodQuerySchema.shape.kind.optional(),
+    id: z.string().min(1).max(255).optional(),
+  })
+  .refine(query => query.period !== "custom" || (query.from !== undefined && query.to !== undefined && query.from <= query.to), { error: customPeriodRule.error })
+  .refine(query => (query.kind === undefined) === (query.id === undefined), { error: "Give both kind and id, or neither." });
 
 export const entryQuerySchema = periodQuerySchema.extend({ id: z.string().min(1).max(255) }).refine(customPeriodRule.check, { error: customPeriodRule.error });

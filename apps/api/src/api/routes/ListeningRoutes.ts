@@ -18,8 +18,9 @@ const listening = new Hono()
     return c.json(await ListeningService.getTop(kind, period, from, to, new Date(), by, show === "all"), 200);
   })
   .get("/over-time", validate("query", overTimeQuerySchema), async c => {
-    const { period, from, to } = c.req.valid("query");
-    return c.json(await ListeningService.getOverTime(period, from, to), 200);
+    const { period, from, to, kind, id } = c.req.valid("query");
+    const entry = kind && id ? { kind, id } : undefined;
+    return c.json(await ListeningService.getOverTime(period, from, to, new Date(), entry), 200);
   })
   .get("/entry", validate("query", entryQuerySchema), async c => {
     const { kind, id, period, from, to } = c.req.valid("query");
