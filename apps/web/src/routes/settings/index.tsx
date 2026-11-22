@@ -110,7 +110,7 @@ function Settings() {
           <ArtistJobRow
             job="played-tracks"
             title="Played tracks"
-            description="Looks up the album and artists of each played track that has none, and each played artist's photo. It makes at most 200 Spotify requests a run."
+            description="Looks up each new played track and artist on Spotify, then groups the copies of each album and recording so the stats count them once."
             actionLabel="Look up tracks"
             lastRun={lastRuns.played_tracks_last_run ?? null}
             result={null}

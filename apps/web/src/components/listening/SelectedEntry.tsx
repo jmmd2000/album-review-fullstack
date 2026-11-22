@@ -30,7 +30,7 @@ export function SelectedEntry({ selection, entry }: SelectedEntryProps) {
 
   return (
     <article className={styles.entry}>
-      <EntryImage kind={kind} imageURLs={entry.imageURLs} large />
+      <EntryImage kind={kind} imageURLs={entry.largeImageURL ? [entry.largeImageURL] : entry.imageURLs} large />
       <p className={styles.rank}>
         #{entry.rank} {describePeriod(period, from, to)} <RankChange change={entry.change} />
       </p>

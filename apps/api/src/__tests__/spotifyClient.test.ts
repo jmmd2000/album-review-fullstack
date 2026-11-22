@@ -211,7 +211,7 @@ describe("getRecentlyPlayed", () => {
     const plays = await SpotifyClient.getRecentlyPlayed("user");
     expect(plays).toHaveLength(recentlyPlayedReply.items.length);
     expect(Object.keys(plays[0]).sort()).toEqual(["played_at", "track"]);
-    expect(Object.keys(plays[0].track).sort()).toEqual(["album", "artists", "duration_ms", "id", "name"]);
+    expect(Object.keys(plays[0].track).sort()).toEqual(["album", "artists", "duration_ms", "external_ids", "id", "name"]);
     expect(fetchMock.mock.calls[0][0]).toContain("/me/player/recently-played?limit=50");
   });
 

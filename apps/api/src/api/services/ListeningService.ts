@@ -1,7 +1,6 @@
 import { AppError } from "@/api/AppError";
 import { ListeningStatsModel, type Period, type PeriodName, type TimelineUnit, type TopEntry, type TopKind } from "@/api/models/ListeningStats";
 import { PlayModel, type ImportedPlay, type ImportResult, type RecentPlay } from "@/api/models/Play";
-import { PlayedTrackModel } from "@/api/models/PlayedTrack";
 import { JobScheduler } from "@/api/services/JobScheduler";
 import { findScheduledJob } from "@/api/services/ScheduledJobs";
 import { z } from "zod";
@@ -180,25 +179,13 @@ export class ListeningService {
   }
 
   /**
-   * Runs the Played tracks lookup until no tracks or artist photos are waiting, then the Played artist genres lookup until no artists are waiting.
-   * Each is a normal run that Settings can follow. It stops a job early when a run leaves as much waiting as before, such as when Spotify refuses,
-   * and stops when a person already started a run of that job.
+   * Runs the Played tracks lookup, then the Played artist genres lookup. Each is a normal run that Settings can follow.
+   * A job a person already started is left to finish on its own.
    */
   static async lookUpAfterImport(): Promise<void> {
-    const steps = [
-      { job: findScheduledJob("played-tracks"), countWaiting: () => PlayedTrackModel.countLookupsWaiting() },
-      { job: findScheduledJob("played-genres"), countWaiting: () => PlayedTrackModel.countGenresWaiting() },
-    ];
-    for (const { job, countWaiting } of steps) {
-      if (!job) continue;
-      let waiting = await countWaiting();
-      while (waiting > 0) {
-        const started = await JobScheduler.runAndWait(job);
-        if (!started) return;
-        const stillWaiting = await countWaiting();
-        if (stillWaiting >= waiting) break;
-        waiting = stillWaiting;
-      }
+    for (const name of ["played-tracks", "played-genres"]) {
+      const job = findScheduledJob(name);
+      if (job) await JobScheduler.runAndWait(job);
     }
   }
 

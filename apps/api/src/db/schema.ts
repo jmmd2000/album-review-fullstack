@@ -75,6 +75,10 @@ export const reviewedTracks = pgTable(
     duration: integer("duration_ms").notNull(),
     rating: integer("rating").notNull(),
     pick: trackPick("pick"),
+    /** The recording's code, which every copy of the recording on Spotify shares. Null when Spotify gives none or it isn't looked up yet. */
+    isrc: varchar("isrc", { length: 12 }),
+    /** True once the ISRC is looked up, so a track with none isn't looked up again */
+    isrcLookedUp: boolean("isrc_looked_up").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql`now()`),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .default(sql`now()`)
@@ -84,6 +88,7 @@ export const reviewedTracks = pgTable(
     index("spotify_id_track_idx").on(table.spotifyID), // Index on Spotify ID for faster lookups
     index("artist_spotify_id_track_idx").on(table.artistSpotifyID), // Index on artist DB ID for faster lookups
     index("album_spotify_id_track_idx").on(table.albumSpotifyID), // Index on album DB ID for faster lookups
+    index("reviewed_tracks_isrc_idx").on(table.isrc),
   ]
 );
 
@@ -295,30 +300,64 @@ export const playedArtists = pgTable("played_artists", {
   name: varchar("name", { length: 255 }).notNull(),
   /** The artist's photo at about 300px wide, or null when Spotify has none or it isn't looked up yet */
   imageURL: text("image_url"),
+  /** The artist's largest photo */
+  largeImageURL: text("large_image_url"),
   /** True once the photo is looked up, so an artist with no photo isn't looked up again */
   imageLookedUp: boolean("image_looked_up").notNull().default(false),
   /** True once the genres are looked up, so an artist with no matching genre isn't looked up again */
   genresLookedUp: boolean("genres_looked_up").notNull().default(false),
 });
 
-/** Albums from the admin's Spotify plays. Reviewed albums have their own table. */
-export const playedAlbums = pgTable("played_albums", {
-  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  /** The album's cover at about 300px wide, or null when Spotify has none */
-  imageURL: text("image_url"),
-});
+/**
+ * Albums from the admin's Spotify plays. Reviewed albums have their own table.
+ * Copies of one album, its deluxe edition and its singles form a group, which the stats count as one album.
+ */
+export const playedAlbums = pgTable(
+  "played_albums",
+  {
+    spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    /** The album's cover at about 300px wide, or null when Spotify has none */
+    imageURL: text("image_url"),
+    /** The album's largest cover */
+    largeImageURL: text("large_image_url"),
+    /** "album", "single" or "compilation". Spotify labels an EP as a single. Null until the album is looked up. */
+    albumType: varchar("album_type", { length: 20 }),
+    /** The album's first credited artist */
+    artistSpotifyID: varchar("artist_spotify_id", { length: 255 }),
+    /** The album its group shows as. Null until the album is grouped. */
+    mainSpotifyID: varchar("main_spotify_id", { length: 255 }),
+    /** The reviewed album in its group, if there is one */
+    reviewedSpotifyID: varchar("reviewed_spotify_id", { length: 255 }),
+  },
+  table => [index("played_albums_main_idx").on(table.mainSpotifyID)]
+);
 
-/** Tracks from the admin's Spotify plays, shared by every play of the track */
-export const playedTracks = pgTable("played_tracks", {
-  spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  /** Null for a track from the streaming history export until it is looked up */
-  durationMs: integer("duration_ms"),
-  albumSpotifyID: varchar("album_spotify_id", { length: 255 }).references(() => playedAlbums.spotifyID),
-  /** True when Spotify no longer has the track, so it isn't looked up again */
-  unavailable: boolean("unavailable").notNull().default(false),
-});
+/**
+ * Tracks from the admin's Spotify plays, shared by every play of the track.
+ * Copies of one recording, on any release, form a group, which the stats count as one track.
+ */
+export const playedTracks = pgTable(
+  "played_tracks",
+  {
+    spotifyID: varchar("spotify_id", { length: 255 }).primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    /** Null for a track from the streaming history export until it is looked up */
+    durationMs: integer("duration_ms"),
+    albumSpotifyID: varchar("album_spotify_id", { length: 255 }).references(() => playedAlbums.spotifyID),
+    /** True when Spotify no longer has the track, so it isn't looked up again */
+    unavailable: boolean("unavailable").notNull().default(false),
+    /** True once the track's details come from Spotify. A track from the streaming history export has only its ID and name. */
+    lookedUp: boolean("looked_up").notNull().default(false),
+    /** The recording's code, which every copy of the recording on Spotify shares. Null when Spotify gives none. */
+    isrc: varchar("isrc", { length: 12 }),
+    /** The track its group shows as. Null until the track is grouped. */
+    mainSpotifyID: varchar("main_spotify_id", { length: 255 }),
+    /** The reviewed track with the same recording, if there is one */
+    reviewedSpotifyID: varchar("reviewed_spotify_id", { length: 255 }),
+  },
+  table => [index("played_tracks_isrc_idx").on(table.isrc), index("played_tracks_main_idx").on(table.mainSpotifyID)]
+);
 
 export const playedTrackArtists = pgTable(
   "played_track_artists",

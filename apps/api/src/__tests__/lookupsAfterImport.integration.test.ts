@@ -3,7 +3,6 @@ import { closeDatabase, query } from "@/db/client";
 import { resetTables } from "./testUtils";
 import { api } from "./apiRequest";
 import { adminCookie } from "./adminCookie";
-import { PlayedTrackModel } from "@/api/models/PlayedTrack";
 import { JobScheduler } from "@/api/services/JobScheduler";
 import { ListeningService } from "@/api/services/ListeningService";
 import { PlayedArtistGenreService } from "@/api/services/PlayedArtistGenreService";
@@ -22,14 +21,10 @@ afterAll(async () => {
   await closeDatabase();
 });
 
-test("runs the track lookup until nothing is waiting, then the genre lookup", async () => {
+test("runs the track lookup, then the genre lookup", async () => {
   const order: string[] = [];
-  let tracksWaiting = 2;
-  vi.spyOn(PlayedTrackModel, "countLookupsWaiting").mockImplementation(async () => tracksWaiting);
-  vi.spyOn(PlayedTrackModel, "countGenresWaiting").mockResolvedValueOnce(1).mockResolvedValue(0);
   vi.spyOn(PlayedTrackLookupService, "lookUp").mockImplementation(async () => {
     order.push("tracks");
-    tracksWaiting--;
   });
   vi.spyOn(PlayedArtistGenreService, "lookUpGenres").mockImplementation(async () => {
     order.push("genres");
@@ -37,23 +32,21 @@ test("runs the track lookup until nothing is waiting, then the genre lookup", as
 
   await ListeningService.lookUpAfterImport();
 
-  expect(order).toEqual(["tracks", "tracks", "genres"]);
+  expect(order).toEqual(["tracks", "genres"]);
 });
 
-test("stops a lookup that leaves as much waiting as before, such as when Spotify refuses", async () => {
-  vi.spyOn(PlayedTrackModel, "countLookupsWaiting").mockResolvedValue(5);
-  vi.spyOn(PlayedTrackModel, "countGenresWaiting").mockResolvedValue(0);
-  const lookUp = vi.spyOn(PlayedTrackLookupService, "lookUp").mockRejectedValue(new Error("Spotify is busy"));
+test("runs the genre lookup even when the track lookup fails", async () => {
+  vi.spyOn(PlayedTrackLookupService, "lookUp").mockRejectedValue(new Error("Spotify is busy"));
+  const lookUpGenres = vi.spyOn(PlayedArtistGenreService, "lookUpGenres").mockResolvedValue();
 
   await ListeningService.lookUpAfterImport();
 
-  expect(lookUp).toHaveBeenCalledTimes(1);
+  expect(lookUpGenres).toHaveBeenCalledTimes(1);
 });
 
 test("a running lookup is listed with its job ID, so Settings can follow it after a refresh", async () => {
   let finish: () => void = () => {};
-  vi.spyOn(PlayedTrackModel, "countLookupsWaiting").mockResolvedValueOnce(1).mockResolvedValue(0);
-  vi.spyOn(PlayedTrackModel, "countGenresWaiting").mockResolvedValue(0);
+  vi.spyOn(PlayedArtistGenreService, "lookUpGenres").mockResolvedValue();
   vi.spyOn(PlayedTrackLookupService, "lookUp").mockReturnValue(new Promise<void>(resolve => (finish = resolve)));
 
   const lookups = ListeningService.lookUpAfterImport();

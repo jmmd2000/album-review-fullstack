@@ -4,7 +4,6 @@ import { GenreModel } from "@/api/models/Genre";
 import { matchGenres } from "@/helpers/matchGenres";
 import type { JobEmit } from "@/api/services/JobService";
 
-const MAX_ARTISTS_PER_RUN = 1000;
 /** A tag counts when listeners use it at least a quarter as often as the artist's top tag */
 const MIN_TAG_COUNT = 25;
 const MAX_GENRES_PER_ARTIST = 3;
@@ -12,15 +11,15 @@ const MAX_GENRES_PER_ARTIST = 3;
 export const PlayedArtistGenreService = {
   /**
    * Gives each played artist up to 3 genres from the genre list, from the tags Last.fm listeners use most for them.
-   * Tags that match no genre are ignored. Looks up at most 1000 artists a run, and only artists not looked up before.
+   * Tags that match no genre are ignored. Looks up every artist not looked up before.
    * An artist that fails is tried again next run. Last.fm's rate limit stops the run.
    */
   async lookUpGenres(emit: JobEmit): Promise<void> {
-    const [artists, genres] = await Promise.all([PlayedTrackModel.getArtistsWithoutGenres(MAX_ARTISTS_PER_RUN), GenreModel.getAllGenres()]);
+    const [artists, genres] = await Promise.all([PlayedTrackModel.getArtistsWithoutGenres(), GenreModel.getAllGenres()]);
     const genreIDsByName = new Map(genres.map(genre => [genre.name, genre.id]));
 
     for (const [index, artist] of artists.entries()) {
-      const progress = { index: index + 1, total: artists.length, spotifyID: artist.spotifyID, artistName: artist.name };
+      const progress = { index: index + 1, total: artists.length, spotifyID: artist.spotifyID, artistName: artist.name, artistImage: artist.imageURL ?? undefined };
       emit("progress", progress);
       try {
         const tags = (await LastFmClient.getTopTags(artist.name)) ?? [];

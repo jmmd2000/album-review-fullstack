@@ -88,7 +88,11 @@ export const localPlaySchema = z.object({
 });
 
 /** A track with its album, as the recent plays and the track lookups give it */
-export const playedTrackSchema = albumTrackSchema.extend({ album: albumSummarySchema });
+export const playedTrackSchema = albumTrackSchema.extend({
+  album: albumSummarySchema.extend({ album_type: z.string().optional() }),
+  /** `isrc` is the recording's code, which every copy of the recording on Spotify shares */
+  external_ids: z.object({ isrc: z.string().optional() }).optional(),
+});
 
 /** `played_at` is an ISO time in UTC. */
 export const playsSchema = z.array(

@@ -24,6 +24,8 @@ export interface TopEntry {
   albumCount: number | null;
   /** A cover or photo. A genre gives its most played artists' photos, up to 4. */
   imageURLs: string[];
+  /** The largest cover or photo, or null for a genre */
+  largeImageURL: string | null;
   /** The review score of a reviewed artist or album, or the rating of a reviewed track */
   score: number | null;
 }
@@ -42,14 +44,17 @@ const PLAY_MS = sql`coalesce(p.ms_played, t.duration_ms, 0)`;
 const TOP_LIMIT = 50;
 const DETAIL_LIMIT = 5;
 const WEEK_COUNT = 12;
+// Copies of one recording or album count as one, under the copy their group shows as. A copy not grouped yet counts as itself.
+const TRACK_GROUP = sql`coalesce(t.main_spotify_id, t.spotify_id)`;
+const ALBUM_GROUP = sql`coalesce(al.main_spotify_id, al.spotify_id)`;
 
 /** Where a listening entry links */
 export type EntryLink = { type: "artist" | "album" | "review"; id: string } | { type: "search"; query: string };
 
 /** Picks the plays of one artist, track, album or genre. Plays join played tracks as `t`. */
 function entryCondition(kind: TopKind, id: string): SQL {
-  if (kind === "tracks") return sql`p.track_spotify_id = ${id}`;
-  if (kind === "albums") return sql`t.album_spotify_id = ${id}`;
+  if (kind === "tracks") return sql`${TRACK_GROUP} = ${id}`;
+  if (kind === "albums") return sql`EXISTS (SELECT 1 FROM played_albums al WHERE al.spotify_id = t.album_spotify_id AND ${ALBUM_GROUP} = ${id})`;
   if (kind === "artists") return sql`EXISTS (SELECT 1 FROM played_track_artists ta WHERE ta.track_spotify_id = p.track_spotify_id AND ta.artist_spotify_id = ${id})`;
   return sql`EXISTS (
     SELECT 1 FROM played_track_artists ta JOIN played_artist_genres pag ON pag.artist_spotify_id = ta.artist_spotify_id
@@ -78,18 +83,20 @@ function rankedQuery(kind: TopKind, period: Period): SQL {
       WHERE ${where}
       GROUP BY a.spotify_id, a.name`,
     tracks: sql`
-      SELECT t.spotify_id AS id, t.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
+      SELECT main.spotify_id AS id, main.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+      JOIN played_tracks main ON main.spotify_id = ${TRACK_GROUP}
       WHERE ${where}
-      GROUP BY t.spotify_id, t.name`,
+      GROUP BY main.spotify_id, main.name`,
     albums: sql`
-      SELECT al.spotify_id AS id, al.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
+      SELECT main.spotify_id AS id, main.name, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
       JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      JOIN played_albums main ON main.spotify_id = ${ALBUM_GROUP}
       WHERE ${where}
-      GROUP BY al.spotify_id, al.name`,
+      GROUP BY main.spotify_id, main.name`,
     genres: sql`
       SELECT g.id::text AS id, g.name, count(*)::int AS plays, sum(genre_plays.ms)::bigint AS ms
       FROM (
@@ -109,51 +116,82 @@ function rankedQuery(kind: TopKind, period: Period): SQL {
     FROM (${grouped}) grouped`;
 }
 
+type EntryDetails = Pick<TopEntry, "artistNames" | "albumCount" | "imageURLs" | "largeImageURL" | "score">;
+
+// A reviewed album's or artist's images are listed largest first
+const REVIEWED_LARGE_IMAGE = (column: SQL) => sql`${column}->0->>'url'`;
+const REVIEWED_MEDIUM_IMAGE = (column: SQL) => sql`coalesce(${column}->1->>'url', ${column}->0->>'url')`;
+
 /** The details each kind shows beside its name, for the given IDs */
-async function detailsFor(kind: TopKind, ids: string[]): Promise<Map<string, Pick<TopEntry, "artistNames" | "albumCount" | "imageURLs" | "score">>> {
-  const details = new Map<string, Pick<TopEntry, "artistNames" | "albumCount" | "imageURLs" | "score">>();
+async function detailsFor(kind: TopKind, ids: string[], period: Period): Promise<Map<string, EntryDetails>> {
+  const details = new Map<string, EntryDetails>();
   if (ids.length === 0) return details;
 
   const queries = {
     artists: sql`
       SELECT a.spotify_id AS id,
-        coalesce(a.image_url, ra.image_urls->0->>'url') AS image_url,
+        coalesce(a.image_url, ${REVIEWED_MEDIUM_IMAGE(sql`ra.image_urls`)}) AS image_url,
+        coalesce(${REVIEWED_LARGE_IMAGE(sql`ra.image_urls`)}, a.large_image_url, a.image_url) AS large_image_url,
         CASE WHEN ra.review_count > 0 AND NOT ra.unrated THEN ra.total_score END AS score,
-        (SELECT count(DISTINCT t.album_spotify_id)::int FROM played_track_artists ta JOIN played_tracks t ON t.spotify_id = ta.track_spotify_id WHERE ta.artist_spotify_id = a.spotify_id) AS album_count,
         '{}'::text[] AS artist_names
       FROM played_artists a
       LEFT JOIN reviewed_artists ra ON ra.spotify_id = a.spotify_id
       WHERE a.spotify_id IN (${sql.join(ids, sql`, `)})`,
     tracks: sql`
-      SELECT t.spotify_id AS id, al.image_url, rt.rating AS score, NULL::int AS album_count,
+      SELECT t.spotify_id AS id, al.image_url, coalesce(al.large_image_url, al.image_url) AS large_image_url, rt.rating AS score,
         array(SELECT a.name FROM played_track_artists ta JOIN played_artists a ON a.spotify_id = ta.artist_spotify_id WHERE ta.track_spotify_id = t.spotify_id ORDER BY ta.position) AS artist_names
       FROM played_tracks t
       LEFT JOIN played_albums al ON al.spotify_id = t.album_spotify_id
-      LEFT JOIN reviewed_tracks rt ON rt.spotify_id = t.spotify_id
+      LEFT JOIN reviewed_tracks rt ON rt.spotify_id = coalesce(t.reviewed_spotify_id, t.spotify_id)
       WHERE t.spotify_id IN (${sql.join(ids, sql`, `)})`,
     albums: sql`
-      SELECT al.spotify_id AS id, al.image_url, ra.final_score AS score, NULL::int AS album_count,
+      SELECT al.spotify_id AS id, al.image_url,
+        coalesce(${REVIEWED_LARGE_IMAGE(sql`ra.image_urls`)}, al.large_image_url, al.image_url) AS large_image_url,
+        ra.final_score AS score,
         array(
           SELECT a.name FROM played_tracks t
+          JOIN played_albums copy ON copy.spotify_id = t.album_spotify_id
           JOIN played_track_artists ta ON ta.track_spotify_id = t.spotify_id AND ta.position = 1
           JOIN played_artists a ON a.spotify_id = ta.artist_spotify_id
-          WHERE t.album_spotify_id = al.spotify_id
+          WHERE coalesce(copy.main_spotify_id, copy.spotify_id) = al.spotify_id
           GROUP BY a.name ORDER BY count(*) DESC, a.name LIMIT 1
         ) AS artist_names
       FROM played_albums al
-      LEFT JOIN reviewed_albums ra ON ra.spotify_id = al.spotify_id
+      LEFT JOIN reviewed_albums ra ON ra.spotify_id = coalesce(al.reviewed_spotify_id, al.spotify_id)
       WHERE al.spotify_id IN (${sql.join(ids, sql`, `)})`,
     genres: sql`
-      SELECT g.id::text AS id, NULL AS image_url, NULL::real AS score, NULL::int AS album_count, '{}'::text[] AS artist_names
+      SELECT g.id::text AS id, NULL AS image_url, NULL AS large_image_url, NULL::real AS score, '{}'::text[] AS artist_names
       FROM genres g
       WHERE g.id::text IN (${sql.join(ids, sql`, `)})`,
   };
 
-  const result = await db.execute(queries[kind]);
-  for (const row of result.rows as unknown as { id: string; image_url: string | null; score: number | null; album_count: number | null; artist_names: string[] }[]) {
-    details.set(row.id, { artistNames: row.artist_names, albumCount: row.album_count, imageURLs: row.image_url ? [row.image_url] : [], score: row.score });
+  const [result, albumCounts] = await Promise.all([db.execute(queries[kind]), kind === "artists" ? countAlbumsPlayed(ids, period) : new Map<string, number>()]);
+  for (const row of result.rows as unknown as { id: string; image_url: string | null; large_image_url: string | null; score: number | null; artist_names: string[] }[]) {
+    details.set(row.id, {
+      artistNames: row.artist_names,
+      albumCount: kind === "artists" ? (albumCounts.get(row.id) ?? 0) : null,
+      imageURLs: row.image_url ? [row.image_url] : [],
+      largeImageURL: row.large_image_url,
+      score: row.score,
+    });
   }
   return details;
+}
+
+/**
+ * How many of each artist's albums were played in the period. An album counts when the artist is its first artist.
+ * Copies, deluxe editions and singles of one album count once, and singles, EPs and compilations on their own don't count.
+ */
+async function countAlbumsPlayed(artistIDs: string[], period: Period): Promise<Map<string, number>> {
+  const result = await db.execute(sql`
+    SELECT main.artist_spotify_id AS id, count(DISTINCT main.spotify_id)::int AS albums
+    FROM plays p
+    JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+    JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+    JOIN played_albums main ON main.spotify_id = ${ALBUM_GROUP}
+    WHERE main.album_type = 'album' AND main.artist_spotify_id IN (${sql.join(artistIDs, sql`, `)}) AND ${inPeriod(period)} AND ${STREAM_CONDITION}
+    GROUP BY main.artist_spotify_id`);
+  return new Map((result.rows as unknown as { id: string; albums: number }[]).map(row => [row.id, row.albums]));
 }
 
 export class ListeningStatsModel {
@@ -189,7 +227,7 @@ export class ListeningStatsModel {
     const result = await db.execute(sql`SELECT * FROM (${rankedQuery(kind, period)}) ranked ORDER BY rank LIMIT ${TOP_LIMIT}`);
     const rows = result.rows as unknown as RankedRow[];
     const ids = rows.map(row => row.id);
-    const details = await detailsFor(kind, ids);
+    const details = await detailsFor(kind, ids, period);
     const genreImages = kind === "genres" ? await this.getGenreImages(ids, period) : new Map<string, { names: string[]; imageURLs: string[] }>();
 
     return rows.map(row => {
@@ -204,6 +242,7 @@ export class ListeningStatsModel {
         artistNames: genre?.names ?? detail?.artistNames ?? [],
         albumCount: detail?.albumCount ?? null,
         imageURLs: genre?.imageURLs ?? detail?.imageURLs ?? [],
+        largeImageURL: detail?.largeImageURL ?? null,
         score: detail?.score ?? null,
       };
     });
@@ -291,13 +330,14 @@ export class ListeningStatsModel {
   /** An artist's or album's most played tracks in the period, with their covers. */
   static async getTopTracks(kind: "artists" | "albums", id: string, period: Period): Promise<{ id: string; name: string; imageURL: string | null; plays: number }[]> {
     const result = await db.execute(sql`
-      SELECT t.spotify_id AS id, t.name, al.image_url, count(*)::int AS plays
+      SELECT main.spotify_id AS id, main.name, main_album.image_url, count(*)::int AS plays
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
-      LEFT JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+      JOIN played_tracks main ON main.spotify_id = ${TRACK_GROUP}
+      LEFT JOIN played_albums main_album ON main_album.spotify_id = main.album_spotify_id
       WHERE ${entryCondition(kind, id)} AND ${inPeriod(period)} AND ${STREAM_CONDITION}
-      GROUP BY t.spotify_id, t.name, al.image_url
-      ORDER BY plays DESC, sum(${PLAY_MS}) DESC, t.name
+      GROUP BY main.spotify_id, main.name, main_album.image_url
+      ORDER BY plays DESC, sum(${PLAY_MS}) DESC, main.name
       LIMIT ${DETAIL_LIMIT}`);
     return (result.rows as unknown as { id: string; name: string; image_url: string | null; plays: number }[]).map(row => ({ id: row.id, name: row.name, imageURL: row.image_url, plays: row.plays }));
   }
@@ -318,7 +358,7 @@ export class ListeningStatsModel {
     return (result.rows as unknown as { id: string; name: string; image_url: string | null; plays: number }[]).map(row => ({ id: row.id, name: row.name, imageURL: row.image_url, plays: row.plays }));
   }
 
-  /** Where the entry links: the reviewed artist or album, the album to review, or a search for the artist. */
+  /** Where the entry links: the reviewed artist or album, the album to review, or a search for the artist. A track links to its album. */
   static async getLink(kind: TopKind, id: string): Promise<EntryLink | null> {
     if (kind === "genres") return null;
 
@@ -332,8 +372,14 @@ export class ListeningStatsModel {
 
     const albumID = kind === "albums" ? id : await this.getTrackAlbumID(id);
     if (!albumID) return null;
-    const reviewed = await db.execute(sql`SELECT 1 FROM reviewed_albums WHERE spotify_id = ${albumID}`);
-    return reviewed.rows.length > 0 ? { type: "album", id: albumID } : { type: "review", id: albumID };
+    const result = await db.execute(sql`
+      SELECT coalesce(al.main_spotify_id, al.spotify_id) AS main_id,
+        (SELECT ra.spotify_id FROM reviewed_albums ra WHERE ra.spotify_id IN (al.spotify_id, coalesce(al.reviewed_spotify_id, al.spotify_id))
+          ORDER BY ra.spotify_id = al.spotify_id DESC LIMIT 1) AS reviewed_id
+      FROM played_albums al WHERE al.spotify_id = ${albumID}`);
+    const row = result.rows[0] as { main_id: string; reviewed_id: string | null } | undefined;
+    if (!row) return { type: "review", id: albumID };
+    return row.reviewed_id ? { type: "album", id: row.reviewed_id } : { type: "review", id: row.main_id };
   }
 
   private static async getTrackAlbumID(trackID: string): Promise<string | null> {
