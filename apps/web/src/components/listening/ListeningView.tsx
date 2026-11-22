@@ -160,8 +160,10 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
               <Dialog.Backdrop className={dialog.backdrop} />
               <Dialog.Popup className={`${dialog.popup} ${styles.sheet}`}>
                 <Dialog.Title className={styles.hidden}>{selected.name}</Dialog.Title>
-                <Dialog.Close render={<Button />}>Close</Dialog.Close>
                 <SelectedEntry selection={shownSelection} entry={selected} />
+                <div className={styles.closeBar}>
+                  <Dialog.Close render={<Button />}>Close</Dialog.Close>
+                </div>
               </Dialog.Popup>
             </Dialog.Portal>
           </Dialog.Root>

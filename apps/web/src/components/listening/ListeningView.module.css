@@ -123,12 +123,40 @@
   }
 }
 
+/* The sheet rises from the bottom of the screen */
 .sheet {
-  --dialog-width: 32rem;
-
-  max-height: calc(100dvh - 2 * var(--space-4));
+  top: auto;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: none;
+  max-height: 90dvh;
   overflow-y: auto;
   justify-items: start;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  translate: none;
+  transition:
+    opacity var(--duration-quick) var(--ease-out),
+    translate var(--duration-quick) var(--ease-out);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 1;
+    scale: 1;
+    translate: 0 100%;
+  }
+}
+
+/* Stays at the bottom of the sheet while its content scrolls */
+.closeBar {
+  position: sticky;
+  bottom: calc(var(--space-panel) * -1);
+  display: grid;
+  justify-self: stretch;
+  margin-inline: calc(var(--space-panel) * -1);
+  margin-bottom: calc(var(--space-panel) * -1);
+  padding: var(--space-3) var(--space-panel) var(--space-panel);
+  background: var(--colour-background);
 }
 
 .hidden {
