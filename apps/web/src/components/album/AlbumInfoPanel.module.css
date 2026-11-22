@@ -56,6 +56,11 @@
   color: var(--colour-text-muted);
 }
 
+/* On its own line, so the line count is the same while the numbers load */
+.firstPlayed {
+  flex-basis: 100%;
+}
+
 /* tinted with the cover's most vivid colour */
 .genres {
   display: flex;

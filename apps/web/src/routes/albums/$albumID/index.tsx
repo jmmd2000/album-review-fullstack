@@ -121,7 +121,12 @@ function RouteComponent() {
         {cover && <img className={styles.cover} src={cover.url} alt={`${album.name} cover`} width={cover.width} height={cover.height} {...morphProps("album", album.spotifyID)} />}
         <div className={styles.column}>
           <div ref={panelsRef} className={styles.panels}>
-            <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} listening={isAdmin ? { plays: plays?.plays ?? null, firstPlayedAt: plays?.firstPlayedAt ?? null } : undefined} />
+            <AlbumInfoPanel
+              album={album}
+              artists={artists}
+              genres={albumGenres ?? []}
+              listening={isAdmin ? { plays: plays?.plays ?? null, minutes: plays?.minutes ?? null, firstPlayedAt: plays?.firstPlayedAt ?? null } : undefined}
+            />
             {album.reviewContent && <ReviewContent content={album.reviewContent} linkedAlbums={linkedAlbums} />}
           </div>
           <Tracklist tracks={tracks} plays={isAdmin ? (plays?.trackPlays ?? null) : undefined} />

@@ -78,12 +78,14 @@ test("gives the artist's plays, first play, and plays and rank each month, with 
   const listening = await ArtistListeningService.getArtistListening("artist", new Date("2026-03-15T12:00:00Z"));
 
   expect(listening.plays).toBe(2);
+  // The total is rounded once, so it isn't the sum of the rounded months
+  expect(listening.minutes).toBe(7);
   expect(listening.firstPlayedAt?.toISOString()).toBe("2025-12-05T10:00:00.000Z");
   expect(listening.months).toEqual([
-    { month: "2025-12", plays: 1, rank: 2 },
-    { month: "2026-01", plays: 0, rank: null },
-    { month: "2026-02", plays: 1, rank: 1 },
-    { month: "2026-03", plays: 0, rank: null },
+    { month: "2025-12", plays: 1, minutes: 3, rank: 2 },
+    { month: "2026-01", plays: 0, minutes: 0, rank: null },
+    { month: "2026-02", plays: 1, minutes: 3, rank: 1 },
+    { month: "2026-03", plays: 0, minutes: 0, rank: null },
   ]);
 });
 

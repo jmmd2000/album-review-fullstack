@@ -506,37 +506,38 @@ export class ListeningStatsModel {
   }
 
   /**
-   * The artist's plays in each month they were played, in Europe/Dublin time, with their rank among every artist played that month.
-   * Artists with the same plays share a rank. Months without plays are left out.
-   * @returns Each month as YYYY-MM, oldest first.
+   * The artist's plays and played time in each month they were played, in Europe/Dublin time, with their rank by plays
+   * among every artist played that month. Artists with the same plays share a rank. Months without plays are left out.
+   * @returns Each month as YYYY-MM, oldest first, with its played time in milliseconds.
    */
-  static async getArtistMonths(artistID: string): Promise<{ month: string; plays: number; rank: number }[]> {
+  static async getArtistMonths(artistID: string): Promise<{ month: string; plays: number; ms: number; rank: number }[]> {
     const result = await db.execute(sql`
       WITH monthly AS (
-        SELECT date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin') AS month, ta.artist_spotify_id, count(*)::int AS plays
+        SELECT date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin') AS month, ta.artist_spotify_id, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
         FROM plays p
+        JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
         JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id
         WHERE ${STREAM_CONDITION}
         GROUP BY 1, 2
       ),
       ranked AS (
-        SELECT month, artist_spotify_id, plays, rank() OVER (PARTITION BY month ORDER BY plays DESC)::int AS rank FROM monthly
+        SELECT month, artist_spotify_id, plays, ms, rank() OVER (PARTITION BY month ORDER BY plays DESC)::int AS rank FROM monthly
       )
-      SELECT to_char(month, 'YYYY-MM') AS month, plays, rank FROM ranked WHERE artist_spotify_id = ${artistID} ORDER BY month`);
-    return result.rows as unknown as { month: string; plays: number; rank: number }[];
+      SELECT to_char(month, 'YYYY-MM') AS month, plays, ms, rank FROM ranked WHERE artist_spotify_id = ${artistID} ORDER BY month`);
+    return (result.rows as unknown as { month: string; plays: number; ms: string | number; rank: number }[]).map(row => ({ ...row, ms: Number(row.ms) }));
   }
 
-  /** A reviewed album's plays in each month it was played, counting its merged copies, oldest first */
-  static async getAlbumMonths(albumID: string): Promise<{ month: string; plays: number }[]> {
+  /** A reviewed album's plays and played time in milliseconds in each month it was played, counting its merged copies, oldest first */
+  static async getAlbumMonths(albumID: string): Promise<{ month: string; plays: number; ms: number }[]> {
     const result = await db.execute(sql`
-      SELECT to_char(date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin'), 'YYYY-MM') AS month, count(*)::int AS plays
+      SELECT to_char(date_trunc('month', p.played_at AT TIME ZONE 'Europe/Dublin'), 'YYYY-MM') AS month, count(*)::int AS plays, sum(${PLAY_MS})::bigint AS ms
       FROM plays p
       JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
       JOIN played_albums al ON al.spotify_id = t.album_spotify_id
       WHERE ${REVIEWED_ALBUM_MATCH(albumID)} AND ${STREAM_CONDITION}
       GROUP BY 1
       ORDER BY 1`);
-    return result.rows as unknown as { month: string; plays: number }[];
+    return (result.rows as unknown as { month: string; plays: number; ms: string | number }[]).map(row => ({ ...row, ms: Number(row.ms) }));
   }
 
   /** When a reviewed album or one of its merged copies was first played, or null when it never was */

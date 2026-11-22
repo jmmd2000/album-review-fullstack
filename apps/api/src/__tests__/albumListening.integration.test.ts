@@ -76,12 +76,13 @@ test("gives the album's plays, first play and plays each month in Dublin time, w
   const listening = await AlbumListeningService.getAlbumListening("artist-album", new Date("2025-10-15T12:00:00Z"));
 
   expect(listening.plays).toBe(3);
+  expect(listening.minutes).toBe(10);
   expect(listening.firstPlayedAt?.toISOString()).toBe("2025-06-30T23:30:00.000Z");
   expect(listening.months).toEqual([
-    { month: "2025-07", plays: 2 },
-    { month: "2025-08", plays: 0 },
-    { month: "2025-09", plays: 1 },
-    { month: "2025-10", plays: 0 },
+    { month: "2025-07", plays: 2, minutes: 7 },
+    { month: "2025-08", plays: 0, minutes: 0 },
+    { month: "2025-09", plays: 1, minutes: 3 },
+    { month: "2025-10", plays: 0, minutes: 0 },
   ]);
 });
 
@@ -96,7 +97,7 @@ test("counts the plays of the album's merged copies, and gives each track's play
   const listening = await AlbumListeningService.getAlbumListening("artist-album", new Date("2026-01-15T12:00:00Z"));
 
   expect(listening.plays).toBe(2);
-  expect(listening.months).toEqual([{ month: "2026-01", plays: 2 }]);
+  expect(listening.months).toEqual([{ month: "2026-01", plays: 2, minutes: 7 }]);
   expect(listening.trackPlays).toEqual({ song: 2 });
 });
 

@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { reviewedDate, shortRuntime, ukReleaseDate } from "@/lib/albumFacts";
 import { morphProps } from "@/lib/coverMorph";
-import { describePlays } from "@/lib/listening";
+import { describeMinutes, describePlays } from "@/lib/listening";
 import { ScoreDisplay } from "@/components/ui/ScoreDisplay";
 import styles from "./AlbumInfoPanel.module.css";
 
@@ -12,15 +12,15 @@ interface AlbumInfoPanelProps {
   album: Jsonified<ReviewedAlbum>;
   artists: Jsonified<ReviewedArtist>[];
   genres: Jsonified<Genre>[];
-  /** The admin's all-time plays of the album and their first play, null while they load. Visitors get none. */
-  listening?: { plays: number | null; firstPlayedAt: string | null };
+  /** The admin's all-time plays and minutes of the album and their first play, null while they load. Visitors get none. */
+  listening?: { plays: number | null; minutes: number | null; firstPlayedAt: string | null };
 }
 
 const firstPlayDate = (date: string) => new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Dublin" });
 
 /**
  * The album's title, artists, score, facts and genres, on a see-through panel over the backdrop.
- * The admin also sees their plays and first play, on a line under the facts.
+ * The admin also sees their plays, minutes and first play, on a line under the facts.
  */
 export function AlbumInfoPanel({ album, artists, genres, listening }: AlbumInfoPanelProps) {
   const photoArtist = artists[0];
@@ -59,7 +59,8 @@ export function AlbumInfoPanel({ album, artists, genres, listening }: AlbumInfoP
       {listening && (
         <p className={styles.listening}>
           <span>{listening.plays === null ? "– plays" : describePlays(listening.plays)}</span>
-          {(listening.plays === null || listening.firstPlayedAt) && <span>First played {listening.firstPlayedAt ? firstPlayDate(listening.firstPlayedAt) : "–"}</span>}
+          <span>{listening.minutes === null ? "– minutes" : describeMinutes(listening.minutes)}</span>
+          {(listening.plays === null || listening.firstPlayedAt) && <span className={styles.firstPlayed}>First played {listening.firstPlayedAt ? firstPlayDate(listening.firstPlayedAt) : "–"}</span>}
         </p>
       )}
 

@@ -122,7 +122,7 @@ function RouteComponent() {
         rankedArtistCount={rankedArtistCount}
         albumCount={albums.length}
         ratedTrackCount={ratedTrackCount}
-        listening={isAdmin ? { plays: plays?.plays ?? null, firstPlayedAt: plays?.firstPlayedAt ?? null } : undefined}
+        listening={isAdmin ? { plays: plays?.plays ?? null, minutes: plays?.minutes ?? null, firstPlayedAt: plays?.firstPlayedAt ?? null } : undefined}
       />
 
       {albumsOldestFirst.length > 1 && (
