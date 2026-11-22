@@ -47,13 +47,13 @@ interface RankedRow {
 }
 
 // A play counts when its length isn't known, as with plays from the recent list, or when it lasted 30 seconds or more
-const STREAM_CONDITION = sql`(p.ms_played IS NULL OR p.ms_played >= 30000)`;
-const PLAY_MS = sql`coalesce(p.ms_played, t.duration_ms, 0)`;
+export const STREAM_CONDITION = sql`(p.ms_played IS NULL OR p.ms_played >= 30000)`;
+export const PLAY_MS = sql`coalesce(p.ms_played, t.duration_ms, 0)`;
 const TOP_LIMIT = 50;
 const DETAIL_LIMIT = 5;
 // Copies of one recording or album count as one, under the copy their group shows as. A copy not grouped yet counts as itself.
-const TRACK_GROUP = sql`coalesce(t.main_spotify_id, t.spotify_id)`;
-const ALBUM_GROUP = sql`coalesce(al.main_spotify_id, al.spotify_id)`;
+export const TRACK_GROUP = sql`coalesce(t.main_spotify_id, t.spotify_id)`;
+export const ALBUM_GROUP = sql`coalesce(al.main_spotify_id, al.spotify_id)`;
 
 /** Where a listening entry links */
 export type EntryLink = { type: "artist" | "album" | "review"; id: string } | { type: "search"; query: string };
