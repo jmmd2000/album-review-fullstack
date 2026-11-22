@@ -26,8 +26,17 @@
   }
 }
 
+.withPlays {
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto auto;
+
+  @media (width < 560px) {
+    grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  }
+}
+
 .number,
-.duration {
+.duration,
+.plays {
   color: var(--colour-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -44,6 +53,11 @@
 .features {
   color: var(--colour-text-muted);
   font-weight: var(--font-weight-body);
+}
+
+.plays {
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .duration {

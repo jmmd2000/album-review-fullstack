@@ -5,6 +5,16 @@
   padding: var(--space-3) var(--page-gutter) var(--space-7);
 }
 
+/* The chart sets its own page width and gutter, so this cancels the page's gutter */
+.listening {
+  margin-inline: calc(var(--page-gutter) * -1);
+}
+
+.error {
+  padding: var(--space-section) var(--page-gutter) 0;
+  color: var(--colour-text-muted);
+}
+
 .links {
   display: flex;
   justify-content: space-between;
