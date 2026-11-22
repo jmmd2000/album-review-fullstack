@@ -85,10 +85,31 @@ test("artists sort by every play credited to them", async () => {
   ]);
 });
 
-test("only the admin can sort by plays, and other sorts carry no plays", async () => {
+test("albums and artists sort by minutes, counted the same way as plays", async () => {
+  // A long play of the quiet album gives it more minutes than the loud album, though it has fewer plays
+  const longPlay = play("quiet-long", "quiet-album", "quiet", 7);
+  await PlayModel.savePlays([{ ...longPlay, track: { ...longPlay.track, duration_ms: 1200000 } }]);
+
+  const albums = await (await api.get("/api/albums?orderBy=minutes", authCookie)).json();
+  const artists = await (await api.get("/api/artists?orderBy=minutes", authCookie)).json();
+
+  expect(albums.albums.map((album: { spotifyID: string; minutes: number }) => [album.spotifyID, album.minutes])).toEqual([
+    ["quiet-album", 23],
+    ["loud-album", 10],
+  ]);
+  expect(artists.artists.map((artist: { spotifyID: string; minutes: number }) => [artist.spotifyID, artist.minutes])).toEqual([
+    ["quiet", 23],
+    ["loud", 17],
+  ]);
+});
+
+test("only the admin can sort by plays or minutes, and other sorts carry neither", async () => {
   expect((await api.get("/api/albums?orderBy=plays")).status).toBe(401);
   expect((await api.get("/api/artists?orderBy=plays")).status).toBe(401);
+  expect((await api.get("/api/albums?orderBy=minutes")).status).toBe(401);
+  expect((await api.get("/api/artists?orderBy=minutes")).status).toBe(401);
 
   const body = await (await api.get("/api/albums?orderBy=name")).json();
   expect(body.albums[0]).not.toHaveProperty("plays");
+  expect(body.albums[0]).not.toHaveProperty("minutes");
 });

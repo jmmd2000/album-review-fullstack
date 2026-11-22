@@ -135,6 +135,8 @@ export interface ReviewedTrack {
 export interface DisplayAlbum {
   /** All-time Spotify plays, given only when the list is sorted by plays */
   plays?: number;
+  /** All-time Spotify minutes, given only when the list is sorted by minutes */
+  minutes?: number;
   /** Spotify ID of the album. */
   spotifyID: string;
   /** Spotify ID of the artist. */
@@ -193,6 +195,8 @@ export interface SearchAlbum extends DisplayAlbum {
 export interface DisplayArtist {
   /** All-time Spotify plays, given only when the list is sorted by plays */
   plays?: number;
+  /** All-time Spotify minutes, given only when the list is sorted by minutes */
+  minutes?: number;
   /** Spotify ID of the artist. */
   spotifyID: string;
   /** Name of the artist. */
@@ -272,7 +276,7 @@ export interface GetPaginatedAlbumsOptions {
   /** The page number to retrieve. */
   page?: number;
   /** The data to order the results by */
-  orderBy?: "finalScore" | "releaseYear" | "name" | "createdAt" | "plays";
+  orderBy?: "finalScore" | "releaseYear" | "name" | "createdAt" | "plays" | "minutes";
   /** The order in which to sort the results */
   order?: "asc" | "desc";
   /** The search query to filter the results by */
@@ -306,7 +310,7 @@ export interface GetPaginatedArtistsOptions {
   /** The page number to retrieve. */
   page?: number;
   /** The data to order the results by */
-  orderBy?: "totalScore" | "peakScore" | "latestScore" | "reviewCount" | "name" | "createdAt" | "leaderboardPosition" | "plays";
+  orderBy?: "totalScore" | "peakScore" | "latestScore" | "reviewCount" | "name" | "createdAt" | "leaderboardPosition" | "plays" | "minutes";
   /** The order in which to sort the results */
   order?: "asc" | "desc";
   /** The search query to filter the results by */

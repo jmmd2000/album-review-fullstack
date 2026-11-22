@@ -150,7 +150,8 @@ export class AlbumService {
       releaseYear: album.releaseYear,
       albumArtists: album.albumArtists,
       colors: album.colors,
-      ...(opts.orderBy === "plays" ? { plays: album.plays } : {}),
+      ...(opts.orderBy === "plays" ? { plays: album.plays ?? 0 } : {}),
+      ...(opts.orderBy === "minutes" ? { minutes: album.minutes ?? 0 } : {}),
     }));
 
     const artistMap = await AlbumModel.getAlbumArtistIDsForAlbums(albums.map(a => a.spotifyID));

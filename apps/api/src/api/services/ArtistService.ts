@@ -28,7 +28,8 @@ export class ArtistService {
       leaderboardPosition: artist.leaderboardPosition,
       peakLeaderboardPosition: artist.peakLeaderboardPosition,
       latestLeaderboardPosition: artist.latestLeaderboardPosition,
-      ...(opts.orderBy === "plays" ? { plays: artist.plays } : {}),
+      ...(opts.orderBy === "plays" ? { plays: artist.plays ?? 0 } : {}),
+      ...(opts.orderBy === "minutes" ? { minutes: artist.minutes ?? 0 } : {}),
     }));
 
     return {

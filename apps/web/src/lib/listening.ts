@@ -69,6 +69,13 @@ export function describeMinutes(minutes: number): string {
   return minutes === 1 ? "1 minute" : `${minutes.toLocaleString("en-GB")} minutes`;
 }
 
+/** The plays or minutes a list item was sorted by, such as "120 plays", or nothing when it carries neither. */
+export function describeSortedAmount(item: { plays?: number; minutes?: number }): string | undefined {
+  if (item.plays !== undefined) return describePlays(item.plays);
+  if (item.minutes !== undefined) return describeMinutes(item.minutes);
+  return undefined;
+}
+
 /** Plays or minutes with their word, to match a plays or minutes switch. */
 export function describeAmount(amount: number, by: RankBy): string {
   return by === "plays" ? describePlays(amount) : describeMinutes(amount);

@@ -1,9 +1,9 @@
-import { desc, eq, ilike, asc, count, getTableColumns, inArray, sql } from "drizzle-orm";
+import { desc, eq, ilike, asc, count, getTableColumns, inArray, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { reviewedArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import type { GetPaginatedArtistsOptions, ReviewedArtist } from "@shared/types";
 import { PAGE_SIZE } from "@/config/constants";
-import { artistPlaysSQL } from "@/api/models/ListeningStats";
+import { artistMinutesSQL, artistPlaysSQL } from "@/api/models/ListeningStats";
 
 export class ArtistModel {
   static async getAllArtists(executor: Executor = db): Promise<ReviewedArtist[]> {
@@ -13,16 +13,23 @@ export class ArtistModel {
   static async getPaginatedArtists({ page = 1, orderBy = "totalScore", order = "desc", search = "" }: GetPaginatedArtistsOptions) {
     const validOrderBy = ["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition"] as const;
     const validOrder = ["asc", "desc"] as const;
-    const sortField = orderBy !== "plays" && validOrderBy.includes(orderBy) ? orderBy : "totalScore";
+    const sortField = orderBy !== "plays" && orderBy !== "minutes" && validOrderBy.includes(orderBy) ? orderBy : "totalScore";
     const sortDirection = validOrder.includes(order) ? order : "desc";
     const OFFSET = (page - 1) * PAGE_SIZE;
     const searchFilter = search.trim() ? ilike(reviewedArtists.name, `%${search}%`) : undefined;
-    const sortValue = orderBy === "plays" ? artistPlaysSQL(reviewedArtists.spotifyID) : reviewedArtists[sortField];
+    let sortValue: SQL | AnyColumn = reviewedArtists[sortField];
+    if (orderBy === "plays") sortValue = artistPlaysSQL(reviewedArtists.spotifyID);
+    if (orderBy === "minutes") sortValue = artistMinutesSQL(reviewedArtists.spotifyID);
     const sortOrder = sortDirection === "asc" ? asc(sortValue) : desc(sortValue);
 
     // Postgres gives tied rows no fixed order, so ties break on name and then ID to keep pages stable
     const artists = await db
-      .select({ ...getTableColumns(reviewedArtists), plays: sql<number>`${artistPlaysSQL(reviewedArtists.spotifyID)}::int` })
+      // Plays and minutes cost a query for each artist, so they're only worked out for the sort that shows them
+      .select({
+        ...getTableColumns(reviewedArtists),
+        plays: orderBy === "plays" ? sql<number | null>`${artistPlaysSQL(reviewedArtists.spotifyID)}::int` : sql<null>`null`,
+        minutes: orderBy === "minutes" ? sql<number | null>`${artistMinutesSQL(reviewedArtists.spotifyID)}::int` : sql<null>`null`,
+      })
       .from(reviewedArtists)
       .where(searchFilter)
       .orderBy(sortOrder, asc(reviewedArtists.name), asc(reviewedArtists.id))

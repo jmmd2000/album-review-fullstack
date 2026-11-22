@@ -226,6 +226,24 @@ export function albumPlaysSQL(albumSpotifyID: SQL | AnyColumn): SQL {
     WHERE ${REVIEWED_ALBUM_MATCH(albumSpotifyID)} AND ${STREAM_CONDITION})`;
 }
 
+/** All-time minutes of a reviewed album and its copies, counted as `albumPlaysSQL` counts plays, as an SQL value for sorting */
+export function albumMinutesSQL(albumSpotifyID: SQL | AnyColumn): SQL {
+  return sql`(
+    SELECT round(coalesce(sum(${PLAY_MS}), 0) / 60000.0) FROM plays p
+    JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+    JOIN played_albums al ON al.spotify_id = t.album_spotify_id
+    WHERE ${REVIEWED_ALBUM_MATCH(albumSpotifyID)} AND ${STREAM_CONDITION})`;
+}
+
+/** All-time minutes credited to a reviewed artist, as an SQL value for sorting */
+export function artistMinutesSQL(artistSpotifyID: SQL | AnyColumn): SQL {
+  return sql`(
+    SELECT round(coalesce(sum(${PLAY_MS}), 0) / 60000.0) FROM plays p
+    JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
+    JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id
+    WHERE ta.artist_spotify_id = ${artistSpotifyID} AND ${STREAM_CONDITION})`;
+}
+
 /** All-time plays credited to a reviewed artist, as an SQL value for sorting */
 export function artistPlaysSQL(artistSpotifyID: SQL | AnyColumn): SQL {
   return sql`(SELECT count(*) FROM plays p JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id WHERE ta.artist_spotify_id = ${artistSpotifyID} AND ${STREAM_CONDITION})`;
