@@ -76,7 +76,6 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
   const entries = top.data?.entries ?? [];
   const shown = showAll ? entries : entries.slice(0, FIRST_ROWS);
   const selected = entries.find(entry => entry.id === selectedID) ?? entries[0];
-  const half = Math.ceil(shown.length / 2);
 
   function select(id: string) {
     setSelectedID(id);
@@ -141,18 +140,11 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
           <div className={styles.selected}>
             <SelectedEntry selection={shownSelection} entry={selected} />
           </div>
-          <div className={styles.columns}>
-            <ol className={styles.entries}>
-              {shown.slice(0, half).map(entry => (
-                <TopEntryRow key={entry.id} kind={shownKind} by={shownBy} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
-              ))}
-            </ol>
-            <ol className={styles.entries} start={half + 1}>
-              {shown.slice(half).map(entry => (
-                <TopEntryRow key={entry.id} kind={shownKind} by={shownBy} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
-              ))}
-            </ol>
-          </div>
+          <ol className={styles.entries}>
+            {shown.map(entry => (
+              <TopEntryRow key={entry.id} kind={shownKind} by={shownBy} entry={entry} selected={entry.id === selected.id} onSelect={() => select(entry.id)} />
+            ))}
+          </ol>
           {!showAll && entries.length > FIRST_ROWS && <Button onClick={() => setShowAll(true)}>Show all</Button>}
           <Dialog.Root open={sheetOpen} onOpenChange={setSheetOpen}>
             <Dialog.Portal>

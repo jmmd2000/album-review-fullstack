@@ -2,7 +2,7 @@
   display: grid;
   gap: var(--space-7);
   width: 100%;
-  margin-top: var(--space-7);
+  margin-block: var(--space-7);
   transition: opacity var(--duration-quick) var(--ease-out);
 
   &[data-loading="true"] {

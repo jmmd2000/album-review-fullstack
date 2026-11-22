@@ -111,7 +111,8 @@
   }
 }
 
-.columns {
+/* Ranks run across the two columns: 1 and 2 on the first line, 3 and 4 on the next */
+.entries {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 clamp(24px, 3vw, 56px);
@@ -120,11 +121,6 @@
   @media (width < 1100px) {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-.entries {
-  display: grid;
-  align-content: start;
 }
 
 .sheet {
