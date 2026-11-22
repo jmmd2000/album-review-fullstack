@@ -24,6 +24,7 @@ import job from "@/api/routes/JobRoutes";
 import drafts from "@/api/routes/ReviewDraftRoutes";
 import discover from "@/api/routes/DiscoverRoutes";
 import listening from "@/api/routes/ListeningRoutes";
+import summary from "@/api/routes/SummaryRoutes";
 
 const base = new Hono<{ Variables: { db: Executor; requestID: string } }>();
 
@@ -62,7 +63,8 @@ export const app = base
   .route("/api/jobs", job)
   .route("/api/drafts", drafts)
   .route("/api/discover", discover)
-  .route("/api/listening", listening);
+  .route("/api/listening", listening)
+  .route("/api/summary", summary);
 
 export type AppType = typeof app;
 
