@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { OptionSwitch } from "@/components/ui/OptionSwitch";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { describePlays, roundedTop } from "@/lib/listening";
-import styles from "./ArtistListening.module.css";
+import styles from "./MonthlyListening.module.css";
 
 type ChartView = "plays" | "rank";
 
@@ -10,12 +10,15 @@ interface Month {
   /** YYYY-MM */
   month: string;
   plays: number;
-  rank: number | null;
+  /** The rank among everything of its kind played that month, or null when it wasn't played */
+  rank?: number | null;
 }
 
-interface ArtistListeningProps {
+interface MonthlyListeningProps {
   /** The months to chart, or null while they load */
   months: Month[] | null;
+  /** Show a switch between plays and rank */
+  withRank?: boolean;
 }
 
 const VIEW_OPTIONS: { value: ChartView; label: string }[] = [
@@ -30,14 +33,15 @@ const monthName = (month: string) => new Date(`${month}-15T12:00:00Z`).toLocaleD
 /** The month's plays and rank, such as "Mar 2025: 120 plays, #3 that month" */
 function describeMonth(month: Month): string {
   const plays = `${monthName(month.month)}: ${describePlays(month.plays)}`;
-  return month.rank === null ? plays : `${plays}, #${month.rank} that month`;
+  const rank = month.rank ?? null;
+  return rank === null ? plays : `${plays}, #${rank} that month`;
 }
 
 /**
- * The admin's plays of the artist each month, or the artist's rank among all the artists played that month.
+ * The admin's plays each month. With `withRank`, a switch changes the chart to the rank each month.
  * While the months load, an empty chart holds their space.
  */
-export function ArtistListening({ months }: ArtistListeningProps) {
+export function MonthlyListening({ months, withRank = false }: MonthlyListeningProps) {
   const [view, setView] = useState<ChartView>("plays");
   const [pointed, setPointed] = useState<number | null>(null);
 
@@ -52,14 +56,14 @@ export function ArtistListening({ months }: ArtistListeningProps) {
     const busiest = months.find(month => month.plays === mostPlays && mostPlays > 0);
     if (busiest) readout = `Busiest: ${monthName(busiest.month)}, ${describePlays(busiest.plays)}`;
   } else {
-    const ranks = months.flatMap(month => (month.rank === null ? [] : [month.rank]));
+    const ranks = months.flatMap(month => (month.rank === null || month.rank === undefined ? [] : [month.rank]));
     const best = months.find(month => month.rank === Math.min(...ranks));
     if (best) readout = `Best rank: ${monthName(best.month)}, #${best.rank}`;
   }
 
   return (
     <section className={styles.section}>
-      <SectionHeader title="Listening" link={<OptionSwitch label="Chart shows" options={VIEW_OPTIONS} value={view} onChange={setView} />} />
+      <SectionHeader title="Listening" link={withRank && <OptionSwitch label="Chart shows" options={VIEW_OPTIONS} value={view} onChange={setView} />} />
       <div className={styles.shell}>
         <p className={styles.readout}>{readout}</p>
         {months === null ? <div className={styles.loading} /> : <MonthBars months={months} view={view} onPoint={setPointed} />}
@@ -87,11 +91,13 @@ const MonthBars = memo(function MonthBars({ months, view, onPoint }: MonthBarsPr
 
   const barHeight = (month: Month) => {
     if (view === "plays") return top > 0 ? month.plays / top : 0;
-    if (month.rank === null) return 0;
+    if (month.rank === null || month.rank === undefined) return 0;
     return (worstRank - month.rank + 1) / worstRank;
   };
 
   const label = (month: Month, index: number) => {
+    // A label runs to the right of its month, so the last two months have no room for one
+    if (index >= months.length - 2) return "";
     if (labelEvery === null) return month.month.endsWith("-01") ? month.month.slice(0, 4) : "";
     return index % labelEvery === 0 ? monthName(month.month) : "";
   };
@@ -110,7 +116,9 @@ const MonthBars = memo(function MonthBars({ months, view, onPoint }: MonthBarsPr
               <span className={styles.barArea}>
                 <span className={styles.bar} style={{ height: `${barHeight(month) * 100}%` }} />
               </span>
-              <span className={styles.label}>{label(month, index)}</span>
+              <span className={styles.label} data-minor={(labelEvery !== null && !month.month.endsWith("-01")) || undefined}>
+                {label(month, index)}
+              </span>
             </li>
           );
         })}

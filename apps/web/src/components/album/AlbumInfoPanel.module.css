@@ -48,6 +48,14 @@
   color: var(--colour-text-muted);
 }
 
+.listening {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 4px;
+  color: var(--colour-text-muted);
+}
+
 /* tinted with the cover's most vivid colour */
 .genres {
   display: flex;

@@ -90,4 +90,11 @@
   color: var(--colour-text-muted);
   font-size: 0.75rem;
   white-space: nowrap;
+
+  /* On a phone only each January is labelled, so the labels don't run into each other */
+  &[data-minor] {
+    @media (width < 600px) {
+      visibility: hidden;
+    }
+  }
 }

@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { queryKeys } from "@/lib/queryKeys";
@@ -19,6 +19,7 @@ import { ReviewContent } from "@/components/album/ReviewContent";
 import { DeleteReviewDialog } from "@/components/album/DeleteReviewDialog";
 import { AlbumRail } from "@/components/album/AlbumRail";
 import { Tracklist } from "@/components/track/Tracklist";
+import { MonthlyListening } from "@/components/listening/MonthlyListening";
 import { RouteError } from "@/components/ui/RouteError";
 import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -90,6 +91,13 @@ function RouteComponent() {
   const { isAdmin } = useAuth();
   const panelsRef = useRef<HTMLDivElement>(null);
   const cover = album.imageURLs[0];
+  // Only the admin's listening shows, so visitors never ask for it
+  const listening = useQuery({
+    queryKey: queryKeys.listening.album(albumID),
+    queryFn: () => handle(client.api.listening.album[":albumID"].$get({ param: { albumID } })),
+    enabled: isAdmin,
+  });
+  const plays = listening.data ?? null;
 
   return (
     <div className={`${coverColours.coverColours} ${styles.page}`} style={coverColourStyle(album.colors ?? [])}>
@@ -113,12 +121,21 @@ function RouteComponent() {
         {cover && <img className={styles.cover} src={cover.url} alt={`${album.name} cover`} width={cover.width} height={cover.height} {...morphProps("album", album.spotifyID)} />}
         <div className={styles.column}>
           <div ref={panelsRef} className={styles.panels}>
-            <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} />
+            <AlbumInfoPanel album={album} artists={artists} genres={albumGenres ?? []} listening={isAdmin ? { plays: plays?.plays ?? null, firstPlayedAt: plays?.firstPlayedAt ?? null } : undefined} />
             {album.reviewContent && <ReviewContent content={album.reviewContent} linkedAlbums={linkedAlbums} />}
           </div>
-          <Tracklist tracks={tracks} />
+          <Tracklist tracks={tracks} plays={isAdmin ? (plays?.trackPlays ?? null) : undefined} />
         </div>
       </section>
+      <div className={styles.listening}>
+        {isAdmin && listening.isPending && <MonthlyListening months={null} />}
+        {plays && plays.months.length > 0 && <MonthlyListening months={plays.months} />}
+        {listening.isError && (
+          <p className={styles.error} role="alert">
+            Your listening couldn't load. {listening.error.message}
+          </p>
+        )}
+      </div>
       <AlbumRail
         title={`More from ${album.artistName}`}
         albums={related.moreByArtist}

@@ -12,7 +12,7 @@ import { ArtistHeader } from "@/components/artist/ArtistHeader";
 import { HeaderImageDialog } from "@/components/artist/HeaderImageDialog";
 import { ArtistStanding } from "@/components/artist/ArtistStanding";
 import { ScoreTimeline } from "@/components/artist/ScoreTimeline";
-import { ArtistListening } from "@/components/artist/ArtistListening";
+import { MonthlyListening } from "@/components/listening/MonthlyListening";
 import { TracksByPlays } from "@/components/artist/TracksByPlays";
 import { OptionSwitch } from "@/components/ui/OptionSwitch";
 import { describePlays } from "@/lib/listening";
@@ -132,8 +132,8 @@ function RouteComponent() {
         </section>
       )}
 
-      {isAdmin && listening.isPending && <ArtistListening months={null} />}
-      {listening.data && listening.data.months.length > 0 && <ArtistListening months={listening.data.months} />}
+      {isAdmin && listening.isPending && <MonthlyListening months={null} withRank />}
+      {listening.data && listening.data.months.length > 0 && <MonthlyListening months={listening.data.months} withRank />}
       {listening.isError && (
         <section className={styles.section}>
           <SectionHeader title="Listening" />

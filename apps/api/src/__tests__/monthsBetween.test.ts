@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { monthsBetween } from "@/api/services/ArtistListeningService";
+import { monthsBetween } from "@/helpers/monthsBetween";
 
 test("fills every month from the first to the last, across a new year", () => {
   expect(monthsBetween("2025-11", "2026-02")).toEqual(["2025-11", "2025-12", "2026-01", "2026-02"]);

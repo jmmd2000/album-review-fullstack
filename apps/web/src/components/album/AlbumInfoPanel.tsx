@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { reviewedDate, shortRuntime, ukReleaseDate } from "@/lib/albumFacts";
 import { morphProps } from "@/lib/coverMorph";
+import { describePlays } from "@/lib/listening";
 import { ScoreDisplay } from "@/components/ui/ScoreDisplay";
 import styles from "./AlbumInfoPanel.module.css";
 
@@ -11,10 +12,17 @@ interface AlbumInfoPanelProps {
   album: Jsonified<ReviewedAlbum>;
   artists: Jsonified<ReviewedArtist>[];
   genres: Jsonified<Genre>[];
+  /** The admin's all-time plays of the album and their first play, null while they load. Visitors get none. */
+  listening?: { plays: number | null; firstPlayedAt: string | null };
 }
 
-/** The album's title, artists, score, facts and genres, on a see-through panel over the backdrop. */
-export function AlbumInfoPanel({ album, artists, genres }: AlbumInfoPanelProps) {
+const firstPlayDate = (date: string) => new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Dublin" });
+
+/**
+ * The album's title, artists, score, facts and genres, on a see-through panel over the backdrop.
+ * The admin also sees their plays and first play, on a line under the facts.
+ */
+export function AlbumInfoPanel({ album, artists, genres, listening }: AlbumInfoPanelProps) {
   const photoArtist = artists[0];
   const photo = photoArtist?.imageURLs.at(-1);
 
@@ -47,6 +55,13 @@ export function AlbumInfoPanel({ album, artists, genres }: AlbumInfoPanelProps) 
         <span>{shortRuntime(album.runtime)}</span>
         <span>Reviewed {reviewedDate(album.createdAt)}</span>
       </p>
+
+      {listening && (
+        <p className={styles.listening}>
+          <span>{listening.plays === null ? "– plays" : describePlays(listening.plays)}</span>
+          {(listening.plays === null || listening.firstPlayedAt) && <span>First played {listening.firstPlayedAt ? firstPlayDate(listening.firstPlayedAt) : "–"}</span>}
+        </p>
+      )}
 
       {genres.length > 0 && (
         <ul className={styles.genres}>
