@@ -48,6 +48,17 @@
     border-radius: var(--radius-tag);
     object-fit: cover;
   }
+
+  &[data-plays] {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+}
+
+.plays {
+  color: var(--colour-text-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .name {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { scoreTier } from "@shared/helpers/ratingTiers";
 import { trackEvent } from "@/lib/analytics";
 import { tierColourVar } from "@/lib/tierColours";
+import { describePlays } from "@/lib/listening";
 import { splitFeatures } from "@/lib/trackFeatures";
 import { Button } from "@/components/ui/Button";
 import styles from "./TracksByRating.module.css";
@@ -77,19 +78,23 @@ export function TracksByRating({ tracks, artistName }: TracksByRatingProps) {
 interface TrackRowProps {
   track: DisplayTrack;
   artistName: string;
+  /** The track's plays, shown at the end of the row when given */
+  plays?: number;
 }
 
-function TrackRow({ track, artistName }: TrackRowProps) {
+/** One track: its cover, its name with the other artists on it, and its plays when given. */
+export function TrackRow({ track, artistName, plays }: TrackRowProps) {
   const { title, featuring } = splitFeatures(track.name, track.features, artistName);
   const cover = track.imageURLs?.at(-1);
 
   return (
-    <li className={styles.row} title={track.albumName ? `${track.name}, from ${track.albumName}` : track.name}>
+    <li className={styles.row} data-plays={plays === undefined ? undefined : ""} title={track.albumName ? `${track.name}, from ${track.albumName}` : track.name}>
       {cover ? <img src={cover.url} alt="" width={30} height={30} loading="lazy" /> : <span />}
       <span className={styles.name}>
         {title}
         {featuring.length > 0 && <span className={styles.features}> feat. {featuring.join(", ")}</span>}
       </span>
+      {plays !== undefined && <span className={styles.plays}>{describePlays(plays)}</span>}
     </li>
   );
 }
