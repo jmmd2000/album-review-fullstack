@@ -50,6 +50,27 @@ test("splits plays by Irish-time day, and gives each day its totals and most pla
   expect(days[1].topTrack).toEqual({ name: "late", artist: "artist2", plays: 1 });
 });
 
+test("lists each day's top 5 artists and albums in rank order, with their images", async () => {
+  await PlayModel.savePlays([...["a1", "a1", "a1", "a2", "a2", "a3", "a4", "a5", "a6"].map((artist, index) => play(`song-${artist}`, `2026-07-01T1${index}:00:00Z`, [artist]))]);
+  await query(`UPDATE played_artists SET image_url = 'https://images.example/a1.jpg' WHERE spotify_id = 'a1'`);
+  await query(`UPDATE played_albums SET image_url = 'https://images.example/album-song-a1.jpg' WHERE spotify_id = 'album-song-a1'`);
+
+  const [day] = await ListeningSummaryService.getDays("2026-07-01", "2026-07-01");
+
+  expect(day.topArtists.map(artist => [artist.name, artist.plays])).toEqual([
+    ["a1", 3],
+    ["a2", 2],
+    ["a3", 1],
+    ["a4", 1],
+    ["a5", 1],
+  ]);
+  expect(day.topArtists[0].imageURL).toBe("https://images.example/a1.jpg");
+  expect(day.topArtists[1].imageURL).toBeNull();
+  expect(day.topAlbums[0]).toEqual({ name: "album-song-a1", artist: "a1", plays: 3, imageURL: "https://images.example/album-song-a1.jpg" });
+  expect(day.topAlbums).toHaveLength(5);
+  expect(day.topArtist).toEqual({ name: "a1", plays: 3 });
+});
+
 test("adds reviews and gigs on their Irish-time day, even with no plays, and leaves out empty days", async () => {
   await query(`INSERT INTO reviewed_artists (spotify_id, name, image_urls, total_score, review_count, unrated) VALUES ('band', 'The Band', '[]', 0, 1, false)`);
   await query(`INSERT INTO reviewed_albums (artist_spotify_id, artist_name, name, spotify_id, release_date, release_year, image_urls, runtime, review_score, final_score, colors, genres, created_at)
@@ -60,7 +81,18 @@ test("adds reviews and gigs on their Irish-time day, even with no plays, and lea
   const days = await ListeningSummaryService.getDays("2026-07-01", "2026-07-31");
 
   expect(days).toEqual([
-    { date: "2026-07-04", plays: 0, minutes: 0, topArtist: null, topAlbum: null, topTrack: null, reviews: [{ album: "First Album", artist: "The Band" }], gigs: [] },
-    { date: "2026-07-06", plays: 0, minutes: 0, topArtist: null, topAlbum: null, topTrack: null, reviews: [], gigs: [{ artist: "The Band", venue: "Vicar Street", city: "Dublin" }] },
+    { date: "2026-07-04", plays: 0, minutes: 0, topArtist: null, topAlbum: null, topTrack: null, topArtists: [], topAlbums: [], reviews: [{ album: "First Album", artist: "The Band" }], gigs: [] },
+    {
+      date: "2026-07-06",
+      plays: 0,
+      minutes: 0,
+      topArtist: null,
+      topAlbum: null,
+      topTrack: null,
+      topArtists: [],
+      topAlbums: [],
+      reviews: [],
+      gigs: [{ artist: "The Band", venue: "Vicar Street", city: "Dublin" }],
+    },
   ]);
 });
