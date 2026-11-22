@@ -13,9 +13,9 @@ import { HeaderImageDialog } from "@/components/artist/HeaderImageDialog";
 import { ArtistStanding } from "@/components/artist/ArtistStanding";
 import { ScoreTimeline } from "@/components/artist/ScoreTimeline";
 import { MonthlyListening } from "@/components/listening/MonthlyListening";
-import { TracksByPlays } from "@/components/artist/TracksByPlays";
+import { TracksByListening } from "@/components/artist/TracksByListening";
 import { OptionSwitch } from "@/components/ui/OptionSwitch";
-import { describePlays } from "@/lib/listening";
+import { describeAmount, type RankBy } from "@/lib/listening";
 import { TracksByRating } from "@/components/artist/TracksByRating";
 import { AlbumCard } from "@/components/album/AlbumCard";
 import { CardGrid } from "@/components/ui/CardGrid";
@@ -25,16 +25,18 @@ import { NotFound } from "@/components/layout/NotFound";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import styles from "./index.module.css";
 
-type TrackSort = "rating" | "plays";
-type AlbumSort = "newest" | "plays";
+type TrackSort = "rating" | RankBy;
+type AlbumSort = "newest" | RankBy;
 
 const TRACK_SORTS: { value: TrackSort; label: string }[] = [
   { value: "rating", label: "Rating" },
   { value: "plays", label: "Most played" },
+  { value: "minutes", label: "Most minutes" },
 ];
 const ALBUM_SORTS: { value: AlbumSort; label: string }[] = [
   { value: "newest", label: "Newest" },
   { value: "plays", label: "Most played" },
+  { value: "minutes", label: "Most minutes" },
 ];
 
 async function fetchReviewedArtist(artistSpotifyID: string) {
@@ -100,11 +102,12 @@ function RouteComponent() {
   });
   const [trackSort, setTrackSort] = useState<TrackSort>("rating");
   const [albumSort, setAlbumSort] = useState<AlbumSort>("newest");
-  // The admin sees the switches straight away. They show a sort by plays only once the listening has loaded, as the lists do.
+  // The admin sees the switches straight away. They show a sort by plays or minutes only once the listening has loaded, as the lists do.
   const plays = listening.data ?? null;
-  const showTrackPlays = plays !== null && trackSort === "plays";
-  const showAlbumPlays = plays !== null && albumSort === "plays";
-  const albumsShown = showAlbumPlays ? [...albums].sort((first, second) => (plays.albumPlays[second.spotifyID] ?? 0) - (plays.albumPlays[first.spotifyID] ?? 0)) : albums;
+  const trackSortShown: TrackSort = plays === null ? "rating" : trackSort;
+  const albumSortShown: AlbumSort = plays === null ? "newest" : albumSort;
+  const albumAmounts = plays === null || albumSortShown === "newest" ? null : albumSortShown === "plays" ? plays.albumPlays : plays.albumMinutes;
+  const albumsShown = albumAmounts === null ? albums : [...albums].sort((first, second) => (albumAmounts[second.spotifyID] ?? 0) - (albumAmounts[first.spotifyID] ?? 0));
   const ratedTrackCount = tracks.filter(track => (track.rating ?? 0) > 0).length;
   const albumsOldestFirst = [...albums].reverse();
 
@@ -145,11 +148,12 @@ function RouteComponent() {
 
       {ratedTrackCount > 0 && (
         <section className={styles.section}>
-          <SectionHeader
-            title={showTrackPlays ? "Tracks sorted by plays" : "Tracks sorted by rating"}
-            link={isAdmin && <OptionSwitch label="Sort tracks by" options={TRACK_SORTS} value={showTrackPlays ? "plays" : "rating"} onChange={setTrackSort} />}
-          />
-          {showTrackPlays ? <TracksByPlays tracks={tracks} plays={plays.trackPlays} artistName={artist.name} /> : <TracksByRating tracks={tracks} artistName={artist.name} />}
+          <SectionHeader title={`Tracks sorted by ${trackSortShown}`} link={isAdmin && <OptionSwitch label="Sort tracks by" options={TRACK_SORTS} value={trackSortShown} onChange={setTrackSort} />} />
+          {plays !== null && trackSortShown !== "rating" ? (
+            <TracksByListening tracks={tracks} amounts={trackSortShown === "plays" ? plays.trackPlays : plays.trackMinutes} by={trackSortShown} artistName={artist.name} />
+          ) : (
+            <TracksByRating tracks={tracks} artistName={artist.name} />
+          )}
         </section>
       )}
 
@@ -157,11 +161,15 @@ function RouteComponent() {
         <SectionHeader
           title="Albums"
           aside={isAdmin ? undefined : "Newest first"}
-          link={isAdmin && <OptionSwitch label="Sort albums by" options={ALBUM_SORTS} value={showAlbumPlays ? "plays" : "newest"} onChange={setAlbumSort} />}
+          link={isAdmin && <OptionSwitch label="Sort albums by" options={ALBUM_SORTS} value={albumSortShown} onChange={setAlbumSort} />}
         />
         <CardGrid>
           {albumsShown.map(album => (
-            <AlbumCard key={album.spotifyID} album={album} subtitle={showAlbumPlays ? describePlays(plays.albumPlays[album.spotifyID] ?? 0) : String(album.releaseYear)} />
+            <AlbumCard
+              key={album.spotifyID}
+              album={album}
+              subtitle={albumAmounts !== null && albumSortShown !== "newest" ? describeAmount(albumAmounts[album.spotifyID] ?? 0, albumSortShown) : String(album.releaseYear)}
+            />
           ))}
         </CardGrid>
       </section>

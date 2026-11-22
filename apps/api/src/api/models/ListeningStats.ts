@@ -583,6 +583,29 @@ export class ListeningStatsModel {
     return new Map((result.rows as unknown as { id: string; plays: number }[]).map(row => [row.id, row.plays]));
   }
 
+  /** All-time minutes of each of the given reviewed tracks, counting their merged copies. A track with no plays is left out. */
+  static async getTrackMinutes(trackIDs: string[]): Promise<Map<string, number>> {
+    if (trackIDs.length === 0) return new Map();
+    const result = await db.execute(sql`
+      SELECT rt.spotify_id AS id, ${MINUTES} AS minutes
+      FROM reviewed_tracks rt
+      JOIN played_tracks t ON ${REVIEWED_TRACK_MATCH(sql`rt.spotify_id`)}
+      JOIN plays p ON p.track_spotify_id = t.spotify_id
+      WHERE rt.spotify_id IN (${sql.join(trackIDs, sql`, `)}) AND ${STREAM_CONDITION}
+      GROUP BY rt.spotify_id`);
+    return new Map((result.rows as unknown as { id: string; minutes: number }[]).map(row => [row.id, row.minutes]));
+  }
+
+  /** All-time minutes of each of the given reviewed albums, counting their merged copies. */
+  static async getAlbumMinutes(albumIDs: string[]): Promise<Map<string, number>> {
+    if (albumIDs.length === 0) return new Map();
+    const result = await db.execute(sql`
+      SELECT ra.spotify_id AS id, ${albumMinutesSQL(sql`ra.spotify_id`)}::int AS minutes
+      FROM reviewed_albums ra
+      WHERE ra.spotify_id IN (${sql.join(albumIDs, sql`, `)})`);
+    return new Map((result.rows as unknown as { id: string; minutes: number }[]).map(row => [row.id, row.minutes]));
+  }
+
   /** All-time plays of each of the given reviewed albums, counting their merged copies. */
   static async getAlbumPlays(albumIDs: string[]): Promise<Map<string, number>> {
     if (albumIDs.length === 0) return new Map();

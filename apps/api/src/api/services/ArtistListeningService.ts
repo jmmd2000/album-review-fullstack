@@ -16,7 +16,7 @@ export interface ListeningMonth {
 export const ArtistListeningService = {
   /**
    * The admin's listening to a reviewed artist: all-time plays, minutes and first play, plays, minutes and rank in each month
-   * from the first play to now, the dates of their gigs, and the plays of each reviewed track and album.
+   * from the first play to now, the dates of their gigs, and the plays and minutes of each reviewed track and album.
    */
   async getArtistListening(artistID: string, now: Date = new Date()) {
     const allTime = { from: null, to: now };
@@ -28,9 +28,13 @@ export const ArtistListeningService = {
       TrackModel.getTracksByArtist(artistID),
       ConcertModel.getByArtist(artistID),
     ]);
-    const [trackPlays, albumPlays] = await Promise.all([
-      ListeningStatsModel.getTrackPlays(tracks.map(track => track.spotifyID)),
-      ListeningStatsModel.getAlbumPlays(albums.map(album => album.spotifyID)),
+    const trackIDs = tracks.map(track => track.spotifyID);
+    const albumIDs = albums.map(album => album.spotifyID);
+    const [trackPlays, trackMinutes, albumPlays, albumMinutes] = await Promise.all([
+      ListeningStatsModel.getTrackPlays(trackIDs),
+      ListeningStatsModel.getTrackMinutes(trackIDs),
+      ListeningStatsModel.getAlbumPlays(albumIDs),
+      ListeningStatsModel.getAlbumMinutes(albumIDs),
     ]);
 
     const thisMonth = now.toLocaleDateString("en-CA", { timeZone: "Europe/Dublin" }).slice(0, 7);
@@ -51,7 +55,9 @@ export const ArtistListeningService = {
       months,
       gigDates: gigs.map(gig => gig.date),
       trackPlays: Object.fromEntries(tracks.map(track => [track.spotifyID, trackPlays.get(track.spotifyID) ?? 0])),
+      trackMinutes: Object.fromEntries(tracks.map(track => [track.spotifyID, trackMinutes.get(track.spotifyID) ?? 0])),
       albumPlays: Object.fromEntries(albums.map(album => [album.spotifyID, albumPlays.get(album.spotifyID) ?? 0])),
+      albumMinutes: Object.fromEntries(albums.map(album => [album.spotifyID, albumMinutes.get(album.spotifyID) ?? 0])),
     };
   },
 };

@@ -49,12 +49,12 @@
     object-fit: cover;
   }
 
-  &[data-plays] {
+  &[data-listening] {
     grid-template-columns: 30px minmax(0, 1fr) auto;
   }
 }
 
-.plays {
+.listening {
   color: var(--colour-text-muted);
   font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
