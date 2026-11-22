@@ -126,7 +126,7 @@ test("a custom period runs from midnight to midnight in Dublin time", async () =
 
   const july = await ListeningService.getTop("tracks", "custom", "2026-07-01", "2026-07-01");
   expect(names(july.entries)).toEqual(["first-of-july"]);
-  expect(july.totals).toEqual({ plays: 1, artists: 1 });
+  expect(july.totals).toEqual({ plays: 1, minutes: 3, artists: 1 });
 });
 
 test("4 weeks runs from Dublin midnight 27 days ago to now", async () => {
@@ -151,7 +151,7 @@ describe("the top route", () => {
     await PlayModel.savePlays([play("track1", new Date().toISOString())]);
 
     const body = await (await api.get("/api/listening/top?kind=artists", authCookie)).json();
-    expect(body.totals).toEqual({ plays: 1, artists: 1 });
+    expect(body.totals).toEqual({ plays: 1, minutes: 3, artists: 1 });
     expect(body.entries.map((entry: { name: string; change: unknown }) => [entry.name, entry.change])).toEqual([["artist1", "new"]]);
   });
 });

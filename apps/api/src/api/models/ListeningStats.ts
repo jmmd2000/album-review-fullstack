@@ -293,16 +293,15 @@ export class ListeningStatsModel {
     return new Map((result.rows as unknown as { id: string; rank: number }[]).map(row => [row.id, row.rank]));
   }
 
-  /** How many plays counted in the period, and how many artists they were by. */
-  static async getTotals(period: Period): Promise<{ plays: number; artists: number }> {
+  /** How many plays counted in the period, how many minutes they came to, and how many artists they were by. */
+  static async getTotals(period: Period): Promise<{ plays: number; minutes: number; artists: number }> {
     const result = await db.execute(sql`
-      SELECT count(DISTINCT p.id)::int AS plays, count(DISTINCT ta.artist_spotify_id)::int AS artists
-      FROM plays p
-      JOIN played_tracks t ON t.spotify_id = p.track_spotify_id
-      LEFT JOIN played_track_artists ta ON ta.track_spotify_id = t.spotify_id
-      WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}`);
-    const row = result.rows[0] as { plays: number; artists: number };
-    return { plays: row.plays, artists: row.artists };
+      SELECT
+        (SELECT count(*)::int FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}) AS plays,
+        (SELECT coalesce(sum(${PLAY_MS}), 0)::bigint FROM plays p JOIN played_tracks t ON t.spotify_id = p.track_spotify_id WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}) AS ms,
+        (SELECT count(DISTINCT ta.artist_spotify_id)::int FROM plays p JOIN played_track_artists ta ON ta.track_spotify_id = p.track_spotify_id WHERE ${inPeriod(period)} AND ${STREAM_CONDITION}) AS artists`);
+    const row = result.rows[0] as { plays: number; ms: string | number; artists: number };
+    return { plays: row.plays, minutes: Math.round(Number(row.ms) / 60000), artists: row.artists };
   }
 
   /** Each genre's 4 most played artists in the period, with their photos, most played first */

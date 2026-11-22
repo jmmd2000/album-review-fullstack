@@ -90,7 +90,16 @@ export function ListeningView({ selection, onChange }: ListeningViewProps) {
       <p className={styles.tally}>
         {top.data ? (
           <>
-            <b>{top.data.totals.plays.toLocaleString("en-GB")}</b> plays by <b>{top.data.totals.artists.toLocaleString("en-GB")}</b> artists {describePeriod(period, from, to)}.
+            {shownBy === "minutes" ? (
+              <>
+                <b>{top.data.totals.minutes.toLocaleString("en-GB")}</b> minutes
+              </>
+            ) : (
+              <>
+                <b>{top.data.totals.plays.toLocaleString("en-GB")}</b> plays
+              </>
+            )}{" "}
+            by <b>{top.data.totals.artists.toLocaleString("en-GB")}</b> artists {describePeriod(period, from, to)}.
           </>
         ) : (
           " "
