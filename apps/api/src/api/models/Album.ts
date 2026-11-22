@@ -3,7 +3,7 @@ import type { GetPaginatedAlbumsOptions, ReviewedAlbum } from "@shared/types";
 import { albumGenres, albumArtists, genres as genresTable, reviewedAlbums, reviewedTracks, trackArtists } from "@/db/schema";
 import { db, type Executor } from "@/db/client";
 import { PAGE_SIZE } from "@/config/constants";
-import { albumPlaysSQL } from "@/api/models/ListeningStats";
+import { albumMinutesSQL, albumPlaysSQL } from "@/api/models/ListeningStats";
 
 export class AlbumModel {
   static async findBySpotifyID(id: string) {
@@ -86,9 +86,9 @@ export class AlbumModel {
     const searchFilter = search.trim() ? sql`(reviewed_albums.name ILIKE ${`%${search.trim()}%`} OR reviewed_albums.artist_name ILIKE ${`%${search.trim()}%`})` : undefined;
 
     let baseOrder;
-    if (orderBy === "plays") {
-      const plays = albumPlaysSQL(reviewedAlbums.spotifyID);
-      baseOrder = order === "asc" ? [asc(plays), asc(reviewedAlbums.name)] : [desc(plays), asc(reviewedAlbums.name)];
+    if (orderBy === "plays" || orderBy === "minutes") {
+      const amount = orderBy === "plays" ? albumPlaysSQL(reviewedAlbums.spotifyID) : albumMinutesSQL(reviewedAlbums.spotifyID);
+      baseOrder = order === "asc" ? [asc(amount), asc(reviewedAlbums.name)] : [desc(amount), asc(reviewedAlbums.name)];
     } else if (orderBy === "releaseYear") {
       // When sorting by year, always use a secondary sort (default to finalScore if not provided)
       const validSecondaryOrderBy = ["finalScore", "name", "createdAt"] as const;
@@ -106,7 +106,12 @@ export class AlbumModel {
     }
 
     const albums = await db
-      .select({ ...getTableColumns(reviewedAlbums), plays: sql<number>`${albumPlaysSQL(reviewedAlbums.spotifyID)}::int` })
+      // Plays and minutes cost a query for each album, so they're only worked out for the sort that shows them
+      .select({
+        ...getTableColumns(reviewedAlbums),
+        plays: orderBy === "plays" ? sql<number | null>`${albumPlaysSQL(reviewedAlbums.spotifyID)}::int` : sql<null>`null`,
+        minutes: orderBy === "minutes" ? sql<number | null>`${albumMinutesSQL(reviewedAlbums.spotifyID)}::int` : sql<null>`null`,
+      })
       .from(reviewedAlbums)
       .where(and(genreFilter, searchFilter))
       .orderBy(...baseOrder)

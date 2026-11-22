@@ -8,7 +8,7 @@ import { artistParamSchema } from "@/api/schemas/paramSchema";
 
 const paginatedSchema = z.object({
   page: z.coerce.number().int().positive().optional(),
-  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition", "plays"]).optional(),
+  orderBy: z.enum(["totalScore", "peakScore", "latestScore", "reviewCount", "name", "createdAt", "leaderboardPosition", "plays", "minutes"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
   search: z.string().optional(),
 });
@@ -30,7 +30,7 @@ const artist = new Hono()
   })
   .get("/", validate("query", paginatedSchema), async c => {
     const query = c.req.valid("query");
-    if (query.orderBy === "plays" && !isAdminRequest(c)) return c.json({ message: "Only the admin can sort by plays." }, 401);
+    if ((query.orderBy === "plays" || query.orderBy === "minutes") && !isAdminRequest(c)) return c.json({ message: "Only the admin can sort by plays or minutes." }, 401);
     return c.json(await ArtistService.getPaginatedArtists(query), 200);
   })
   .put("/:artistID/headerImage", requireAdmin, validate("param", artistParamSchema, 404), validate("json", headerImageSchema), async c => {

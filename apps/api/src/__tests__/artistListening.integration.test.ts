@@ -78,16 +78,18 @@ test("gives the artist's plays, first play, and plays and rank each month, with 
   const listening = await ArtistListeningService.getArtistListening("artist", new Date("2026-03-15T12:00:00Z"));
 
   expect(listening.plays).toBe(2);
+  // The total is rounded once, so it isn't the sum of the rounded months
+  expect(listening.minutes).toBe(7);
   expect(listening.firstPlayedAt?.toISOString()).toBe("2025-12-05T10:00:00.000Z");
   expect(listening.months).toEqual([
-    { month: "2025-12", plays: 1, rank: 2 },
-    { month: "2026-01", plays: 0, rank: null },
-    { month: "2026-02", plays: 1, rank: 1 },
-    { month: "2026-03", plays: 0, rank: null },
+    { month: "2025-12", plays: 1, minutes: 3, rank: 2 },
+    { month: "2026-01", plays: 0, minutes: 0, rank: null },
+    { month: "2026-02", plays: 1, minutes: 3, rank: 1 },
+    { month: "2026-03", plays: 0, minutes: 0, rank: null },
   ]);
 });
 
-test("gives the gig dates, and each track's and album's plays with their copies", async () => {
+test("gives the gig dates, and each track's and album's plays and minutes with their copies", async () => {
   await PlayModel.savePlays([
     play("song", "2026-01-05T10:00:00Z", "artist", "artist-album", "QZAAA2600001"),
     // Another copy of the reviewed song, such as on a deluxe edition
@@ -99,7 +101,9 @@ test("gives the gig dates, and each track's and album's plays with their copies"
 
   expect(listening.gigDates).toEqual([new Date("2026-02-10T20:00:00Z")]);
   expect(listening.trackPlays).toEqual({ song: 2 });
+  expect(listening.trackMinutes).toEqual({ song: 7 });
   expect(listening.albumPlays).toEqual({ "artist-album": 2 });
+  expect(listening.albumMinutes).toEqual({ "artist-album": 7 });
 });
 
 test("an artist never played gives no months", async () => {

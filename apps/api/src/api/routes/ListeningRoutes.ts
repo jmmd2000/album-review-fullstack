@@ -26,8 +26,8 @@ const listening = new Hono()
     return c.json(await ListeningService.getOverTime(period, from, to, new Date(), entry), 200);
   })
   .get("/entry", validate("query", entryQuerySchema), async c => {
-    const { kind, id, period, from, to } = c.req.valid("query");
-    return c.json(await ListeningService.getEntry(kind, id, period, from, to), 200);
+    const { kind, id, period, by, from, to } = c.req.valid("query");
+    return c.json(await ListeningService.getEntry(kind, id, period, by, from, to), 200);
   })
   .get("/artist/:artistID", validate("param", artistParamSchema, 404), async c => {
     return c.json(await ArtistListeningService.getArtistListening(c.req.valid("param").artistID), 200);

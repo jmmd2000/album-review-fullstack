@@ -41,13 +41,27 @@ test("gives an artist's first play and top tracks in the period", async () => {
     play("hit", "2025-12-10T10:00:00Z"),
   ]);
 
-  const entry = await ListeningService.getEntry("artists", "artist1", "4-weeks", undefined, undefined, now);
+  const entry = await ListeningService.getEntry("artists", "artist1", "4-weeks", "plays", undefined, undefined, now);
 
   expect(entry.firstPlayedAt?.toISOString()).toBe("2025-06-01T10:00:00.000Z");
   expect(entry.topTracks.map(track => [track.name, track.plays])).toEqual([
     ["hit", 2],
     ["deep-cut", 1],
   ]);
+});
+
+test("by minutes, the top tracks are ordered by their minutes", async () => {
+  const longPlay = play("long", "2026-02-25T10:00:00Z");
+  await PlayModel.savePlays([play("hit", "2026-02-28T10:00:00Z"), play("hit", "2026-02-27T10:00:00Z"), { ...longPlay, track: { ...longPlay.track, duration_ms: 600000 } }]);
+
+  const byPlays = await ListeningService.getEntry("artists", "artist1", "4-weeks", "plays", undefined, undefined, now);
+  const byMinutes = await ListeningService.getEntry("artists", "artist1", "4-weeks", "minutes", undefined, undefined, now);
+
+  expect(byPlays.topTracks.map(track => [track.name, track.plays, track.minutes])).toEqual([
+    ["hit", 2, 7],
+    ["long", 1, 10],
+  ]);
+  expect(byMinutes.topTracks.map(track => track.name)).toEqual(["long", "hit"]);
 });
 
 test("gives a genre's top artists and its share of all plays in the period", async () => {
@@ -60,7 +74,7 @@ test("gives a genre's top artists and its share of all plays in the period", asy
   const rock = await GenreModel.createGenre({ name: "Rock", slug: "rock" });
   await PlayedTrackModel.saveGenres("rocker", [rock.id]);
 
-  const entry = await ListeningService.getEntry("genres", String(rock.id), "4-weeks", undefined, undefined, now);
+  const entry = await ListeningService.getEntry("genres", String(rock.id), "4-weeks", "plays", undefined, undefined, now);
 
   expect(entry.share).toBe(0.5);
   expect(entry.topArtists.map(artist => [artist.name, artist.plays])).toEqual([["rocker", 2]]);
@@ -69,7 +83,7 @@ test("gives a genre's top artists and its share of all plays in the period", asy
 test("a track shows the top tracks of its album in the period", async () => {
   await PlayModel.savePlays([play("single", "2026-02-28T10:00:00Z"), play("album-cut", "2026-02-27T10:00:00Z"), play("album-cut", "2026-02-26T10:00:00Z")]);
 
-  const entry = await ListeningService.getEntry("tracks", "single", "4-weeks", undefined, undefined, now);
+  const entry = await ListeningService.getEntry("tracks", "single", "4-weeks", "plays", undefined, undefined, now);
 
   expect(entry.topTracks.map(track => [track.name, track.plays])).toEqual([
     ["album-cut", 2],
@@ -81,9 +95,9 @@ test("links a reviewed artist to its page and an unreviewed one to a search, and
   await PlayModel.savePlays([play("track1", "2026-02-28T10:00:00Z", "reviewed"), play("track2", "2026-02-28T11:00:00Z", "unreviewed", "album2")]);
   await ArtistModel.createArtist({ spotifyID: "reviewed", name: "reviewed", imageURLs: [], headerImage: null, totalScore: 0, reviewCount: 1, unrated: false, leaderboardPosition: null });
 
-  expect((await ListeningService.getEntry("artists", "reviewed", "all")).link).toEqual({ type: "artist", id: "reviewed" });
-  expect((await ListeningService.getEntry("artists", "unreviewed", "all")).link).toEqual({ type: "search", query: "unreviewed" });
-  expect((await ListeningService.getEntry("tracks", "track2", "all")).link).toEqual({ type: "review", id: "album2" });
+  expect((await ListeningService.getEntry("artists", "reviewed", "all", "plays")).link).toEqual({ type: "artist", id: "reviewed" });
+  expect((await ListeningService.getEntry("artists", "unreviewed", "all", "plays")).link).toEqual({ type: "search", query: "unreviewed" });
+  expect((await ListeningService.getEntry("tracks", "track2", "all", "plays")).link).toEqual({ type: "review", id: "album2" });
 });
 
 test("the entry route is for the admin only", async () => {

@@ -116,16 +116,16 @@ export class ListeningService {
   }
 
   /**
-   * More about one entry: its first play, its plays in each of the last 12 weeks, its top tracks or a genre's top artists
+   * More about one entry: its first play, its top tracks or a genre's top artists, by plays or by minutes,
    * and share of all plays in the period, and where it links.
    */
-  static async getEntry(kind: TopKind, id: string, periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date()) {
+  static async getEntry(kind: TopKind, id: string, periodName: PeriodName, by: RankBy, customFrom?: string, customTo?: string, now: Date = new Date()) {
     const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
     const [firstPlayedAt, link] = await Promise.all([ListeningStatsModel.getFirstPlay(kind, id), ListeningStatsModel.getLink(kind, id)]);
 
     if (kind === "genres") {
       const [topArtists, genrePlays, totals] = await Promise.all([
-        ListeningStatsModel.getGenreArtists(id, period),
+        ListeningStatsModel.getGenreArtists(id, period, by),
         ListeningStatsModel.countEntryPlays(kind, id, period),
         ListeningStatsModel.getTotals(period),
       ]);
@@ -134,11 +134,11 @@ export class ListeningService {
 
     // A track shows the top tracks of its album, so every kind but genres has a list of tracks
     const albumID = kind === "tracks" ? await ListeningStatsModel.getTrackAlbumGroupID(id) : null;
-    const topTracks = kind === "tracks" ? (albumID ? await ListeningStatsModel.getTopTracks("albums", albumID, period) : []) : await ListeningStatsModel.getTopTracks(kind, id, period);
+    const topTracks = kind === "tracks" ? (albumID ? await ListeningStatsModel.getTopTracks("albums", albumID, period, by) : []) : await ListeningStatsModel.getTopTracks(kind, id, period, by);
     return { firstPlayedAt, link, topTracks, topArtists: [], share: null };
   }
 
-  /** Plays over time for the period, in days, weeks or months to suit its length, and plays in each hour of each weekday. */
+  /** Plays and minutes over time for the period, in days, weeks or months to suit its length, and in each hour of each weekday. */
   static async getOverTime(periodName: PeriodName, customFrom?: string, customTo?: string, now: Date = new Date(), entry?: EntryFilter) {
     const period = await ListeningStatsModel.resolvePeriod(periodName, now, customFrom, customTo);
     let firstPlayAt: Date | null = null;
